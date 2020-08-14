@@ -19,6 +19,9 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     other physical quantities measured in the run for convenience. Status check
     is done periodically on the simulation, provided by LibEnsemble.
     """
+    # By default, indicate that task failed
+    calc_status = TASK_FAILED
+
     # Modify the input script, with the value passed in H
     values = H['x'][0]
     values_dict = { 'z_lens1': values[0],
@@ -33,7 +36,7 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
     machine_specs = sim_specs['user']['machine_specs']
-    time_limit = sim_specs['user']['sim_kill_minutes'] * 60.0
+    time_limit = machine_specs['sim_kill_minutes'] * 60.0
     os.environ["NUMBA_NUM_THREADS"] = machine_specs['NUMBA_NUM_THREADS']
     # Launch the executor to actually run the WarpX simulation
     if machine_specs['name'] == 'summit':
@@ -58,24 +61,6 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
         task.poll()
         if task.runtime > time_limit:
             task.kill()  # Timeout
-
-    # Set calc_status with optional prints.
-    if task.finished:
-        if task.state == 'FINISHED':
-            calc_status = WORKER_DONE
-        elif task.state == 'FAILED':
-            print("Warning: Task {} failed: Error code {}"
-                  .format(task.name, task.errcode))
-            calc_status = TASK_FAILED
-        elif task.state == 'USER_KILLED':
-            print("Warning: Task {} has been killed"
-                  .format(task.name))
-        else:
-            print("Warning: Task {} in unknown state {}. Error code {}"
-                  .format(task.name, task.state, task.errcode))
-
-    # Safety
-    time.sleep(0.2)
 
     # Data analysis from the last simulation
     from openpmd_viewer.addons import LpaDiagnostics
@@ -106,4 +91,20 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     libE_output['zlens_1'] = H['x'][0][2]
     libE_output['adjust_factor'] = H['x'][0][3]
 
+    # Set calc_status with optional prints.
+    if task.finished:
+        if task.state == 'FINISHED':
+            calc_status = WORKER_DONE
+        elif task.state == 'FAILED':
+            print("Warning: Task {} failed: Error code {}"
+                  .format(task.name, task.errcode))
+            calc_status = TASK_FAILED
+        elif task.state == 'USER_KILLED':
+            print("Warning: Task {} has been killed"
+                  .format(task.name))
+        else:
+            print("Warning: Task {} in unknown state {}. Error code {}"
+                  .format(task.name, task.state, task.errcode))
+
+    
     return libE_output, persis_info, calc_status

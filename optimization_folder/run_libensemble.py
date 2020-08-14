@@ -105,8 +105,6 @@ sim_specs = {
         ('adjust_factor', float, (1,)),
     ],
     'user': {
-        # Run timeouts after 3 mins
-        'sim_kill_minutes': 3,
         # machine-specific parameters
         'machine_specs': machine_specs
     }
