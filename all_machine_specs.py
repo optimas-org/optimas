@@ -11,7 +11,7 @@ local_specs = {
     'cores': 1,  # Number of cores per simulation
     'sim_app': 'python',
     'extra_args': '',  # extra arguments passed to mpirun/mpiexec at execution
-    'NUMBA_NUM_THREADS': '4',
+    'NUMBA_NUM_THREADS': '1',
     'sim_max': 3 # Maximum number of simulations
 }
 
