@@ -244,8 +244,8 @@ if __name__ == '__main__':
                     ((gab*(z+vb*t)>=zlen) & (gab*(z+vb*t)<=zlen)) 
         
         sim.external_fields += [
-            ExternalField( Ex, 'Ex', amplitude, 0. ),
-            ExternalField( Ey, 'Ey', amplitude, 0. ),            
+            ExternalField( Ex, 'Ex', amplitude, 0., species=bunch ),
+            ExternalField( Ey, 'Ey', amplitude, 0., species=bunch ),
         ]
     
     
