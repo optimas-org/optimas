@@ -15,13 +15,13 @@ nworkers=1 as one worker is for the persistent gen_f.
 """
 
 # Either 'random' or 'aposmm'
-generator_type = 'aposmm'
+generator_type = 'random'
 # Either 'local' or 'summit'
 machine = 'local'
 
 import sys
 import numpy as np
-from warpx_simf import run_warpx  # Sim function from current directory
+from simf import run_fbpic
 
 # Import libEnsemble modules
 from libensemble.libE import libE
@@ -77,7 +77,7 @@ exctr.register_calc(full_path=sim_app, calc_type='sim')
 sim_specs = {
     # Function whose output is being minimized. The parallel WarpX run is
     # launched from run_WarpX.
-    'sim_f': run_warpx,
+    'sim_f': run_fbpic,
     # Name of input for sim_f, that LibEnsemble is allowed to modify.
     # May be a 1D array.
     'in': ['x'],

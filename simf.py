@@ -32,9 +32,9 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
 
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
-    os.environ["NUMBA_NUM_THREADS"] = machine_specs['NUMBA_NUM_THREADS']
-    time_limit = sim_specs['user']['sim_kill_minutes'] * 60.0
     machine_specs = sim_specs['user']['machine_specs']
+    time_limit = sim_specs['user']['sim_kill_minutes'] * 60.0
+    os.environ["NUMBA_NUM_THREADS"] = machine_specs['NUMBA_NUM_THREADS']
     # Launch the executor to actually run the WarpX simulation
     if machine_specs['name'] == 'summit':
         task = exctr.submit(calc_type='sim',
