@@ -41,7 +41,7 @@ gamma_boost = 60.
 boost = BoostConverter(gamma_boost)
 
 # The simulation box
-Nz = 1920        # Number of gridpoints along z
+Nz = 3840        # Number of gridpoints along z
 zmax = 0.e-6     # Length of the box along z (meters)
 zmin = -161.e-6
 Nr = 48          # Number of gridpoints along r
