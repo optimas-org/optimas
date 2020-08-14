@@ -83,10 +83,8 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     libE_output['energy_avg'] = energy_avg
     libE_output['charge'] = charge_f
     libE_output['emittance'] = emittance_f
-    libE_output['ramp_down_1'] = H['x'][0][0]
-    libE_output['ramp_down_2'] = H['x'][0][1]
-    libE_output['zlens_1'] = H['x'][0][2]
-    libE_output['adjust_factor'] = H['x'][0][3]
+    libE_output['adjust_factor_1'] = H['x'][0][0]
+    libE_output['adjust_factor_2'] = H['x'][0][1]
 
     # Set calc_status with optional prints.
     if task.finished:

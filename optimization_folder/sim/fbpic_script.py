@@ -67,7 +67,7 @@ mcce = 510999.
 wlen = 0.002
 lenses = { 'ga': [ 13950, 25990 ],
            'vb': [299792457.2297312, 299792457.77808934],
-           'zlen': [ 0.5*(z_end_stages[i] + z_start_stages[i+1] for i in range(2) ]
+           'zlen': [ 0.5*(z_end_stages[i] + z_start_stages[i+1]) for i in range(2) ],
            'adjust_factor': [ {{adjust_factor1}}, {{adjust_factor2}}] }
 
 # The lasers (conversion to boosted frame is done inside 'add_laser')
