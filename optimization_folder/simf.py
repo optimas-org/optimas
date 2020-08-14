@@ -24,10 +24,8 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
 
     # Modify the input script, with the value passed in H
     values = H['x'][0]
-    values_dict = { 'z_lens1': values[0],
-                    'z_lens2': values[1],
-                    'adjust_factor1': values[2],
-                    'adjust_factor2': values[3] }
+    values_dict = { 'adjust_factor1': values[0],
+                    'adjust_factor2': values[1] }
     with open('fbpic_script.py', 'r') as f:
         template = jinja2.Template( f.read() )
     with open('fbpic_script.py', 'w') as f:

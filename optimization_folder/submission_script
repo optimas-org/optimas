@@ -1,6 +1,6 @@
 #!/bin/bash -x
 #BSUB -P APH114
-#BSUB -J libe_mproc
+#BSUB -J libE_fbpic
 #BSUB -W 00:30
 #BSUB -nnodes 2
 #BSUB -alloc_flags "smt1"
@@ -26,4 +26,4 @@ export FBPIC_DISABLE_CACHING=1
 # - Manager and workers run on launch node.
 # - Workers submit tasks to the nodes in the job available.
 
-python run_libensemble_on_warpx.py --comms local --nworkers 12
+python run_libensemble.py --comms local --nworkers 12

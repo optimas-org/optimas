@@ -59,6 +59,7 @@ ramp_up = 2.e-2
 plateau = 0.295
 ramp_down = 5.e-3
 z_start_stages = [0, 0.35, 0.7]
+z_end_stages = [ z0 + ramp_up+ramp_up+ramp_down for z0 in z_start_stages ]
 
 # Parameters of the plasma lenses:
 dlen = 0.019
@@ -66,7 +67,7 @@ mcce = 510999.
 wlen = 0.002
 lenses = { 'ga': [ 13950, 25990 ],
            'vb': [299792457.2297312, 299792457.77808934],
-           'zlen': [ {{z_lens1}}, {{z_lens2}} ],
+           'zlen': [ 0.5*(z_end_stages[i] + z_start_stages[i+1] for i in range(2) ]
            'adjust_factor': [ {{adjust_factor1}}, {{adjust_factor2}}] }
 
 # The lasers (conversion to boosted frame is done inside 'add_laser')
@@ -81,7 +82,7 @@ focal_distance = 0.00875
 
 # The particles of the plasma
 p_zmin = 0.e-6   # Position of the beginning of the plasma (meters)
-p_zmax = z_start_stages[-1] + plateau + ramp_down
+p_zmax = z_end_stages[-1]
 p_rmax = 150.e-6 # Maximal radial position of the plasma (meters)
 n_e = 1.7e23     # The density in the labframe (electrons.meters^-3)
 p_nz = 2         # Number of particles per cell along z
@@ -178,7 +179,7 @@ if __name__ == '__main__':
     sim = Simulation( Nz, zmax, Nr, rmax, Nm, dt, zmin=zmin,
         v_comoving=v_comoving, gamma_boost=boost.gamma0,
         n_order=n_order, use_cuda=use_cuda,
-        particle_shape='cubic',
+        particle_shape='cubic', verbose_level=2,
         boundaries={'z':'open', 'r':'reflective'})
         # 'r': 'open' can also be used, but is more computationally expensive
 
@@ -220,9 +221,8 @@ if __name__ == '__main__':
 
     # Configure plasma mirrors: at the enf of each stage
     sim.plasma_mirrors = [
-        PlasmaMirror( z_lab=z0 + ramp_up+plateau+ramp_down,
-                      gamma_boost=gamma_boost, n_cells=4) \
-        for z0 in z_start_stages
+        PlasmaMirror( z_lab=zf, gamma_boost=gamma_boost, n_cells=4) \
+        for zf in z_end_stages
     ]
 
     # Configure plasma lenses

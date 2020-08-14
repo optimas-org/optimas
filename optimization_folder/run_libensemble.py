@@ -17,7 +17,7 @@ nworkers=1 as one worker is for the persistent gen_f.
 # Either 'random' or 'aposmm'
 generator_type = 'aposmm'
 # Either 'local' or 'summit'
-machine = 'local'
+machine = 'summit'
 
 import sys
 import numpy as np
@@ -65,7 +65,7 @@ sim_app = machine_specs['sim_app']
 
 # Problem dimension. This is the number of input parameters exposed,
 # that LibEnsemble will vary in order to minimize a single output parameter.
-n = 4
+n = 2
 
 exctr = MPIExecutor(central_mode=True)
 exctr.register_calc(full_path=sim_app, calc_type='sim')
@@ -94,15 +94,9 @@ sim_specs = {
         ('charge', float, (1,)),
         # Final beam emittance.
         ('emittance', float, (1,)),
-        # input parameter: length of first downramp.
-        ('ramp_down_1', float, (1,)),
-        # input parameter: Length of second downramp.
-        ('ramp_down_2', float, (1,)),
-        # input parameter: position of the focusing lens.
-        ('zlens_1', float, (1,)),
-        # Relative stength of the lens (1. is from
-        # back-of-the-envelope calculation)
-        ('adjust_factor', float, (1,)),
+        # input parameters
+        ('adjust_factor_1', float, (1,)),
+        ('adjust_factor_2', float, (1,)),
     ],
     'user': {
         # machine-specific parameters
@@ -128,9 +122,9 @@ if generator_type == 'random':
             # Total max number of sims running concurrently.
             'gen_batch_size': nworkers,
             # Lower bound for the n parameters.
-            'lb': np.array([2.e-3, 2.e-3, 0.005, .1]),
+            'lb': np.array([ 0.5, 0.5]),
             # Upper bound for the n parameters.
-            'ub': np.array([2.e-2, 2.e-2, 0.028, 3.]),
+            'ub': np.array([ 2., 2.]),
         }
     }
 
