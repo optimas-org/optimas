@@ -1,0 +1,5 @@
+# For simulation/analysis
+fbpic
+openpmd_viewer
+libensemble
+nlopt

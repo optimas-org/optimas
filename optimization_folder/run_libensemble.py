@@ -176,9 +176,9 @@ elif generator_type == 'aposmm':
             # local optimization stops.
             'ftol_abs': 3e-8,
             # Lower bound for the n input parameters.
-            'lb': np.array([2.e-3, 2.e-3, 0.005, .1]),
+            'lb': np.array([ 0.5, 0.5 ]),
             # Upper bound for the n input parameters.
-            'ub': np.array([2.e-2, 2.e-2, 0.028, 3.]),
+            'ub': np.array([ 2., 2. ]),
         }
     }
 
