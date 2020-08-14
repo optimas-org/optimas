@@ -15,7 +15,7 @@ nworkers=1 as one worker is for the persistent gen_f.
 """
 
 # Either 'random' or 'aposmm'
-generator_type = 'random'
+generator_type = 'aposmm'
 # Either 'local' or 'summit'
 machine = 'local'
 
@@ -32,7 +32,7 @@ if generator_type == 'random':
         import give_sim_work_first as alloc_f
 elif generator_type == 'aposmm':
     import libensemble.gen_funcs
-    libensemble.gen_funcs.rc.aposmm_optimizer = 'nlopt'
+    libensemble.gen_funcs.rc.aposmm_optimizers = 'nlopt'
     from libensemble.gen_funcs.persistent_aposmm import aposmm as gen_f
     from libensemble.alloc_funcs.persistent_aposmm_alloc \
         import persistent_aposmm_alloc as alloc_f
