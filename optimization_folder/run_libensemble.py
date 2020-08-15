@@ -194,9 +194,8 @@ else:
     sys.exit()
 
 # Save H to file every N simulation evaluations
-libE_specs['save_every_k_sims'] = 100
-# Sim directory to be copied for each worker
-libE_specs['sim_input_dir'] = 'sim'
+libE_specs['save_every_k_sims'] = 12
+libE_specs['sim_dir_copy_files'] = ['sim_specific/template_fbpic_script.py']
 
 sim_max = machine_specs['sim_max']  # Maximum number of simulations
 exit_criteria = {'sim_max': sim_max}  # Exit after running sim_max simulations

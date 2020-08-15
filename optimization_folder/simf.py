@@ -26,7 +26,7 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     values = H['x'][0]
     values_dict = { 'adjust_factor1': values[0],
                     'adjust_factor2': values[1] }
-    with open('fbpic_script.py', 'r') as f:
+    with open('template_fbpic_script.py', 'r') as f:
         template = jinja2.Template( f.read() )
     with open('fbpic_script.py', 'w') as f:
         f.write( template.render(values_dict) )
@@ -34,7 +34,7 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
     machine_specs = sim_specs['user']['machine_specs']
-    time_limit = machine_specs['sim_kill_minutes'] * 60.0
+    time_limit = machine_specs['sim_kill_minutes'] * 60.
     # Launch the executor to actually run the WarpX simulation
     if machine_specs['name'] == 'summit':
         task = exctr.submit(calc_type='sim',
