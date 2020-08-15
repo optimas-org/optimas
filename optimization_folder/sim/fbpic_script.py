@@ -59,7 +59,7 @@ ramp_up = 2.e-2
 plateau = 0.295
 ramp_down = 5.e-3
 z_start_stages = [0, 0.35, 0.7]
-z_end_stages = [ z0 + ramp_up+ramp_up+ramp_down for z0 in z_start_stages ]
+z_end_stages = [ z0 + ramp_up+plateau+ramp_down for z0 in z_start_stages ]
 
 # Parameters of the plasma lenses:
 dlen = 0.019
