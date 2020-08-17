@@ -46,7 +46,7 @@ zmax = 0.e-6     # Length of the box along z (meters)
 zmin = -161.e-6
 Nr = 48          # Number of gridpoints along r
 rmax = 242.e-6   # Length of the box along r (meters)
-Nm = 2           # Number of modes used
+Nm = 3           # Number of modes used
 
 # The simulation timestep
 # (See the section Advanced use > Running boosted-frame simulation
@@ -59,7 +59,6 @@ ramp_up = 2.e-2
 plateau = 0.295
 ramp_down = 5.e-3
 z_start_stages = [0, 0.35, 0.7]
-z_end_stages = [ z0 + ramp_up+plateau+ramp_down for z0 in z_start_stages ]
 
 # Parameters of the plasma lenses:
 dlen = 0.019
@@ -67,7 +66,7 @@ mcce = 510999.
 wlen = 0.002
 lenses = { 'ga': [ 13950, 25990 ],
            'vb': [299792457.2297312, 299792457.77808934],
-           'zlen': [ 0.5*(z_end_stages[i] + z_start_stages[i+1]) for i in range(2) ],
+           'zlen': [ 0.34, 0.69 ],
            'adjust_factor': [ {{adjust_factor1}}, {{adjust_factor2}}] }
 
 # The lasers (conversion to boosted frame is done inside 'add_laser')
@@ -82,7 +81,7 @@ focal_distance = 0.00875
 
 # The particles of the plasma
 p_zmin = 0.e-6   # Position of the beginning of the plasma (meters)
-p_zmax = z_end_stages[-1]
+p_zmax = z_start_stages[-1] + plateau + ramp_down
 p_rmax = 150.e-6 # Maximal radial position of the plasma (meters)
 n_e = 1.7e23     # The density in the labframe (electrons.meters^-3)
 p_nz = 2         # Number of particles per cell along z
@@ -122,13 +121,13 @@ def dens_func( z, r ):
         zf = z0 + ramp_up_b + plateau_b + ramp_down_b
         # Make ramp up
         n = np.where( (z>=z0) & (z<z0+ramp_up_b),
-                      (z-z0)*inv_ramp_up_b, n )
+                      np.sin( 0.5*np.pi*(z-z0)*inv_ramp_up_b )**2, n )
         # Make plateau
         n = np.where( (z>=z0+ramp_up_b) & (z<zf-ramp_down_b),
                       1., n )
         # Make ramp down
         n = np.where( (z>=zf-ramp_down_b) & (z<zf),
-                      (zf-z)*inv_ramp_down_b, n )
+                      np.sin( 0.5*np.pi*(zf-z)*inv_ramp_down_b )**2, n )
     # Add transverse guiding parabolic profile
     # Relative change divided by w_matched^2 that allows guiding
     rel_delta_n_over_w2 = 1./( np.pi * 2.81e-15 * w_matched**4 * n_e )
@@ -166,7 +165,7 @@ dt_lab_diag_period = 0.02/c
 # Period of writing the cached, backtransformed lab frame diagnostics to disk
 write_period = 50
 ## Period of the diagnostics in the boosted-frame
-diag_period = 1225
+diag_period = 100
 
 # ---------------------------
 # Carrying out the simulation
@@ -221,8 +220,9 @@ if __name__ == '__main__':
 
     # Configure plasma mirrors: at the enf of each stage
     sim.plasma_mirrors = [
-        PlasmaMirror( z_lab=zf, gamma_boost=gamma_boost, n_cells=4) \
-        for zf in z_end_stages
+        PlasmaMirror( z_lab=z0 + ramp_up+plateau+ramp_down,
+                      gamma_boost=gamma_boost, n_cells=4) \
+        for z0 in z_start_stages
     ]
 
     # Configure plasma lenses
@@ -233,15 +233,15 @@ if __name__ == '__main__':
         adjust_factor = lenses['adjust_factor'][i_lens]
 
         gab = gamma_boost        
-        amplitude = adjust_factor * gab * 2 * mcce * ga / (wlen * dlen)
+        amplitude = adjust_factor * gab * 4 * mcce * ga / (wlen * dlen)
         
         # Focusing force along x and y
         def Ex( F, x, y, z, t, amplitude, length_scale ):
             return F + amplitude * x * \
-                    ((gab*(z+vb*t)>=zlen) & (gab*(z+vb*t)<=zlen)) 
+                    ((gab*(z+vb*t)>=zlen) & (gab*(z+vb*t)<=zlen+wlen)) 
         def Ey( F, x, y, z, t, amplitude, length_scale ):
             return F + amplitude * y * \
-                    ((gab*(z+vb*t)>=zlen) & (gab*(z+vb*t)<=zlen)) 
+                    ((gab*(z+vb*t)>=zlen) & (gab*(z+vb*t)<=zlen+wlen)) 
         
         sim.external_fields += [
             ExternalField( Ex, 'Ex', amplitude, 0., species=bunch ),
