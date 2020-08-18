@@ -1,5 +1,3 @@
-import os
-
 """
 This file is part of the suite of scripts to use LibEnsemble on top of WarpX
 simulations. It contains a dictionary for machine-specific elements.

@@ -20,7 +20,6 @@ generator_type = 'aposmm'
 machine = 'summit'
 
 import sys
-import numpy as np
 from simf import run_fbpic
 
 # Import libEnsemble modules
@@ -37,15 +36,16 @@ elif generator_type == 'aposmm':
     from libensemble.alloc_funcs.persistent_aposmm_alloc \
         import persistent_aposmm_alloc as alloc_f
 else:
-    print("you shouldn' hit that")
-    sys.exit()
+    raise RuntimeError('Unknown generator: %s' %generator_type)
 
 from libensemble.tools import parse_args, save_libE_output, \
     add_unique_random_streams
 from libensemble import libE_logger
 from libensemble.executors.mpi_executor import MPIExecutor
 
+# Import user-defined parameters
 import all_machine_specs
+from sim_specific.varying_parameters import varying_parameters
 
 # Import machine-specific run parameters
 if machine == 'local':
@@ -65,7 +65,7 @@ sim_app = machine_specs['sim_app']
 
 # Problem dimension. This is the number of input parameters exposed,
 # that LibEnsemble will vary in order to minimize a single output parameter.
-n = 2
+n = len(varying_parameters)
 
 exctr = MPIExecutor(central_mode=True)
 exctr.register_calc(full_path=sim_app, calc_type='sim')
@@ -93,11 +93,10 @@ sim_specs = {
         # Final beam charge.
         ('charge', float, (1,)),
         # Final beam emittance.
-        ('emittance', float, (1,)),
+        ('emittance', float, (1,)), 
+        ] \
         # input parameters
-        ('adjust_factor_1', float, (1,)),
-        ('adjust_factor_2', float, (1,)),
-    ],
+        + [ (name, float, (1,)) for name in varying_parameters.keys() ],
     'user': {
         # machine-specific parameters
         'machine_specs': machine_specs
@@ -122,9 +121,9 @@ if generator_type == 'random':
             # Total max number of sims running concurrently.
             'gen_batch_size': nworkers,
             # Lower bound for the n parameters.
-            'lb': np.array([ 0.5, 0.5]),
+            'lb': varying_parameters['lower bound'],
             # Upper bound for the n parameters.
-            'ub': np.array([ 2., 2.]),
+            'ub': varying_parameters['upper bound'],
         }
     }
 
@@ -175,10 +174,10 @@ elif generator_type == 'aposmm':
             # Absolute tolerance of output 'f'. Determines when
             # local optimization stops.
             'ftol_abs': 3e-8,
-            # Lower bound for the n input parameters.
-            'lb': np.array([ 0.5, 0.5 ]),
-            # Upper bound for the n input parameters.
-            'ub': np.array([ 2., 2. ]),
+            # Lower bound for the n parameters.
+            'lb': varying_parameters['lower bound'],
+            # Upper bound for the n parameters.
+            'ub': varying_parameters['upper bound'],
         }
     }
 

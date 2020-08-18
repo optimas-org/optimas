@@ -6,6 +6,9 @@ import jinja2
 from libensemble.executors.executor import Executor
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
+# Import user-defined parameters
+from sim_specific.varying_parameters import varying_parameters
+
 """
 This file is part of the suite of scripts to use LibEnsemble on top of WarpX
 simulations. It defines a sim_f function that takes LibEnsemble history and
@@ -24,8 +27,10 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
 
     # Modify the input script, with the value passed in H
     values = H['x'][0]
-    values_dict = { 'adjust_factor1': values[0],
-                    'adjust_factor2': values[1] }
+    names = varying_parameters.keys() 
+    # Note: The order of keys is well-defined here, 
+    # since `varying_parameters` is an OrderedDict
+    values_dict = { n: v for n, v in zip(names, values) }
     with open('template_fbpic_script.py', 'r') as f:
         template = jinja2.Template( f.read() )
     with open('fbpic_script.py', 'w') as f:
@@ -59,50 +64,43 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
         if task.runtime > time_limit:
             task.kill()  # Timeout
 
-    # Data analysis from the last simulation
-    from openpmd_viewer.addons import LpaDiagnostics
-    ts = LpaDiagnostics( os.path.join(task.workdir, 'lab_diags/hdf5') )
-
-    charge_i = ts.get_charge( iteration=ts.iterations[0] )
-    emittance_i = ts.get_emittance( iteration=ts.iterations[0] )[0]
-    charge_f = ts.get_charge( iteration=ts.iterations[-1] )
-    emittance_f = ts.get_emittance( iteration=ts.iterations[-1] )[0]
-    energy_avg, energy_std = ts.get_mean_gamma( iteration=ts.iterations[-1] ) 
-    
-    # Pass the sim output values to LibEnsemble.
-    # When optimization is ON, 'f' is then passed to the generating function
-    # gen_f to generate new inputs for next runs.
-    # All other parameters are here just for convenience.
-    libE_output = np.zeros(1, dtype=sim_specs['out'])
-    # Build a quantity to minimize (f) that encompasses
-    # emittance AND charge loss 1% charge loss has the
-    # same impact as doubling the initial emittance.
-    # we minimize f!
-    if charge_f != 0:
-        libE_output['f'] = emittance_f + emittance_i*(1.-charge_f/charge_i)*100
-    else:
-        libE_output['f'] = np.nan
-    libE_output['energy_std'] = energy_std
-    libE_output['energy_avg'] = energy_avg
-    libE_output['charge'] = charge_f
-    libE_output['emittance'] = emittance_f
-    libE_output['adjust_factor_1'] = H['x'][0][0]
-    libE_output['adjust_factor_2'] = H['x'][0][1]
-
     # Set calc_status with optional prints.
     if task.finished:
         if task.state == 'FINISHED':
             calc_status = WORKER_DONE
         elif task.state == 'FAILED':
-            print("Warning: Task {} failed: Error code {}"
-                  .format(task.name, task.errcode))
             calc_status = TASK_FAILED
-        elif task.state == 'USER_KILLED':
-            print("Warning: Task {} has been killed"
-                  .format(task.name))
-        else:
+        if task.state not in ['FINISHED', 'FAILED', 'USER_KILLED']:
             print("Warning: Task {} in unknown state {}. Error code {}"
                   .format(task.name, task.state, task.errcode))
 
+    # Data analysis from the last simulation
+    if calc_status == WORKER_DONE:
+        from openpmd_viewer.addons import LpaDiagnostics
+        ts = LpaDiagnostics( os.path.join(task.workdir, 'lab_diags/hdf5') )
+
+        charge_i = ts.get_charge( iteration=ts.iterations[0] )
+        emittance_i = ts.get_emittance( iteration=ts.iterations[0] )[0]
+        charge_f = ts.get_charge( iteration=ts.iterations[-1] )
+        emittance_f = ts.get_emittance( iteration=ts.iterations[-1] )[0]
+        energy_avg, energy_std = ts.get_mean_gamma( 
+            iteration=ts.iterations[-1] ) 
     
+        # Pass the sim output values to LibEnsemble.
+        # When optimization is ON, 'f' is then passed to the generating function
+        # gen_f to generate new inputs for next runs.
+        # All other parameters are here just for convenience.
+        libE_output = np.zeros(1, dtype=sim_specs['out'])
+        # Build a quantity to minimize (f) that encompasses
+        # emittance AND charge loss 1% charge loss has the
+        # same impact as doubling the initial emittance.
+        # we minimize f!
+        libE_output['f'] = emittance_f + emittance_i*(1.-charge_f/charge_i)*100
+        libE_output['energy_std'] = energy_std
+        libE_output['energy_avg'] = energy_avg
+        libE_output['charge'] = charge_f
+        libE_output['emittance'] = emittance_f
+        for i, name in enumerate(varying_parameters.keys()):
+            libE_output[name] = H['x'][0][i]
+        
     return libE_output, persis_info, calc_status
