@@ -78,7 +78,10 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     # emittance AND charge loss 1% charge loss has the
     # same impact as doubling the initial emittance.
     # we minimize f!
-    libE_output['f'] = emittance_f + emittance_i*(1.-charge_f/charge_i)*100
+    if charge_f != 0:
+        libE_output['f'] = emittance_f + emittance_i*(1.-charge_f/charge_i)*100
+    else:
+        libE_output['f'] = np.nan
     libE_output['energy_std'] = energy_std
     libE_output['energy_avg'] = energy_avg
     libE_output['charge'] = charge_f
