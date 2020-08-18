@@ -20,6 +20,7 @@ generator_type = 'aposmm'
 machine = 'summit'
 
 import sys
+import numpy as np
 from simf import run_fbpic
 
 # Import libEnsemble modules
@@ -121,9 +122,9 @@ if generator_type == 'random':
             # Total max number of sims running concurrently.
             'gen_batch_size': nworkers,
             # Lower bound for the n parameters.
-            'lb': varying_parameters['lower bound'],
+            'lb': np.array([ v[0] for v in varying_parameters.values() ]),
             # Upper bound for the n parameters.
-            'ub': varying_parameters['upper bound'],
+            'ub': np.array([ v[1] for v in varying_parameters.values() ]),
         }
     }
 
@@ -175,9 +176,9 @@ elif generator_type == 'aposmm':
             # local optimization stops.
             'ftol_abs': 3e-8,
             # Lower bound for the n parameters.
-            'lb': varying_parameters['lower bound'],
+            'lb': np.array([ v[0] for v in varying_parameters.values() ]),
             # Upper bound for the n parameters.
-            'ub': varying_parameters['upper bound'],
+            'ub': np.array([ v[1] for v in varying_parameters.values() ]),
         }
     }
 
