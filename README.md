@@ -1,7 +1,7 @@
 # Optimization of fbpic simulation with libEnsemble
 
-Usage:
+Usage (on Summit)
 ```
 cd optimization_folder
-python run_libensemble.py --comms local --nworkers 2
+bsub submission_script
 ```
