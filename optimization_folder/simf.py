@@ -79,12 +79,17 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
         from openpmd_viewer.addons import LpaDiagnostics
         ts = LpaDiagnostics( os.path.join(task.workdir, 'lab_diags/hdf5') )
 
-        charge_i = ts.get_charge( iteration=ts.iterations[0] )
-        emittance_i = ts.get_emittance( iteration=ts.iterations[0] )[0]
-        charge_f = ts.get_charge( iteration=ts.iterations[-1] )
-        emittance_f = ts.get_emittance( iteration=ts.iterations[-1] )[0]
+        select = {'x':[-100.e-6,100.e-6], 'y':[-100.e-6, 100.e-6]}
+
+        charge_i = ts.get_charge( iteration=ts.iterations[0], select=select )
+        emittance_i = ts.get_emittance( iteration=ts.iterations[0], 
+                                        select=select )[0]
+        charge_f = ts.get_charge( iteration=ts.iterations[-1],
+                                  select=select )
+        emittance_f = ts.get_emittance( iteration=ts.iterations[-1],
+                                        select=select )[0]
         energy_avg, energy_std = ts.get_mean_gamma( 
-            iteration=ts.iterations[-1] ) 
+            iteration=ts.iterations[-1], select=select ) 
     
         # Pass the sim output values to LibEnsemble.
         # When optimization is ON, 'f' is then passed to the generating function

@@ -31,6 +31,8 @@ from fbpic.openpmd_diag import FieldDiagnostic, ParticleDiagnostic, \
 # ----------
 # Parameters
 # ----------
+np.random.seed(0)
+
 use_cuda = True
 
 n_order = 32
@@ -165,7 +167,7 @@ dt_lab_diag_period = 0.02/c
 # Period of writing the cached, backtransformed lab frame diagnostics to disk
 write_period = 50
 ## Period of the diagnostics in the boosted-frame
-diag_period = 100
+diag_period = 1000
 
 # ---------------------------
 # Carrying out the simulation
