@@ -3,3 +3,4 @@ fbpic
 openpmd_viewer
 libensemble
 nlopt
+jinja2
