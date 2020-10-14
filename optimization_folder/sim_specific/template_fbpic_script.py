@@ -24,7 +24,7 @@ from fbpic.main import Simulation
 from fbpic.lpa_utils.laser import add_laser
 from fbpic.lpa_utils.bunch import add_particle_bunch_gaussian
 from fbpic.lpa_utils.boosted_frame import BoostConverter
-from fbpic.lpa_utils.plasma_mirrors import PlasmaMirror
+from fbpic.lpa_utils.mirrors import Mirror
 from fbpic.lpa_utils.external_fields import ExternalField
 from fbpic.openpmd_diag import FieldDiagnostic, ParticleDiagnostic, \
         BackTransformedFieldDiagnostic, BackTransformedParticleDiagnostic
@@ -205,7 +205,7 @@ if __name__ == '__main__':
                                          n_macroparticles=bunch_n_macroparticles,
                                          tf=0.0, zf=bunch_z0, boost=boost,
                                          z_injection_plane=0.)
-    
+
     # Add a laser to the fields of the simulation
     for i_stage in range(len(z_start_stages)):
         z0_antenna = z_start_stages[i_stage]
@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
     # Configure plasma mirrors: at the enf of each stage
     sim.plasma_mirrors = [
-        PlasmaMirror( z_lab=z0 + ramp_up+plateau+ramp_down,
+        Mirror( z_lab=z0 + ramp_up+plateau+ramp_down,
                       gamma_boost=gamma_boost, n_cells=4) \
         for z0 in z_start_stages
     ]
@@ -234,23 +234,23 @@ if __name__ == '__main__':
         zlen = lenses['zlen'][i_lens]
         adjust_factor = lenses['adjust_factor'][i_lens]
 
-        gab = gamma_boost        
+        gab = gamma_boost
         amplitude = adjust_factor * gab * 4 * mcce * ga / (wlen * dlen)
-        
+
         # Focusing force along x and y
         def Ex( F, x, y, z, t, amplitude, length_scale ):
             return F + amplitude * x * \
-                    ((gab*(z+vb*t)>=zlen) & (gab*(z+vb*t)<=zlen+wlen)) 
+                    ((gab*(z+vb*t)>=zlen) & (gab*(z+vb*t)<=zlen+wlen))
         def Ey( F, x, y, z, t, amplitude, length_scale ):
             return F + amplitude * y * \
-                    ((gab*(z+vb*t)>=zlen) & (gab*(z+vb*t)<=zlen+wlen)) 
-        
+                    ((gab*(z+vb*t)>=zlen) & (gab*(z+vb*t)<=zlen+wlen))
+
         sim.external_fields += [
             ExternalField( Ex, 'Ex', amplitude, 0., species=bunch ),
             ExternalField( Ey, 'Ey', amplitude, 0., species=bunch ),
         ]
-    
-    
+
+
     # Add a field diagnostic
     sim.diags = [
                   # Diagnostics in the boosted frame
@@ -269,7 +269,7 @@ if __name__ == '__main__':
                   BackTransformedParticleDiagnostic( zmin, zmax, v_window,
                                                   dt_lab_diag_period,
                                                   N_lab_diag, boost.gamma0,
-                                                  write_period, sim.fld, 
+                                                  write_period, sim.fld,
                                                   species={'bunch':bunch},
                                                   comm=sim.comm )
                 ]

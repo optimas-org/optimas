@@ -15,9 +15,9 @@ nworkers=1 as one worker is for the persistent gen_f.
 """
 
 # Either 'random' or 'aposmm'
-generator_type = 'aposmm'
+generator_type = 'random'
 # Either 'local' or 'summit'
-machine = 'summit'
+machine = 'local'
 
 import sys
 import numpy as np
@@ -94,7 +94,7 @@ sim_specs = {
         # Final beam charge.
         ('charge', float, (1,)),
         # Final beam emittance.
-        ('emittance', float, (1,)), 
+        ('emittance', float, (1,)),
         ] \
         # input parameters
         + [ (name, float, (1,)) for name in varying_parameters.keys() ],
