@@ -15,7 +15,7 @@ nworkers=1 as one worker is for the persistent gen_f.
 """
 
 # Either 'random' or 'aposmm'
-generator_type = 'random'
+generator_type = 'aposmm'
 # Either 'local' or 'summit'
 machine = 'local'
 

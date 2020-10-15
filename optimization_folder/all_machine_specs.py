@@ -10,7 +10,7 @@ local_specs = {
     'sim_app': 'python',
     'sim_kill_minutes': 10,
     'extra_args': '',  # extra arguments passed to mpirun/mpiexec at execution
-    'sim_max': 16 # Maximum number of simulations
+    'sim_max': 50 # Maximum number of simulations
 }
 
 
