@@ -19,7 +19,6 @@ generator_type = 'random'
 # Either 'local' or 'summit'
 machine = 'local'
 
-import sys
 import numpy as np
 from simf import run_fbpic
 
@@ -47,15 +46,13 @@ from libensemble.executors.mpi_executor import MPIExecutor
 # Import user-defined parameters
 import all_machine_specs
 from sim_specific.varying_parameters import varying_parameters
+from sim_specific.analysis_script import analyzed_quantities
 
 # Import machine-specific run parameters
 if machine == 'local':
     machine_specs = all_machine_specs.local_specs
 elif machine == 'summit':
     machine_specs = all_machine_specs.summit_specs
-else:
-    print("you shouldn' hit that")
-    sys.exit()
 
 libE_logger.set_level('INFO')
 
@@ -82,20 +79,9 @@ sim_specs = {
     # Name of input for sim_f, that LibEnsemble is allowed to modify.
     # May be a 1D array.
     'in': ['x'],
-    'out': [
+    'out': [ ('f', float) ] \
         # f is the single float output that LibEnsemble minimizes.
-        ('f', float),
-        # All parameters below are not used for calculation,
-        # just output for convenience.
-        # Final relative energy spread.
-        ('energy_std', float, (1,)),
-        # Final average energy, in MeV.
-        ('energy_avg', float, (1,)),
-        # Final beam charge.
-        ('charge', float, (1,)),
-        # Final beam emittance.
-        ('emittance', float, (1,)),
-        ] \
+        + analyzed_quantities \
         # input parameters
         + [ (name, float, (1,)) for name in varying_parameters.keys() ],
     'user': {
@@ -189,12 +175,8 @@ elif generator_type == 'aposmm':
         'out': [('given_back', bool)],
         'user': {}}
 
-else:
-    print("you shouldn' hit that")
-    sys.exit()
-
 # Save H to file every N simulation evaluations
-libE_specs['save_every_k_sims'] = 12
+libE_specs['save_every_k_sims'] = 10
 libE_specs['sim_dir_copy_files'] = ['sim_specific/template_fbpic_script.py']
 
 sim_max = machine_specs['sim_max']  # Maximum number of simulations

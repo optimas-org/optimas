@@ -278,5 +278,5 @@ if __name__ == '__main__':
     N_step = int(T_interact/sim.dt)
 
     ### Run the simulation
-    sim.step( N_step )
+    sim.step( 10 )
     print('')
