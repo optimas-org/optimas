@@ -9,4 +9,4 @@ import numpy as np
 result =  ( {{x0}} + 10*np.cos({{x0}}) )*( {{x1}} + 5*np.cos({{x1}}) )
 
 with open('result.txt', 'w') as f:
-    f.write(result)
+    f.write("%f" %result)
