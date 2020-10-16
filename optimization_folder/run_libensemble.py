@@ -25,7 +25,7 @@ from simf import run_fbpic
 # Import libEnsemble modules
 from libensemble.libE import libE
 if generator_type == 'random':
-    from libensemble.gen_funcs.sampling \
+    from libensemble.gen_funcs.persistent_uniform_sampling \
         import persistent_uniform as gen_f
     from libensemble.alloc_funcs.start_only_persistent \
         import only_persistent_gens as alloc_f
@@ -118,20 +118,9 @@ if generator_type in ['random', 'bo']:
         }
     }
 
-    alloc_specs = {
-        # Allocator function, decides what a worker should do.
-        # We use a LibEnsemble allocator.
-        'alloc_f': alloc_f,
-        'out': [
-            ('allocated', bool)
-        ],
-        'user': {
-            # If true wait for all sims to process before generate more
-            'batch_mode': True,
-            # Only one active generator at a time
-            'num_active_gens': 1
-        }
-    }
+    # Allocator function, decides what a worker should do.
+    # We use a LibEnsemble allocator.
+    alloc_specs = {'alloc_f': alloc_f, 'out': [('given_back', bool)]}
 
 elif generator_type == 'aposmm':
     # Here, the 'user' field is for the user's (in this case,
