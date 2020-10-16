@@ -38,7 +38,7 @@ def persistent_gp_gen_f( H, persis_info, gen_specs, libE_info ):
     domain = EuclideanDomain( [ [l,u] for l,u in zip(lb_list, ub_list) ] )
     func_caller = EuclideanFunctionCaller(None, domain)
     opt = EuclideanGPBandit( func_caller, ask_tell_mode=True,
-                                    options=Namespace(acq='ts') )
+          options=Namespace(acq='ts', build_new_model_every=batch_size) )
     opt.initialise()
 
     # Receive information from the manager (or a STOP_TAG)
@@ -64,5 +64,7 @@ def persistent_gp_gen_f( H, persis_info, gen_specs, libE_info ):
                 x = calc_in['x'][i]
                 y = calc_in['f'][i]
                 opt.tell([ (x, -y) ])
+            # Update hyperparameters
+            opt._build_new_model()
 
-        return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
+    return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
