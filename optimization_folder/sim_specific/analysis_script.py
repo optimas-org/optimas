@@ -6,9 +6,16 @@ after the simulation was run.
 # These parameters are not used by libEnsemble, but they provide additional
 # information / diagnostic for the user
 # The third parameter is the shape of the corresponding array
-analyzed_quantities = []
+analyzed_quantities = [
+    ('energy_med', float, (1,)),
+    # Final average energy, in MeV.
+    ('energy_mad', float, (1,)),
+    # Final beam charge.
+    ('charge', float, (1,)),
+]
 
 import numpy as np
+from scipy.constants import e
 
 def weighted_median(data, weights):
     """
@@ -75,6 +82,9 @@ def analyze_simulation( simulation_directory, libE_output ):
         libE_output['f'] = 0
     else:
         med, mad = weighted_mad(uz/2, w)
-        libE_output['f'] = np.sqrt(q)*med/mad/100
+        libE_output['f'] = -np.sqrt(q)*med/mad/100
+        libE_output['charge'] = q
+        libE_output['energy_med'] = med
+        libE_output['energy_mad'] = mad
 
     return libE_output
