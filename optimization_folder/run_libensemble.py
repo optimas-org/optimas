@@ -169,7 +169,7 @@ elif generator_type == 'aposmm':
         'user': {}}
 
 # Save H to file every N simulation evaluations
-libE_specs['save_every_k_sims'] = 10
+libE_specs['save_every_k_sims'] = 5
 libE_specs['sim_dir_copy_files'] = ['sim_specific/template_fbpic_script.py']
 
 sim_max = machine_specs['sim_max']  # Maximum number of simulations

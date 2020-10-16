@@ -20,5 +20,5 @@ summit_specs = {
     'sim_kill_minutes': 100,
     # extra arguments passed to jsrun at execution
     'extra_args': '-n 1 -a 1 -g 1 -c 1 --bind=packed:1',
-    'sim_max': 44 # Maximum number of simulations
+    'sim_max': 30 # Maximum number of simulations
 }
