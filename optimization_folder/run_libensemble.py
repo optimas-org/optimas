@@ -15,7 +15,7 @@ nworkers=1 as one worker is for the persistent gen_f.
 """
 
 # Either 'random' or 'aposmm'
-generator_type = 'aposmm'
+generator_type = 'bo'
 # Either 'local' or 'summit'
 machine = 'local'
 
@@ -26,9 +26,13 @@ from simf import run_fbpic
 from libensemble.libE import libE
 if generator_type == 'random':
     from libensemble.gen_funcs.sampling \
-        import uniform_random_sample as gen_f
-    from libensemble.alloc_funcs.give_sim_work_first\
-        import give_sim_work_first as alloc_f
+        import persistent_uniform as gen_f
+    from libensemble.alloc_funcs.start_only_persistent \
+        import only_persistent_gens as alloc_f
+elif generator_type == 'bo':
+    from .gp_alloc_and_gen import persistent_gp_gen_f as gen_f
+    from libensemble.alloc_funcs.start_only_persistent \
+        import only_persistent_gens as alloc_f
 elif generator_type == 'aposmm':
     import libensemble.gen_funcs
     libensemble.gen_funcs.rc.aposmm_optimizers = 'nlopt'
@@ -92,7 +96,7 @@ sim_specs = {
 
 # State the generating function, its arguments, output,
 # and necessary parameters.
-if generator_type == 'random':
+if generator_type in ['random', 'bo']:
     # Here, the 'user' field is for the user's (in this case,
     # the RNG) convenience.
     gen_specs = {
@@ -106,7 +110,7 @@ if generator_type == 'random':
         ],
         'user': {
             # Total max number of sims running concurrently.
-            'gen_batch_size': nworkers,
+            'gen_batch_size': nworkers-1,
             # Lower bound for the n parameters.
             'lb': np.array([ v[0] for v in varying_parameters.values() ]),
             # Upper bound for the n parameters.
