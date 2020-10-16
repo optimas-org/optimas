@@ -1,14 +1,11 @@
 """
-This file defines the `gen_f` and `alloc_f` for Bayesian optimization with
-a Gaussian process.
+This file defines the `gen_f` for Bayesian optimization with a Gaussian process.
 
-- The `gen_f` is called once by a dedicated worker and only returns at the end
-  of the whole libEnsemble run.
-- The `alloc_f` is called by the manager. It receives asks for parameters
-  to try, from the `gen_f` and in turns sends the results of simulations.
+The `gen_f` is called once by a dedicated worker and only returns at the end
+of the whole libEnsemble run.
 
-Thus the `gen_f` and `alloc_f` are closely linked, since they communicate
-with each other.
+This `gen_f` is meant to be used with the `alloc_f` function
+`only_persistent_gens`
 """
 
 import numpy as np
@@ -45,8 +42,6 @@ def persistent_gp_gen_f( H, persis_info, gen_specs, libE_info ):
     tag = None
     while tag not in [STOP_TAG, PERSIS_STOP]:
 
-        # TODO: Periodically re-fit the hyperparameters of the GP
-
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
         H_o = np.zeros(batch_size, dtype=gen_specs['out'])
@@ -55,8 +50,7 @@ def persistent_gp_gen_f( H, persis_info, gen_specs, libE_info ):
             H_o['x'][i] = x
 
         # Send data and get results from finished simulation
-        # Is this call blocking? Does it only continue once the
-        # the manager calls `gen_work`?
+        # Blocking call: waits for simulation results to be sent by the manager
         tag, Work, calc_in = sendrecv_mgr_worker_msg(libE_info['comm'], H_o)
         if calc_in is not None:
             # Update the GP with latest simulation results
