@@ -35,8 +35,13 @@ python run_libensemble.py --comms local --nworkers 3
 
 ### On Summit
 
-Install according to instructions
-Then `pip install -e requirements`
+Install according to:
+https://fbpic.github.io/install/install_summit.html
+
+Then install other dependencies:
+```
+pip install -r requirements.txt
+```
 
 `cd` into your `$MEMBERWORK` folder, and create a dedicated directory. Then run:
 ```
