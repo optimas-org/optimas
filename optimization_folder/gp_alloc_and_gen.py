@@ -63,4 +63,6 @@ def persistent_gp_gen_f( H, persis_info, gen_specs, libE_info ):
             for i in range(batch_size):
                 x = calc_in['x'][i]
                 y = calc_in['f'][i]
-                opt.tell([ (x, y) ])
+                opt.tell([ (x, -y) ])
+
+        return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
