@@ -11,9 +11,6 @@ from fbpic.openpmd_diag import FieldDiagnostic, ParticleDiagnostic, \
      set_periodic_checkpoint, restart_from_checkpoint, BoostedFieldDiagnostic, BoostedParticleDiagnostic
 from fbpic.lpa_utils.boosted_frame import BoostConverter
 
-import os
-from mpi4py.MPI import COMM_WORLD as comm
-
 def LUXlaser(energy_measured_joule, FWHM_x_um, FWHM_t_fs, lambda_laser = 0.8,  T_beamline = 1, focus_factor = 1, tempolar_factor = 1):
     energy_gauss_joule = energy_measured_joule * T_beamline * focus_factor * tempolar_factor
     FWHMtoSigma = 2 * np.sqrt(2 * np.log(2))
@@ -38,8 +35,6 @@ t_scale = 1.
 
 
 # Whether to use the GPU
-use_cuda = True
-
 dens_z = np.linspace(0, 8e-3, 1000)
 dens_h2 = 5e23*np.exp(-((dens_z-2.9e-3)/1.e-3)**2) + 6e23 * np.exp(-((dens_z-5.3e-3)/1.7e-3)**4)
 dens_n2 = 0.5e23*np.exp(-((dens_z-2.5e-3)/0.5e-3)**2 )
@@ -129,7 +124,7 @@ if __name__ == '__main__':
     # Initialize the simulation object
     sim = Simulation( Nz, zmax, Nr, rmax, Nm, dt,
         zmin=zmin, boundaries={'z':'open', 'r':'open'}, initialize_ions=False,
-        n_order=n_order, use_cuda=use_cuda, v_comoving=v_comoving,
+        n_order=n_order, use_cuda=True, v_comoving=v_comoving,
         gamma_boost=gamma_boost, verbose_level=2, particle_shape='cubic',
         use_galilean=True, use_all_mpi_ranks=False)
     # By default the simulation initializes an electron species (sim.ptcl[0])

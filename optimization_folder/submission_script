@@ -2,7 +2,7 @@
 #BSUB -P APH114
 #BSUB -J libE_fbpic
 #BSUB -W 02:00
-#BSUB -nnodes 2
+#BSUB -nnodes 1
 #BSUB -alloc_flags "smt1"
 
 module purge
