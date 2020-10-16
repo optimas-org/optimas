@@ -25,7 +25,7 @@ def LUXlaser(energy_measured_joule, FWHM_x_um, FWHM_t_fs, lambda_laser = 0.8,  T
 # ----------
 
 laser_scale = {{laser_scale}}
-z_foc = {{z_foc}}
+z_foc = {{z_foc}}*1.e-3
 mult = {{mult}}
 plasma_scale = {{plasma_scale}}
 
