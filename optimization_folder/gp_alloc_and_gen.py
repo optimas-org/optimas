@@ -29,13 +29,15 @@ def persistent_gp_gen_f( H, persis_info, gen_specs, libE_info ):
     # Extract bounds of the parameter space, and batch size
     ub_list = gen_specs['user']['ub']
     lb_list = gen_specs['user']['lb']
-    batch_size = gen_specs['user']['gen_batch_size']
+
+    # Number of points to generate initially
+    number_of_gen_points = gen_specs['user']['gen_batch_size']
 
     # Initialize the dragonfly GP optimizer
     domain = EuclideanDomain( [ [l,u] for l,u in zip(lb_list, ub_list) ] )
     func_caller = EuclideanFunctionCaller(None, domain)
     opt = EuclideanGPBandit( func_caller, ask_tell_mode=True,
-          options=Namespace(acq='ts', build_new_model_every=batch_size) )
+          options=Namespace(acq='ts', build_new_model_every=number_of_gen_points) )
     opt.initialise()
 
     # Receive information from the manager (or a STOP_TAG)
@@ -44,8 +46,8 @@ def persistent_gp_gen_f( H, persis_info, gen_specs, libE_info ):
 
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
-        H_o = np.zeros(batch_size, dtype=gen_specs['out'])
-        for i in range(batch_size):
+        H_o = np.zeros(number_of_gen_points, dtype=gen_specs['out'])
+        for i in range(number_of_gen_points):
             x = opt.ask()
             H_o['x'][i] = x
 
@@ -53,12 +55,18 @@ def persistent_gp_gen_f( H, persis_info, gen_specs, libE_info ):
         # Blocking call: waits for simulation results to be sent by the manager
         tag, Work, calc_in = sendrecv_mgr_worker_msg(libE_info['comm'], H_o)
         if calc_in is not None:
+            # Check how many simulations have returned
+            n = len(calc_in['f'])
             # Update the GP with latest simulation results
-            for i in range(batch_size):
+            for i in range(n):
                 x = calc_in['x'][i]
                 y = calc_in['f'][i]
                 opt.tell([ (x, -y) ])
             # Update hyperparameters
             opt._build_new_model()
+            # Set the number of points to generate to that number:
+            number_of_gen_points = n
+        else:
+            number_of_gen_points = 0
 
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
