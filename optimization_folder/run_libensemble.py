@@ -15,15 +15,17 @@ nworkers=1 as one worker is for the persistent gen_f.
 """
 
 # Either 'random' or 'bo' or 'aposmm'
-generator_type = 'bo'
+generator_type = 'random'
 # Either 'local' or 'summit'
 machine = 'local'
 
+import os
 import numpy as np
 from simf import run_fbpic
 
 # Import libEnsemble modules
 from libensemble.libE import libE
+from libensemble.tools import check_inputs
 if generator_type == 'random':
     from libensemble.gen_funcs.persistent_uniform_sampling \
         import persistent_uniform as gen_f
@@ -178,9 +180,17 @@ exit_criteria = {'sim_max': sim_max}  # Exit after running sim_max simulations
 # Create a different random number stream for each worker and the manager
 persis_info = add_unique_random_streams({}, nworkers + 1)
 
+# Before starting libensemble, check whether there is past history file
+if os.path.exists('past_history.npy'):
+    H0 = np.load('past_history.npy')
+    check_inputs( H0=H0, sim_specs=sim_specs,
+                  alloc_specs=alloc_specs, gen_specs=gen_specs)
+else:
+    H0 = None
+
 # Run LibEnsemble, and store results in history array H
 H, persis_info, flag = libE(sim_specs, gen_specs, exit_criteria,
-                            persis_info, alloc_specs, libE_specs)
+                            persis_info, alloc_specs, libE_specs, H0=H0)
 
 # Save results to numpy file
 if is_master:
