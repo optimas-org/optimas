@@ -17,7 +17,7 @@ nworkers=1 as one worker is for the persistent gen_f.
 # Either 'random' or 'bo' or 'aposmm'
 generator_type = 'bo'
 # Either 'local' or 'summit'
-machine = 'summit'
+machine = 'local'
 
 import numpy as np
 from simf import run_fbpic

@@ -10,14 +10,14 @@ local_specs = {
     'sim_app': 'python',
     'sim_kill_minutes': 10,
     'extra_args': '',  # extra arguments passed to mpirun/mpiexec at execution
-    'sim_max': 50 # Maximum number of simulations
+    'sim_max': 10 # Maximum number of simulations
 }
 
 
 summit_specs = {
     'name': 'summit',  # Machine name
     'sim_app': 'python',
-    'sim_kill_minutes': 100,
+    'sim_kill_minutes': 120,
     # extra arguments passed to jsrun at execution
     'extra_args': '-n 1 -a 1 -g 1 -c 1 --bind=packed:1',
     'sim_max': 36 # Maximum number of simulations
