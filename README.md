@@ -23,6 +23,7 @@ https://fbpic.github.io/install/install_local.html
 
 Then install other dependencies:
 ```
+pip install git+https://github.com/Libensemble/libensemble.git@feature/multi_fidelity
 pip install -r requirements.txt
 ```
 
@@ -40,6 +41,7 @@ https://fbpic.github.io/install/install_summit.html
 
 Then install other dependencies:
 ```
+pip install git+https://github.com/Libensemble/libensemble.git@feature/multi_fidelity
 pip install -r requirements.txt
 ```
 
@@ -49,4 +51,3 @@ git clone https://github.com/RemiLehe/fbpic_libE.git
 cd fbpic_libE/optimization_folder
 bsub submission_script
 ```
-

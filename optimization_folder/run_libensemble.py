@@ -15,7 +15,7 @@ nworkers=1 as one worker is for the persistent gen_f.
 """
 
 # Either 'random' or 'bo', 'async_bo' or 'aposmm'
-generator_type = 'bo'
+generator_type = 'async_bo'
 # Either 'local' or 'summit'
 machine = 'local'
 
@@ -32,7 +32,8 @@ if generator_type == 'random':
     from libensemble.alloc_funcs.start_only_persistent \
         import only_persistent_gens as alloc_f
 elif generator_type in ['bo', 'async_bo']:
-    from gp_alloc_and_gen import persistent_gp_gen_f as gen_f
+    from libensemble.gen_funcs.persistent_gp \
+        import persistent_gp_gen_f as gen_f
     from libensemble.alloc_funcs.start_only_persistent \
         import only_persistent_gens as alloc_f
 elif generator_type == 'aposmm':
