@@ -14,7 +14,7 @@ The number of concurrent evaluations of the objective function will be
 nworkers=1 as one worker is for the persistent gen_f.
 """
 
-# Either 'random' or 'bo', 'async_bo' or 'aposmm'
+# Either 'random' or 'bo', 'async_bo', 'async_bo_mf', or 'aposmm'
 generator_type = 'async_bo'
 # Either 'local' or 'summit'
 machine = 'local'
@@ -31,11 +31,15 @@ if generator_type == 'random':
         import persistent_uniform as gen_f
     from libensemble.alloc_funcs.start_only_persistent \
         import only_persistent_gens as alloc_f
-elif generator_type in ['bo', 'async_bo']:
-    from libensemble.gen_funcs.persistent_gp \
-        import persistent_gp_gen_f as gen_f
+elif generator_type in ['bo', 'async_bo', 'async_bo_mf']:
     from libensemble.alloc_funcs.start_only_persistent \
         import only_persistent_gens as alloc_f
+    if generator_type == 'async_bo_mf':
+        from libensemble.gen_funcs.persistent_gp \
+            import persistent_gp_mf_gen_f as gen_f
+    else:
+        from libensemble.gen_funcs.persistent_gp \
+            import persistent_gp_gen_f as gen_f
 elif generator_type == 'aposmm':
     import libensemble.gen_funcs
     libensemble.gen_funcs.rc.aposmm_optimizers = 'nlopt'

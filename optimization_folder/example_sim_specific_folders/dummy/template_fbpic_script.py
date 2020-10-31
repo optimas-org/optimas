@@ -7,7 +7,7 @@ import numpy as np
 import time
 
 # 2D function with multiple minima
-result =  -( {{x0}} + 10*np.cos({{x0}} + 0.1*{{resolution}}) )*( {{x1}} + 5*np.cos({{x1}} - 0.2*{{resolution}}) )
+result =  -( {{x0}} + 10*np.cos({{x0}}) )*( {{x1}} + 5*np.cos({{x1}}) )
 
 with open('result.txt', 'w') as f:
     f.write("%f" %result)
