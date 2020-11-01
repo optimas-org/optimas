@@ -15,7 +15,7 @@ nworkers=1 as one worker is for the persistent gen_f.
 """
 
 # Either 'random' or 'bo', 'async_bo', 'async_bo_mf', or 'aposmm'
-generator_type = 'async_bo'
+generator_type = 'async_bo_mf'
 # Either 'local' or 'summit'
 machine = 'local'
 
@@ -128,11 +128,11 @@ gen_specs = {
 
 # State the generating function, its arguments, output,
 # and necessary parameters.
-if generator_type in ['random', 'bo', 'async_bo']:
+if generator_type in ['random', 'bo', 'async_bo', 'async_bo_mf']:
     # Here, the 'user' field is for the user's (in this case,
     # the RNG) convenience.
     gen_specs['user']['gen_batch_size'] = nworkers-1
-    if generator_type == 'async_bo':
+    if generator_type in ['async_bo', 'async_bo_mf']:
         gen_specs['user']['async'] = True
 
 elif generator_type == 'aposmm':
