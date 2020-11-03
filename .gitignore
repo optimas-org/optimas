@@ -1,3 +1,6 @@
+# Python cache
+__pycache__
+
 # IDE and development directories
 .venv
 .vscode
