@@ -6,8 +6,8 @@ from libensemble.executors.executor import Executor
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
 # Import user-defined parameters
-from .sim_specific.varying_parameters import varying_parameters
-from .sim_specific.analysis_script import analyze_simulation
+from sim_specific.varying_parameters import varying_parameters
+from sim_specific.analysis_script import analyze_simulation
 
 """
 This file is part of the suite of scripts to use LibEnsemble on top of WarpX

@@ -21,7 +21,7 @@ machine = 'local'
 
 import os
 import numpy as np
-from .simf import run_fbpic
+from simf import run_fbpic
 
 # Import libEnsemble modules
 from libensemble.libE import libE
@@ -55,9 +55,9 @@ from libensemble import libE_logger
 from libensemble.executors.mpi_executor import MPIExecutor
 
 # Import user-defined parameters
-from .all_machine_specs import local_specs, summit_specs
-from .sim_specific.varying_parameters import varying_parameters
-from .sim_specific.analysis_script import analyzed_quantities
+from all_machine_specs import local_specs, summit_specs
+from sim_specific.varying_parameters import varying_parameters
+from sim_specific.analysis_script import analyzed_quantities
 
 # Import machine-specific run parameters
 if machine == 'local':
