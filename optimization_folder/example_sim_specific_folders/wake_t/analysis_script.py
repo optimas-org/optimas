@@ -13,8 +13,8 @@ import numpy as np
 
 
 def analyze_simulation( simulation_directory, libE_output ):
-    g_lens = libE_output['g_lens']
-    file_path = 'a_x_abs-{:.3f}.npy'.format(g_lens)
+    g_lens = libE_output['g_lens'][0][0]
+    file_path = 'a_x_abs-{:0.3f}.npy'.format(g_lens)
     a_x_abs = np.load(file_path)
     libE_output['f'] = a_x_abs
 
