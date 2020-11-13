@@ -64,6 +64,8 @@ from libensemble.executors.mpi_executor import MPIExecutor
 from all_machine_specs import local_specs, summit_specs
 from sim_specific.varying_parameters import varying_parameters
 from sim_specific.analysis_script import analyzed_quantities
+if is_mf:
+    from sim_specific.mf_parameters import mf_parameters
 
 # Import machine-specific run parameters
 if machine == 'local':
