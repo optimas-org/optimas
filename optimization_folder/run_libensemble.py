@@ -109,6 +109,10 @@ sim_specs = {
     }
 }
 
+if is_mf:
+    sim_specs['in'].append('z')
+    sim_specs['out'].append((mf_parameters['name'], np.unicode_, 16))
+
 # Allocator function, decides what a worker should do.
 # We use a LibEnsemble allocator.
 alloc_specs = {'alloc_f': alloc_f, 'out': [('given_back', bool)]}
@@ -142,6 +146,10 @@ if generator_type in ['random', 'bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_di
     gen_specs['user']['gen_batch_size'] = nworkers-1
     if generator_type in ['async_bo', 'async_bo_mf', 'async_bo_mf_disc']:
         gen_specs['user']['async'] = True
+
+    if is_mf:
+        gen_specs['out'].append(('z', np.unicode_, 16))
+        gen_specs['user'] = {**gen_specs['user'], **mf_parameters}
 
 elif generator_type == 'aposmm':
     gen_specs['out'] = [
