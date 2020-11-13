@@ -26,11 +26,27 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     calc_status = TASK_FAILED
 
     # Modify the input script, with the value passed in H
-    values = H['x'][0]
-    names = varying_parameters.keys()
+    values = list(H['x'][0])
+    names = list(varying_parameters.keys())
     # Note: The order of keys is well-defined here,
     # since `varying_parameters` is an OrderedDict
+    
+    # If a fidelity is present, add to list of names and values.
+    if 'z' in H.dtype.names:
+        from sim_specific.mf_parameters import mf_parameters
+        z_name = mf_parameters['name']
+        z =  H['z'][0]
+        # If fidelity is a string, add single quotes so that it is written as
+        # a Python string by jinja.
+        if isinstance(z, str):
+            z = "'{}'".format(z)
+        values.append(z)
+        names.append(z_name)
+    
+    # Merge lists into dictionary.
     values_dict = { n: v for n, v in zip(names, values) }
+
+    # Create simulation input file.
     with open('template_fbpic_script.py', 'r') as f:
         template = jinja2.Template( f.read() )
     with open('fbpic_script.py', 'w') as f:
@@ -79,8 +95,8 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
         # Prepare the array that is returned to libE
         # Automatically include the input parameters
         libE_output = np.zeros(1, dtype=sim_specs['out'])
-        for i, name in enumerate(varying_parameters.keys()):
-            libE_output[name] = H['x'][0][i]
+        for i, name in enumerate(names):
+            libE_output[name] = values[i]
 
         # Extract the objective function for the current simulation,
         # as well as a few diagnostics
