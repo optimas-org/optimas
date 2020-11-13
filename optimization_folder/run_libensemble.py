@@ -15,7 +15,7 @@ nworkers=1 as one worker is for the persistent gen_f.
 """
 
 # Either 'random' or 'bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_disc'or 'aposmm'
-generator_type = 'async_bo_mf_disc'
+generator_type = 'async_bo_mf'
 # Either 'local' or 'summit'
 machine = 'local'
 
