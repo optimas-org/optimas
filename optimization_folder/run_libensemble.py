@@ -26,6 +26,7 @@ from simf import run_fbpic
 # Import libEnsemble modules
 from libensemble.libE import libE
 from libensemble.tools import check_inputs
+is_mf = False
 if generator_type == 'random':
     from libensemble.gen_funcs.persistent_uniform_sampling \
         import persistent_uniform as gen_f
@@ -37,9 +38,11 @@ elif generator_type in ['bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_disc']:
     if generator_type == 'async_bo_mf':
         from libensemble.gen_funcs.persistent_gp \
             import persistent_gp_mf_gen_f as gen_f
+        is_mf = True
     elif generator_type == 'async_bo_mf_disc':
         from libensemble.gen_funcs.persistent_gp \
             import persistent_gp_mf_disc_gen_f as gen_f
+        is_mf = True
     else:
         from libensemble.gen_funcs.persistent_gp \
             import persistent_gp_gen_f as gen_f
