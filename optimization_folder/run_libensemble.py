@@ -61,7 +61,7 @@ from libensemble import libE_logger
 from libensemble.executors.mpi_executor import MPIExecutor
 
 # Import user-defined parameters
-from all_machine_specs import local_specs, summit_specs
+import all_machine_specs
 from sim_specific.varying_parameters import varying_parameters
 from sim_specific.analysis_script import analyzed_quantities
 if is_mf:
@@ -69,9 +69,9 @@ if is_mf:
 
 # Import machine-specific run parameters
 if machine == 'local':
-    machine_specs = local_specs
+    machine_specs = all_machine_specs.local_specs
 elif machine == 'summit':
-    machine_specs = summit_specs
+    machine_specs = all_machine_specs.summit_specs
 
 libE_logger.set_level('INFO')
 
