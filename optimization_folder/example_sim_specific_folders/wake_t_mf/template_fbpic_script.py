@@ -60,8 +60,6 @@ def run_wake_t(bunch, g_lens):
 
 
 def run_fbpic(bunch, g_lens):
-    bunch.x, bunch.y, bunch.xi, bunch.px, bunch.py, bunch.pz, bunch.q
-    w = np.abs(bunch.q / ct.e)
 
     # ----------
     # Parameters
@@ -186,6 +184,7 @@ def run_fbpic(bunch, g_lens):
         boundaries={'z':'open', 'r':'open'}, use_cuda=use_cuda, particle_shape='cubic' )
 
     # Add electron bunch
+    w = np.abs(bunch.q / ct.e)
     z = bunch.xi - np.average(bunch.xi) - L_box/2
     add_particle_bunch_from_arrays(sim, -ct.e, ct.m_e, bunch.x, bunch.y, z,
                                    bunch.px, bunch.py, bunch.pz, w,
