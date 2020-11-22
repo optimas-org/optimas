@@ -1,23 +1,11 @@
 #!/usr/bin/env python
-
 """
-This file is part of the suite of scripts to use LibEnsemble on top of WarpX
-simulations. It is the entry point script that runs LibEnsemble. Libensemble
-then launches WarpX simulations.
-
-Execute locally via the following command:
-    python run_libensemble_on_warpx.py --comms local --nworkers 3
-On summit, use the submission script:
-    bsub summit_submit_mproc.sh
-
-The number of concurrent evaluations of the objective function will be
-nworkers=1 as one worker is for the persistent gen_f.
+This file is part of the suite of scripts to use LibEnsemble on top of PIC
+simulations.
 """
 
-# Either 'random' or 'bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_disc'or 'aposmm'
-generator_type = 'async_bo_mf'
-# Either 'local' or 'summit'
-machine = 'local'
+# Either 'random' or 'bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_disc' or 'aposmm'
+generator_type = 'async_bo'
 
 import os
 import numpy as np
@@ -61,31 +49,20 @@ from libensemble import libE_logger
 from libensemble.executors.mpi_executor import MPIExecutor
 
 # Import user-defined parameters
-import all_machine_specs
 from sim_specific.varying_parameters import varying_parameters
 from sim_specific.analysis_script import analyzed_quantities
 if is_mf:
     from sim_specific.mf_parameters import mf_parameters
 
-# Import machine-specific run parameters
-if machine == 'local':
-    machine_specs = all_machine_specs.local_specs
-elif machine == 'summit':
-    machine_specs = all_machine_specs.summit_specs
-
 libE_logger.set_level('INFO')
-
 nworkers, is_master, libE_specs, _ = parse_args()
-
-# Set to full path of warp executable
-sim_app = machine_specs['sim_app']
 
 # Problem dimension. This is the number of input parameters exposed,
 # that LibEnsemble will vary in order to minimize a single output parameter.
 n = len(varying_parameters)
 
 exctr = MPIExecutor(central_mode=True, zero_resource_workers=[1])
-exctr.register_calc(full_path=sim_app, calc_type='sim')
+exctr.register_calc(full_path='python', calc_type='sim')
 
 # State the objective function, its arguments, output, and necessary parameters
 # (and their sizes). Here, the 'user' field is for the user's (in this case,
@@ -103,10 +80,6 @@ sim_specs = {
         + analyzed_quantities \
         # input parameters
         + [ (name, float, (1,)) for name in varying_parameters.keys() ],
-    'user': {
-        # machine-specific parameters
-        'machine_specs': machine_specs
-    }
 }
 
 if is_mf:
@@ -187,8 +160,7 @@ elif generator_type == 'aposmm':
 libE_specs['save_every_k_sims'] = 5
 libE_specs['sim_dir_copy_files'] = ['sim_specific/template_fbpic_script.py']
 
-sim_max = machine_specs['sim_max']  # Maximum number of simulations
-exit_criteria = {'sim_max': sim_max}  # Exit after running sim_max simulations
+exit_criteria = {'sim_max': 10}  # Exit after running sim_max simulations
 
 # Create a different random number stream for each worker and the manager
 persis_info = add_unique_random_streams({}, nworkers + 1)

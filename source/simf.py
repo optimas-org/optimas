@@ -30,7 +30,7 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     names = list(varying_parameters.keys())
     # Note: The order of keys is well-defined here,
     # since `varying_parameters` is an OrderedDict
-    
+
     # If a fidelity is present, add to list of names and values.
     if 'z' in H.dtype.names:
         from sim_specific.mf_parameters import mf_parameters
@@ -42,7 +42,7 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
             z = "'{}'".format(z)
         values.append(z)
         names.append(z_name)
-    
+
     # Merge lists into dictionary.
     values_dict = { n: v for n, v in zip(names, values) }
 
@@ -54,23 +54,14 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
 
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
-    machine_specs = sim_specs['user']['machine_specs']
-    time_limit = machine_specs['sim_kill_minutes'] * 60.
     # Launch the executor to actually run the WarpX simulation
-    if machine_specs['name'] == 'summit':
-        task = exctr.submit(calc_type='sim',
-                            extra_args=machine_specs['extra_args'],
-                            app_args='fbpic_script.py',
-                            stdout='out.txt',
-                            stderr='err.txt',
-                            wait_on_run=True)
-    else:
-        task = exctr.submit(calc_type='sim',
-                            num_procs=machine_specs['cores'],
-                            app_args='fbpic_script.py',
-                            stdout='out.txt',
-                            stderr='err.txt',
-                            wait_on_run=True)
+    extra_args = os.environ['LIBE_SIM_EXTRA_ARGS']
+    task = exctr.submit(calc_type='sim',
+                        extra_args=machine_specs['extra_args'],
+                        app_args='fbpic_script.py',
+                        stdout='out.txt',
+                        stderr='err.txt',
+                        wait_on_run=True)
 
     # Periodically check the status of the simulation
     poll_interval = 10  # secs
