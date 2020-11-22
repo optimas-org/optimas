@@ -55,13 +55,21 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
     # Launch the executor to actually run the WarpX simulation
-    extra_args = os.environ.get( 'LIBE_SIM_EXTRA_ARGS', '' )
-    task = exctr.submit(calc_type='sim',
-                        extra_args=extra_args,
-                        app_args='fbpic_script.py',
-                        stdout='out.txt',
-                        stderr='err.txt',
-                        wait_on_run=True)
+    extra_args = os.environ.get( 'LIBE_SIM_EXTRA_ARGS', None )
+    if extra_args is not None:
+        task = exctr.submit(calc_type='sim',
+                            extra_args=extra_args,
+                            app_args='fbpic_script.py',
+                            stdout='out.txt',
+                            stderr='err.txt',
+                            wait_on_run=True)
+    else:
+        task = exctr.submit(calc_type='sim',
+                            num_procs=1,
+                            app_args='fbpic_script.py',
+                            stdout='out.txt',
+                            stderr='err.txt',
+                            wait_on_run=True)
 
     # Periodically check the status of the simulation
     poll_interval = 10  # secs
