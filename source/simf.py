@@ -1,4 +1,4 @@
-import time
+import os, time
 import jinja2
 import numpy as np
 
@@ -55,9 +55,9 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
     # Launch the executor to actually run the WarpX simulation
-    extra_args = os.environ['LIBE_SIM_EXTRA_ARGS']
+    extra_args = os.environ.get( 'LIBE_SIM_EXTRA_ARGS', '' )
     task = exctr.submit(calc_type='sim',
-                        extra_args=machine_specs['extra_args'],
+                        extra_args=extra_args,
                         app_args='fbpic_script.py',
                         stdout='out.txt',
                         stderr='err.txt',
