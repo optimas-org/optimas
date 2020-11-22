@@ -5,5 +5,4 @@ from collections import OrderedDict
 varying_parameters = OrderedDict({
     'x0': [0, 15],
     'x1': [0, 15],
-    'resolution': [1, 8],
 })

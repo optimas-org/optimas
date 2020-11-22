@@ -14,7 +14,7 @@ The number of concurrent evaluations of the objective function will be
 nworkers=1 as one worker is for the persistent gen_f.
 """
 
-# Either 'random' or 'bo', 'async_bo', 'async_bo_mf', or 'aposmm'
+# Either 'random' or 'bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_disc'or 'aposmm'
 generator_type = 'async_bo_mf'
 # Either 'local' or 'summit'
 machine = 'local'
@@ -26,17 +26,23 @@ from simf import run_fbpic
 # Import libEnsemble modules
 from libensemble.libE import libE
 from libensemble.tools import check_inputs
+is_mf = False
 if generator_type == 'random':
     from libensemble.gen_funcs.persistent_uniform_sampling \
         import persistent_uniform as gen_f
     from libensemble.alloc_funcs.start_only_persistent \
         import only_persistent_gens as alloc_f
-elif generator_type in ['bo', 'async_bo', 'async_bo_mf']:
+elif generator_type in ['bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_disc']:
     from libensemble.alloc_funcs.start_only_persistent \
         import only_persistent_gens as alloc_f
     if generator_type == 'async_bo_mf':
         from libensemble.gen_funcs.persistent_gp \
             import persistent_gp_mf_gen_f as gen_f
+        is_mf = True
+    elif generator_type == 'async_bo_mf_disc':
+        from libensemble.gen_funcs.persistent_gp \
+            import persistent_gp_mf_disc_gen_f as gen_f
+        is_mf = True
     else:
         from libensemble.gen_funcs.persistent_gp \
             import persistent_gp_gen_f as gen_f
@@ -58,6 +64,8 @@ from libensemble.executors.mpi_executor import MPIExecutor
 import all_machine_specs
 from sim_specific.varying_parameters import varying_parameters
 from sim_specific.analysis_script import analyzed_quantities
+if is_mf:
+    from sim_specific.mf_parameters import mf_parameters
 
 # Import machine-specific run parameters
 if machine == 'local':
@@ -101,6 +109,13 @@ sim_specs = {
     }
 }
 
+if is_mf:
+    sim_specs['in'].append('z')
+    if mf_parameters['discrete']:
+        sim_specs['out'].append((mf_parameters['name'], np.unicode_, 16))
+    else:
+        sim_specs['out'].append((mf_parameters['name'], float))
+
 # Allocator function, decides what a worker should do.
 # We use a LibEnsemble allocator.
 alloc_specs = {'alloc_f': alloc_f, 'out': [('given_back', bool)]}
@@ -122,18 +137,25 @@ gen_specs = {
         # Lower bound for the n parameters.
         'lb': np.array([ v[0] for v in varying_parameters.values() ]),
         # Upper bound for the n parameters.
-        'ub': np.array([ v[1] for v in varying_parameters.values() ]),
+        'ub': np.array([ v[1] for v in varying_parameters.values() ])
     }
 }
 
 # State the generating function, its arguments, output,
 # and necessary parameters.
-if generator_type in ['random', 'bo', 'async_bo', 'async_bo_mf']:
+if generator_type in ['random', 'bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_disc']:
     # Here, the 'user' field is for the user's (in this case,
     # the RNG) convenience.
     gen_specs['user']['gen_batch_size'] = nworkers-1
-    if generator_type in ['async_bo', 'async_bo_mf']:
+    if generator_type in ['async_bo', 'async_bo_mf', 'async_bo_mf_disc']:
         gen_specs['user']['async'] = True
+
+    if is_mf:
+        if mf_parameters['discrete']:
+            gen_specs['out'].append(('z', np.unicode_, 16))
+        else:
+            gen_specs['out'].append(('z', float))
+        gen_specs['user'] = {**gen_specs['user'], **mf_parameters}
 
 elif generator_type == 'aposmm':
     gen_specs['out'] = [

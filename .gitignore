@@ -1,0 +1,11 @@
+# Python cache
+__pycache__
+
+# IDE and development directories
+.venv
+.vscode
+
+# LibEnsemble files and folders
+ensemble
+libE_*
+run_libensemble_*
