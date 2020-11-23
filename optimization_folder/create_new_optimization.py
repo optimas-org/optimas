@@ -57,6 +57,3 @@ In order to run the optimization:
 """.format(name=args.name, command_line=command_line)
 
 print(message)
-
-# TODO: Modify README
-# TODO: Process sim_max
