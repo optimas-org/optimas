@@ -77,8 +77,6 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     while(not task.finished):
         time.sleep(poll_interval)
         task.poll()
-        if task.runtime > time_limit:
-            task.kill()  # Timeout
 
     # Set calc_status with optional prints.
     if task.finished:
