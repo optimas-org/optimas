@@ -53,6 +53,7 @@ Created a new directory `{name}`.
 
 In order to run the optimization:
 --> cd {name}
+--> Change the optimization method and max_sim in `run_libensemble.py`
 --> {command_line}
 """.format(name=args.name, command_line=command_line)
 
