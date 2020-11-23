@@ -6,6 +6,8 @@ simulations.
 
 # Either 'random' or 'bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_disc' or 'aposmm'
 generator_type = 'async_bo'
+# Choose maximum number of simulations to be run within the optimization
+sim_max = 10
 
 import os
 import numpy as np
@@ -160,7 +162,7 @@ elif generator_type == 'aposmm':
 libE_specs['save_every_k_sims'] = 5
 libE_specs['sim_dir_copy_files'] = ['sim_specific/template_fbpic_script.py']
 
-exit_criteria = {'sim_max': 10}  # Exit after running sim_max simulations
+exit_criteria = {'sim_max': sim_max}  # Exit after running sim_max simulations
 
 # Create a different random number stream for each worker and the manager
 persis_info = add_unique_random_streams({}, nworkers + 1)

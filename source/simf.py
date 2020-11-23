@@ -51,6 +51,7 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
         template = jinja2.Template( f.read() )
     with open('fbpic_script.py', 'w') as f:
         f.write( template.render(values_dict) )
+    os.remove('template_fbpic_script.py')
 
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
