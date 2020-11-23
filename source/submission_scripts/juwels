@@ -1,7 +1,7 @@
 #!/bin/bash -x
 #SBATCH -J {name}
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node={n_nodes}
+#SBATCH --nodes={n_nodes}
+#SBATCH --ntasks-per-node=4
 #SBATCH --output=mpi-out.%j
 #SBATCH --error=mpi-err.%j
 #SBATCH --time={max_time}

@@ -27,11 +27,29 @@ https://fbpic.github.io/install/install_summit.html
 
 Then install other dependencies:
 ```
+source activate $SCRATCH/fbpic_env
+pip install git+https://github.com/Libensemble/libensemble.git@feature/multi_fidelity
+pip install -r requirements.txt
+source deactivate
+```
+
+`cd` into your `$MEMBERWORK` folder, and create a dedicated directory. Then run:
+```
+git clone https://github.com/RemiLehe/fbpic_libE.git
+```
+
+### On Lawrencium
+
+Install according to:
+https://fbpic.github.io/install/install_lawrencium.html
+
+Then install other dependencies:
+```
 pip install git+https://github.com/Libensemble/libensemble.git@feature/multi_fidelity
 pip install -r requirements.txt
 ```
 
-`cd` into your `$MEMBERWORK` folder, and create a dedicated directory. Then run:
+`cd` into your `$SCRATCH` folder, and create a dedicated directory. Then run:
 ```
 git clone https://github.com/RemiLehe/fbpic_libE.git
 ```
