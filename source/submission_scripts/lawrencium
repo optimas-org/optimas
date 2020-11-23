@@ -1,0 +1,21 @@
+#!/bin/bash
+#SBATCH -J {name}
+#SBATCH --partition es1
+#SBATCH --qos es_normal
+#SBATCH --constraint es1_v100
+#SBATCH --time {max_time}
+#SBATCH --ntasks {n_workers}
+#SBATCH --gres=gpu:2 --cpus-per-task=4
+
+module load python/3.6
+source activate $SCRATCH/fbpic_env
+
+export NUMBA_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+
+# Script to run libEnsemble using multiprocessing on launch nodes.
+# Assumes Conda environment is set up.
+
+export LIBE_SIM_EXTRA_ARGS="--gres=gpu:1"
+
+python run_libensemble.py --comms local --nworkers {n_workers}
