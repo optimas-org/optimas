@@ -1,10 +1,10 @@
 #!/bin/bash -x
-#SBATCH -J libE_test
+#SBATCH -J {name}
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=2
+#SBATCH --ntasks-per-node={n_nodes}
 #SBATCH --output=mpi-out.%j
 #SBATCH --error=mpi-err.%j
-#SBATCH --time=24:00:00
+#SBATCH --time={max_time}
 #SBATCH --partition=maxgpu,allgpu
 #SBATCH --constraint=V100|P100
 
@@ -19,4 +19,4 @@ export FBPIC_ENABLE_GPUDIRECT=0
 
 export LIBE_SIM_EXTRA_ARGS="--gres=gpu:1"
 
-python run_libensemble.py --comms local --nworkers 3
+python run_libensemble.py --comms local --nworkers {n_workers}

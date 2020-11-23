@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import os, shutil
+import os, shutil, math
 import argparse
 
 # Parse the command line
@@ -16,9 +16,8 @@ parser.add_argument('--machine', required=True,
 parser.add_argument('--n_sim_workers', required=True,
     type=int,
     help='Number of workers that can simultaneously launch simulations')
-parser.add_argument('--sim_max', required=True,
-    type=int,
-    help='Maximum number of simulations to perform')
+parser.add_argument('--max_time', default='02:00',
+    help='Maximum wall time for the optimization')
 args = parser.parse_args()
 
 # TODO: Check / Ask user to provide missing values
@@ -31,10 +30,24 @@ shutil.copytree(
     os.path.join('../source/example_sim_specific_folders', args.from_example),
     os.path.join(args.name, 'sim_specific') )
 
-# TODO: Print instructions for users
+# Copy relevant submission script
+if args.machine != 'local':
+    with open(os.path.join('../source/submission_scripts/', args.machine)) as f:
+        code = f.read()
+    gpu_per_nodes = { 'juwels':4, 'summit':6 }
+    n_nodes = int(math.ceil(args.n_sim_workers*1./gpu_per_nodes[args.machine]))
+    code = code.format(name=args.name, n_nodes=n_nodes,
+                       n_workers=args.n_sim_workers+1, max_time=args.max_time)
+    with open( os.path.join(args.name, 'submission_script'), 'w' ) as f:
+        f.write(code)
+
+# Print instructions for users
 if args.machine=='local':
     command_line = "python run_libensemble.py --comms local --nworkers " + \
         str(args.n_sim_workers + 1)
+else:
+    submission_command = {'juwels': 'sbatch', 'summit': 'bsub'}
+    command_line = submission_command[args.machine] + " submission_script"
 message = """
 Created a new directory `{name}`.
 
