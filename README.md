@@ -2,19 +2,7 @@
 
 The scripts in this repository allow to optimize FBPIC simulation.
 
-## Contents of the repository
-
-`optimization_folder/sim_specific`: Contains the scripts necessary to run the simulation with varying parameters. In particular, it has to contain the following 3 files:
-
-- `template_fbpic_script.py`: an FBPIC script, templated with `jinja2` syntax.
-- `varying_parameters.py`: list of varying parameters, along with their bounds. These variables should match the templated variables in `template_fbpic_script.py`.
-- `analysis_script.py`: analyzes the result of the simulation and extract the objective function `f`.
-
-This folder can be swapped out for other examples in `optimization_folder/example_sim_specific_folders`
-
-`optimization_folder/run_libensemble.py`: this is the main file that controls the optimization.
-
-## Installing and running
+## Installing
 
 ### On a local computer
 
@@ -30,8 +18,6 @@ pip install -r requirements.txt
 Then
 ```
 git clone https://github.com/RemiLehe/fbpic_libE.git
-cd fbpic_libE/optimization_folder
-python run_libensemble.py --comms local --nworkers 3
 ```
 
 ### On Summit
@@ -48,6 +34,18 @@ pip install -r requirements.txt
 `cd` into your `$MEMBERWORK` folder, and create a dedicated directory. Then run:
 ```
 git clone https://github.com/RemiLehe/fbpic_libE.git
-cd fbpic_libE/optimization_folder
-bsub submission_script
 ```
+
+## Usage
+
+`cd` into the folder `optimization_folder`, and run the script
+`create_new_optimization.py`. (In order to see the usage of this script,
+type `./create_new_optimization.py -h`.) Then follow the printed instructions.
+
+Note that the script will create a new folder, with a number of files,
+which you can modify before submitting/launching the optimization job:
+
+- `template_fbpic_script.py`: an FBPIC script, templated with `jinja2` syntax.
+- `varying_parameters.py`: list of varying parameters, along with their bounds. These variables should match the templated variables in `template_fbpic_script.py`.
+- `mf_parameters.py` (optional): defines fidelity parameters for multi-fidelity optimization.
+- `analysis_script.py`: analyzes the result of the simulation and extract the objective function `f`.
