@@ -63,7 +63,7 @@ nworkers, is_master, libE_specs, _ = parse_args()
 # that LibEnsemble will vary in order to minimize a single output parameter.
 n = len(varying_parameters)
 
-exctr = MPIExecutor(central_mode=True, zero_resource_workers=[1])
+exctr = MPIExecutor(central_mode=False, zero_resource_workers=[1])
 exctr.register_calc(full_path='python', calc_type='sim')
 
 # State the objective function, its arguments, output, and necessary parameters
