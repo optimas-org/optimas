@@ -34,7 +34,7 @@ shutil.copytree(
 if args.machine != 'local':
     with open(os.path.join('../source/submission_scripts/', args.machine)) as f:
         code = f.read()
-    gpu_per_nodes = { 'juwels':4, 'summit':6, 'lawrencium':6 }
+    gpu_per_nodes = { 'juwels':4, 'summit':6, 'lawrencium':2, 'lawrencium_1080ti':4 }
     n_nodes = int(math.ceil(args.n_sim_workers*1./gpu_per_nodes[args.machine]))
     code = code.format(name=args.name, n_nodes=n_nodes,
                        n_workers=args.n_sim_workers+1, max_time=args.max_time)
@@ -48,6 +48,7 @@ if args.machine=='local':
 else:
     submission_command = {'juwels': 'sbatch',
                           'lawrencium': 'sbatch',
+                          'lawrencium_1080ti': 'sbatch',
                           'summit': 'bsub' }
     command_line = submission_command[args.machine] + " submission_script"
 message = """
