@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import os, shutil, math
+import os, shutil, math, re
 import argparse
 
 # Parse the command line
@@ -16,11 +16,16 @@ parser.add_argument('--machine', required=True,
 parser.add_argument('--n_sim_workers', required=True,
     type=int,
     help='Number of workers that can simultaneously launch simulations')
-parser.add_argument('--max_time', default='02:00',
-    help='Maximum wall time for the optimization')
+parser.add_argument('--max_time', default='02:00:00',
+    help='Maximum wall time for the optimization (format: hh:mm:ss)')
 args = parser.parse_args()
 
 # TODO: Check / Ask user to provide missing values
+if re.match('\d\d:\d\d:\d\d', args.max_time) is None:
+    raise ValueError('max_time needs to be in the format hh:mm:ss')
+if args.machine == 'summit':
+    # For Summit: the number of seconds need to be removed
+    args.max_time = args.max_time[:-3]
 
 # Create corresponding folder, copied from existing example
 os.mkdir(args.name)
