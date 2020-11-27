@@ -101,7 +101,7 @@ gen_specs = {
     # Generator function. Will randomly generate new sim inputs 'x'.
     'gen_f': gen_f,
     # Generator input. This is a RNG, no need for inputs.
-    'in': [],
+    'in': ['sim_id', 'x', 'f'],
     'out': [
         # parameters to input into the simulation.
         ('x', float, (n,))
@@ -115,6 +115,8 @@ gen_specs = {
         'ub': np.array([ v[1] for v in varying_parameters.values() ])
     }
 }
+if is_mf:
+    gen_specs['in'].append('z')
 
 # State the generating function, its arguments, output,
 # and necessary parameters.
@@ -170,6 +172,7 @@ persis_info = add_unique_random_streams({}, nworkers + 1)
 # Before starting libensemble, check whether there is past history file
 if os.path.exists('past_history.npy'):
     H0 = np.load('past_history.npy')
+    H0 = H0[ H0['returned']==True ] # Only include runs that completed
     check_inputs( H0=H0, sim_specs=sim_specs,
                   alloc_specs=alloc_specs, gen_specs=gen_specs)
 else:
