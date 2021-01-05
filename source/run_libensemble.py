@@ -163,6 +163,8 @@ elif generator_type == 'aposmm':
 # Save H to file every N simulation evaluations
 libE_specs['save_every_k_sims'] = 5
 libE_specs['sim_dir_copy_files'] = ['sim_specific/template_fbpic_script.py']
+# Force libEnsemble to create a directory for each simulation
+libE_specs['sim_dirs_make'] = True
 
 exit_criteria = {'sim_max': sim_max}  # Exit after running sim_max simulations
 
