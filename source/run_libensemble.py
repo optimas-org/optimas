@@ -104,6 +104,7 @@ sim_specs = {
         + [ (name, float, (1,)) for name in varying_parameters.keys() ],
 }
 
+# If multifidelity is used, add fidelity to sim_specs 'in' and 'out'.
 if is_mf:
     sim_specs['in'].append('z')
     fidel_type, fidel_len = determine_fidelity_type_and_length(mf_parameters)
@@ -145,6 +146,8 @@ if generator_type in ['random', 'bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_di
     if generator_type in ['async_bo', 'async_bo_mf', 'async_bo_mf_disc']:
         gen_specs['user']['async'] = True
 
+    # If multifidelity is used, add fidelity to 'out' and multifidelity
+    # parameters to 'user'.
     if is_mf:
         fidel_type, fidel_len = determine_fidelity_type_and_length(mf_parameters)
         gen_specs['out'].append(('z', fidel_type, fidel_len))
