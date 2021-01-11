@@ -6,7 +6,6 @@ from libensemble.tools import check_inputs
 from libensemble import libE_logger
 from libensemble.executors.mpi_executor import MPIExecutor
 from libensemble.tools import save_libE_output, add_unique_random_streams
-from numpy import lib
 
 from libe_opt.utils import (
     create_alloc_specs, create_gen_specs, create_libe_specs, create_sim_specs)
