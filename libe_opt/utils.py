@@ -133,3 +133,12 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None):
         # Absolute tolerance of output 'f'. Determines when
         # local optimization stops.
         gen_specs['user']['ftol_abs'] =  3e-8
+
+
+def create_libe_specs(sim_template, libE_specs={}):
+    # Save H to file every N simulation evaluations
+    libE_specs['save_every_k_sims'] = 5
+    libE_specs['sim_dir_copy_files'] = [sim_template]
+    # Force libEnsemble to create a directory for each simulation
+    libE_specs['sim_dirs_make'] = True
+    return libE_specs
