@@ -24,7 +24,7 @@ def determine_fidelity_type_and_length(mf_parameters):
     return fidel_type, fidel_len
 
 
-def create_sim_specs(analyzed_params, var_params, analysis_func, mf_params=None):
+def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template, mf_params=None):
     # State the objective function, its arguments, output, and necessary parameters
     # (and their sizes). Here, the 'user' field is for the user's (in this case,
     # the simulation) convenience. Feel free to use it to pass number of nodes,
@@ -43,7 +43,8 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, mf_params=None)
             + [(name, float, (1,)) for name in var_params.keys()],
         'user': {
             'var_params': list(var_params.keys()),
-            'analysis_func': analysis_func
+            'analysis_func': analysis_func,
+            'sim_template': sim_template
         }
     }
 

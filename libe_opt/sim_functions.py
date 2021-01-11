@@ -36,11 +36,12 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
     values_dict = { n: v for n, v in zip(names, values) }
 
     # Create simulation input file.
-    with open('template_fbpic_script.py', 'r') as f:
+    sim_template = sim_specs['user']['sim_template']
+    with open(sim_template, 'r') as f:
         template = jinja2.Template( f.read() )
-    with open('fbpic_script.py', 'w') as f:
+    with open('simulation_script.py', 'w') as f:
         f.write( template.render(values_dict) )
-    os.remove('template_fbpic_script.py')
+    os.remove(sim_template)
 
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
@@ -49,14 +50,14 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
     if extra_args is not None:
         task = exctr.submit(calc_type='sim',
                             extra_args=extra_args,
-                            app_args='fbpic_script.py',
+                            app_args='simulation_script.py',
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_run=True)
     else:
         task = exctr.submit(calc_type='sim',
                             num_procs=1,
-                            app_args='fbpic_script.py',
+                            app_args='simulation_script.py',
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_run=True)

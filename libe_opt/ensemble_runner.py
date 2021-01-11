@@ -24,7 +24,7 @@ def run_ensemble(
 
     # Create specs.
     sim_specs = create_sim_specs(
-        analyzed_params, var_params, analysis_func, mf_params)
+        analyzed_params, var_params, analysis_func, sim_template, mf_params)
     alloc_specs = create_alloc_specs(gen_type)
     gen_specs = create_gen_specs(
         gen_type, nworkers, var_params, run_async, mf_params)
