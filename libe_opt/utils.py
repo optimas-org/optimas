@@ -23,7 +23,7 @@ def determine_fidelity_type_and_length(mf_parameters):
     return fidel_type, fidel_len
 
 
-def create_sim_specs(sim_f, analyzed_params, var_params, mf_params=None):
+def create_sim_specs(sim_f, analyzed_params, var_params, analysis_func, mf_params=None):
     # State the objective function, its arguments, output, and necessary parameters
     # (and their sizes). Here, the 'user' field is for the user's (in this case,
     # the simulation) convenience. Feel free to use it to pass number of nodes,
@@ -40,6 +40,10 @@ def create_sim_specs(sim_f, analyzed_params, var_params, mf_params=None):
             + analyzed_params \
             # input parameters
             + [(name, float, (1,)) for name in var_params.keys()],
+        'user': {
+            'var_params': list(var_params.keys()),
+            'analysis_func': analysis_func
+        }
     }
 
     # If multifidelity is used, add fidelity to sim_specs 'in' and 'out'.
@@ -47,6 +51,7 @@ def create_sim_specs(sim_f, analyzed_params, var_params, mf_params=None):
         sim_specs['in'].append('z')
         fidel_type, fidel_len = determine_fidelity_type_and_length(mf_params)
         sim_specs['out'].append((mf_params['name'], fidel_type, fidel_len))
+        sim_specs['user']['z_name'] = mf_params['name']
 
 
 def create_alloc_specs(gen_type):
