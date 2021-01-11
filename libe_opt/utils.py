@@ -97,7 +97,7 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
 
     # State the generating function, its arguments, output,
     # and necessary parameters.
-    if gen_type in ['random', 'bo', 'async_bo', 'async_bo_mf', 'async_bo_mf_disc']:
+    if gen_type in ['random', 'bo', 'bo_mf', 'bo_mf_disc']:
         # Here, the 'user' field is for the user's (in this case,
         # the RNG) convenience.
         gen_specs['user']['gen_batch_size'] = nworkers-1
