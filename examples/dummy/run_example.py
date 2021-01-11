@@ -1,8 +1,8 @@
 from libensemble.tools import parse_args
 from libe_opt.ensemble_runner import run_ensemble
 
-from .varying_parameters import varying_parameters
-from .analysis_script import analyze_simulation, analyzed_quantities
+from varying_parameters import varying_parameters
+from analysis_script import analyze_simulation, analyzed_quantities
 
 
 gen_type = 'async_bo'
