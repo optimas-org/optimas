@@ -2,6 +2,7 @@ import numpy as np
 
 from libe_opt.gen_functions import get_generator_function
 from libe_opt.alloc_functions import get_alloc_function_from_gen_type
+from libe_opt.sim_functions import run_simulation
 
 
 def determine_fidelity_type_and_length(mf_parameters):
@@ -23,7 +24,7 @@ def determine_fidelity_type_and_length(mf_parameters):
     return fidel_type, fidel_len
 
 
-def create_sim_specs(sim_f, analyzed_params, var_params, analysis_func, mf_params=None):
+def create_sim_specs(analyzed_params, var_params, analysis_func, mf_params=None):
     # State the objective function, its arguments, output, and necessary parameters
     # (and their sizes). Here, the 'user' field is for the user's (in this case,
     # the simulation) convenience. Feel free to use it to pass number of nodes,
@@ -31,7 +32,7 @@ def create_sim_specs(sim_f, analyzed_params, var_params, analysis_func, mf_param
     sim_specs = {
         # Function whose output is being minimized. The parallel WarpX run is
         # launched from run_WarpX.
-        'sim_f': sim_f,
+        'sim_f': run_simulation,
         # Name of input for sim_f, that LibEnsemble is allowed to modify.
         # May be a 1D array.
         'in': ['x'],
