@@ -2,6 +2,8 @@ from libensemble.gen_funcs.persistent_uniform_sampling import (
     persistent_uniform)
 from libensemble.gen_funcs.persistent_gp import (
     persistent_gp_gen_f, persistent_gp_mf_gen_f, persistent_gp_mf_disc_gen_f)
+import libensemble.gen_funcs as libe_genf
+libe_genf.rc.aposmm_optimizers = 'nlopt'
 from libensemble.gen_funcs.persistent_aposmm import aposmm
 
 
