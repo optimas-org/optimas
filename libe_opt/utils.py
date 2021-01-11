@@ -1,7 +1,7 @@
 import numpy as np
 
 from libe_opt.gen_functions import get_generator_function
-from libe_opt.alloc_functions import get_alloc_function
+from libe_opt.alloc_functions import get_alloc_function_from_gen_type
 
 
 def determine_fidelity_type_and_length(mf_parameters):
@@ -49,11 +49,11 @@ def create_sim_specs(sim_f, analyzed_params, var_params, mf_params=None):
         sim_specs['out'].append((mf_params['name'], fidel_type, fidel_len))
 
 
-def create_alloc_specs(alloc_type):
+def create_alloc_specs(gen_type):
     # Allocator function, decides what a worker should do.
     # We use a LibEnsemble allocator.
     alloc_specs = {
-        'alloc_f': get_alloc_function(alloc_type),
+        'alloc_f': get_alloc_function_from_gen_type(gen_type),
         'out': [('given_back', bool)]
         }
 
