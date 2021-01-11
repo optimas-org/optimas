@@ -14,7 +14,7 @@ from libe_opt.utils import (
 def run_ensemble(
         nworkers, sim_max, is_master, gen_type, analyzed_params,
         var_params, analysis_func, sim_template, mf_params=None,
-        past_history=None, libE_specs={}):
+        past_history=None, libE_specs={}, run_async=False):
     # MPI executor
     exctr = MPIExecutor(central_mode=False, zero_resource_workers=[1])
     exctr.register_calc(full_path='python', calc_type='sim')
@@ -26,7 +26,8 @@ def run_ensemble(
     sim_specs = create_sim_specs(
         analyzed_params, var_params, analysis_func, mf_params)
     alloc_specs = create_alloc_specs(gen_type)
-    gen_specs = create_gen_specs(gen_type, nworkers, var_params, mf_params)
+    gen_specs = create_gen_specs(
+        gen_type, nworkers, var_params, run_async, mf_params)
     libE_specs = create_libe_specs(sim_template, libE_specs)
     
     # Exit criteria

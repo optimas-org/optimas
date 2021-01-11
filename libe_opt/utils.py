@@ -64,7 +64,7 @@ def create_alloc_specs(gen_type):
         }
 
 
-def create_gen_specs(gen_type, nworkers, var_params, mf_params=None):
+def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=None):
     # Problem dimension. This is the number of input parameters exposed,
     # that LibEnsemble will vary in order to minimize a single output parameter.
     n = len(var_params)
@@ -98,8 +98,7 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None):
         # Here, the 'user' field is for the user's (in this case,
         # the RNG) convenience.
         gen_specs['user']['gen_batch_size'] = nworkers-1
-        if gen_type in ['async_bo', 'async_bo_mf', 'async_bo_mf_disc']:
-            gen_specs['user']['async'] = True
+        gen_specs['user']['async'] = run_async
 
         # If multifidelity is used, add fidelity to 'out' and multifidelity
         # parameters to 'user'.
