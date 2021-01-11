@@ -53,6 +53,7 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, mf_params=None)
         fidel_type, fidel_len = determine_fidelity_type_and_length(mf_params)
         sim_specs['out'].append((mf_params['name'], fidel_type, fidel_len))
         sim_specs['user']['z_name'] = mf_params['name']
+    return sim_specs
 
 
 def create_alloc_specs(gen_type):
@@ -62,6 +63,7 @@ def create_alloc_specs(gen_type):
         'alloc_f': get_alloc_function_from_gen_type(gen_type),
         'out': [('given_back', bool)]
         }
+    return alloc_specs
 
 
 def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=None):
@@ -132,6 +134,7 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
         # Absolute tolerance of output 'f'. Determines when
         # local optimization stops.
         gen_specs['user']['ftol_abs'] =  3e-8
+    return gen_specs
 
 
 def create_libe_specs(sim_template, libE_specs={}):
