@@ -13,7 +13,7 @@ from libe_opt.utils import (
 
 def run_ensemble(
         nworkers, sim_max, is_master, gen_type, analyzed_params,
-        var_params, analysis_func, mf_params=None, files_to_copy=[],
+        var_params, analysis_func, sim_template=[], mf_params=None,
         past_history=None, libE_specs={}):
     # MPI executor
     exctr = MPIExecutor(central_mode=False, zero_resource_workers=[1])
