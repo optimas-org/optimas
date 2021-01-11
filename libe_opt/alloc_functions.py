@@ -8,6 +8,13 @@ alloc_functions = {
 }
 
 
+def get_alloc_function_from_gen_type(gen_type):
+    if gen_type == 'aposmm':
+        return get_alloc_function('persistent_aposmm')
+    else:
+        return get_alloc_function('only_persistent')
+
+
 def get_alloc_function(alloc_type):
     if alloc_type in alloc_functions:
         return alloc_functions[alloc_type]
