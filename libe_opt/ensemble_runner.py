@@ -13,7 +13,7 @@ from libe_opt.utils import (
 
 def run_ensemble(
         nworkers, sim_max, is_master, gen_type, analyzed_params,
-        var_params, analysis_func, sim_template=[], mf_params=None,
+        var_params, analysis_func, sim_template, mf_params=None,
         past_history=None, libE_specs={}):
     # MPI executor
     exctr = MPIExecutor(central_mode=False, zero_resource_workers=[1])
@@ -27,7 +27,7 @@ def run_ensemble(
         analyzed_params, var_params, analysis_func, mf_params)
     alloc_specs = create_alloc_specs(gen_type)
     gen_specs = create_gen_specs(gen_type, nworkers, var_params, mf_params)
-    libE_specs = create_libe_specs(files_to_copy, libE_specs)
+    libE_specs = create_libe_specs(sim_template, libE_specs)
     
     # Exit criteria
     exit_criteria = {'sim_max': sim_max}  # Exit after running sim_max simulations
