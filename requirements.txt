@@ -1,6 +1,4 @@
 # For simulation/analysis
-fbpic
-openpmd_viewer
 libensemble
 jinja2
 dragonfly-opt
