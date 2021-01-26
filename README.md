@@ -67,3 +67,5 @@ which you can modify before submitting/launching the optimization job:
 - `varying_parameters.py`: list of varying parameters, along with their bounds. These variables should match the templated variables in `template_fbpic_script.py`.
 - `mf_parameters.py` (optional): defines fidelity parameters for multi-fidelity optimization.
 - `analysis_script.py`: analyzes the result of the simulation and extract the objective function `f`.
+
+You can also resume a previous `libE` optimization (of the exact same problem), by copying the `.npy` file that was produced by `libE` into the new folder, and renaming it as `past_history.npy`.
