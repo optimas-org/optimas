@@ -30,7 +30,9 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
         if isinstance(z, str):
             z = "'{}'".format(z)
         values.append(z)
-        names.append(z_name)
+        # Add fidelity name to names list only once.
+        if z_name not in names:
+            names.append(z_name)
 
     # Merge lists into dictionary.
     values_dict = { n: v for n, v in zip(names, values) }
