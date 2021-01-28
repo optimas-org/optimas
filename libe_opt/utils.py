@@ -72,6 +72,12 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
     # that LibEnsemble will vary in order to minimize a single output parameter.
     n = len(var_params)
 
+    # Detect if multifidelity is used and add suffix to generator type
+    if mf_params is not None:
+        gen_type = gen_type + '_mf'
+        if mf_params['discrete']:
+            gen_type = gen_type + '_disc'
+
     # Here, the 'user' field is for the user's (in this case,
     # the RNG) convenience.
     gen_specs = {
