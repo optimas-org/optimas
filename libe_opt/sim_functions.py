@@ -5,20 +5,10 @@ import numpy as np
 from libensemble.executors.executor import Executor
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
-# Import user-defined parameters
-from sim_specific.varying_parameters import varying_parameters
-from sim_specific.analysis_script import analyze_simulation
 
-"""
-This file is part of the suite of scripts to use LibEnsemble on top of WarpX
-simulations. It defines a sim_f function that takes LibEnsemble history and
-input parameters, run a WarpX simulation and returns 'f'.
-"""
-
-
-def run_fbpic(H, persis_info, sim_specs, libE_info):
+def run_simulation(H, persis_info, sim_specs, libE_info):
     """
-    This function runs a WarpX simulation and returns quantity 'f' as well as
+    This function runs a simulation and returns quantity 'f' as well as
     other physical quantities measured in the run for convenience. Status check
     is done periodically on the simulation, provided by LibEnsemble.
     """
@@ -27,31 +17,33 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
 
     # Modify the input script, with the value passed in H
     values = list(H['x'][0])
-    names = list(varying_parameters.keys())
+    names = sim_specs['user']['var_params']
     # Note: The order of keys is well-defined here,
     # since `varying_parameters` is an OrderedDict
 
     # If a fidelity is present, add to list of names and values.
     if 'z' in H.dtype.names:
-        from sim_specific.mf_parameters import mf_parameters
-        z_name = mf_parameters['name']
+        z_name = sim_specs['user']['z_name']
         z =  H['z'][0]
         # If fidelity is a string, add single quotes so that it is written as
         # a Python string by jinja.
         if isinstance(z, str):
             z = "'{}'".format(z)
         values.append(z)
-        names.append(z_name)
+        # Add fidelity name to names list only once.
+        if z_name not in names:
+            names.append(z_name)
 
     # Merge lists into dictionary.
     values_dict = { n: v for n, v in zip(names, values) }
 
     # Create simulation input file.
-    with open('template_fbpic_script.py', 'r') as f:
+    sim_template = sim_specs['user']['sim_template']
+    with open(sim_template, 'r') as f:
         template = jinja2.Template( f.read() )
-    with open('fbpic_script.py', 'w') as f:
+    with open('simulation_script.py', 'w') as f:
         f.write( template.render(values_dict) )
-    os.remove('template_fbpic_script.py')
+    os.remove(sim_template)
 
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
@@ -60,14 +52,14 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
     if extra_args is not None:
         task = exctr.submit(calc_type='sim',
                             extra_args=extra_args,
-                            app_args='fbpic_script.py',
+                            app_args='simulation_script.py',
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_run=True)
     else:
         task = exctr.submit(calc_type='sim',
                             num_procs=1,
-                            app_args='fbpic_script.py',
+                            app_args='simulation_script.py',
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_run=True)
@@ -98,6 +90,6 @@ def run_fbpic(H, persis_info, sim_specs, libE_info):
 
         # Extract the objective function for the current simulation,
         # as well as a few diagnostics
-        analyze_simulation( task.workdir, libE_output )
+        sim_specs['user']['analysis_func'](task.workdir, libE_output)
 
     return libE_output, persis_info, calc_status

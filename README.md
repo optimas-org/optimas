@@ -18,6 +18,8 @@ pip install -r requirements.txt
 Then
 ```
 git clone https://github.com/RemiLehe/fbpic_libE.git
+cd fbpic_libE
+pip install .
 ```
 
 ### On Summit
@@ -36,6 +38,8 @@ source deactivate
 `cd` into your `$MEMBERWORK` folder, and create a dedicated directory. Then run:
 ```
 git clone https://github.com/RemiLehe/fbpic_libE.git
+cd fbpic_libE
+pip install .
 ```
 
 ### On Lawrencium
@@ -52,6 +56,8 @@ pip install -r requirements.txt
 `cd` into your `$SCRATCH` folder, and create a dedicated directory. Then run:
 ```
 git clone https://github.com/RemiLehe/fbpic_libE.git
+cd fbpic_libE
+pip install .
 ```
 
 ## Usage
@@ -63,8 +69,8 @@ type `./create_new_optimization.py -h`.) Then follow the printed instructions.
 Note that the script will create a new folder, with a number of files,
 which you can modify before submitting/launching the optimization job:
 
-- `template_fbpic_script.py`: an FBPIC script, templated with `jinja2` syntax.
-- `varying_parameters.py`: list of varying parameters, along with their bounds. These variables should match the templated variables in `template_fbpic_script.py`.
+- `template_simulation_script.py`: an simulation script, templated with `jinja2` syntax.
+- `varying_parameters.py`: list of varying parameters, along with their bounds. These variables should match the templated variables in `template_simulation_script.py`.
 - `mf_parameters.py` (optional): defines fidelity parameters for multi-fidelity optimization.
 - `analysis_script.py`: analyzes the result of the simulation and extract the objective function `f`.
 
