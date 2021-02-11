@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 Then
 ```
-git clone https://github.com/RemiLehe/fbpic_libE.git
+git clone https://github.com/RemiLehe/libE_opt.git
 cd fbpic_libE
 pip install .
 ```
@@ -37,7 +37,7 @@ source deactivate
 
 `cd` into your `$MEMBERWORK` folder, and create a dedicated directory. Then run:
 ```
-git clone https://github.com/RemiLehe/fbpic_libE.git
+git clone https://github.com/RemiLehe/libE_opt.git
 cd fbpic_libE
 pip install .
 ```
@@ -55,7 +55,7 @@ pip install -r requirements.txt
 
 `cd` into your `$SCRATCH` folder, and create a dedicated directory. Then run:
 ```
-git clone https://github.com/RemiLehe/fbpic_libE.git
+git clone https://github.com/RemiLehe/libE_opt.git
 cd fbpic_libE
 pip install .
 ```
