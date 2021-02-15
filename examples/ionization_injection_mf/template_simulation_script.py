@@ -33,11 +33,10 @@ spot_scale = 1.
 t_scale = 1.
 
 
-
-# Whether to use the GPU
 dens_z = np.linspace(0, 8e-3, 1000)
-dens_h2 = 5e23*np.exp(-((dens_z-2.9e-3)/1.e-3)**2) + 6e23 * np.exp(-((dens_z-5.3e-3)/1.7e-3)**4)
-dens_n2 = 0.5e23*np.exp(-((dens_z-2.5e-3)/0.5e-3)**2 )
+dens_h2 = plasma_scale*( 5e23*np.exp(-((dens_z-2.9e-3)/1.e-3)**2) + \
+            6e23 * np.exp(-((dens_z-5.3e-3)/1.7e-3)**4) )
+dens_n2 = plasma_scale*( 0.5e23*np.exp(-((dens_z-2.5e-3)/0.5e-3)**2 ) )
 
 dens_h2 = dens_h2-(mult-1)*dens_n2
 dens_n2 = dens_n2*mult
