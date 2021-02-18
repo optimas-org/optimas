@@ -6,7 +6,7 @@ from analysis_script import analyze_simulation, analyzed_quantities
 from mf_parameters import mf_parameters
 
 
-gen_type = 'bo'
+gen_type = 'bo_mf'
 sim_max = 10
 sim_template = './template_simulation_script.py'
 run_async = True
