@@ -75,3 +75,9 @@ which you can modify before submitting/launching the optimization job:
 - `analysis_script.py`: analyzes the result of the simulation and extract the objective function `f`.
 
 You can also resume a previous `libE` optimization (of the exact same problem), by copying the `.npy` file that was produced by `libE` into the new folder, and renaming it as `past_history.npy`.
+
+You can easily postprocess the optimization in a Jupyter notebook by using:
+```
+from libe_opt.post_processing import PostProcOptimization
+pp = PostProcOptimization('path/to/your/optimization')
+```
