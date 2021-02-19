@@ -25,9 +25,9 @@ setup(name='libE_opt',
       packages=find_packages('.'),
       install_requires=read_requirements(),
       platforms='any',
-      classifiers=(
+      classifiers=[
           "Development Status :: 3 - Alpha",
           "Programming Language :: Python :: 3",
           "Intended Audience :: Science/Research",
-          "Operating System :: OS Independent"),
+          "Operating System :: OS Independent"],
       )
