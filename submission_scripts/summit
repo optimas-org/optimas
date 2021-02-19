@@ -24,4 +24,4 @@ export FBPIC_DISABLE_CACHING=1
 
 export LIBE_SIM_EXTRA_ARGS="-n 1 -a 1 -g 1 -c 1 --bind=packed:1"
 
-python run_libensemble.py --comms local --nworkers {n_workers}
+python run_example.py --comms local --nworkers {n_workers}
