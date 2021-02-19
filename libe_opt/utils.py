@@ -87,7 +87,8 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
         'in': ['sim_id', 'x', 'f'],
         'out': [
             # parameters to input into the simulation.
-            ('x', float, (n,))
+            ('x', float, (n,)),
+            ('resource_sets', int)
         ],
         'user': {
             # Total max number of sims running concurrently.
