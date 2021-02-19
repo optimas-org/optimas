@@ -42,40 +42,40 @@ class PostProcOptimization(object):
         """
         return self.df
 
-    def plot_optimization(self, resolution_parameter=None, **kwargs):
+    def plot_optimization(self, fidelity_parameter=None, **kwargs):
         """
         Plot the values that where reached during the optimization
 
         Parameters:
         -----------
-        resolution_parameter: string or None
-            Name of the resolution parameter
-            If given, the different resolution will
+        fidelity_parameter: string or None
+            Name of the fidelity parameter
+            If given, the different fidelity will
             be plotted in different colors
 
         kwargs: optional arguments to pass to `plt.scatter`
         """
-        if resolution_parameter is not None:
-            resolution = self.df[resolution_parameter]
+        if fidelity_parameter is not None:
+            fidelity = self.df[fidelity_parameter]
         else:
-            resolution = None
-        plt.scatter( self.df.given_time, self.df.f, c=resolution )
+            fidelity = None
+        plt.scatter( self.df.given_time, self.df.f, c=fidelity )
 
-    def get_trace(self, resolution_parameter=None,
-                   min_resolution=None, t_array=None,
+    def get_trace(self, fidelity_parameter=None,
+                   min_fidelity=None, t_array=None,
                    plot=False, **kw):
         """
         Plot the minimum so far, as a function of time during the optimization
 
         Parameters:
         -----------
-        resolution_parameter: string
-            Name of the resolution parameter. If `resolution_parameter`
-            and `min_resolution` are set, only the runs with resolution
-            above `min_resolution` are considered.
+        fidelity_parameter: string
+            Name of the fidelity parameter. If `fidelity_parameter`
+            and `min_fidelity` are set, only the runs with fidelity
+            above `min_fidelity` are considered.
 
-        resolution_min: float
-            Minimum resolution above which points are considered
+        fidelity_min: float
+            Minimum fidelity above which points are considered
 
         t_array: 1D numpy array
             If provided, th
@@ -89,9 +89,9 @@ class PostProcOptimization(object):
         --------
         time, max
         """
-        if resolution_parameter is not None:
-            assert min_resolution is not None
-            df = self.df[self.df[resolution_parameter]>min_resolution]
+        if fidelity_parameter is not None:
+            assert min_fidelity is not None
+            df = self.df[self.df[fidelity_parameter]>=min_fidelity]
         else:
             df = self.df.copy()
 
