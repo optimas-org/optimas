@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 from libe_opt.gen_functions import get_generator_function
 from libe_opt.alloc_functions import get_alloc_function_from_gen_type
@@ -44,7 +45,8 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template, m
         'user': {
             'var_params': list(var_params.keys()),
             'analysis_func': analysis_func,
-            'sim_template': sim_template
+            # keeps only the file name of the simulation template
+            'sim_template': os.path.basename(sim_template)
         }
     }
 
