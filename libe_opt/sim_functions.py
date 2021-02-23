@@ -90,14 +90,14 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
             print("Warning: Task {} in unknown state {}. Error code {}"
                   .format(task.name, task.state, task.errcode))
 
+    # Prepare the array that is returned to libE
+    # Automatically include the input parameters
+    libE_output = np.zeros(1, dtype=sim_specs['out'])
+    for i, name in enumerate(names):
+        libE_output[name] = values[i]
+
     # Data analysis from the last simulation
     if calc_status == WORKER_DONE:
-        # Prepare the array that is returned to libE
-        # Automatically include the input parameters
-        libE_output = np.zeros(1, dtype=sim_specs['out'])
-        for i, name in enumerate(names):
-            libE_output[name] = values[i]
-
         # Extract the objective function for the current simulation,
         # as well as a few diagnostics
         sim_specs['user']['analysis_func'](task.workdir, libE_output)
