@@ -17,7 +17,7 @@ def run_ensemble(
         past_history=None, libE_specs={}, run_async=False):
     # MPI executor
     libE_specs['zero_resource_workers'] = [1]
-    libE_specs['central_mode'] = True
+    libE_specs['central_mode'] = False
     exctr = MPIExecutor()
     exctr.register_calc(full_path='python', calc_type='sim')
 
