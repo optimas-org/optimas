@@ -15,7 +15,9 @@ try:
     import libensemble.gen_funcs as libe_genf
     libe_genf.rc.aposmm_optimizers = 'nlopt'
     from libensemble.gen_funcs.persistent_aposmm import aposmm
-    gen_funcs['aposmm'] = aposmm
+    gen_functions['aposmm'] = aposmm
+except ImportError:
+    pass
 
 def get_generator_function(gen_type):
     if gen_type in gen_functions:
