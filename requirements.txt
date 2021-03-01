@@ -1,4 +1,5 @@
 # For simulation/analysis
+numpy
 libensemble
 jinja2
 dragonfly-opt
