@@ -69,7 +69,8 @@ def create_alloc_specs(gen_type):
     return alloc_specs
 
 
-def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=None):
+def create_gen_specs(gen_type, nworkers, var_params, run_async=False,
+                     mf_params=None, ax_client=None):
     # Problem dimension. This is the number of input parameters exposed,
     # that LibEnsemble will vary in order to minimize a single output parameter.
     n = len(var_params)
@@ -143,6 +144,15 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
         # Absolute tolerance of output 'f'. Determines when
         # local optimization stops.
         gen_specs['user']['ftol_abs'] =  3e-8
+
+    elif gen_type == 'ax':
+        # pass axclient to gen
+        gen_specs['user'] = {
+                # Total max number of sims running concurrently.
+                'gen_batch_size': nworkers - 1,
+                'client': ax_client
+            }
+    print(gen_specs)
     return gen_specs
 
 
