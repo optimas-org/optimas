@@ -35,7 +35,7 @@ class PostProcOptimization(object):
         elif path.endswith('.npy'):
             output_file = path
         else:
-            raise RuntimeEror(
+            raise RuntimeError(
             'The path should either point to a folder or a `.npy` file.')
 
         # Load the file as a pandas DataFrame
@@ -49,6 +49,7 @@ class PostProcOptimization(object):
 
         # Make the time relative to the start of the simulation
         self.df['given_time'] -= self.df['gen_time'].min()
+        self.df['returned_time'] -= self.df['gen_time'].min()
         self.df['gen_time'] -= self.df['gen_time'].min()
 
     def get_df(self):
