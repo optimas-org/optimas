@@ -132,3 +132,34 @@ class PostProcOptimization(object):
             plt.plot( t_array, cummin_array, **kw )
 
         return t_array, cummin_array
+
+
+    def plot_worker_timeline(self, fidelity_parameter=None):
+        """
+        Plot the timeline of worker utilization
+
+        Parameter:
+        ----------
+            fidelity_parameter: string or None
+                Name of the fidelity parameter
+                If given, the different fidelity will
+                be plotted in different colors
+        """
+        df = self.get_df()
+        if fidelity_parameter is not None:
+            min_fidelity = df[fidelity_parameter].min()
+            max_fidelity = df[fidelity_parameter].max()
+
+        for i in range(len(df)):
+            start = df['given_time'].iloc[i]
+            duration = df['returned_time'].iloc[i] - start
+            if fidelity_parameter is not None:
+                fidelity = df[fidelity_parameter].iloc[i]
+                color = plt.cm.viridis( (fidelity-min_fidelity)/(max_fidelity-min_fidelity) )
+            else:
+                color='b'
+            plt.barh( [ str(df['sim_worker'].iloc[i]) ],
+                        [ duration ], left=[ start ], color=color )
+
+        plt.ylabel('Worker')
+        plt.xlabel('Time ')
