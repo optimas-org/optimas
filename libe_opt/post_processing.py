@@ -75,7 +75,7 @@ class PostProcOptimization(object):
             fidelity = self.df[fidelity_parameter]
         else:
             fidelity = None
-        plt.scatter( self.df.given_time, self.df.f, c=fidelity )
+        plt.scatter( self.df.returned_time, self.df.f, c=fidelity )
 
     def get_trace(self, fidelity_parameter=None,
                    min_fidelity=None, t_array=None,
@@ -111,8 +111,9 @@ class PostProcOptimization(object):
         else:
             df = self.df.copy()
 
-        t = df.given_time.values
-        cummin = df.f.cummin().values
+        df = df.sort_values('returned_time')
+        t = np.concatenate( (np.zeros(1), df.returned_time.values) )
+        cummin = np.concatenate( (np.zeros(1), df.f.cummin().values) )
 
         if t_array is not None:
             # Interpolate the trace curve on t_array
@@ -159,7 +160,8 @@ class PostProcOptimization(object):
             else:
                 color='b'
             plt.barh( [ str(df['sim_worker'].iloc[i]) ],
-                        [ duration ], left=[ start ], color=color )
+                        [ duration ], left=[ start ],
+                        color=color, edgecolor='k', linewidth=1 )
 
         plt.ylabel('Worker')
         plt.xlabel('Time ')
