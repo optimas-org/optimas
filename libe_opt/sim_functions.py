@@ -2,6 +2,7 @@ import os, time
 import jinja2
 import numpy as np
 
+from libensemble.resources.resources import Resources
 from libensemble.executors.executor import Executor
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
@@ -48,9 +49,16 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
     # Launch the executor to actually run the WarpX simulation
+    resources = Resources.resources.worker_resources
+    os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(
+        map(str,resources.slots_on_node))
+    num_nodes = resources.local_node_count
+    cores_per_node = resources.slot_count #One CPU per GPU
     extra_args = os.environ.get( 'LIBE_SIM_EXTRA_ARGS', None )
     if extra_args is not None:
         task = exctr.submit(calc_type='sim',
+                            num_nodes=num_nodes,
+                            ranks_per_node=cores_per_node,
                             extra_args=extra_args,
                             app_args='simulation_script.py',
                             stdout='out.txt',
@@ -59,6 +67,8 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
     else:
         task = exctr.submit(calc_type='sim',
                             num_procs=1,
+                            num_nodes=num_nodes,
+                            ranks_per_node=cores_per_node,
                             app_args='simulation_script.py',
                             stdout='out.txt',
                             stderr='err.txt',
@@ -80,14 +90,14 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
             print("Warning: Task {} in unknown state {}. Error code {}"
                   .format(task.name, task.state, task.errcode))
 
+    # Prepare the array that is returned to libE
+    # Automatically include the input parameters
+    libE_output = np.zeros(1, dtype=sim_specs['out'])
+    for i, name in enumerate(names):
+        libE_output[name] = values[i]
+
     # Data analysis from the last simulation
     if calc_status == WORKER_DONE:
-        # Prepare the array that is returned to libE
-        # Automatically include the input parameters
-        libE_output = np.zeros(1, dtype=sim_specs['out'])
-        for i, name in enumerate(names):
-            libE_output[name] = values[i]
-
         # Extract the objective function for the current simulation,
         # as well as a few diagnostics
         sim_specs['user']['analysis_func'](task.workdir, libE_output)

@@ -78,7 +78,7 @@ def analyze_simulation( simulation_directory, libE_output ):
     uz,w = d.get_particle(['uz','w'], iteration=1,
                 select={'uz':[10,None],'x':[-15e-6,15e-6],'y':[-15e-6,15e-6]})
     q = w.sum()*e*1e12
-    if w.sum() == 0:
+    if len(w) < 2: # Need at least two particles to calculate the energy spread
         libE_output['f'] = 0
     else:
         med, mad = weighted_mad(uz/2, w)

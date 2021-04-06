@@ -19,4 +19,4 @@ export FBPIC_ENABLE_GPUDIRECT=0
 
 export LIBE_SIM_EXTRA_ARGS="--gres=gpu:1"
 
-python run_libensemble.py --comms local --nworkers {n_workers}
+python run_example.py --comms local --nworkers {n_workers}

@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 from libe_opt.gen_functions import get_generator_function
 from libe_opt.alloc_functions import get_alloc_function_from_gen_type
@@ -44,7 +45,8 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template, m
         'user': {
             'var_params': list(var_params.keys()),
             'analysis_func': analysis_func,
-            'sim_template': sim_template
+            # keeps only the file name of the simulation template
+            'sim_template': os.path.basename(sim_template)
         }
     }
 
@@ -145,9 +147,18 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
 
 
 def create_libe_specs(sim_template, libE_specs={}):
+    # Add sim_template to the list of files to be copied
+    # (if not present already)
+    if 'sim_dir_copy_files' not in libE_specs:
+        libE_specs['sim_dir_copy_files'] = [sim_template]
+    elif sim_template not in libE_specs['sim_dir_copy_files']:
+        libE_specs['sim_dir_copy_files'].append(sim_template)
     # Save H to file every N simulation evaluations
-    libE_specs['save_every_k_sims'] = 5
-    libE_specs['sim_dir_copy_files'] = [sim_template]
+    # default value, if not defined
+    if 'save_every_k_sims' not in libE_specs.keys():
+        libE_specs['save_every_k_sims'] = 5
     # Force libEnsemble to create a directory for each simulation
-    libE_specs['sim_dirs_make'] = True
+    # default value, if not defined
+    if 'sim_dirs_make' not in libE_specs.keys():
+        libE_specs['sim_dirs_make'] = True
     return libE_specs

@@ -1,6 +1,6 @@
-# Optimization of fbpic simulation with libEnsemble
+# Optimization of PIC simulation with libEnsemble
 
-The scripts in this repository allow to optimize FBPIC simulation.
+The scripts in this repository allow to optimize PIC simulation.
 
 ## Installing
 

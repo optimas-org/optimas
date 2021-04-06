@@ -16,7 +16,10 @@ def run_ensemble(
         var_params, analysis_func, sim_template, mf_params=None,
         past_history=None, libE_specs={}, run_async=False):
     # MPI executor
-    exctr = MPIExecutor(central_mode=False, zero_resource_workers=[1])
+    libE_specs['zero_resource_workers'] = [1]
+    if 'central_mode' not in libE_specs.keys():
+        libE_specs['central_mode'] = False
+    exctr = MPIExecutor()
     exctr.register_calc(full_path='python', calc_type='sim')
 
     # libE logger
