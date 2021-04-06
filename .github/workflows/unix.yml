@@ -46,3 +46,15 @@ jobs:
         cd optimization_folder;
         ./create_new_optimization.py --name test --from dummy --machine local --n_sim_workers 2;
         cd test; python run_example.py --comms local --nworkers 3
+    - shell: bash -l {0}
+      name: test dummy_mf example
+      run: |
+        cd optimization_folder;
+        ./create_new_optimization.py --name test_mf --from dummy_mf --machine local --n_sim_workers 2;
+        cd test_mf; python run_example.py --comms local --nworkers 3
+    - shell: bash -l {0}
+      name: test dummy_mf_disc example
+      run: |
+        cd optimization_folder;
+        ./create_new_optimization.py --name test_mf_disc --from dummy_mf_disc --machine local --n_sim_workers 2;
+        cd test_mf_disc; python run_example.py --comms local --nworkers 3
