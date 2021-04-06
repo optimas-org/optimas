@@ -13,17 +13,12 @@ from libe_opt.utils import (
 
 def run_ensemble(
         nworkers, sim_max, is_master, gen_type, analyzed_params,
-        var_params, analysis_func, sim_template, mf_params=None,
+        var_params, analysis_func, mf_params=None,
         past_history=None, libE_specs={}, run_async=False):
-    # MPI executor
-    libE_specs['zero_resource_workers'] = [1]
-    if 'central_mode' not in libE_specs.keys():
-        libE_specs['central_mode'] = False
-    exctr = MPIExecutor()
-    exctr.register_calc(full_path='python', calc_type='sim')
 
-    # libE logger
-    libE_logger.set_level('INFO')
+    # Automatically detect the template simulation script
+    sim_template = [ filename for filename in os.listdir('./') \
+                              if filename.startswith('template') ][0]
 
     # Create specs.
     sim_specs = create_sim_specs(
@@ -32,7 +27,22 @@ def run_ensemble(
     gen_specs = create_gen_specs(
         gen_type, nworkers, var_params, run_async, mf_params)
     libE_specs = create_libe_specs(sim_template, libE_specs)
-    
+
+    # Setup MPI executor
+    libE_specs['zero_resource_workers'] = [1]
+    exctr = MPIExecutor()
+    if sim_template.endswith('.py'):
+        exctr.register_calc(full_path='python', calc_type='sim')
+    else:
+        # By default, if the template is not a `.py` file, we run warpx
+        exctr.register_calc(full_path='warpx.exe', calc_type='sim')
+        if 'warpx.exe' not in os.listdir('./'):
+            raise ValueError('You need to copy the WarpX executable in this folder.')
+        libE_specs['sim_dir_copy_files'].append('warpx.exe')
+
+    # libE logger
+    libE_logger.set_level('INFO')
+
     # Exit criteria
     exit_criteria = {'sim_max': sim_max}  # Exit after running sim_max simulations
 
