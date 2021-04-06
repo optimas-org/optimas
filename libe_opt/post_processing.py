@@ -15,16 +15,31 @@ class PostProcOptimization(object):
         Parameter:
         ----------
         path: string
-            Path to the folder that contains the libE optimization
+            Path to the folder that contains the libE optimization,
+            or path to the individual `.npy` history file.
         """
         # Find the `npy` file that contains the results
-        output_files = [ filename for filename in os.listdir(path) \
+        if os.path.isdir(path):
+            output_files = [ filename for filename in os.listdir(path) \
                     if filename.startswith('libE_history_for_run_')
                    and filename.endswith('.npy')]
-        assert len(output_files) == 1
+            if len(output_files) == 0:
+                raise RuntimeError(
+                'The specified path does not contain any `.npy` file.')
+            elif len(output_files) > 1:
+                raise RuntimeError(
+                'The specified path contains multiple `.npy` files.\n'
+                'Please specify the path to an individual `.npy` file.')
+            else:
+                output_file = output_files[0]
+        elif path.endswith('.npy'):
+            output_file = path
+        else:
+            raise RuntimeEror(
+            'The path should either point to a folder or a `.npy` file.')
 
         # Load the file as a pandas DataFrame
-        x  = np.load( os.path.join(path, output_files[0]) )
+        x  = np.load( os.path.join(path, output_file) )
         d = { label: x[label].flatten() for label in x.dtype.names \
                 if label not in ['x', 'x_on_cube'] }
         self.df = pd.DataFrame(d)
