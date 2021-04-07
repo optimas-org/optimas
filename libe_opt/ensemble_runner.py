@@ -34,11 +34,16 @@ def run_ensemble(
     if sim_template.endswith('.py'):
         exctr.register_calc(full_path='python', calc_type='sim')
     else:
-        # By default, if the template is not a `.py` file, we run warpx
-        exctr.register_calc(full_path='warpx.exe', calc_type='sim')
-        if 'warpx.exe' not in os.listdir('./'):
+        # By default, if the template is not a `.py` file, we run
+        # it with an executable. The executable should have a `.ex` at the end
+        executables = [filename for filename in os.listdir() \
+                     if filename.endswith('.ex')]
+        if len(executables) == 0:
             raise ValueError('You need to copy the WarpX executable in this folder.')
-        libE_specs['sim_dir_copy_files'].append('warpx.exe')
+        else:
+            executable = executables[0]
+            exctr.register_calc(full_path=executable, calc_type='sim')
+        libE_specs['sim_dir_copy_files'].append(executable)
 
     # libE logger
     libE_logger.set_level('INFO')
