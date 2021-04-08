@@ -50,8 +50,9 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
     exctr = Executor.executor  # Get Executor
     # Launch the executor to actually run the WarpX simulation
     resources = Resources.resources.worker_resources
-    os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(
-        map(str,resources.slots_on_node))
+    if Resources.resources.launcher != 'jsrun':
+        os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(
+            map(str,resources.slots_on_node))
     num_nodes = resources.local_node_count
     cores_per_node = resources.slot_count #One CPU per GPU
     extra_args = os.environ.get( 'LIBE_SIM_EXTRA_ARGS', None )
