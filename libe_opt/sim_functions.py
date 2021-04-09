@@ -40,9 +40,10 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
 
     # Create simulation input file.
     sim_template = sim_specs['user']['sim_template']
+    sim_script = sim_template[len('template_'):] # Strip 'template_' from name
     with open(sim_template, 'r') as f:
         template = jinja2.Template( f.read() )
-    with open('simulation_script.py', 'w') as f:
+    with open(sim_script, 'w') as f:
         f.write( template.render(values_dict) )
     os.remove(sim_template)
 
@@ -61,7 +62,7 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
                             num_nodes=num_nodes,
                             ranks_per_node=cores_per_node,
                             extra_args=extra_args,
-                            app_args='simulation_script.py',
+                            app_args=sim_script,
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_run=True)
@@ -70,7 +71,7 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
                             num_procs=1,
                             num_nodes=num_nodes,
                             ranks_per_node=cores_per_node,
-                            app_args='simulation_script.py',
+                            app_args=sim_script,
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_run=True)

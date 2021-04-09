@@ -161,4 +161,8 @@ def create_libe_specs(sim_template, libE_specs={}):
     # default value, if not defined
     if 'sim_dirs_make' not in libE_specs.keys():
         libE_specs['sim_dirs_make'] = True
+    # Force central mode
+    if 'central_mode' not in libE_specs.keys():
+        libE_specs['central_mode'] = False
+
     return libE_specs

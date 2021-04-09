@@ -17,6 +17,15 @@ analyzed_quantities = [
 ]
 
 
+def get_emittance(ts, t):
+    import numpy as np
+    w, x, ux = ts.get_particle(['w', 'x', 'ux'], t=t)
+    x2 = np.average(x**2, weights=w)
+    u2 = np.average(ux**2, weights=w)
+    xu = np.average(x*ux, weights=w)
+    return np.sqrt( x2 * u2 - xu**2 )
+
+
 def analyze_simulation( simulation_directory, libE_output ):
 
     import os
@@ -24,18 +33,14 @@ def analyze_simulation( simulation_directory, libE_output ):
 
     # Define/calculate the objective function 'f'
     # as well as the diagnostic quantities listed in `analyzed_quantities` above
-    ts = LpaDiagnostics( os.path.join(simulation_directory, 'lab_diags/hdf5') )
-
-    select = {'x':[-100.e-6,100.e-6], 'y':[-100.e-6, 100.e-6]}
-    charge_i = ts.get_charge( iteration=ts.iterations[0], select=select )
-    emittance_i = ts.get_emittance( iteration=ts.iterations[0],
-                                    select=select )[0]
-    charge_f = ts.get_charge( iteration=ts.iterations[-1],
-                              select=select )
-    emittance_f = ts.get_emittance( iteration=ts.iterations[-1],
-                                    select=select )[0]
-    energy_avg, energy_std = ts.get_mean_gamma(
-        iteration=ts.iterations[-1], select=select )
+    ts = LpaDiagnostics( os.path.join(simulation_directory, 'diags/diag') )
+    t0 = 4.e-11 # Time, in the boosted-frame, at which we calculate beam properties
+    
+    charge_i = ts.get_charge( t=0 )
+    emittance_i = get_emittance( ts, t=0 )
+    charge_f = ts.get_charge( t=t0 )
+    emittance_f = get_emittance( ts, t=t0 )
+    energy_avg, energy_std = ts.get_mean_gamma( t=t0 )
 
     # Here: Build a quantity to minimize (f) that encompasses
     # emittance AND charge loss 1% charge loss has the
