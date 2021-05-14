@@ -75,7 +75,7 @@ class PostProcOptimization(object):
             fidelity = self.df[fidelity_parameter]
         else:
             fidelity = None
-        plt.scatter( self.df.given_time, self.df.f, c=fidelity )
+        plt.scatter( self.df.returned_time, self.df.f, c=fidelity )
 
     def get_trace(self, fidelity_parameter=None,
                    min_fidelity=None, t_array=None,
@@ -111,8 +111,9 @@ class PostProcOptimization(object):
         else:
             df = self.df.copy()
 
-        t = df.given_time.values
-        cummin = df.f.cummin().values
+        df = df.sort_values('returned_time')
+        t = np.concatenate( (np.zeros(1), df.returned_time.values) )
+        cummin = np.concatenate( (np.zeros(1), df.f.cummin().values) )
 
         if t_array is not None:
             # Interpolate the trace curve on t_array
@@ -132,3 +133,35 @@ class PostProcOptimization(object):
             plt.plot( t_array, cummin_array, **kw )
 
         return t_array, cummin_array
+
+
+    def plot_worker_timeline(self, fidelity_parameter=None):
+        """
+        Plot the timeline of worker utilization
+
+        Parameter:
+        ----------
+            fidelity_parameter: string or None
+                Name of the fidelity parameter
+                If given, the different fidelity will
+                be plotted in different colors
+        """
+        df = self.get_df()
+        if fidelity_parameter is not None:
+            min_fidelity = df[fidelity_parameter].min()
+            max_fidelity = df[fidelity_parameter].max()
+
+        for i in range(len(df)):
+            start = df['given_time'].iloc[i]
+            duration = df['returned_time'].iloc[i] - start
+            if fidelity_parameter is not None:
+                fidelity = df[fidelity_parameter].iloc[i]
+                color = plt.cm.viridis( (fidelity-min_fidelity)/(max_fidelity-min_fidelity) )
+            else:
+                color='b'
+            plt.barh( [ str(df['sim_worker'].iloc[i]) ],
+                        [ duration ], left=[ start ],
+                        color=color, edgecolor='k', linewidth=1 )
+
+        plt.ylabel('Worker')
+        plt.xlabel('Time ')
