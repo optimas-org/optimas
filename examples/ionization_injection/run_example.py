@@ -6,7 +6,7 @@ from analysis_script import analyze_simulation, analyzed_quantities
 
 
 gen_type = 'bo'
-sim_max = 10
+sim_max = 10000
 run_async = True
 nworkers, is_master, libE_specs, _ = parse_args()
 
