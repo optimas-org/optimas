@@ -5,5 +5,5 @@ mf_parameters = {
     'name': 'resolution',
     'range': [2., 4.],
     'discrete': True,
-    'cost_func': lambda z: z[0]**2
+    'cost_func': lambda z: z[0][0]**3
 }
