@@ -68,7 +68,6 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
                             wait_on_run=True)
     else:
         task = exctr.submit(calc_type='sim',
-                            num_procs=1,
                             num_nodes=num_nodes,
                             ranks_per_node=cores_per_node,
                             app_args=sim_script,

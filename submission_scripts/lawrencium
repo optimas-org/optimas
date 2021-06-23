@@ -15,5 +15,6 @@ export OMP_NUM_THREADS=1
 
 # Script to run libEnsemble using multiprocessing on launch nodes.
 # Assumes Conda environment is set up.
+export LIBE_SIM_EXTRA_ARGS="--oversubscribe"
 
 python run_example.py --comms local --nworkers {n_workers}
