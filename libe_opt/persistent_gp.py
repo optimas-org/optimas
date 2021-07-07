@@ -60,7 +60,7 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
-    model_iteration = 0
+    model_iteration = -1
     while tag not in [STOP_TAG, PERSIS_STOP]:
         model_iteration += 1
 
@@ -150,7 +150,7 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
-    model_iteration = 0
+    model_iteration = -1
     while tag not in [STOP_TAG, PERSIS_STOP]:
         model_iteration += 1
 
@@ -259,7 +259,7 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
-    model_iteration = 0
+    model_iteration = -1
     while tag not in [STOP_TAG, PERSIS_STOP]:
         model_iteration += 1
 
