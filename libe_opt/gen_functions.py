@@ -1,6 +1,6 @@
 from libensemble.gen_funcs.persistent_uniform_sampling import (
     persistent_uniform)
-from libensemble.gen_funcs.persistent_gp import (
+from .persistent_gp import (
     persistent_gp_gen_f, persistent_gp_mf_gen_f, persistent_gp_mf_disc_gen_f)
 
 gen_functions = {
