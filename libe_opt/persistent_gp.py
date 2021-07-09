@@ -40,9 +40,9 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
     domain = EuclideanDomain([[lo, up] for lo, up in zip(lb_list, ub_list)])
     func_caller = EuclideanFunctionCaller(None, domain)
     opt = EuclideanGPBandit(func_caller, ask_tell_mode=True,
-                            options=Namespace(
-                                acq='ts', build_new_model_every=number_of_gen_points,
-                                init_capital=number_of_gen_points))
+                            options=Namespace( acq='ts',
+                                build_new_model_every=5,
+                                init_capital=max(5,number_of_gen_points)) )
     opt.initialise()
 
     # Initialize folder to log the model
@@ -55,8 +55,6 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
             x = H['x'][i]
             y = H['f'][i]
             opt.tell([(x, -y)])
-        # Update hyperparameters
-        opt._build_new_model()
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
@@ -86,8 +84,6 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
                 x = calc_in['x'][i]
                 y = calc_in['f'][i]
                 opt.tell([(x, -y)])
-            # Update hyperparameters
-            opt._build_new_model()
             # Set the number of points to generate to that number:
             number_of_gen_points = n
         else:
@@ -130,8 +126,8 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
                             ask_tell_mode=True,
                             is_mf=True,
                             options=Namespace(acq='ts',
-                                              build_new_model_every=number_of_gen_points,
-                                              init_capital=number_of_gen_points))
+                                build_new_model_every=5,
+                                init_capital=max(5,number_of_gen_points)) )
     opt.initialise()
 
     # Initialize folder to log the model
@@ -145,8 +141,6 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
             z = H['z'][i]
             y = H['f'][i]
             opt.tell([([z], x, -y)])
-        # Update hyperparameters
-        opt._build_new_model()
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
@@ -178,8 +172,6 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
                 z = calc_in['z'][i]
                 y = calc_in['f'][i]
                 opt.tell([([z], x, -y)])
-            # Update hyperparameters
-            opt._build_new_model()
             # Set the number of points to generate to that number:
             number_of_gen_points = n
         else:
@@ -238,9 +230,9 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
         fidel_space_orderings=config.fidel_space_orderings)
     opt = CPGPBandit(
         func_caller, ask_tell_mode=True, is_mf=True,
-        options=Namespace(
-            acq='ts', build_new_model_every=number_of_gen_points,
-            init_capital=number_of_gen_points))
+        options=Namespace( acq='ts',
+            build_new_model_every=5,
+            init_capital=max(5,number_of_gen_points)) )
     opt.initialise()
 
     # Initialize folder to log the model
@@ -254,8 +246,6 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
             z = H['z'][i]
             y = H['f'][i]
             opt.tell([([z], x, -y)])
-        # Update hyperparameters
-        opt._build_new_model()
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
@@ -287,8 +277,7 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
                 z = calc_in['z'][i]
                 y = calc_in['f'][i]
                 opt.tell([([z], x, -y)])
-            # Update hyperparameters
-            opt._build_new_model()
+
             # Set the number of points to generate to that number:
             number_of_gen_points = n
         else:
