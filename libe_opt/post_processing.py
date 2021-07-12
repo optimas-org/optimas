@@ -4,7 +4,7 @@ This file contains a class that helps post-process libE optimization
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import os, re
 
 class PostProcOptimization(object):
 
@@ -18,6 +18,8 @@ class PostProcOptimization(object):
             Path to the folder that contains the libE optimization,
             or path to the individual `.npy` history file.
         """
+        self.path = path
+
         # Find the `npy` file that contains the results
         if os.path.isdir(path):
             output_files = [ filename for filename in os.listdir(path) \
@@ -165,3 +167,48 @@ class PostProcOptimization(object):
 
         plt.ylabel('Worker')
         plt.xlabel('Time ')
+
+    def show_1d_model(self, n, input_variable, fidelity_parameter=None):
+        """
+        TODO
+        n: number of points to take into account
+        """
+        # Plot points
+        x = self.df[input_variable].iloc[:n].values
+        y = self.df['f'].iloc[:n].values
+        if fidelity_parameter:
+            fidel = self.df[fidelity_parameter].iloc[:n].values
+            plt.plot(x[-1], y[-1], 'ro', ms=10, alpha=0.3)
+            plt.scatter( x, y, c=fidel )
+        else:
+            plt.scatter( x, y )
+
+        # Extract hyper parameters of the Gaussian process
+        with open(os.path.join(self.path, 'model_history/model_%05d.txt' %n)) as f:
+            hp_string = f.read()
+            print(hp_string)
+        # TODO: Extract bounds of the axis to be plotted
+        xmin = 0
+        xmax = 20
+
+        if hp_string.startswith('None'):
+            return
+
+        scale = float( re.findall('scale: ([\d\.]+)', hp_string)[0] )
+        fidel_length = float( re.findall('fid:: se: \[([\d\.]+)\]', hp_string)[0] )
+        dom_length = (xmax-xmin)*float( re.findall('dom:: se: \[([\d\.]+)\]', hp_string)[0] )
+
+        from sklearn.gaussian_process import GaussianProcessRegressor
+        from sklearn.gaussian_process.kernels import RBF
+
+        # Plot the model
+        kernel = scale*RBF([fidel_length, dom_length], length_scale_bounds='fixed')
+        model = GaussianProcessRegressor( kernel=kernel )
+        model.fit( np.stack([fidel,x], axis=1), y.reshape(-1,1) )
+        for fidelity in [1, 2]:
+            x1d = np.linspace(xmin, xmax, 1000)
+            fidel1d = fidelity*np.ones_like(x1d)
+
+            y_pred, sigma = model.predict(np.stack([fidel1d, x1d], axis=1), return_std=True)
+            plt.plot( x1d, y_pred )
+            plt.fill_between(x1d, y_pred.flatten()-sigma, y_pred.flatten()+sigma, alpha=0.3)
