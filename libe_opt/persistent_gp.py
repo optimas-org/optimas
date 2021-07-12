@@ -41,8 +41,8 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
     func_caller = EuclideanFunctionCaller(None, domain)
     opt = EuclideanGPBandit(func_caller, ask_tell_mode=True,
                             options=Namespace( acq='ts',
-                                build_new_model_every=5,
-                                init_capital=max(5,number_of_gen_points)) )
+                                build_new_model_every=3,
+                                init_capital=max(10,number_of_gen_points)) )
     opt.initialise()
 
     # Initialize folder to log the model
@@ -126,8 +126,8 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
                             ask_tell_mode=True,
                             is_mf=True,
                             options=Namespace(acq='ts',
-                                build_new_model_every=5,
-                                init_capital=max(5,number_of_gen_points)) )
+                                build_new_model_every=3,
+                                init_capital=max(10,number_of_gen_points)) )
     opt.initialise()
 
     # Initialize folder to log the model
@@ -231,8 +231,8 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
     opt = CPGPBandit(
         func_caller, ask_tell_mode=True, is_mf=True,
         options=Namespace( acq='ts',
-            build_new_model_every=5,
-            init_capital=max(5,number_of_gen_points)) )
+            build_new_model_every=3,
+            init_capital=max(10,number_of_gen_points)) )
     opt.initialise()
 
     # Initialize folder to log the model
