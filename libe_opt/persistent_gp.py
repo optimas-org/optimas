@@ -41,6 +41,8 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
     func_caller = EuclideanFunctionCaller(None, domain)
     opt = EuclideanGPBandit(func_caller, ask_tell_mode=True,
                             options=Namespace( acq='ts',
+                                noise_var_type='value',
+                                noise_var_value=0,
                                 build_new_model_every=5,
                                 init_capital=max(5,number_of_gen_points)) )
     opt.initialise()
@@ -126,6 +128,8 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
                             ask_tell_mode=True,
                             is_mf=True,
                             options=Namespace(acq='ts',
+                                noise_var_type='value',
+                                noise_var_value=0,
                                 build_new_model_every=5,
                                 init_capital=max(5,number_of_gen_points)) )
     opt.initialise()
