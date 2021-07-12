@@ -174,12 +174,13 @@ class PostProcOptimization(object):
         n: number of points to take into account
         """
         # Plot points
-        x = self.df[input_variable].iloc[:n].values
-        y = self.df['f'].iloc[:n].values
+        x = self.df[input_variable].iloc[:n+1].values
+        y = self.df['f'].iloc[:n+1].values
         if fidelity_parameter:
-            fidel = self.df[fidelity_parameter].iloc[:n].values
+            fidel = self.df[fidelity_parameter].iloc[:n+1].values
             plt.plot(x[-1], y[-1], 'ro', ms=10, alpha=0.3)
-            plt.scatter( x, y, c=fidel )
+            for fidelity, color in zip([1, 2], ['b', 'orange']):
+                plt.plot( x[fidel==fidelity], y[fidel==fidelity], 'o', color=color )
         else:
             plt.scatter( x, y )
 
@@ -204,7 +205,7 @@ class PostProcOptimization(object):
         # Plot the model
         kernel = scale*RBF([fidel_length, dom_length], length_scale_bounds='fixed')
         model = GaussianProcessRegressor( kernel=kernel )
-        model.fit( np.stack([fidel,x], axis=1), y.reshape(-1,1) )
+        model.fit( np.stack([fidel[:-1],x[:-1]], axis=1), y[:-1].reshape(-1,1) )
         for fidelity in [1, 2]:
             x1d = np.linspace(xmin, xmax, 1000)
             fidel1d = fidelity*np.ones_like(x1d)
