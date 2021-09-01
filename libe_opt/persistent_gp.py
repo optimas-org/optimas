@@ -339,8 +339,8 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             RangeParameter(
                 name='x{}'.format(i),
                 parameter_type=ParameterType.FLOAT,
-                lower=lb,
-                upper=ub)
+                lower=float(lb),
+                upper=float(ub))
         )
     search_space=SearchSpace(parameters=parameters)
 
@@ -350,7 +350,7 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
         lower_is_better=True
     )
     offline_objective = AxMetric(
-        name='online_metric',
+        name='offline_metric',
         lower_is_better=True
     )
 
@@ -363,10 +363,10 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             name="mt_exp",
             search_space=search_space,
             default_trial_type="online",
-            default_runner=AxRunner(),
+            default_runner=AxRunner(libE_info, gen_specs),
             optimization_config=opt_config,
         )
-    exp.add_trial_type("offline", AxRunner())
+    exp.add_trial_type("offline", AxRunner(libE_info, gen_specs))
     exp.add_tracking_metric(
         metric=offline_objective,
         trial_type="offline",
@@ -459,6 +459,7 @@ class AxRunner(Runner):
 
     def run(self, trial):
         trial_metadata = {"name": str(trial.index)}
+        task = trial.trial_type
         number_of_gen_points = self.gen_specs['user']['gen_batch_size']  # or simy the number of arms: len(trial.arms)
         H_o = np.zeros(number_of_gen_points, dtype=self.gen_specs['out'])
         
@@ -470,7 +471,7 @@ class AxRunner(Runner):
             for j in range(n_param):
                 param_array[j] = params['x{}'.format(j)]
             H_o['x'][i] = param_array
-            pass
+            H_o['task'][i] = task
 
         tag, Work, calc_in = sendrecv_mgr_worker_msg(self.libE_info['comm'], H_o)
         
