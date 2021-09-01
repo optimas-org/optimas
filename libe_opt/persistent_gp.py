@@ -8,7 +8,9 @@ This `gen_f` is meant to be used with the `alloc_f` function
 `only_persistent_gens`
 """
 import os
+from copy import deepcopy
 import numpy as np
+import pandas as pd
 from libensemble.message_numbers import STOP_TAG, PERSIS_STOP, FINISHED_PERSISTENT_GEN_TAG
 from libensemble.tools.gen_support import sendrecv_mgr_worker_msg
 
@@ -19,6 +21,16 @@ from dragonfly.exd.experiment_caller import (EuclideanFunctionCaller,
 from dragonfly.opt.gp_bandit import EuclideanGPBandit, CPGPBandit
 from dragonfly.exd.cp_domain_utils import load_config
 from argparse import Namespace
+from ax import Metric, Runner
+from ax.core.data import Data
+from ax.core.generator_run import GeneratorRun
+from ax.core.multi_type_experiment import MultiTypeExperiment
+from ax.core.parameter import RangeParameter, ParameterType
+from ax.core.search_space import SearchSpace
+from ax.core.optimization_config import OptimizationConfig
+from ax.core.objective import Objective
+from ax.modelbridge.factory import get_sobol, get_MTGP
+from ax.core.observation import ObservationFeatures
 
 
 def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
@@ -296,3 +308,222 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
 
 
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
+
+
+def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
+    """
+    Create a Gaussian Process model for multi-task optimization
+    and update it as new simulation results are
+    available, and generate inputs for the next simulations.
+
+    This is a persistent `genf` i.e. this function is called by a dedicated
+    worker and does not return until the end of the whole libEnsemble run.
+    """
+    # Extract bounds of the parameter space, and batch size
+    ub_list = gen_specs['user']['ub']
+    lb_list = gen_specs['user']['lb']
+
+    # Number of points to generate initially.
+    number_of_gen_points = gen_specs['user']['gen_batch_size']
+
+    # TODO: Add these parameters to gen_specs.
+    # n_init_online = 2  # Size of the quasirandom initialization run online
+    # n_init_offline = 20  # Size of the quasirandom initialization run offline
+    # n_opt_online = 2  # Batch size for BO selected points to be run online
+    # n_opt_offline = 20  # Batch size for BO selected to be run offline
+
+    # Create search space.
+    parameters = []
+    for i, (ub, lb) in enumerate(zip(ub_list, lb_list)):
+        parameters.append(
+            RangeParameter(
+                name='x{}'.format(i),
+                parameter_type=ParameterType.FLOAT,
+                lower=lb,
+                upper=ub)
+        )
+    search_space=SearchSpace(parameters=parameters)
+
+    # Create metrics.
+    online_objective = AxMetric(
+        name='online_metric',
+        lower_is_better=True
+    )
+    offline_objective = AxMetric(
+        name='online_metric',
+        lower_is_better=True
+    )
+
+    # Create optimization config.
+    opt_config = OptimizationConfig(
+        objective=Objective(online_objective, minimize=True))
+
+    # Create experiment.
+    exp = MultiTypeExperiment(
+            name="mt_exp",
+            search_space=search_space,
+            default_trial_type="online",
+            default_runner=AxRunner(),
+            optimization_config=opt_config,
+        )
+    exp.add_trial_type("offline", AxRunner())
+    exp.add_tracking_metric(
+        metric=offline_objective,
+        trial_type="offline",
+        canonical_name="online_metric")
+
+    # If there is any past history, feed it to the GP
+    # if len(H) > 0:
+    #     for i in range(len(H)):
+    #         x = H['x'][i]
+    #         z = H['z'][i]
+    #         y = H['f'][i]
+    #         opt.tell([([z], x, -y)])
+    #     # Update hyperparameters
+    #     opt._build_new_model()
+
+    # Receive information from the manager (or a STOP_TAG)
+    tag = None
+    model_iteration = 0
+    online_trials = []
+    while tag not in [STOP_TAG, PERSIS_STOP]:
+
+        if model_iteration == 0:
+            # Initialize with sobol sample.
+            for model in ['online', 'offline']:
+                s = get_sobol(exp.search_space, scramble=False)
+                gr = s.gen(number_of_gen_points)
+                trial = exp.new_batch_trial(trial_type=model, generator_run=gr)
+                trial.run()
+                trial.mark_completed()
+                if model == 'online':
+                    online_trials.append(trial.index)
+
+        else:
+            # Run multi-task BO.
+
+            # Fit the MTGP.
+            m = get_MTGP(
+                experiment=exp,
+                data=exp.fetch_data(),
+                search_space=exp.search_space,
+            )
+
+            # Find the best points for the online task.
+            gr = m.gen(
+                n=number_of_gen_points,
+                optimization_config=exp.optimization_config,
+                fixed_features=ObservationFeatures(
+                    parameters={}, trial_index=online_trials[-1]),
+            )
+
+            # But launch them offline.
+            tr = exp.new_batch_trial(trial_type="offline", generator_run=gr)
+            tr.run()
+            tr.mark_completed()
+            
+            # Update the model.
+            m = get_MTGP(
+                experiment=exp,
+                data=exp.fetch_data(),
+                search_space=exp.search_space,
+            )
+            
+            # Select max-utility points from the offline batch to generate an online batch
+            gr = max_utility_from_GP(
+                n=number_of_gen_points,
+                m=m,
+                experiment=exp,
+                search_space=exp.search_space,
+                gr=gr,
+            )
+            tr = exp.new_batch_trial(trial_type="online", generator_run=gr)
+            tr.run()
+            tr.mark_completed()
+            online_trials.append(tr.index)
+
+        # Make dummy H_o. Is it needed?
+        H_o = np.zeros(number_of_gen_points, dtype=gen_specs['out'])
+
+        model_iteration += 1
+
+
+    return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
+
+
+class AxRunner(Runner):
+    def __init__(self, libE_info, gen_specs):
+        self.libE_info = libE_info
+        self.gen_specs = gen_specs
+        super().__init__()
+
+    def run(self, trial):
+        trial_metadata = {"name": str(trial.index)}
+        number_of_gen_points = self.gen_specs['user']['gen_batch_size']  # or simy the number of arms: len(trial.arms)
+        H_o = np.zeros(number_of_gen_points, dtype=self.gen_specs['out'])
+        
+        for i, (arm_name, arm) in enumerate(trial.arms_by_name.items()):
+            # fill H_o
+            params = arm.parameters
+            n_param = len(params)
+            param_array = np.zeros(n_param)
+            for j in range(n_param):
+                param_array[j] = params['x{}'.format(j)]
+            H_o['x'][i] = param_array
+            pass
+
+        tag, Work, calc_in = sendrecv_mgr_worker_msg(self.libE_info['comm'], H_o)
+        
+        for i, (arm_name, arm) in enumerate(trial.arms_by_name.items()):
+            # fill metadata
+            params = arm.parameters
+            trial_metadata[arm_name] = {
+                "arm_name": arm_name,
+                "trial_index": trial.index,
+                # in practice, the mean and sem will be looked up based on trial metadata
+                # but for this tutorial we will calculate them
+                "f": calc_in['f'][i]
+            }
+        return trial_metadata
+
+
+class AxMetric(Metric):
+    def fetch_trial_data(self, trial):
+        records = []
+        for arm_name, arm in trial.arms_by_name.items():
+            records.append({
+                "arm_name": arm_name,
+                "metric_name": self.name,
+                "trial_index": trial.index,
+                # in practice, the mean and sem will be looked up based on trial metadata
+                # but for this tutorial we will calculate them
+                "mean": trial.run_metadata[arm_name]['f'],
+                "sem": 0.0,
+            })
+        return Data(df=pd.DataFrame.from_records(records))
+
+
+def max_utility_from_GP(n, m, experiment, search_space, gr):
+    """
+    Online batches are constructed by selecting the maximum utility points
+    from the offline batch, after updating the model with the offline results.
+    This function selects the max utility points according to the MTGP
+    predictions.
+    """
+    obsf = []
+    for arm in gr.arms:
+        params = deepcopy(arm.parameters)
+        params['trial_type'] = 'online'
+        obsf.append(ObservationFeatures(parameters=params))
+    # Make predictions
+    f, cov = m.predict(obsf)
+    # Compute expected utility
+    u = -np.array(f['online_metric']) 
+    best_arm_indx = np.flip(np.argsort(u))[:n]
+    gr_new = GeneratorRun(
+        arms = [
+            gr.arms[i] for i in best_arm_indx
+        ],
+        weights = [1.] * n,
+    )
+    return gr_new
