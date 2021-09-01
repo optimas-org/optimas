@@ -1,13 +1,15 @@
 from libensemble.gen_funcs.persistent_uniform_sampling import (
     persistent_uniform)
 from .persistent_gp import (
-    persistent_gp_gen_f, persistent_gp_mf_gen_f, persistent_gp_mf_disc_gen_f)
+    persistent_gp_gen_f, persistent_gp_mf_gen_f, persistent_gp_mf_disc_gen_f,
+    persistent_gp_mt_ax_gen_f)
 
 gen_functions = {
     'random': persistent_uniform,
     'bo': persistent_gp_gen_f,
     'bo_mf': persistent_gp_mf_gen_f,
-    'bo_mf_disc': persistent_gp_mf_disc_gen_f
+    'bo_mf_disc': persistent_gp_mf_disc_gen_f,
+    'bo_mt': persistent_gp_mt_ax_gen_f
 }
 
 # Try to import `aposmm` if avaiable (heavier dependencies)
