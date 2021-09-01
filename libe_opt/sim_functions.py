@@ -35,6 +35,11 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
         if z_name not in names:
             names.append(z_name)
 
+    # If running with multiple tasks, add to names and values.
+    elif 'task' in H.dtype.names:
+        values.append("'{}'".format(H['task'][0]))
+        names.append('task')
+
     # Merge lists into dictionary.
     values_dict = { n: v for n, v in zip(names, values) }
 
