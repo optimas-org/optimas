@@ -436,9 +436,7 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             gr = max_utility_from_GP(
                 n=n_opt_hifi,
                 m=m,
-                experiment=exp,
-                search_space=exp.search_space,
-                gr=gr,
+                gr=gr
             )
             tr = exp.new_batch_trial(trial_type="online", generator_run=gr)
             tr.run()
@@ -507,7 +505,7 @@ class AxMetric(Metric):
         return Data(df=pd.DataFrame.from_records(records))
 
 
-def max_utility_from_GP(n, m, experiment, search_space, gr):
+def max_utility_from_GP(n, m, gr):
     """
     Online batches are constructed by selecting the maximum utility points
     from the offline batch, after updating the model with the offline results.
