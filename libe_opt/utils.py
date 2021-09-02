@@ -59,9 +59,6 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template,
         sim_specs['user']['z_name'] = mf_params['name']
     elif mt_params is not None:
         sim_specs['in'].append('task')
-        sim_specs['out'].append(
-            ('task', str, max([len(mt_params['name_hifi']), len(mt_params['name_lofi'])]))
-            )
     return sim_specs
 
 
