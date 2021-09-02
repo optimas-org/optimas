@@ -323,7 +323,11 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     ub_list = gen_specs['user']['ub']
     lb_list = gen_specs['user']['lb']
 
-    # Number of points to generate intially and during optimization.
+    # Get task names.
+    hifi_task = gen_specs['user']['name_hifi']
+    lofi_task = gen_specs['user']['name_lofi']
+
+    # Number of points to generate initially and during optimization.
     n_init_hifi = gen_specs['user']['n_init_hifi']
     n_init_lofi = gen_specs['user']['n_init_lofi']
     n_opt_hifi = gen_specs['user']['n_opt_hifi']
@@ -342,32 +346,32 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     search_space=SearchSpace(parameters=parameters)
 
     # Create metrics.
-    online_objective = AxMetric(
-        name='online_metric',
+    hifi_objective = AxMetric(
+        name='hifi_metric',
         lower_is_better=True
     )
-    offline_objective = AxMetric(
-        name='offline_metric',
+    lofi_objective = AxMetric(
+        name='lofi_metric',
         lower_is_better=True
     )
 
     # Create optimization config.
     opt_config = OptimizationConfig(
-        objective=Objective(online_objective, minimize=True))
+        objective=Objective(hifi_objective, minimize=True))
 
     # Create experiment.
     exp = MultiTypeExperiment(
             name="mt_exp",
             search_space=search_space,
-            default_trial_type="online",
+            default_trial_type=hifi_task,
             default_runner=AxRunner(libE_info, gen_specs),
             optimization_config=opt_config,
         )
-    exp.add_trial_type("offline", AxRunner(libE_info, gen_specs))
+    exp.add_trial_type(lofi_task, AxRunner(libE_info, gen_specs))
     exp.add_tracking_metric(
-        metric=offline_objective,
-        trial_type="offline",
-        canonical_name="online_metric")
+        metric=lofi_objective,
+        trial_type=lofi_task,
+        canonical_name='hifi_metric')
 
     # If there is any past history, feed it to the GP
     # if len(H) > 0:
@@ -382,12 +386,12 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     # Receive information from the manager (or a STOP_TAG)
     tag = None
     model_iteration = 0
-    online_trials = []
+    hifi_trials = []
     while tag not in [STOP_TAG, PERSIS_STOP]:
 
         if model_iteration == 0:
             # Initialize with sobol sample.
-            for model, n_gen in zip(['online', 'offline'], [n_init_hifi, n_init_lofi]):
+            for model, n_gen in zip([hifi_task, lofi_task], [n_init_hifi, n_init_lofi]):
                 s = get_sobol(exp.search_space, scramble=False)
                 gr = s.gen(n_gen)
                 trial = exp.new_batch_trial(trial_type=model, generator_run=gr)
@@ -396,8 +400,8 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 tag = trial.run_metadata['tag']
                 if tag in [STOP_TAG, PERSIS_STOP]:
                     break
-                if model == 'online':
-                    online_trials.append(trial.index)
+                if model == hifi_task:
+                    hifi_trials.append(trial.index)
 
         else:
             # Run multi-task BO.
@@ -409,16 +413,16 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 search_space=exp.search_space,
             )
 
-            # Find the best points for the online task.
+            # Find the best points for the high fidelity task.
             gr = m.gen(
                 n=n_opt_lofi,
                 optimization_config=exp.optimization_config,
                 fixed_features=ObservationFeatures(
-                    parameters={}, trial_index=online_trials[-1]),
+                    parameters={}, trial_index=hifi_trials[-1]),
             )
 
-            # But launch them offline.
-            tr = exp.new_batch_trial(trial_type="offline", generator_run=gr)
+            # But launch them at low fidelity.
+            tr = exp.new_batch_trial(trial_type=lofi_task, generator_run=gr)
             tr.run()
             tr.mark_completed()
             tag = tr.run_metadata['tag']
@@ -432,19 +436,20 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 search_space=exp.search_space,
             )
             
-            # Select max-utility points from the offline batch to generate an online batch
+            # Select max-utility points from the low fidelity batch to generate a high fidelity batch.
             gr = max_utility_from_GP(
                 n=n_opt_hifi,
                 m=m,
-                gr=gr
+                gr=gr,
+                hifi_task=hifi_task
             )
-            tr = exp.new_batch_trial(trial_type="online", generator_run=gr)
+            tr = exp.new_batch_trial(trial_type=hifi_task, generator_run=gr)
             tr.run()
             tr.mark_completed()
             tag = tr.run_metadata['tag']
             if tag in [STOP_TAG, PERSIS_STOP]:
                 break
-            online_trials.append(tr.index)
+            hifi_trials.append(tr.index)
 
         # Make dummy H_o. Is it needed?
         H_o = np.zeros(1, dtype=gen_specs['out'])
@@ -505,22 +510,22 @@ class AxMetric(Metric):
         return Data(df=pd.DataFrame.from_records(records))
 
 
-def max_utility_from_GP(n, m, gr):
+def max_utility_from_GP(n, m, gr, hifi_task):
     """
-    Online batches are constructed by selecting the maximum utility points
-    from the offline batch, after updating the model with the offline results.
+    High fidelity batches are constructed by selecting the maximum utility points
+    from the low fidelity batch, after updating the model with the low fidelity results.
     This function selects the max utility points according to the MTGP
     predictions.
     """
     obsf = []
     for arm in gr.arms:
         params = deepcopy(arm.parameters)
-        params['trial_type'] = 'online'
+        params['trial_type'] = hifi_task
         obsf.append(ObservationFeatures(parameters=params))
     # Make predictions
     f, cov = m.predict(obsf)
     # Compute expected utility
-    u = -np.array(f['online_metric']) 
+    u = -np.array(f['hifi_metric']) 
     best_arm_indx = np.flip(np.argsort(u))[:n]
     gr_new = GeneratorRun(
         arms = [
