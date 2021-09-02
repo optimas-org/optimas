@@ -1,3 +1,5 @@
+import warnings 
+
 import numpy as np
 import os
 
@@ -112,7 +114,7 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
 
     # State the generating function, its arguments, output,
     # and necessary parameters.
-    if gen_type in ['random', 'bo', 'bo_mf', 'bo_mf_disc', 'bo_mt']:
+    if gen_type in ['random', 'bo', 'bo_mf', 'bo_mf_disc']:
         # Here, the 'user' field is for the user's (in this case,
         # the RNG) convenience.
         gen_specs['user']['gen_batch_size'] = nworkers-1
@@ -124,11 +126,21 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
             fidel_type, fidel_len = determine_fidelity_type_and_length(mf_params)
             gen_specs['out'].append(('z', fidel_type, fidel_len))
             gen_specs['user'] = {**gen_specs['user'], **mf_params}
-        elif mt_params is not None:
-            gen_specs['out'].append(
+
+    elif gen_type in ['bo_mt']:
+        gen_specs['user']['gen_batch_size'] = nworkers-1
+
+        if run_async:
+            warnings.warn(
+                "Asynchronous mode not available in multi-task optimization."
+                " `run_async` parameter ignored."
+            )
+        gen_specs['user']['async'] = False
+        
+        gen_specs['out'].append(
                 ('task', str, max([len(mt_params['name_hifi']), len(mt_params['name_lofi'])]))
                 )
-            gen_specs['user'] = {**gen_specs['user'], **mt_params}
+        gen_specs['user'] = {**gen_specs['user'], **mt_params}
 
     elif gen_type == 'aposmm':
         gen_specs['out'] = [
