@@ -128,8 +128,6 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
             gen_specs['user'] = {**gen_specs['user'], **mf_params}
 
     elif gen_type in ['bo_mt']:
-        gen_specs['user']['gen_batch_size'] = nworkers-1
-
         if run_async:
             warnings.warn(
                 "Asynchronous mode not available in multi-task optimization."
