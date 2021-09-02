@@ -7,8 +7,8 @@ from mt_parameters import mt_parameters
 
 
 gen_type = 'bo'
-sim_max = 10
-run_async = True
+sim_max = 100
+run_async = False
 nworkers, is_master, libE_specs, _ = parse_args()
 
 run_ensemble(
