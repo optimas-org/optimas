@@ -323,14 +323,11 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     ub_list = gen_specs['user']['ub']
     lb_list = gen_specs['user']['lb']
 
-    # Number of points to generate initially.
-    number_of_gen_points = gen_specs['user']['gen_batch_size']
-
-    # TODO: Add these parameters to gen_specs.
-    # n_init_online = 2  # Size of the quasirandom initialization run online
-    # n_init_offline = 20  # Size of the quasirandom initialization run offline
-    # n_opt_online = 2  # Batch size for BO selected points to be run online
-    # n_opt_offline = 20  # Batch size for BO selected to be run offline
+    # Number of points to generate intially and during optimization.
+    n_init_hifi = gen_specs['user']['n_init_hifi']
+    n_init_lofi = gen_specs['user']['n_init_lofi']
+    n_opt_hifi = gen_specs['user']['n_opt_hifi']
+    n_opt_lofi = gen_specs['user']['n_opt_lofi']
 
     # Create search space.
     parameters = []
@@ -390,9 +387,9 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
 
         if model_iteration == 0:
             # Initialize with sobol sample.
-            for model in ['online', 'offline']:
+            for model, n_gen in zip(['online', 'offline'], [n_init_hifi, n_init_lofi]):
                 s = get_sobol(exp.search_space, scramble=False)
-                gr = s.gen(number_of_gen_points)
+                gr = s.gen(n_gen)
                 trial = exp.new_batch_trial(trial_type=model, generator_run=gr)
                 trial.run()
                 trial.mark_completed()
@@ -414,7 +411,7 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
 
             # Find the best points for the online task.
             gr = m.gen(
-                n=number_of_gen_points,
+                n=n_opt_lofi,
                 optimization_config=exp.optimization_config,
                 fixed_features=ObservationFeatures(
                     parameters={}, trial_index=online_trials[-1]),
@@ -437,7 +434,7 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             
             # Select max-utility points from the offline batch to generate an online batch
             gr = max_utility_from_GP(
-                n=number_of_gen_points,
+                n=n_opt_hifi,
                 m=m,
                 experiment=exp,
                 search_space=exp.search_space,
@@ -452,7 +449,7 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             online_trials.append(tr.index)
 
         # Make dummy H_o. Is it needed?
-        H_o = np.zeros(number_of_gen_points, dtype=gen_specs['out'])
+        H_o = np.zeros(1, dtype=gen_specs['out'])
 
         model_iteration += 1
 
@@ -469,7 +466,7 @@ class AxRunner(Runner):
     def run(self, trial):
         trial_metadata = {"name": str(trial.index)}
         task = trial.trial_type
-        number_of_gen_points = self.gen_specs['user']['gen_batch_size']  # or simy the number of arms: len(trial.arms)
+        number_of_gen_points = len(trial.arms)
         H_o = np.zeros(number_of_gen_points, dtype=self.gen_specs['out'])
         
         for i, (arm_name, arm) in enumerate(trial.arms_by_name.items()):
