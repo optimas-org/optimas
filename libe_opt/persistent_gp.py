@@ -491,8 +491,6 @@ class AxRunner(Runner):
             trial_metadata[arm_name] = {
                 "arm_name": arm_name,
                 "trial_index": trial.index,
-                # in practice, the mean and sem will be looked up based on trial metadata
-                # but for this tutorial we will calculate them
                 "f": calc_in['f'][i] if calc_in is not None else None                
             }
         return trial_metadata
@@ -506,8 +504,6 @@ class AxMetric(Metric):
                 "arm_name": arm_name,
                 "metric_name": self.name,
                 "trial_index": trial.index,
-                # in practice, the mean and sem will be looked up based on trial metadata
-                # but for this tutorial we will calculate them
                 "mean": trial.run_metadata[arm_name]['f'],
                 "sem": 0.0,
             })
