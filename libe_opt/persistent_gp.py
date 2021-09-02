@@ -396,6 +396,9 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 trial = exp.new_batch_trial(trial_type=model, generator_run=gr)
                 trial.run()
                 trial.mark_completed()
+                tag = trial.run_metadata['tag']
+                if tag in [STOP_TAG, PERSIS_STOP]:
+                    break
                 if model == 'online':
                     online_trials.append(trial.index)
 
@@ -421,6 +424,9 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             tr = exp.new_batch_trial(trial_type="offline", generator_run=gr)
             tr.run()
             tr.mark_completed()
+            tag = tr.run_metadata['tag']
+            if tag in [STOP_TAG, PERSIS_STOP]:
+                break
             
             # Update the model.
             m = get_MTGP(
@@ -440,6 +446,9 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             tr = exp.new_batch_trial(trial_type="online", generator_run=gr)
             tr.run()
             tr.mark_completed()
+            tag = tr.run_metadata['tag']
+            if tag in [STOP_TAG, PERSIS_STOP]:
+                break
             online_trials.append(tr.index)
 
         # Make dummy H_o. Is it needed?
@@ -475,6 +484,7 @@ class AxRunner(Runner):
 
         tag, Work, calc_in = sendrecv_mgr_worker_msg(self.libE_info['comm'], H_o)
         
+        trial_metadata['tag'] = tag
         for i, (arm_name, arm) in enumerate(trial.arms_by_name.items()):
             # fill metadata
             params = arm.parameters
@@ -483,7 +493,7 @@ class AxRunner(Runner):
                 "trial_index": trial.index,
                 # in practice, the mean and sem will be looked up based on trial metadata
                 # but for this tutorial we will calculate them
-                "f": calc_in['f'][i]
+                "f": calc_in['f'][i] if calc_in is not None else None                
             }
         return trial_metadata
 
