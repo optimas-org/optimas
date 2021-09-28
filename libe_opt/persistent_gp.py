@@ -22,6 +22,10 @@ from dragonfly.opt.gp_bandit import EuclideanGPBandit, CPGPBandit
 from dragonfly.exd.cp_domain_utils import load_config
 from argparse import Namespace
 from ax import Metric, Runner
+from ax.runners import SyntheticRunner
+from ax.storage.json_store.save import save_experiment
+from ax.storage.metric_registry import register_metric
+from ax.storage.runner_registry import register_runner
 from ax.core.data import Data
 from ax.core.generator_run import GeneratorRun
 from ax.core.multi_type_experiment import MultiTypeExperiment
@@ -359,15 +363,19 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     opt_config = OptimizationConfig(
         objective=Objective(hifi_objective, minimize=True))
 
+    # Create runner.
+    ax_runner = AxRunner(libE_info, gen_specs)
+
     # Create experiment.
     exp = MultiTypeExperiment(
             name="mt_exp",
             search_space=search_space,
             default_trial_type=hifi_task,
-            default_runner=AxRunner(libE_info, gen_specs),
+            default_runner=ax_runner,
             optimization_config=opt_config,
         )
-    exp.add_trial_type(lofi_task, AxRunner(libE_info, gen_specs))
+
+    exp.add_trial_type(lofi_task, ax_runner)
     exp.add_tracking_metric(
         metric=lofi_objective,
         trial_type=lofi_task,
@@ -451,6 +459,32 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 break
             hifi_trials.append(tr.index)
 
+        if model_iteration == 0:
+            # Initialize folder to log the model.
+            if not os.path.exists('model_history'):
+                os.mkdir('model_history')
+            # Register metric and runner in order to be able to save to json.
+            register_metric(AxMetric)
+            register_runner(AxRunner)
+
+        # Save current experiment.
+        # Saving the experiment to a json file currently requires a bit of
+        # trickery. The `AxRunner` cannot be serialized into a json file
+        # due to the `libE_info` and `gen_specs` attributes. This also prevents
+        # the experiment from being saved to file. In order to overcome this,
+        # all instances of the `AxRunner` are replaced by a `SyntheticRunner`
+        # before saving. Afterwards, the `AxRunner` is reasigned again to both
+        # high- and low-fidelity tasks in order to allow the optimization to
+        # continue.
+        for i, trial in exp.trials.items():
+            trial._runner = SyntheticRunner()
+        exp.update_runner(lofi_task, SyntheticRunner())
+        exp.update_runner(hifi_task, SyntheticRunner())
+        save_experiment(exp, 'model_history/experiment_%05d.json' % model_iteration)
+        exp.update_runner(lofi_task, ax_runner)
+        exp.update_runner(hifi_task, ax_runner)
+
+        # Increase iteration counter.
         model_iteration += 1
 
     return [], persis_info, FINISHED_PERSISTENT_GEN_TAG
