@@ -61,6 +61,13 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template,
         sim_specs['user']['z_name'] = mf_params['name']
     elif mt_params is not None:
         sim_specs['in'].append('task')
+        sim_specs['user']['extra_args'] = {}
+        if 'extra_args_lofi' in mt_params:
+            lofi_name = mt_params['name_lofi']
+            sim_specs['user']['extra_args'][lofi_name] = mt_params['extra_args_lofi']
+        if 'extra_args_hifi' in mt_params:
+            hifi_name = mt_params['name_hifi']
+            sim_specs['user']['extra_args'][hifi_name] = mt_params['extra_args_hifi']
     return sim_specs
 
 
