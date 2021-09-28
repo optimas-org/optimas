@@ -381,15 +381,8 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
         trial_type=lofi_task,
         canonical_name='hifi_metric')
 
-    # If there is any past history, feed it to the GP
-    # if len(H) > 0:
-    #     for i in range(len(H)):
-    #         x = H['x'][i]
-    #         z = H['z'][i]
-    #         y = H['f'][i]
-    #         opt.tell([([z], x, -y)])
-    #     # Update hyperparameters
-    #     opt._build_new_model()
+    # TODO: Implement reading past history (by reading saved experiment or
+    # libEnsemble hystory file).
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
