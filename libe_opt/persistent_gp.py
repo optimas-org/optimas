@@ -451,13 +451,9 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 break
             hifi_trials.append(tr.index)
 
-        # Make dummy H_o. Is it needed?
-        H_o = np.zeros(1, dtype=gen_specs['out'])
-
         model_iteration += 1
 
-
-    return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
+    return [], persis_info, FINISHED_PERSISTENT_GEN_TAG
 
 
 class AxRunner(Runner):
