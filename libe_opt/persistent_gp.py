@@ -491,6 +491,8 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
 
 
 class AxRunner(Runner):
+    """ Custom runner in charge of executing the trials using libEnsemble. """
+
     def __init__(self, libE_info, gen_specs):
         self.libE_info = libE_info
         self.gen_specs = gen_specs
@@ -527,6 +529,8 @@ class AxRunner(Runner):
 
 
 class AxMetric(Metric):
+    """ Custom metric to be optimized during the experiment. """
+
     def fetch_trial_data(self, trial):
         records = []
         for arm_name, arm in trial.arms_by_name.items():
