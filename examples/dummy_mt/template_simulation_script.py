@@ -8,9 +8,9 @@ import time
 
 task = {{task}}
 
-if task == 'online':
+if task == 'expensive_model':
     resolution = 60
-elif task == 'offline':
+elif task == 'cheap_model':
     resolution = 1
 
 # 2D function with multiple minima
