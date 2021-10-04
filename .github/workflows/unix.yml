@@ -34,7 +34,7 @@ jobs:
       run: |
         conda install -c conda-forge numpy mpi4py;
         pip install pyflakes;
-        pip install git+http://github.com/RemiLehe/libensemble@multi_fidelity_adaptive;
+        pip install libensemble;
         pip install -r requirements.txt;
         python setup.py install
     - shell: bash -l {0}
