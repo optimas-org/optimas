@@ -53,6 +53,7 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template, m
     # If multifidelity is used, add fidelity to sim_specs 'in' and 'out'.
     if mf_params is not None:
         sim_specs['in'].append('z')
+        sim_specs['persis_in'].append('z')
         fidel_type, fidel_len = determine_fidelity_type_and_length(mf_params)
         sim_specs['out'].append((mf_params['name'], fidel_type, fidel_len))
         sim_specs['user']['z_name'] = mf_params['name']
@@ -89,6 +90,7 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None):
         'gen_f': get_generator_function(gen_type),
         # Generator input. This is a RNG, no need for inputs.
         'in': ['sim_id', 'x', 'f'],
+        'persis_in': ['sim_id', 'x', 'f'],
         'out': [
             # parameters to input into the simulation.
             ('x', float, (n,)),
@@ -105,6 +107,7 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None):
     }
     if mf_params is not None:
         gen_specs['in'].append('z')
+        gen_specs['persis_in'].append('z')
 
     # State the generating function, its arguments, output,
     # and necessary parameters.
