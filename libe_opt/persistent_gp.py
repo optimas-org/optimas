@@ -7,10 +7,10 @@ of the whole libEnsemble run.
 This `gen_f` is meant to be used with the `alloc_f` function
 `only_persistent_gens`
 """
-import os
+
 import numpy as np
-from libensemble.message_numbers import STOP_TAG, PERSIS_STOP, FINISHED_PERSISTENT_GEN_TAG
-from libensemble.tools.gen_support import sendrecv_mgr_worker_msg
+from libensemble.message_numbers import STOP_TAG, PERSIS_STOP, FINISHED_PERSISTENT_GEN_TAG, EVAL_GEN_TAG
+from libensemble.tools.persistent_support import PersistentSupport
 
 # import dragonfly Gaussian Process functions
 from dragonfly.exd.domains import EuclideanDomain
@@ -32,6 +32,7 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
     # Extract bounds of the parameter space, and batch size
     ub_list = gen_specs['user']['ub']
     lb_list = gen_specs['user']['lb']
+    ps = PersistentSupport(libE_info, EVAL_GEN_TAG)
 
     # Number of points to generate initially
     number_of_gen_points = gen_specs['user']['gen_batch_size']
@@ -45,10 +46,6 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
                                 init_capital=number_of_gen_points))
     opt.initialise()
 
-    # Initialize folder to log the model
-    if not os.path.exists('model_history'):
-        os.mkdir('model_history')
-
     # If there is any past history, feed it to the GP
     if len(H) > 0:
         for i in range(len(H)):
@@ -60,9 +57,7 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
-    model_iteration = -1
     while tag not in [STOP_TAG, PERSIS_STOP]:
-        model_iteration += 1
 
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
@@ -70,14 +65,11 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
         for i in range(number_of_gen_points):
             x = opt.ask()
             H_o['x'][i] = x
-
-        # Log the parameters of the model
-        with open('model_history/model_%05d.txt' %model_iteration, 'w') as f:
-            f.write( opt.gp.__str__() + "\n" )
+            H_o['resource_sets'][i] = 1
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager
-        tag, Work, calc_in = sendrecv_mgr_worker_msg(libE_info['comm'], H_o)
+        tag, Work, calc_in = ps.send_recv(H_o)
         if calc_in is not None:
             # Check how many simulations have returned
             n = len(calc_in['f'])
@@ -108,6 +100,7 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
     # Extract bounds of the parameter space, and batch size
     ub_list = gen_specs['user']['ub']
     lb_list = gen_specs['user']['lb']
+    ps = PersistentSupport(libE_info, EVAL_GEN_TAG)
 
     # Fidelity range.
     fidel_range = gen_specs['user']['range']
@@ -134,10 +127,6 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
                                               init_capital=number_of_gen_points))
     opt.initialise()
 
-    # Initialize folder to log the model
-    if not os.path.exists('model_history'):
-        os.mkdir('model_history')
-
     # If there is any past history, feed it to the GP
     if len(H) > 0:
         for i in range(len(H)):
@@ -150,9 +139,7 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
-    model_iteration = -1
     while tag not in [STOP_TAG, PERSIS_STOP]:
-        model_iteration += 1
 
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
@@ -161,14 +148,11 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
             z, input_vector = opt.ask()
             H_o['x'][i] = input_vector
             H_o['z'][i] = z[0]
-
-        # Log the parameters of the model
-        with open('model_history/model_%05d.txt' %model_iteration, 'w') as f:
-            f.write( opt.gp.__str__() + "\n" )
+            H_o['resource_sets'][i] = max(1, int(z[0]/2))
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager
-        tag, Work, calc_in = sendrecv_mgr_worker_msg(libE_info['comm'], H_o)
+        tag, Work, calc_in = ps.send_recv(H_o)
         if calc_in is not None:
             # Check how many simulations have returned
             n = len(calc_in['f'])
@@ -200,6 +184,7 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
     # Extract bounds of the parameter space, and batch size
     ub_list = gen_specs['user']['ub']
     lb_list = gen_specs['user']['lb']
+    ps = PersistentSupport(libE_info, EVAL_GEN_TAG)
 
     # Multifidelity settings.
     cost_func = gen_specs['user']['cost_func']
@@ -243,10 +228,6 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
             init_capital=number_of_gen_points))
     opt.initialise()
 
-    # Initialize folder to log the model
-    if not os.path.exists('model_history'):
-        os.mkdir('model_history')
-
     # If there is any past history, feed it to the GP
     if len(H) > 0:
         for i in range(len(H)):
@@ -259,9 +240,7 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
-    model_iteration = -1
     while tag not in [STOP_TAG, PERSIS_STOP]:
-        model_iteration += 1
 
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
@@ -270,14 +249,11 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
             z, input_vector = opt.ask()
             H_o['x'][i] = input_vector
             H_o['z'][i] = z[0]
-
-        # Log the parameters of the model
-        with open('model_history/model_%05d.txt' %model_iteration, 'w') as f:
-            f.write( opt.gp.__str__() + "\n" )
+            H_o['resource_sets'][i] = max(1, int(z[0]/2))
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager
-        tag, Work, calc_in = sendrecv_mgr_worker_msg(libE_info['comm'], H_o)
+        tag, Work, calc_in = ps.send_recv(H_o)
         if calc_in is not None:
             # Check how many simulations have returned
             n = len(calc_in['f'])
@@ -293,6 +269,5 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
             number_of_gen_points = n
         else:
             number_of_gen_points = 0
-
 
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
