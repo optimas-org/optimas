@@ -34,7 +34,7 @@ jobs:
       run: |
         conda install -c conda-forge numpy mpi4py;
         pip install pyflakes;
-        pip install libensemble;
+        pip install git+http://github.com/Libensemble/libensemble@develop;
         pip install -r requirements.txt;
         python setup.py install
     - shell: bash -l {0}
