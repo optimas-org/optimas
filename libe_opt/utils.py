@@ -53,7 +53,6 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template, m
     # If multifidelity is used, add fidelity to sim_specs 'in' and 'out'.
     if mf_params is not None:
         sim_specs['in'].append('z')
-        sim_specs['persis_in'].append('z')
         fidel_type, fidel_len = determine_fidelity_type_and_length(mf_params)
         sim_specs['out'].append((mf_params['name'], fidel_type, fidel_len))
         sim_specs['user']['z_name'] = mf_params['name']
