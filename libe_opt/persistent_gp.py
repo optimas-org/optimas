@@ -7,7 +7,7 @@ of the whole libEnsemble run.
 This `gen_f` is meant to be used with the `alloc_f` function
 `only_persistent_gens`
 """
-
+import os
 import numpy as np
 from libensemble.message_numbers import STOP_TAG, PERSIS_STOP, FINISHED_PERSISTENT_GEN_TAG, EVAL_GEN_TAG
 from libensemble.tools.persistent_support import PersistentSupport
@@ -46,6 +46,10 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
                                 init_capital=number_of_gen_points))
     opt.initialise()
 
+    # Initialize folder to log the model
+    if not os.path.exists('model_history'):
+        os.mkdir('model_history')
+
     # If there is any past history, feed it to the GP
     if len(H) > 0:
         for i in range(len(H)):
@@ -57,7 +61,9 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
+    model_iteration = -1
     while tag not in [STOP_TAG, PERSIS_STOP]:
+        model_iteration += 1
 
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
@@ -66,6 +72,10 @@ def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
             x = opt.ask()
             H_o['x'][i] = x
             H_o['resource_sets'][i] = 1
+
+        # Log the parameters of the model
+        with open('model_history/model_%05d.txt' %model_iteration, 'w') as f:
+            f.write( opt.gp.__str__() + "\n" )
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager
@@ -127,6 +137,14 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
                                               init_capital=number_of_gen_points))
     opt.initialise()
 
+    # Initialize folder to log the model
+    if not os.path.exists('model_history'):
+        os.mkdir('model_history')
+
+    # Initialize folder to log the model
+    if not os.path.exists('model_history'):
+        os.mkdir('model_history')
+
     # If there is any past history, feed it to the GP
     if len(H) > 0:
         for i in range(len(H)):
@@ -139,7 +157,9 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
+    model_iteration = -1
     while tag not in [STOP_TAG, PERSIS_STOP]:
+        model_iteration += 1
 
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
@@ -148,7 +168,11 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
             z, input_vector = opt.ask()
             H_o['x'][i] = input_vector
             H_o['z'][i] = z[0]
-            H_o['resource_sets'][i] = max(1, int(z[0]/2))
+            H_o['resource_sets'][i] = 1
+
+        # Log the parameters of the model
+        with open('model_history/model_%05d.txt' %model_iteration, 'w') as f:
+            f.write( opt.gp.__str__() + "\n" )
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager
@@ -228,6 +252,10 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
             init_capital=number_of_gen_points))
     opt.initialise()
 
+    # Initialize folder to log the model
+    if not os.path.exists('model_history'):
+        os.mkdir('model_history')
+
     # If there is any past history, feed it to the GP
     if len(H) > 0:
         for i in range(len(H)):
@@ -240,7 +268,9 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
+    model_iteration = -1
     while tag not in [STOP_TAG, PERSIS_STOP]:
+        model_iteration += 1
 
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
@@ -249,7 +279,11 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
             z, input_vector = opt.ask()
             H_o['x'][i] = input_vector
             H_o['z'][i] = z[0]
-            H_o['resource_sets'][i] = max(1, int(z[0]/2))
+            H_o['resource_sets'][i] = 1
+
+        # Log the parameters of the model
+        with open('model_history/model_%05d.txt' %model_iteration, 'w') as f:
+            f.write( opt.gp.__str__() + "\n" )
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager
