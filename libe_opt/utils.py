@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import os
 
@@ -25,7 +27,8 @@ def determine_fidelity_type_and_length(mf_parameters):
     return fidel_type, fidel_len
 
 
-def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template, mf_params=None):
+def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template,
+                     mf_params=None, mt_params=None):
     # State the objective function, its arguments, output, and necessary parameters
     # (and their sizes). Here, the 'user' field is for the user's (in this case,
     # the simulation) convenience. Feel free to use it to pass number of nodes,
@@ -56,6 +59,15 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template, m
         fidel_type, fidel_len = determine_fidelity_type_and_length(mf_params)
         sim_specs['out'].append((mf_params['name'], fidel_type, fidel_len))
         sim_specs['user']['z_name'] = mf_params['name']
+    elif mt_params is not None:
+        sim_specs['in'].append('task')
+        sim_specs['user']['extra_args'] = {}
+        if 'extra_args_lofi' in mt_params:
+            lofi_name = mt_params['name_lofi']
+            sim_specs['user']['extra_args'][lofi_name] = mt_params['extra_args_lofi']
+        if 'extra_args_hifi' in mt_params:
+            hifi_name = mt_params['name_hifi']
+            sim_specs['user']['extra_args'][hifi_name] = mt_params['extra_args_hifi']
     return sim_specs
 
 
@@ -71,7 +83,7 @@ def create_alloc_specs(gen_type, run_async=False):
     return alloc_specs
 
 
-def create_gen_specs(gen_type, nworkers, var_params, mf_params=None):
+def create_gen_specs(gen_type, nworkers, var_params, mf_params=None, mt_params=None):
     # Problem dimension. This is the number of input parameters exposed,
     # that LibEnsemble will vary in order to minimize a single output parameter.
     n = len(var_params)
@@ -81,6 +93,8 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None):
         gen_type = gen_type + '_mf'
         if mf_params['discrete']:
             gen_type = gen_type + '_disc'
+    elif mt_params is not None:
+        gen_type = gen_type + '_mt'
 
     # Here, the 'user' field is for the user's (in this case,
     # the RNG) convenience.
@@ -107,6 +121,9 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None):
     if mf_params is not None:
         gen_specs['in'].append('z')
         gen_specs['persis_in'].append('z')
+    elif mf_params is not None:
+        gen_specs['in'].append('task')
+        gen_specs['persis_in'].append('task')
 
     # State the generating function, its arguments, output,
     # and necessary parameters.
@@ -121,6 +138,19 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None):
             fidel_type, fidel_len = determine_fidelity_type_and_length(mf_params)
             gen_specs['out'].append(('z', fidel_type, fidel_len))
             gen_specs['user'] = {**gen_specs['user'], **mf_params}
+
+    elif gen_type in ['bo_mt']:
+        if run_async:
+            warnings.warn(
+                "Asynchronous mode not available in multi-task optimization."
+                " `run_async` parameter ignored."
+            )
+        gen_specs['user']['async'] = False
+
+        gen_specs['out'].append(
+                ('task', str, max([len(mt_params['name_hifi']), len(mt_params['name_lofi'])]))
+                )
+        gen_specs['user'] = {**gen_specs['user'], **mt_params}
 
     elif gen_type == 'aposmm':
         gen_specs['out'] = [
