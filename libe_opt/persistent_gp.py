@@ -314,6 +314,54 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
 
 
+def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
+    """
+    Create a Gaussian Process model, update it as new simulation results
+    are available, and generate inputs for the next simulations.
+    This is a persistent `genf` i.e. this function is called by a dedicated
+    worker and does not return until the end of the whole libEnsemble run.
+    """
+    # Extract bounds of the parameter space, and batch size
+    ax_client = gen_specs['user']['client']
+    metric_name = list(ax_client.experiment.metrics.keys())[0]
+    # Number of points to generate initially
+    number_of_gen_points = gen_specs['user']['gen_batch_size']
+    # Receive information from the manager (or a STOP_TAG)
+
+    tag = None
+    while tag not in [STOP_TAG, PERSIS_STOP]:
+
+        # Ask the optimizer to generate `batch_size` new points
+        # Store this information in the format expected by libE
+        H_o = np.zeros(number_of_gen_points, dtype=gen_specs['out'])
+        for i in range(number_of_gen_points):
+            parameters, _ = ax_client.get_next_trial()
+            # Transform ax parameter dict to list
+            input_vector = list(parameters.values())
+            H_o['x'][i] = input_vector
+
+        # Send data and get results from finished simulation
+        # Blocking call: waits for simulation results to be sent by the manager
+        tag, Work, calc_in = sendrecv_mgr_worker_msg(libE_info['comm'], H_o)
+        if calc_in is not None:
+            # Check how many simulations have returned
+            n = len(calc_in['f'])
+            # Update the GP with latest simulation results
+            for i in range(n):
+                trial_index = int(calc_in['sim_id'][i])
+                y = calc_in['f'][i]
+                # Register trial with unknown SEM
+                ax_client.complete_trial(trial_index, {metric_name: (y, np.nan)})
+            # Set the number of points to generate to that number:
+            number_of_gen_points = n
+        else:
+            number_of_gen_points = 0
+
+    ax_client.save_to_json_file('ax_client.json')
+
+    return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
+
+    
 def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     """
     Create a Gaussian Process model for multi-task optimization
