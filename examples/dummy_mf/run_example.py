@@ -6,7 +6,7 @@ from analysis_script import analyze_simulation, analyzed_quantities
 from mf_parameters import mf_parameters
 
 
-gen_type = 'bo'
+gen_type = 'ax'
 sim_max = 10
 run_async = True
 nworkers, is_master, libE_specs, _ = parse_args()

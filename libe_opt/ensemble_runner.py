@@ -14,7 +14,8 @@ from libe_opt.utils import (
 def run_ensemble(
         nworkers, sim_max, is_master, gen_type, analyzed_params,
         var_params, analysis_func, mf_params=None, mt_params=None,
-        past_history=None, libE_specs={}, run_async=False):
+        past_history=None, libE_specs={}, run_async=False,
+        ax_client=None):
 
     # Automatically detect the template simulation script
     sim_template = [ filename for filename in os.listdir('./') \
@@ -26,7 +27,8 @@ def run_ensemble(
         mt_params)
     alloc_specs = create_alloc_specs(gen_type)
     gen_specs = create_gen_specs(
-        gen_type, nworkers, var_params, run_async, mf_params, mt_params)
+        gen_type, nworkers, var_params, run_async, mf_params, mt_params,
+        ax_client)
     libE_specs = create_libe_specs(sim_template, libE_specs)
 
     # Setup MPI executor
