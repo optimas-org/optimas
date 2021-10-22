@@ -161,10 +161,6 @@ if __name__ == '__main__':
     # Add a diagnostics
     write_dir = 'diags'
     sim.diags = [
-                 BoostedFieldDiagnostic( zmin, zmax, c,
-                    dt_snapshot_lab, Ntot_snapshot_lab, gamma_boost,
-                    period=diag_period, fldobject=sim.fld, comm=sim.comm,
-                    fieldtypes=["E", "B", "rho"], write_dir=write_dir),
                 BoostedParticleDiagnostic( zmin, zmax, c, dt_snapshot_lab,
                     Ntot_snapshot_lab, gamma_boost, diag_period, sim.fld,
                     species={"electrons from N": elec_from_N},
@@ -172,8 +168,7 @@ if __name__ == '__main__':
                     ]
     # Remove step 0 outputs
     sim.diags[0].snapshots.pop(0)
-    sim.diags[1].snapshots.pop(0)
-
+    
     N_step = int(T_interact/sim.dt)
     ### Run the simulation
     sim.step( N_step )

@@ -35,14 +35,20 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
         if z_name not in names:
             names.append(z_name)
 
+
     # Merge lists into dictionary.
     values_dict = { n: v for n, v in zip(names, values) }
 
+    # If running with multiple tasks, add to names and values.
+    if 'task' in H.dtype.names:
+        values_dict['task'] = "'{}'".format(H['task'][0])
+
     # Create simulation input file.
     sim_template = sim_specs['user']['sim_template']
+    sim_script = sim_template[len('template_'):] # Strip 'template_' from name
     with open(sim_template, 'r') as f:
         template = jinja2.Template( f.read() )
-    with open('simulation_script.py', 'w') as f:
+    with open(sim_script, 'w') as f:
         f.write( template.render(values_dict) )
     os.remove(sim_template)
 
@@ -50,17 +56,32 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
     exctr = Executor.executor  # Get Executor
     # Launch the executor to actually run the WarpX simulation
     resources = Resources.resources.worker_resources
-    os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(
-        map(str,resources.slots_on_node))
+    if Resources.resources.launcher != 'jsrun':
+        os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(
+            map(str,resources.slots_on_node))
     num_nodes = resources.local_node_count
     cores_per_node = resources.slot_count #One CPU per GPU
+
+    # Get extra args.
     extra_args = os.environ.get( 'LIBE_SIM_EXTRA_ARGS', None )
+
+    # If running with multiple tasks, get extra args specific of current task.
+    if 'task' in H.dtype.names:
+        task_name = H['task'][0]
+        if task_name in sim_specs['user']['extra_args']:
+            task_args = sim_specs['user']['extra_args'][task_name]
+            if isinstance(task_args, str):
+                if extra_args is not None:
+                    extra_args += ' ' + task_args
+                else:
+                    extra_args = task_args
+
     if extra_args is not None:
         task = exctr.submit(calc_type='sim',
                             num_nodes=num_nodes,
                             ranks_per_node=cores_per_node,
                             extra_args=extra_args,
-                            app_args='simulation_script.py',
+                            app_args=sim_script,
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_run=True)
@@ -69,7 +90,7 @@ def run_simulation(H, persis_info, sim_specs, libE_info):
                             num_procs=1,
                             num_nodes=num_nodes,
                             ranks_per_node=cores_per_node,
-                            app_args='simulation_script.py',
+                            app_args=sim_script,
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_run=True)

@@ -13,27 +13,44 @@ from libe_opt.utils import (
 
 def run_ensemble(
         nworkers, sim_max, is_master, gen_type, analyzed_params,
-        var_params, analysis_func, sim_template, mf_params=None,
+        var_params, analysis_func, mf_params=None, mt_params=None,
         past_history=None, libE_specs={}, run_async=False,
         ax_client=None):
-    # MPI executor
+
+    # Automatically detect the template simulation script
+    sim_template = [ filename for filename in os.listdir('./') \
+                              if filename.startswith('template') ][0]
+
+    # Create specs.
+    sim_specs = create_sim_specs(
+        analyzed_params, var_params, analysis_func, sim_template, mf_params,
+        mt_params)
+    alloc_specs = create_alloc_specs(gen_type)
+    gen_specs = create_gen_specs(
+        gen_type, nworkers, var_params, run_async, mf_params, mt_params,
+        ax_client)
+    libE_specs = create_libe_specs(sim_template, libE_specs)
+
+    # Setup MPI executor
     libE_specs['zero_resource_workers'] = [1]
-    if 'central_mode' not in libE_specs.keys():
-        libE_specs['central_mode'] = False
     exctr = MPIExecutor()
-    exctr.register_calc(full_path='python', calc_type='sim')
+    if sim_template.endswith('.py'):
+        exctr.register_calc(full_path='python', calc_type='sim')
+    else:
+        # By default, if the template is not a `.py` file, we run
+        # it with an executable. The executable should have a `.ex` at the end
+        executables = [filename for filename in os.listdir() \
+                     if filename.endswith('.ex')]
+        if len(executables) == 0:
+            raise ValueError('You need to copy the WarpX executable in this folder.')
+        else:
+            executable = executables[0]
+            exctr.register_calc(full_path=executable, calc_type='sim')
+        libE_specs['sim_dir_copy_files'].append(executable)
 
     # libE logger
     libE_logger.set_level('INFO')
 
-    # Create specs.
-    sim_specs = create_sim_specs(
-        analyzed_params, var_params, analysis_func, sim_template, mf_params)
-    alloc_specs = create_alloc_specs(gen_type)
-    gen_specs = create_gen_specs(
-        gen_type, nworkers, var_params, run_async, mf_params, ax_client)
-    libE_specs = create_libe_specs(sim_template, libE_specs)
-    
     # Exit criteria
     exit_criteria = {'sim_max': sim_max}  # Exit after running sim_max simulations
 
