@@ -8,20 +8,3 @@ varying_parameters = OrderedDict({
     'x0': [0., 15.],
     'x1': [0., 15.],
 })
-
-parameters = list()
-for key, value in varying_parameters.items():
-    parameters.append(
-        {
-            'name': key,
-            "type": "range",
-            "bounds": value
-        }
-    )
-
-ax_client = AxClient()
-ax_client.create_experiment(
-    parameters= parameters,
-    objective_name="f",
-    minimize=True,
-)
