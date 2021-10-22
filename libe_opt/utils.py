@@ -121,6 +121,8 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False,
         'user': {
             # Total max number of sims running concurrently.
             'gen_batch_size': nworkers-1,
+            # Parameter names.
+            'params': [ name for name in var_params.keys() ],
             # Lower bound for the n parameters.
             'lb': np.array([ v[0] for v in var_params.values() ]),
             # Upper bound for the n parameters.
@@ -151,7 +153,7 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False,
         if use_mf:
             fidel_type, fidel_len = determine_fidelity_type_and_length(mf_params)
             gen_specs['out'].append(('z', fidel_type, fidel_len))
-            gen_specs['user'] = {**gen_specs['user'], **mf_params}
+            gen_specs['user']['mf_params'] = mf_params
 
         # If multi-task is used, make user async mode is not used, add task to
         # 'out' and multi-task parameters to 'user'.
@@ -166,7 +168,7 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False,
             gen_specs['out'].append(
                     ('task', str, max([len(mt_params['name_hifi']), len(mt_params['name_lofi'])]))
                     )
-            gen_specs['user'] = {**gen_specs['user'], **mt_params}
+            gen_specs['user']['mt_params'] = mt_params
 
     elif gen_type == 'aposmm':
         gen_specs['out'] = [
