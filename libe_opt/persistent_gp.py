@@ -130,10 +130,10 @@ def persistent_gp_mf_gen_f(H, persis_info, gen_specs, libE_info):
     lb_list = gen_specs['user']['lb']
 
     # Fidelity range.
-    fidel_range = gen_specs['user']['range']
+    fidel_range = gen_specs['user']['mf_params']['range']
 
     # Get fidelity cost function.
-    cost_func = gen_specs['user']['cost_func']
+    cost_func = gen_specs['user']['mf_params']['cost_func']
 
     # Number of points to generate initially
     number_of_gen_points = gen_specs['user']['gen_batch_size']
@@ -222,9 +222,9 @@ def persistent_gp_mf_disc_gen_f(H, persis_info, gen_specs, libE_info):
     lb_list = gen_specs['user']['lb']
 
     # Multifidelity settings.
-    cost_func = gen_specs['user']['cost_func']
+    cost_func = gen_specs['user']['mf_params']['cost_func']
     # discrete_fidel = gen_specs['user']['discrete']
-    fidel_range = gen_specs['user']['range']
+    fidel_range = gen_specs['user']['mf_params']['range']
 
     # Number of points to generate initially.
     number_of_gen_points = gen_specs['user']['gen_batch_size']
@@ -463,14 +463,14 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     lb_list = gen_specs['user']['lb']
 
     # Get task names.
-    hifi_task = gen_specs['user']['name_hifi']
-    lofi_task = gen_specs['user']['name_lofi']
+    hifi_task = gen_specs['user']['mt_params']['name_hifi']
+    lofi_task = gen_specs['user']['mt_params']['name_lofi']
 
     # Number of points to generate initially and during optimization.
-    n_init_hifi = gen_specs['user']['n_init_hifi']
-    n_init_lofi = gen_specs['user']['n_init_lofi']
-    n_opt_hifi = gen_specs['user']['n_opt_hifi']
-    n_opt_lofi = gen_specs['user']['n_opt_lofi']
+    n_init_hifi = gen_specs['user']['mt_params']['n_init_hifi']
+    n_init_lofi = gen_specs['user']['mt_params']['n_init_lofi']
+    n_opt_hifi = gen_specs['user']['mt_params']['n_opt_hifi']
+    n_opt_lofi = gen_specs['user']['mt_params']['n_opt_lofi']
 
     # Create search space.
     parameters = []
