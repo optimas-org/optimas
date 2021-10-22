@@ -35,6 +35,10 @@ from ax.core.optimization_config import OptimizationConfig
 from ax.core.objective import Objective
 from ax.modelbridge.factory import get_sobol, get_MTGP
 from ax.core.observation import ObservationFeatures
+from ax.service.ax_client import AxClient
+from ax.modelbridge.generation_strategy import (
+    GenerationStep, GenerationStrategy)
+from ax.modelbridge.registry import Models
 
 
 def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
@@ -321,14 +325,88 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
     This is a persistent `genf` i.e. this function is called by a dedicated
     worker and does not return until the end of the whole libEnsemble run.
     """
-    # Extract bounds of the parameter space, and batch size
-    ax_client = gen_specs['user']['client']
-    metric_name = list(ax_client.experiment.metrics.keys())[0]
-    # Number of points to generate initially
-    number_of_gen_points = gen_specs['user']['gen_batch_size']
-    # Receive information from the manager (or a STOP_TAG)
+    # Create Ax client.
+    if gen_specs['user']['client'] is not None:
+        ax_client = gen_specs['user']['client']
+    else:
+        # Extract bounds of the parameter space
+        names_list = gen_specs['user']['params']
+        ub_list = gen_specs['user']['ub']
+        lb_list = gen_specs['user']['lb']
 
+        # Create parameter list.
+        # The use of `.item()` converts from numpy types to native Python
+        # types. This is needed becase Ax seems to support only native types.
+        parameters = list()
+        for name, lb, ub in zip(names_list, lb_list, ub_list):
+            parameters.append(
+                {
+                    'name': name,
+                    'type': 'range',
+                    'bounds': [lb.item(), ub.item()]
+                }
+            )
+
+        use_mf = False
+        if 'mf_params' in gen_specs['user']:
+            use_mf = True
+            mf_params = gen_specs['user']['mf_params']
+            fidel_name = mf_params['name']
+            parameters.append(
+                {
+                    'name': mf_params['name'],
+                    'type': 'range',
+                    'bounds': mf_params['range'],
+                    'is_fidelity': True,
+                    'target_value': mf_params['range'][-1]
+                }
+            )
+
+        # Batch size
+        batch_size = gen_specs['user']['gen_batch_size']
+
+        # Make generation strategy:
+        # 1. Sobol initialization with `batch_size` random trials.
+        # 2. Continue indefinitely with GPEI (of GPKG for multifidelity).
+        steps = [
+            GenerationStep(model=Models.SOBOL, num_trials=batch_size)
+        ]
+        if use_mf:
+            steps.append(
+                GenerationStep(
+                    model=Models.GPKG,
+                    num_trials=-1,
+                    model_kwargs={
+                        'cost_intercept': mf_params['cost_intercept']
+                    }
+                )
+            )
+        else:
+            steps.append(
+                GenerationStep(
+                    model=Models.GPEI,
+                    num_trials=-1
+                )
+            )
+        gs = GenerationStrategy(steps)
+
+        # Create client and experiment.
+        ax_client = AxClient(generation_strategy=gs)
+        ax_client.create_experiment(
+            parameters=parameters,
+            objective_name="f",
+            minimize=True
+        )
+
+    # Metric name.
+    metric_name = list(ax_client.experiment.metrics.keys())[0]
+
+    # Number of points to generate initially.
+    number_of_gen_points = gen_specs['user']['gen_batch_size']
+
+    # Receive information from the manager (or a STOP_TAG)
     tag = None
+    model_iteration = 0
     while tag not in [STOP_TAG, PERSIS_STOP]:
 
         # Ask the optimizer to generate `batch_size` new points
@@ -336,9 +414,9 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
         H_o = np.zeros(number_of_gen_points, dtype=gen_specs['out'])
         for i in range(number_of_gen_points):
             parameters, _ = ax_client.get_next_trial()
-            # Transform ax parameter dict to list
-            input_vector = list(parameters.values())
-            H_o['x'][i] = input_vector
+            if use_mf:
+                H_o['z'][i] = parameters.pop(fidel_name)
+            H_o['x'][i] = list(parameters.values())
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager
@@ -357,11 +435,20 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
         else:
             number_of_gen_points = 0
 
-    ax_client.save_to_json_file('ax_client.json')
+        # Save current model.
+        if model_iteration == 0:
+            # Initialize folder to log the model.
+            if not os.path.exists('model_history'):
+                os.mkdir('model_history')
+        ax_client.save_to_json_file(
+            'model_history/ax_client_%05d.json' % model_iteration)
+
+        # Increase iteration counter.
+        model_iteration += 1
 
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
 
-    
+
 def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     """
     Create a Gaussian Process model for multi-task optimization
