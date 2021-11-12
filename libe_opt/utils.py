@@ -80,6 +80,13 @@ def create_alloc_specs(gen_type, run_async=False):
         }
     if gen_type in ['random', 'bo']:
         alloc_specs['user'] = {'async_return': run_async}
+    elif gen_type in ['bo_mt']:
+        warnings.warn(
+            "Asynchronous mode not available in multi-task optimization."
+            " `run_async` parameter ignored."
+        )
+        alloc_specs['user'] = {'async_return': False}
+
     return alloc_specs
 
 
@@ -140,13 +147,6 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None, mt_params=N
             gen_specs['user'] = {**gen_specs['user'], **mf_params}
 
     elif gen_type in ['bo_mt']:
-        if run_async:
-            warnings.warn(
-                "Asynchronous mode not available in multi-task optimization."
-                " `run_async` parameter ignored."
-            )
-        gen_specs['user']['async'] = False
-
         gen_specs['out'].append(
                 ('task', str, max([len(mt_params['name_hifi']), len(mt_params['name_lofi'])]))
                 )
