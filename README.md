@@ -30,7 +30,7 @@ https://fbpic.github.io/install/install_summit.html
 Then install other dependencies:
 ```
 source activate $SCRATCH/fbpic_env
-pip install git+https://github.com/Libensemble/libensemble.git@feature/multi_fidelity
+pip install git+https://github.com/Libensemble/libensemble.git@develop
 pip install -r requirements.txt
 source deactivate
 ```
@@ -49,7 +49,7 @@ https://fbpic.github.io/install/install_lawrencium.html
 
 Then install other dependencies:
 ```
-pip install git+https://github.com/Libensemble/libensemble.git@feature/multi_fidelity
+pip install git+https://github.com/Libensemble/libensemble.git@develop
 pip install -r requirements.txt
 ```
 
