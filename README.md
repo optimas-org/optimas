@@ -11,7 +11,7 @@ https://fbpic.github.io/install/install_local.html
 
 Then install other dependencies:
 ```
-pip install git+https://github.com/Libensemble/libensemble.git@feature/multi_fidelity
+pip install git+https://github.com/Libensemble/libensemble.git@develop
 pip install -r requirements.txt
 ```
 

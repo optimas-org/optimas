@@ -3,7 +3,7 @@ import os
 import numpy as np
 from libensemble.libE import libE
 from libensemble.tools import check_inputs
-from libensemble import libE_logger
+from libensemble import logger
 from libensemble.executors.mpi_executor import MPIExecutor
 from libensemble.tools import save_libE_output, add_unique_random_streams
 
@@ -24,16 +24,16 @@ def run_ensemble(
     sim_specs = create_sim_specs(
         analyzed_params, var_params, analysis_func, sim_template, mf_params,
         mt_params)
-    alloc_specs = create_alloc_specs(gen_type)
+    alloc_specs = create_alloc_specs(gen_type, run_async)
     gen_specs = create_gen_specs(
-        gen_type, nworkers, var_params, run_async, mf_params, mt_params)
+        gen_type, nworkers, var_params, mf_params, mt_params)
     libE_specs = create_libe_specs(sim_template, libE_specs)
 
     # Setup MPI executor
     libE_specs['zero_resource_workers'] = [1]
     exctr = MPIExecutor()
     if sim_template.endswith('.py'):
-        exctr.register_calc(full_path='python', calc_type='sim')
+        exctr.register_app(full_path='python', calc_type='sim')
     else:
         # By default, if the template is not a `.py` file, we run
         # it with an executable. The executable should have a `.ex` at the end
@@ -43,11 +43,11 @@ def run_ensemble(
             raise ValueError('You need to copy the WarpX executable in this folder.')
         else:
             executable = executables[0]
-            exctr.register_calc(full_path=executable, calc_type='sim')
+            exctr.register_app(full_path=executable, calc_type='sim')
         libE_specs['sim_dir_copy_files'].append(executable)
 
     # libE logger
-    libE_logger.set_level('INFO')
+    logger.set_level('INFO')
 
     # Exit criteria
     exit_criteria = {'sim_max': sim_max}  # Exit after running sim_max simulations

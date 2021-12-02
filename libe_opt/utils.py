@@ -1,4 +1,4 @@
-import warnings 
+import warnings
 
 import numpy as np
 import os
@@ -71,17 +71,26 @@ def create_sim_specs(analyzed_params, var_params, analysis_func, sim_template,
     return sim_specs
 
 
-def create_alloc_specs(gen_type):
+def create_alloc_specs(gen_type, run_async=False):
     # Allocator function, decides what a worker should do.
     # We use a LibEnsemble allocator.
     alloc_specs = {
         'alloc_f': get_alloc_function_from_gen_type(gen_type),
         'out': [('given_back', bool)]
         }
+    if gen_type in ['random', 'bo']:
+        alloc_specs['user'] = {'async_return': run_async}
+    elif gen_type in ['bo_mt']:
+        warnings.warn(
+            "Asynchronous mode not available in multi-task optimization."
+            " `run_async` parameter ignored."
+        )
+        alloc_specs['user'] = {'async_return': False}
+
     return alloc_specs
 
 
-def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=None, mt_params=None):
+def create_gen_specs(gen_type, nworkers, var_params, mf_params=None, mt_params=None):
     # Problem dimension. This is the number of input parameters exposed,
     # that LibEnsemble will vary in order to minimize a single output parameter.
     n = len(var_params)
@@ -101,9 +110,11 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
         'gen_f': get_generator_function(gen_type),
         # Generator input. This is a RNG, no need for inputs.
         'in': ['sim_id', 'x', 'f'],
+        'persis_in': ['sim_id', 'x', 'f'],
         'out': [
             # parameters to input into the simulation.
-            ('x', float, (n,))
+            ('x', float, (n,)),
+            ('resource_sets', int)
         ],
         'user': {
             # Total max number of sims running concurrently.
@@ -116,8 +127,10 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
     }
     if mf_params is not None:
         gen_specs['in'].append('z')
+        gen_specs['persis_in'].append('z')
     elif mf_params is not None:
         gen_specs['in'].append('task')
+        gen_specs['persis_in'].append('task')
 
     # State the generating function, its arguments, output,
     # and necessary parameters.
@@ -125,7 +138,6 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
         # Here, the 'user' field is for the user's (in this case,
         # the RNG) convenience.
         gen_specs['user']['gen_batch_size'] = nworkers-1
-        gen_specs['user']['async'] = run_async
 
         # If multifidelity is used, add fidelity to 'out' and multifidelity
         # parameters to 'user'.
@@ -135,13 +147,6 @@ def create_gen_specs(gen_type, nworkers, var_params, run_async=False, mf_params=
             gen_specs['user'] = {**gen_specs['user'], **mf_params}
 
     elif gen_type in ['bo_mt']:
-        if run_async:
-            warnings.warn(
-                "Asynchronous mode not available in multi-task optimization."
-                " `run_async` parameter ignored."
-            )
-        gen_specs['user']['async'] = False
-        
         gen_specs['out'].append(
                 ('task', str, max([len(mt_params['name_hifi']), len(mt_params['name_lofi'])]))
                 )
@@ -191,7 +196,7 @@ def create_libe_specs(sim_template, libE_specs={}):
     if 'sim_dirs_make' not in libE_specs.keys():
         libE_specs['sim_dirs_make'] = True
     # Force central mode
-    if 'central_mode' not in libE_specs.keys():
-        libE_specs['central_mode'] = False
+    if 'dedicated_mode' not in libE_specs.keys():
+        libE_specs['dedicated_mode'] = False
 
     return libE_specs
