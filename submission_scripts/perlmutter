@@ -1,0 +1,16 @@
+#!/bin/bash -x
+#SBATCH -J {name}
+#SBATCH -A m3906_g
+#SBATCH -C gpu
+#SBATCH --time {max_time}
+#SBATCH --nodes {n_nodes}
+#SBATCH --ntasks-per-node=4
+#SBATCH --gpus-per-task=1
+
+module load python
+source activate libE_opt
+
+export MPICH_GPU_SUPPORT_ENABLED=1
+export FBPIC_ENABLE_GPUDIRECT=1
+
+python run_example.py --comms local --nworkers {n_workers}
