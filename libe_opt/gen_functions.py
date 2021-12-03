@@ -20,7 +20,7 @@ try:
        persistent_gp_gen_f, persistent_gp_mf_gen_f, persistent_gp_mf_disc_gen_f
     gen_functions['bo'] = persistent_gp_gen_f
     gen_functions['bo_mf'] = persistent_gp_mf_gen_f
-    gen_functions['bo_mf_disc'] = persistent_gp_mf_disc_gen_f,
+    gen_functions['bo_mf_disc'] = persistent_gp_mf_disc_gen_f
 except ImportError:
     pass
 
