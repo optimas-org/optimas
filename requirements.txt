@@ -2,5 +2,3 @@
 libensemble
 jinja2
 dragonfly-opt
-pandas
-ax-platform
