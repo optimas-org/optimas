@@ -150,7 +150,6 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None,
     # and necessary parameters.
     if gen_type == 'random':
         gen_specs['user']['gen_batch_size'] = nworkers-1
-        gen_specs['user']['async'] = run_async
 
     elif gen_type == 'bo':
         gen_specs['user']['gen_batch_size'] = nworkers-1

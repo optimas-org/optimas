@@ -410,6 +410,8 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
     # Metric name.
     metric_name = list(ax_client.experiment.metrics.keys())[0]
 
+    ps = PersistentSupport(libE_info, EVAL_GEN_TAG)
+
     # Number of points to generate initially.
     number_of_gen_points = gen_specs['user']['gen_batch_size']
 
@@ -426,10 +428,11 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
             if use_mf:
                 H_o['z'][i] = parameters.pop(fidel_name)
             H_o['x'][i] = list(parameters.values())
+            H_o['resource_sets'][i] = 1
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager
-        tag, Work, calc_in = sendrecv_mgr_worker_msg(libE_info['comm'], H_o)
+        tag, Work, calc_in = ps.send_recv(H_o)
         if calc_in is not None:
             # Check how many simulations have returned
             n = len(calc_in['f'])
