@@ -18,8 +18,9 @@ def run_ensemble(
         bo_backend='df', ax_client=None):
 
     # Automatically detect the template simulation script
-    sim_template = [ filename for filename in os.listdir('./') \
-                              if filename.startswith('template') ][0]
+    sim_template = [ os.path.join('./sim_specific/',filename) \
+                    for filename in os.listdir('./sim_specific') \
+                    if filename.startswith('template') ][0]
 
     # Create specs.
     sim_specs = create_sim_specs(
