@@ -6,7 +6,7 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: [3.6]
+        python-version: [3.7]
         os: [ubuntu-20.04]
     runs-on: ${{ matrix.os }}
 
@@ -59,3 +59,15 @@ jobs:
         cd optimization_folder;
         ./create_new_optimization.py --name test_mf_disc --from dummy_mf_disc --machine local --n_sim_workers 2;
         cd test_mf_disc; python run_example.py --comms local --nworkers 3
+    - shell: bash -l {0}
+      name: test dummy_ax example
+      run: |
+        cd optimization_folder;
+        ./create_new_optimization.py --name test_dummy_ax --from dummy_ax --machine local --n_sim_workers 2;
+        cd test_dummy_ax; python run_example.py --comms local --nworkers 3
+    - shell: bash -l {0}
+      name: test dummy_mt example
+      run: |
+        cd optimization_folder;
+        ./create_new_optimization.py --name test_dummy_mt --from dummy_mt --machine local --n_sim_workers 2;
+        cd test_dummy_mt; python run_example.py --comms local --nworkers 3

@@ -90,24 +90,36 @@ def create_alloc_specs(gen_type, run_async=False):
     return alloc_specs
 
 
-def create_gen_specs(gen_type, nworkers, var_params, mf_params=None, mt_params=None):
+def create_gen_specs(gen_type, nworkers, var_params, mf_params=None,
+                    mt_params=None, bo_backend='df', ax_client=None):
     # Problem dimension. This is the number of input parameters exposed,
     # that LibEnsemble will vary in order to minimize a single output parameter.
     n = len(var_params)
 
-    # Detect if multifidelity is used and add suffix to generator type
-    if mf_params is not None:
-        gen_type = gen_type + '_mf'
-        if mf_params['discrete']:
-            gen_type = gen_type + '_disc'
-    elif mt_params is not None:
-        gen_type = gen_type + '_mt'
+    use_mf = False
+    discrete_mf = False
+    use_mt = False
+    if gen_type == 'bo':
+        # Detect if multifidelity or multi-task are used
+        if mf_params is not None:
+            use_mf = True
+            if mf_params['discrete']:
+                discrete_mf = True
+        elif mt_params is not None:
+            use_mt = True
+        # Check backend
+        if bo_backend not in ['df', 'ax']:
+            raise ValueError(
+                "Backend '{}' not recognized. ".format(bo_backend) +
+                "Possible BO backends are 'df' (dragonfly) or 'ax' (Ax/BoTorch)"
+            )
 
     # Here, the 'user' field is for the user's (in this case,
     # the RNG) convenience.
     gen_specs = {
         # Generator function. Will randomly generate new sim inputs 'x'.
-        'gen_f': get_generator_function(gen_type),
+        'gen_f': get_generator_function(
+            gen_type, bo_backend, use_mf, discrete_mf, use_mt),
         # Generator input. This is a RNG, no need for inputs.
         'in': ['sim_id', 'x', 'f'],
         'persis_in': ['sim_id', 'x', 'f'],
@@ -119,6 +131,8 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None, mt_params=N
         'user': {
             # Total max number of sims running concurrently.
             'gen_batch_size': nworkers-1,
+            # Parameter names.
+            'params': [ name for name in var_params.keys() ],
             # Lower bound for the n parameters.
             'lb': np.array([ v[0] for v in var_params.values() ]),
             # Upper bound for the n parameters.
@@ -134,23 +148,30 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None, mt_params=N
 
     # State the generating function, its arguments, output,
     # and necessary parameters.
-    if gen_type in ['random', 'bo', 'bo_mf', 'bo_mf_disc']:
-        # Here, the 'user' field is for the user's (in this case,
-        # the RNG) convenience.
+    if gen_type == 'random':
         gen_specs['user']['gen_batch_size'] = nworkers-1
+
+    elif gen_type == 'bo':
+        gen_specs['user']['gen_batch_size'] = nworkers-1
+
+        # Add Ax client
+        if bo_backend == 'ax':
+            gen_specs['user']['client'] = ax_client
 
         # If multifidelity is used, add fidelity to 'out' and multifidelity
         # parameters to 'user'.
-        if mf_params is not None:
+        if use_mf:
             fidel_type, fidel_len = determine_fidelity_type_and_length(mf_params)
             gen_specs['out'].append(('z', fidel_type, fidel_len))
-            gen_specs['user'] = {**gen_specs['user'], **mf_params}
+            gen_specs['user']['mf_params'] = mf_params
 
-    elif gen_type in ['bo_mt']:
-        gen_specs['out'].append(
-                ('task', str, max([len(mt_params['name_hifi']), len(mt_params['name_lofi'])]))
-                )
-        gen_specs['user'] = {**gen_specs['user'], **mt_params}
+        # If multi-task is used, make user async mode is not used, add task to
+        # 'out' and multi-task parameters to 'user'.
+        if use_mt:
+            gen_specs['out'].append(
+                    ('task', str, max([len(mt_params['name_hifi']), len(mt_params['name_lofi'])]))
+                    )
+            gen_specs['user']['mt_params'] = mt_params
 
     elif gen_type == 'aposmm':
         gen_specs['out'] = [
@@ -177,6 +198,7 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None, mt_params=N
         # Absolute tolerance of output 'f'. Determines when
         # local optimization stops.
         gen_specs['user']['ftol_abs'] =  3e-8
+
     return gen_specs
 
 
