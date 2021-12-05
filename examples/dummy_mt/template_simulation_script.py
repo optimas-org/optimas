@@ -9,7 +9,7 @@ import time
 task = {{task}}
 
 if task == 'expensive_model':
-    resolution = 60
+    resolution = 3
 elif task == 'cheap_model':
     resolution = 1
 

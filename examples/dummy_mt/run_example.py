@@ -8,7 +8,7 @@ from mt_parameters import mt_parameters
 
 gen_type = 'bo'
 backend = 'ax'
-sim_max = 100
+sim_max = 25
 run_async = False
 nworkers, is_master, libE_specs, _ = parse_args()
 
