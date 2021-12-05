@@ -66,12 +66,6 @@ jobs:
         ./create_new_optimization.py --name test_dummy_ax --from dummy_ax --machine local --n_sim_workers 2;
         cd test_dummy_ax; python run_example.py --comms local --nworkers 3
     - shell: bash -l {0}
-      name: test dummy_ax_mf example
-      run: |
-        cd optimization_folder;
-        ./create_new_optimization.py --name test_dummy_ax_mf --from dummy_ax_mf --machine local --n_sim_workers 2;
-        cd test_dummy_ax_mf; python run_example.py --comms local --nworkers 3
-    - shell: bash -l {0}
       name: test dummy_mt example
       run: |
         cd optimization_folder;
