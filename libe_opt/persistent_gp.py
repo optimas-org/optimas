@@ -681,7 +681,7 @@ class AxMetric(Metric):
                 "metric_name": self.name,
                 "trial_index": trial.index,
                 "mean": trial.run_metadata[arm_name]['f'],
-                "sem": 0.0,
+                "sem": np.nan,
             })
         return Data(df=pd.DataFrame.from_records(records))
 
