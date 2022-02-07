@@ -5,6 +5,6 @@ from collections import OrderedDict
 varying_parameters = OrderedDict({
     'laser_scale': [0.7, 1.05],
     'z_foc': [3, 7.5],
-    'mult': [0.6, 0.8],
-    'plasma_scale': [0.1, 1.5],
+    'mult': [0.1, 1.5],
+    'plasma_scale': [0.6, 0.8],
 })
