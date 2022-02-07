@@ -377,7 +377,7 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
         # Make generation strategy:
         steps = []
 
-        # If there is no past past history,
+        # If there is no past history,
         # adds Sobol initialization with `batch_size` random trials:
         if len(H) == 0:
             steps.append(GenerationStep(model=Models.SOBOL, num_trials=batch_size))
