@@ -3,4 +3,4 @@ libensemble
 jinja2
 dragonfly-opt
 pandas
-ax-platform
+ax-platform >= 0.2.4
