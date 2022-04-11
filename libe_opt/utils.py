@@ -116,7 +116,7 @@ def create_gen_specs(
             )
 
     # Get default gen_params.
-    default_gen_params = get_default_gen_params(gen_type, nworkers)
+    default_gen_params = get_default_gen_params(gen_type, nworkers, use_mt)
     # Overwrite defaults with given parameters.
     gen_params = {**default_gen_params, **gen_params}
 
