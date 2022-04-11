@@ -371,14 +371,14 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 }
             )
 
-        # Batch size
-        batch_size = gen_specs['user']['gen_batch_size']
+        # Number of initial random trials.
+        n_init = gen_specs['user']['n_init']
 
         # Make generation strategy:
-        # 1. Sobol initialization with `batch_size` random trials.
+        # 1. Sobol initialization with `n_init` random trials.
         # 2. Continue indefinitely with GPEI (of GPKG for multifidelity).
         steps = [
-            GenerationStep(model=Models.SOBOL, num_trials=batch_size)
+            GenerationStep(model=Models.SOBOL, num_trials=n_init)
         ]
         if use_mf:
             steps.append(
