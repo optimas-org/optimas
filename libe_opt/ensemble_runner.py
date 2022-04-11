@@ -14,7 +14,7 @@ from libe_opt.utils import (
 def run_ensemble(
         nworkers, sim_max, is_master, gen_type, analyzed_params,
         var_params, analysis_func, sim_template=None,
-        mf_params=None, mt_params=None,
+        gen_params={}, mf_params=None, mt_params=None,
         past_history=None, libE_specs={}, run_async=False,
         bo_backend='df', ax_client=None):
 
@@ -29,7 +29,7 @@ def run_ensemble(
         mt_params)
     alloc_specs = create_alloc_specs(gen_type, run_async)
     gen_specs = create_gen_specs(
-        gen_type, nworkers, var_params, mf_params, mt_params,
+        gen_type, nworkers, var_params, gen_params, mf_params, mt_params,
         bo_backend, ax_client)
     libE_specs = create_libe_specs(sim_template, libE_specs)
 

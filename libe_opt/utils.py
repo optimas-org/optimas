@@ -90,8 +90,9 @@ def create_alloc_specs(gen_type, run_async=False):
     return alloc_specs
 
 
-def create_gen_specs(gen_type, nworkers, var_params, mf_params=None,
-                    mt_params=None, bo_backend='df', ax_client=None):
+def create_gen_specs(
+        gen_type, nworkers, var_params, gen_params={}, mf_params=None,
+        mt_params=None, bo_backend='df', ax_client=None):
     # Problem dimension. This is the number of input parameters exposed,
     # that LibEnsemble will vary in order to minimize a single output parameter.
     n = len(var_params)
@@ -113,6 +114,11 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None,
                 "Backend '{}' not recognized. ".format(bo_backend) +
                 "Possible BO backends are 'df' (dragonfly) or 'ax' (Ax/BoTorch)"
             )
+
+    # Get default gen_params.
+    default_gen_params = get_default_gen_params(gen_type, nworkers)
+    # Overwrite defaults with given parameters.
+    gen_params = {**default_gen_params, **gen_params}
 
     # Here, the 'user' field is for the user's (in this case,
     # the RNG) convenience.
@@ -136,7 +142,9 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None,
             # Lower bound for the n parameters.
             'lb': np.array([ v[0] for v in var_params.values() ]),
             # Upper bound for the n parameters.
-            'ub': np.array([ v[1] for v in var_params.values() ])
+            'ub': np.array([ v[1] for v in var_params.values() ]),
+            # Add user gen_params.
+            **gen_params
         }
     }
     if mf_params is not None:
@@ -222,3 +230,10 @@ def create_libe_specs(sim_template, libE_specs={}):
         libE_specs['dedicated_mode'] = False
 
     return libE_specs
+
+
+def get_default_gen_params(gen_type, nworkers, is_mt):
+    gen_params = {}
+    if gen_type == 'bo' and not is_mt:
+        gen_params['n_init'] = nworkers - 1
+    return gen_params
