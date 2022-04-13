@@ -13,13 +13,15 @@ from libe_opt.utils import (
 
 def run_ensemble(
         nworkers, sim_max, is_master, gen_type, analyzed_params,
-        var_params, analysis_func, mf_params=None, mt_params=None,
+        var_params, analysis_func, sim_template=None,
+        mf_params=None, mt_params=None,
         past_history=None, libE_specs={}, run_async=False,
         bo_backend='df', ax_client=None):
 
-    # Automatically detect the template simulation script
-    sim_template = [ filename for filename in os.listdir('./') \
-                              if filename.startswith('template') ][0]
+    if sim_template is None:
+        # Automatically detect the template simulation script
+        sim_template = [ filename for filename in os.listdir('./') \
+                         if filename.startswith('template') ][0]
 
     # Create specs.
     sim_specs = create_sim_specs(

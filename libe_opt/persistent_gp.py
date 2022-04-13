@@ -375,11 +375,14 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
         batch_size = gen_specs['user']['gen_batch_size']
 
         # Make generation strategy:
-        # 1. Sobol initialization with `batch_size` random trials.
-        # 2. Continue indefinitely with GPEI (of GPKG for multifidelity).
-        steps = [
-            GenerationStep(model=Models.SOBOL, num_trials=batch_size)
-        ]
+        steps = []
+
+        # If there is no past history,
+        # adds Sobol initialization with `batch_size` random trials:
+        if len(H) == 0:
+            steps.append(GenerationStep(model=Models.SOBOL, num_trials=batch_size))
+
+        # continue indefinitely with GPEI (of GPKG for multifidelity).
         if use_mf:
             steps.append(
                 GenerationStep(
@@ -397,6 +400,7 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
                     num_trials=-1
                 )
             )
+
         gs = GenerationStrategy(steps)
 
         # Create client and experiment.
@@ -414,6 +418,22 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Number of points to generate initially.
     number_of_gen_points = gen_specs['user']['gen_batch_size']
+
+    # If there is any past history, feed it to the GP
+    if len(H) > 0:
+        names_list = gen_specs['user']['params']
+        params = dict.fromkeys(names_list)
+
+        for i in range(len(H)):
+            for j, name in enumerate(names_list):
+                params[name] = H['x'][i][j]
+
+            if 'mf_params' in gen_specs['user']:
+                fidel_name = gen_specs['user']['mf_params']['name']
+                params[fidel_name] = H['z'][i]
+
+            _, trial_id = ax_client.attach_trial(params)
+            ax_client.complete_trial(trial_id, {metric_name: (H['f'][i], np.nan)})
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
@@ -604,8 +624,12 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             if not os.path.exists('model_history'):
                 os.mkdir('model_history')
             # Register metric and runner in order to be able to save to json.
-            register_metric(AxMetric)
-            register_runner(AxRunner)
+            _, encoder_registry, decoder_registry = register_metric(AxMetric)
+            _, encoder_registry, decoder_registry = register_runner(
+                AxRunner,
+                encoder_registry=encoder_registry,
+                decoder_registry=decoder_registry
+            )
 
         # Save current experiment.
         # Saving the experiment to a json file currently requires a bit of
@@ -620,7 +644,11 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             trial._runner = SyntheticRunner()
         exp.update_runner(lofi_task, SyntheticRunner())
         exp.update_runner(hifi_task, SyntheticRunner())
-        save_experiment(exp, 'model_history/experiment_%05d.json' % model_iteration)
+        save_experiment(
+            exp,
+            'model_history/experiment_%05d.json' % model_iteration,
+            encoder_registry=encoder_registry
+        )
         exp.update_runner(lofi_task, ax_runner)
         exp.update_runner(hifi_task, ax_runner)
 
