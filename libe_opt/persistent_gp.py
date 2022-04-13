@@ -375,11 +375,14 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
         batch_size = gen_specs['user']['gen_batch_size']
 
         # Make generation strategy:
-        # 1. Sobol initialization with `batch_size` random trials.
-        # 2. Continue indefinitely with GPEI (of GPKG for multifidelity).
-        steps = [
-            GenerationStep(model=Models.SOBOL, num_trials=batch_size)
-        ]
+        steps = []
+
+        # If there is no past history,
+        # adds Sobol initialization with `batch_size` random trials:
+        if len(H) == 0:
+            steps.append(GenerationStep(model=Models.SOBOL, num_trials=batch_size))
+
+        # continue indefinitely with GPEI (of GPKG for multifidelity).
         if use_mf:
             steps.append(
                 GenerationStep(
@@ -397,6 +400,7 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
                     num_trials=-1
                 )
             )
+
         gs = GenerationStrategy(steps)
 
         # Create client and experiment.
@@ -414,6 +418,22 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
 
     # Number of points to generate initially.
     number_of_gen_points = gen_specs['user']['gen_batch_size']
+
+    # If there is any past history, feed it to the GP
+    if len(H) > 0:
+        names_list = gen_specs['user']['params']
+        params = dict.fromkeys(names_list)
+
+        for i in range(len(H)):
+            for j, name in enumerate(names_list):
+                params[name] = H['x'][i][j]
+
+            if 'mf_params' in gen_specs['user']:
+                fidel_name = gen_specs['user']['mf_params']['name']
+                params[fidel_name] = H['z'][i]
+
+            _, trial_id = ax_client.attach_trial(params)
+            ax_client.complete_trial(trial_id, {metric_name: (H['f'][i], np.nan)})
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
