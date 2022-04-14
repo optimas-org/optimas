@@ -45,12 +45,12 @@ class PostProcOptimization(object):
         self.df = pd.DataFrame(d)
 
         # Only keep the simulations that finished properly
-        self.df = self.df[self.df.returned]
+        self.df = self.df[self.df.sim_ended]
 
         # Make the time relative to the start of the simulation
-        self.df['given_time'] -= self.df['gen_time'].min()
-        self.df['returned_time'] -= self.df['gen_time'].min()
-        self.df['gen_time'] -= self.df['gen_time'].min()
+        self.df['sim_started_time'] -= self.df['gen_ended_time'].min()
+        self.df['sim_ended_time'] -= self.df['gen_ended_time'].min()
+        self.df['gen_ended_time'] -= self.df['gen_ended_time'].min()
 
     def get_df(self):
         """
@@ -75,7 +75,7 @@ class PostProcOptimization(object):
             fidelity = self.df[fidelity_parameter]
         else:
             fidelity = None
-        plt.scatter( self.df.returned_time, self.df.f, c=fidelity )
+        plt.scatter( self.df.sim_ended_time, self.df.f, c=fidelity )
 
     def get_trace(self, fidelity_parameter=None,
                    min_fidelity=None, t_array=None,
@@ -111,8 +111,8 @@ class PostProcOptimization(object):
         else:
             df = self.df.copy()
 
-        df = df.sort_values('returned_time')
-        t = np.concatenate( (np.zeros(1), df.returned_time.values) )
+        df = df.sort_values('sim_ended_time')
+        t = np.concatenate( (np.zeros(1), df.sim_ended_time.values) )
         cummin = np.concatenate( (np.zeros(1), df.f.cummin().values) )
 
         if t_array is not None:
@@ -152,8 +152,8 @@ class PostProcOptimization(object):
             max_fidelity = df[fidelity_parameter].max()
 
         for i in range(len(df)):
-            start = df['given_time'].iloc[i]
-            duration = df['returned_time'].iloc[i] - start
+            start = df['sim_started_time'].iloc[i]
+            duration = df['sim_ended_time'].iloc[i] - start
             if fidelity_parameter is not None:
                 fidelity = df[fidelity_parameter].iloc[i]
                 color = plt.cm.viridis( (fidelity-min_fidelity)/(max_fidelity-min_fidelity) )
