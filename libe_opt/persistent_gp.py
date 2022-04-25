@@ -21,6 +21,7 @@ from dragonfly.exd.experiment_caller import (EuclideanFunctionCaller,
 from dragonfly.opt.gp_bandit import EuclideanGPBandit, CPGPBandit
 from dragonfly.exd.cp_domain_utils import load_config
 from argparse import Namespace
+import torch
 from ax import Metric, Runner
 from ax.runners import SyntheticRunner
 from ax.storage.json_store.save import save_experiment
@@ -382,6 +383,11 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
         if len(H) == 0:
             steps.append(GenerationStep(model=Models.SOBOL, num_trials=batch_size))
 
+        # If CUDA is available, run BO loop on the GPU.
+        # To force running on the CPU, set CUDA_VISIBLE_DEVICES='' in the
+        # calling script.
+        torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
         # continue indefinitely with GPEI (of GPKG for multifidelity).
         if use_mf:
             steps.append(
@@ -389,7 +395,9 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
                     model=Models.GPKG,
                     num_trials=-1,
                     model_kwargs={
-                        'cost_intercept': mf_params['cost_intercept']
+                        'cost_intercept': mf_params['cost_intercept'],
+                        'torch_dtype': torch.double,
+                        'torch_device': torch.device(torch_device)
                     }
                 )
             )
@@ -397,7 +405,11 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
             steps.append(
                 GenerationStep(
                     model=Models.GPEI,
-                    num_trials=-1
+                    num_trials=-1,
+                    model_kwargs = {
+                        'torch_dtype': torch.double,
+                        'torch_device': torch.device(torch_device)
+                    }
                 )
             )
 
