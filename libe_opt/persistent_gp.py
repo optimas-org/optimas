@@ -34,12 +34,27 @@ from ax.core.parameter import RangeParameter, ParameterType
 from ax.core.search_space import SearchSpace
 from ax.core.optimization_config import OptimizationConfig
 from ax.core.objective import Objective
-from ax.modelbridge.factory import get_sobol, get_MTGP
+from ax.modelbridge.factory import get_sobol  # , get_MTGP
 from ax.core.observation import ObservationFeatures
 from ax.service.ax_client import AxClient
 from ax.modelbridge.generation_strategy import (
     GenerationStep, GenerationStrategy)
 from ax.modelbridge.registry import Models
+
+# Imports and definitions needed for custom `get_MTGP`
+from ax.core.experiment import Experiment
+from typing import Optional
+from ax.modelbridge.transforms.convert_metric_names import (
+    tconfig_from_mt_experiment
+)
+from ax.modelbridge.registry import (
+    Models,
+    MT_MTGP_trans,
+    ST_MTGP_trans,
+)
+from ax.modelbridge.torch import TorchModelBridge
+from ax.models.torch.botorch import BotorchModel
+DEFAULT_TORCH_DEVICE = torch.device("cpu")
 
 
 def persistent_gp_gen_f(H, persis_info, gen_specs, libE_info):
@@ -563,6 +578,11 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     # TODO: Implement reading past history (by reading saved experiment or
     # libEnsemble hystory file).
 
+    # If CUDA is available, run BO loop on the GPU.
+    # To force running on the CPU, set CUDA_VISIBLE_DEVICES='' in the
+    # calling script.
+    torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
     # Receive information from the manager (or a STOP_TAG)
     tag = None
     model_iteration = 0
@@ -591,6 +611,8 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 experiment=exp,
                 data=exp.fetch_data(),
                 search_space=exp.search_space,
+                dtype=torch.double,
+                device=torch.device(torch_device)
             )
 
             # Find the best points for the high fidelity task.
@@ -614,6 +636,8 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 experiment=exp,
                 data=exp.fetch_data(),
                 search_space=exp.search_space,
+                dtype=torch.double,
+                device=torch.device(torch_device)
             )
 
             # Select max-utility points from the low fidelity batch to generate a high fidelity batch.
@@ -750,3 +774,77 @@ def max_utility_from_GP(n, m, gr, hifi_task):
         weights = [1.] * n,
     )
     return gr_new
+
+
+def get_MTGP(
+    experiment: Experiment,
+    data: Data,
+    search_space: Optional[SearchSpace] = None,
+    dtype: torch.dtype = torch.double,
+    device: torch.device = DEFAULT_TORCH_DEVICE,
+    trial_index: Optional[int] = None,
+) -> TorchModelBridge:
+    """Instantiates a Multi-task Gaussian Process (MTGP) model that generates
+    points with EI.
+    If the input experiment is a MultiTypeExperiment then a
+    Multi-type Multi-task GP model will be instantiated.
+    Otherwise, the model will be a Single-type Multi-task GP.
+
+    This method is a custom version of `get_MTGP` in `ax.modelbridge.factory`
+    that exposes a `device` parameter in order to be able to run on the GPU.
+    See https://github.com/facebook/Ax/issues/928 for details.
+
+    Implemented by S. Jalas.
+    """
+
+    if isinstance(experiment, MultiTypeExperiment):
+        trial_index_to_type = {
+            t.index: t.trial_type for t in experiment.trials.values()
+        }
+        transforms = MT_MTGP_trans
+        transform_configs = {
+            "TrialAsTask": {"trial_level_map": {"trial_type": trial_index_to_type}},
+            "ConvertMetricNames": tconfig_from_mt_experiment(experiment),
+        }
+    else:
+        # Set transforms for a Single-type MTGP model.
+        transforms = ST_MTGP_trans
+        transform_configs = None
+
+    # Choose the status quo features for the experiment from the selected trial.
+    # If trial_index is None, we will look for a status quo from the last
+    # experiment trial to use as a status quo for the experiment.
+    if trial_index is None:
+        trial_index = len(experiment.trials) - 1
+    elif trial_index >= len(experiment.trials):
+        raise ValueError("trial_index is bigger than the number of experiment trials")
+
+    # pyre-fixme[16]: `ax.core.base_trial.BaseTrial` has no attribute `status_quo`.
+    status_quo = experiment.trials[trial_index].status_quo
+    if status_quo is None:
+        status_quo_features = None
+    else:
+        status_quo_features = ObservationFeatures(
+            parameters=status_quo.parameters,
+            # pyre-fixme[6]: Expected `Optional[numpy.int64]` for 2nd param but got
+            #  `int`.
+            trial_index=trial_index,
+        )
+
+    return TorchModelBridge(
+        experiment=experiment,
+        search_space=search_space or experiment.search_space,
+        data=data,
+        model=BotorchModel(),
+        transforms=transforms,
+        # pyre-fixme[6]: Expected `Optional[Dict[str, Dict[str,
+        #  typing.Union[botorch.acquisition.acquisition.AcquisitionFunction, float,
+        #  int, str]]]]` for 6th param but got `Optional[Dict[str,
+        #  typing.Union[Dict[str, Dict[str, Dict[int, Optional[str]]]], Dict[str,
+        #  typing.Union[botorch.acquisition.acquisition.AcquisitionFunction, float,
+        #  int, str]]]]]`.
+        transform_configs=transform_configs,
+        torch_dtype=torch.double,
+        torch_device=device,
+        status_quo_features=status_quo_features,
+    )
