@@ -48,7 +48,6 @@ from ax.modelbridge.transforms.convert_metric_names import (
     tconfig_from_mt_experiment
 )
 from ax.modelbridge.registry import (
-    Models,
     MT_MTGP_trans,
     ST_MTGP_trans,
 )
