@@ -6,9 +6,6 @@ The scripts in this repository allow to optimize PIC simulation.
 
 ### On a local computer
 
-Install FBPIC according to:
-https://fbpic.github.io/install/install_local.html
-
 Then install other dependencies:
 ```
 pip install git+https://github.com/Libensemble/libensemble.git@develop
