@@ -37,7 +37,7 @@ def run_ensemble(
     libE_specs['zero_resource_workers'] = [1]
     exctr = MPIExecutor()
     if sim_template.endswith('.py'):
-        exctr.register_app(full_path='python', calc_type='sim')
+        exctr.register_app(full_path='simulation_script.py', calc_type='sim')
     else:
         # By default, if the template is not a `.py` file, we run
         # it with an executable. The executable should have a `.ex` at the end
