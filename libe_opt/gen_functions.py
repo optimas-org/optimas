@@ -1,4 +1,4 @@
-from libensemble.gen_funcs.persistent_uniform_sampling import (
+from libensemble.gen_funcs.persistent_sampling import (
     persistent_uniform)
 from .persistent_gp import (
     persistent_gp_gen_f, persistent_gp_mf_gen_f, persistent_gp_mf_disc_gen_f,
