@@ -21,6 +21,10 @@ pip install .
 
 ### On Summit
 
+In the instructions below, before the `git clone` command, `cd` into your `$MEMBERWORK` folder, and create a dedicated directory.
+
+#### For FBPIC simulations
+
 Install according to:
 https://fbpic.github.io/install/install_summit.html
 
@@ -28,15 +32,23 @@ Then install other dependencies:
 ```
 source activate $SCRATCH/fbpic_env
 pip install git+https://github.com/Libensemble/libensemble.git@develop
-pip install -r requirements.txt
-source deactivate
-```
-
-`cd` into your `$MEMBERWORK` folder, and create a dedicated directory. Then run:
-```
 git clone https://github.com/RemiLehe/libE_opt.git
 cd libE_opt
 pip install .
+source deactivate
+```
+
+#### For WarpX simulations
+```
+conda create -n libE_opt
+source activate libE_opt
+conda install -c conda-forge mamba
+mamba install -c conda-forge openpmd-viewer openpmd-api pandas botorch ax-platform
+pip install git+https://github.com/Libensemble/libensemble.git@develop
+git clone https://github.com/RemiLehe/libE_opt.git
+cd libE_opt
+pip install .
+source deactivate
 ```
 
 ### On Lawrencium
