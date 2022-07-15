@@ -61,7 +61,7 @@ pip install .
 
 `cd` into the folder `optimization_folder`, and run the script
 `create_new_optimization.py`. (In order to see the usage of this script,
-type `./create_new_optimization.py -h`.) Then follow the printed instructions.
+type `python create_new_optimization.py -h`.) Then follow the printed instructions.
 
 Note that the script will create a new folder, with a number of files,
 which you can modify before submitting/launching the optimization job:
