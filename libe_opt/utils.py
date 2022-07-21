@@ -91,7 +91,8 @@ def create_alloc_specs(gen_type, run_async=False):
 
 
 def create_gen_specs(gen_type, nworkers, var_params, mf_params=None,
-                    mt_params=None, bo_backend='df', ax_client=None):
+                     mt_params=None, bo_backend='df', ax_client=None,
+                     use_cuda=False):
     # Problem dimension. This is the number of input parameters exposed,
     # that LibEnsemble will vary in order to minimize a single output parameter.
     n = len(var_params)
@@ -136,7 +137,9 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None,
             # Lower bound for the n parameters.
             'lb': np.array([ v[0] for v in var_params.values() ]),
             # Upper bound for the n parameters.
-            'ub': np.array([ v[1] for v in var_params.values() ])
+            'ub': np.array([ v[1] for v in var_params.values() ]),
+            # Allow generator to run on GPU.
+            'use_cuda': use_cuda
         }
     }
     if mf_params is not None:

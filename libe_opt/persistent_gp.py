@@ -398,9 +398,10 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
             steps.append(GenerationStep(model=Models.SOBOL, num_trials=batch_size))
 
         # If CUDA is available, run BO loop on the GPU.
-        # To force running on the CPU, set CUDA_VISIBLE_DEVICES='' in the
-        # calling script.
-        torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        if gen_specs['user']['use_cuda'] and torch.cuda.is_available():
+            torch_device = 'cuda'
+        else:
+            torch_device = 'cpu'
 
         # continue indefinitely with GPEI (of GPKG for multifidelity).
         if use_mf:
@@ -578,9 +579,10 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     # libEnsemble hystory file).
 
     # If CUDA is available, run BO loop on the GPU.
-    # To force running on the CPU, set CUDA_VISIBLE_DEVICES='' in the
-    # calling script.
-    torch_device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    if gen_specs['user']['use_cuda'] and torch.cuda.is_available():
+        torch_device = 'cuda'
+    else:
+        torch_device = 'cpu'
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
