@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 from libensemble.message_numbers import STOP_TAG, PERSIS_STOP, FINISHED_PERSISTENT_GEN_TAG, EVAL_GEN_TAG
 from libensemble.tools.persistent_support import PersistentSupport
+from libensemble.resources.resources import Resources
 
 # import dragonfly Gaussian Process functions
 from dragonfly.exd.domains import EuclideanDomain
@@ -400,6 +401,8 @@ def persistent_gp_ax_gen_f(H, persis_info, gen_specs, libE_info):
         # If CUDA is available, run BO loop on the GPU.
         if gen_specs['user']['use_cuda'] and torch.cuda.is_available():
             torch_device = 'cuda'
+            resources = Resources.resources.worker_resources
+            resources.set_env_to_slots('CUDA_VISIBLE_DEVICES')
         else:
             torch_device = 'cpu'
 
@@ -581,6 +584,8 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     # If CUDA is available, run BO loop on the GPU.
     if gen_specs['user']['use_cuda'] and torch.cuda.is_available():
         torch_device = 'cuda'
+        resources = Resources.resources.worker_resources
+        resources.set_env_to_slots('CUDA_VISIBLE_DEVICES')
     else:
         torch_device = 'cpu'
 
