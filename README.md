@@ -6,9 +6,6 @@ The scripts in this repository allow to optimize PIC simulation.
 
 ### On a local computer
 
-Install FBPIC according to:
-https://fbpic.github.io/install/install_local.html
-
 Then install other dependencies:
 ```
 pip install git+https://github.com/Libensemble/libensemble.git@develop
@@ -24,6 +21,10 @@ pip install .
 
 ### On Summit
 
+In the instructions below, before the `git clone` command, `cd` into your `$MEMBERWORK` folder, and create a dedicated directory.
+
+#### For FBPIC simulations
+
 Install according to:
 https://fbpic.github.io/install/install_summit.html
 
@@ -31,15 +32,23 @@ Then install other dependencies:
 ```
 source activate $SCRATCH/fbpic_env
 pip install git+https://github.com/Libensemble/libensemble.git@develop
-pip install -r requirements.txt
-source deactivate
-```
-
-`cd` into your `$MEMBERWORK` folder, and create a dedicated directory. Then run:
-```
 git clone https://github.com/RemiLehe/libE_opt.git
 cd libE_opt
 pip install .
+source deactivate
+```
+
+#### For WarpX simulations
+```
+conda create -n libE_opt
+source activate libE_opt
+conda install -c conda-forge mamba
+mamba install -c conda-forge openpmd-viewer openpmd-api pandas botorch ax-platform
+pip install git+https://github.com/Libensemble/libensemble.git@develop
+git clone https://github.com/RemiLehe/libE_opt.git
+cd libE_opt
+pip install .
+source deactivate
 ```
 
 ### On Lawrencium
@@ -64,7 +73,7 @@ pip install .
 
 `cd` into the folder `optimization_folder`, and run the script
 `create_new_optimization.py`. (In order to see the usage of this script,
-type `./create_new_optimization.py -h`.) Then follow the printed instructions.
+type `python create_new_optimization.py -h`.) Then follow the printed instructions.
 
 Note that the script will create a new folder, with a number of files,
 which you can modify before submitting/launching the optimization job:
