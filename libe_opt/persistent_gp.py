@@ -651,11 +651,12 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                     break
                 except RuntimeError as e:
                     # Print exception.
-                    print('RuntimeError: {}'.format(e))
+                    print('RuntimeError: {}'.format(e), flush=True)
                     # Divide batch size by 2.
                     init_batch_limit //= 2
+                    print('Retrying with `init_batch_limit={}`'.format(
+                        init_batch_limit), flush=True)
                 finally:
-                    print(init_batch_limit)
                     # If all attempts have failed (even for batch size of 1),
                     # mark generation as failed and break loop.
                     if init_batch_limit == 0:
