@@ -601,7 +601,7 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
         if model_iteration == 0:
             # Initialize with sobol sample.
             for model, n_gen in zip([hifi_task, lofi_task], [n_init_hifi, n_init_lofi]):
-                s = get_sobol(exp.search_space, scramble=False)
+                s = get_sobol(exp.search_space, scramble=True)
                 gr = s.gen(n_gen)
                 trial = exp.new_batch_trial(trial_type=model, generator_run=gr)
                 trial.run()
