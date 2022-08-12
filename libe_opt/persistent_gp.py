@@ -35,7 +35,7 @@ from ax.core.parameter import RangeParameter, ParameterType
 from ax.core.search_space import SearchSpace
 from ax.core.optimization_config import OptimizationConfig
 from ax.core.objective import Objective
-from ax.modelbridge.factory import get_sobol  # , get_MTGP
+from ax.modelbridge.factory import get_sobol
 from ax.core.observation import ObservationFeatures
 from ax.service.ax_client import AxClient
 from ax.modelbridge.generation_strategy import (
@@ -825,15 +825,12 @@ def get_MTGP(
     elif trial_index >= len(experiment.trials):
         raise ValueError("trial_index is bigger than the number of experiment trials")
 
-    # pyre-fixme[16]: `ax.core.base_trial.BaseTrial` has no attribute `status_quo`.
     status_quo = experiment.trials[trial_index].status_quo
     if status_quo is None:
         status_quo_features = None
     else:
         status_quo_features = ObservationFeatures(
             parameters=status_quo.parameters,
-            # pyre-fixme[6]: Expected `Optional[numpy.int64]` for 2nd param but got
-            #  `int`.
             trial_index=trial_index,
         )
 
@@ -843,12 +840,6 @@ def get_MTGP(
         data=data,
         model=BotorchModel(),
         transforms=transforms,
-        # pyre-fixme[6]: Expected `Optional[Dict[str, Dict[str,
-        #  typing.Union[botorch.acquisition.acquisition.AcquisitionFunction, float,
-        #  int, str]]]]` for 6th param but got `Optional[Dict[str,
-        #  typing.Union[Dict[str, Dict[str, Dict[int, Optional[str]]]], Dict[str,
-        #  typing.Union[botorch.acquisition.acquisition.AcquisitionFunction, float,
-        #  int, str]]]]]`.
         transform_configs=transform_configs,
         torch_dtype=torch.double,
         torch_device=device,
