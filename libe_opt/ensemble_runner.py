@@ -15,7 +15,7 @@ def run_ensemble(
         nworkers, sim_max, is_master, gen_type, analyzed_params,
         var_params, analysis_func, sim_template=None,
         mf_params=None, mt_params=None,
-        past_history=None, libE_specs={}, run_async=False,
+        past_history=None, libE_specs={}, run_async=False, use_cuda=False,
         bo_backend='df', ax_client=None):
 
     if sim_template is None:
@@ -30,11 +30,10 @@ def run_ensemble(
     alloc_specs = create_alloc_specs(gen_type, run_async)
     gen_specs = create_gen_specs(
         gen_type, nworkers, var_params, mf_params, mt_params,
-        bo_backend, ax_client)
+        bo_backend, ax_client, use_cuda)
     libE_specs = create_libe_specs(sim_template, libE_specs)
 
     # Setup MPI executor
-    libE_specs['zero_resource_workers'] = [1]
     exctr = MPIExecutor()
     if sim_template.endswith('.py'):
         exctr.register_app(full_path='simulation_script.py', calc_type='sim')
@@ -58,6 +57,12 @@ def run_ensemble(
 
     # Create a different random number stream for each worker and the manager
     persis_info = add_unique_random_streams({}, nworkers + 1)
+
+    # Indicate whether to allocate resources for the generator
+    if use_cuda:
+        persis_info['gen_resources'] = 1
+    else:
+        libE_specs['zero_resource_workers'] = [1]
 
     # Before starting libensemble, check whether there is past history file
     if past_history is not None and os.path.exists(past_history):
