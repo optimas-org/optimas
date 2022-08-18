@@ -589,6 +589,9 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
     else:
         torch_device = 'cpu'
 
+    # Batch limit for the initialization of the aquisition function optimization.
+    init_batch_limit = 1000
+
     # Receive information from the manager (or a STOP_TAG)
     tag = None
     model_iteration = 0
@@ -612,7 +615,7 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
         else:
             # Run multi-task BO.
 
-            # Fit the MTGP.
+            # 1) Fit the MTGP.
             m = get_MTGP(
                 experiment=exp,
                 data=exp.fetch_data(),
@@ -621,15 +624,50 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 device=torch.device(torch_device)
             )
 
-            # Find the best points for the high fidelity task.
-            gr = m.gen(
-                n=n_opt_lofi,
-                optimization_config=exp.optimization_config,
-                fixed_features=ObservationFeatures(
-                    parameters={}, trial_index=hifi_trials[-1]),
-            )
+            # 2) Find the best points for the high fidelity task.
 
-            # But launch them at low fidelity.
+            # Too large initialization batches can lead to out-of-memory errors.
+            # The loop below tries to generate the next points to evaluate
+            # using `init_batch_limit`. If an RuntimeError is raised during
+            # generation (namely an out-of-memory error), `init_batch_limit`
+            # is divided by two and a new attempt is made. This is repeated
+            # until the generation runs successfully.            
+            generator_success = True
+            while True:
+                try:
+                    # Try to generate the new points.
+                    gr = m.gen(
+                        n=n_opt_lofi,
+                        optimization_config=exp.optimization_config,
+                        fixed_features=ObservationFeatures(
+                            parameters={}, trial_index=hifi_trials[-1]),
+                        model_gen_options={
+                            'optimizer_kwargs': {
+                                'init_batch_limit': init_batch_limit
+                            }
+                        }
+                    )
+                    # When successful, break loop.
+                    break
+                except RuntimeError as e:
+                    # Print exception.
+                    print('RuntimeError: {}'.format(e), flush=True)
+                    # Divide batch size by 2.
+                    init_batch_limit //= 2
+                    print('Retrying with `init_batch_limit={}`'.format(
+                        init_batch_limit), flush=True)
+                finally:
+                    # If all attempts have failed (even for batch size of 1),
+                    # mark generation as failed and break loop.
+                    if init_batch_limit == 0:
+                        generator_success = False
+                        break
+            # If generation failed, stop optimization.
+            if not generator_success:
+                tag = STOP_TAG
+                break
+
+            # 3) But launch them at low fidelity.
             tr = exp.new_batch_trial(trial_type=lofi_task, generator_run=gr)
             tr.run()
             tr.mark_completed()
@@ -637,7 +675,7 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
             if tag in [STOP_TAG, PERSIS_STOP]:
                 break
 
-            # Update the model.
+            # 4) Update the model.
             m = get_MTGP(
                 experiment=exp,
                 data=exp.fetch_data(),
@@ -646,7 +684,7 @@ def persistent_gp_mt_ax_gen_f(H, persis_info, gen_specs, libE_info):
                 device=torch.device(torch_device)
             )
 
-            # Select max-utility points from the low fidelity batch to generate a high fidelity batch.
+            # 5) Select max-utility points from the low fidelity batch to generate a high fidelity batch.
             gr = max_utility_from_GP(
                 n=n_opt_hifi,
                 m=m,
