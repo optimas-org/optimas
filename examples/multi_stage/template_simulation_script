@@ -1,215 +1,216 @@
-#################################
-########## MESH PATCH ###########
-#################################
-amr.max_level = 0
-
-#################################
-######### BOX PARAMETERS ########
-#################################
-warpx.zmax_plasma_to_compute_max_step = 0.66
-
-amr.n_cell = 64 2048
-amr.max_grid_size = 2048
-
-geometry.coord_sys   = 0
-geometry.is_periodic = 0 0
-# physical domain when running in the lab frame
-geometry.prob_lo = -242e-6 -161e-6
-geometry.prob_hi =  242e-6    0
-
-#################################
-############ NUMERICS ###########
-#################################
-warpx.verbose = 1
-algo.current_deposition = esirkepov
+# algo
 algo.charge_deposition = standard
+algo.current_deposition = direct
 algo.field_gathering = momentum-conserving
+algo.maxwell_solver = PSATD
 algo.particle_pusher = vay
-algo.maxwell_solver = ckc
-interpolation.nox = 3
-interpolation.noy = 3
-interpolation.noz = 3
-warpx.use_filter = 1
-warpx.filter_npass_each_dir = 1 4
-warpx.cfl = .9999
-warpx.do_pml = 0
-# Moving window
-warpx.do_moving_window = 1
-warpx.moving_window_dir = z
-warpx.moving_window_v = 1.0 # in units of the speed of light
+algo.particle_shape = 3
 
-#################################
-####### BOOST PARAMETERS ########
-#################################
-warpx.gamma_boost = 30.0
-warpx.boost_direction = z
+# amr
+amr.blocking_factor = 64
+amr.max_grid_size = 4000
+amr.max_level = 0
+amr.n_cell = 64 3840
 
-#################################
-############ PLASMA #############
-#################################
-particles.species_names = electrons ions electrons2 ions2 beam
-
-particles.use_fdtd_nci_corr = 1
-particles.rigid_injected_species = beam
-
-electrons.charge = -q_e
-electrons.mass = m_e
-electrons.injection_style = NUniformPerCell
-electrons.num_particles_per_cell_each_dim = 1 1
-electrons.momentum_distribution_type = "gaussian"
-electrons.xmin = -150.e-6
-electrons.xmax =  150.e-6
-electrons.ymin = -150.e-6
-electrons.ymax =  150.e-6
-electrons.zmin = 0.0
-electrons.zmax = 0.32
-electrons.profile                 = "predefined"
-electrons.predefined_profile_name = "parabolic_channel"
-#         predefined_profile_params = z_start   ramp_up   plateau   ramp_down   rc       n0
-electrons.predefined_profile_params = 0.0       .02       .297      .003        40.e-6   1.7e23
-electrons.do_continuous_injection = 1
-electrons.do_back_transformed_diagnostics=0
-
-ions.charge = q_e
-ions.mass = m_p
-ions.injection_style = NUniformPerCell
-ions.num_particles_per_cell_each_dim = 1 1
-ions.momentum_distribution_type = "gaussian"
-ions.xmin = -150.e-6
-ions.xmax =  150.e-6
-ions.ymin = -150.e-6
-ions.ymax =  150.e-6
-ions.zmin = 0.0
-ions.zmax = 0.32
-ions.profile                 = "predefined"
-ions.predefined_profile_name = "parabolic_channel"
-#    predefined_profile_params = z_start   ramp_up   plateau   ramp_down   rc       n0
-ions.predefined_profile_params = 0.0       .02       .297      .003        40.e-6   1.7e23
-ions.do_continuous_injection = 1
-ions.do_back_transformed_diagnostics=0
-
-electrons2.charge = -q_e
-electrons2.mass = m_e
-electrons2.injection_style = NUniformPerCell
-electrons2.num_particles_per_cell_each_dim = 1 1 1
-electrons2.momentum_distribution_type = "gaussian"
-electrons2.xmin = -150.e-6
-electrons2.xmax =  150.e-6
-electrons2.ymin = -150.e-6
-electrons2.ymax =  150.e-6
-electrons2.zmin = 0.3485
-electrons2.zmax = 0.6685
-electrons2.profile                 = "predefined"
-electrons2.predefined_profile_name = "parabolic_channel"
-#         predefined_profile_params = z_start   ramp_up   plateau   ramp_down   rc       n0
-electrons2.predefined_profile_params = 0.3485       .02       .297       .003        40.e-6   1.7e23
-electrons2.do_continuous_injection = 1
-electrons2.do_back_transformed_diagnostics=0
-
-ions2.charge = q_e
-ions2.mass = m_p
-ions2.injection_style = NUniformPerCell
-ions2.num_particles_per_cell_each_dim = 1 1 1
-ions2.momentum_distribution_type = "gaussian"
-ions2.xmin = -150.e-6
-ions2.xmax =  150.e-6
-ions2.ymin = -150.e-6
-ions2.ymax =  150.e-6
-ions2.zmin = 0.3485
-ions2.zmax = 0.6685
-ions2.profile                 = "predefined"
-ions2.predefined_profile_name = "parabolic_channel"
-#    predefined_profile_params = z_start   ramp_up   plateau   ramp_down   rc       n0
-ions2.predefined_profile_params = 0.3485       .02       .297       .003        40.e-6   1.7e23
-ions2.do_continuous_injection = 1
-ions2.do_back_transformed_diagnostics=0
-
+# beam
 beam.charge = -q_e
+beam.initialize_self_fields = 0
+beam.injection_style = gaussian_beam
+beam.do_symmetrize = 1
 beam.mass = m_e
-beam.injection_style = "gaussian_beam"
-beam.x_rms = 6.e-7
-beam.y_rms = 6.e-7
-beam.z_rms = 3.e-6
-beam.x_cut = 3.
-beam.y_cut = 3.
-beam.z_cut = 2.
-beam.x_m = 0.
-beam.y_m = 0.
-beam.z_m = -98.e-6
-beam.npart = 100000
-beam.q_tot = -0.9e-12
-beam.momentum_distribution_type = "gaussian"
-beam.ux_m = 0.
-beam.uy_m = 0.
-beam.uz_m = 1956.9469069265976
-beam.ux_th = 0.4166666666666667
-beam.uy_th = 0.
-beam.uz_th = 39.138943248532286
-beam.zinject_plane = 0.02
-beam.rigid_advance = true
-beam.projected = true
-beam.focused = false
-beam.do_back_transformed_diagnostics=1
+beam.momentum_distribution_type = gaussian
+beam.npart = 50000
+beam.q_tot = -1.e-15
+beam.rigid_advance = 1
+beam.ux_m = 0.0
+beam.ux_th = 1.0
+beam.uy_m = 0.0
+beam.uy_th = 1.0
+beam.uz_m = 1956.9469069265979
+beam.uz_th = 0.
+beam.x_m = 0.0
+beam.x_rms = 3e-06
+beam.y_m = 0.0
+beam.y_rms = 3e-06
+beam.z_m = -0.000109
+beam.z_rms = 5.e-7
+beam.zinject_plane = 0.0
 
-#################################
-######### Lens Mirror ###########
-#################################
+# boundary
+boundary.field_hi = none damped
+boundary.field_lo = none damped
+boundary.particle_hi = absorbing absorbing
+boundary.particle_lo = absorbing absorbing
 
-my_constants.ga = 13330
-my_constants.zlen = {{zlen}}
-my_constants.dlen = 0.019
-my_constants.wlen = 0.02
-my_constants.mcce = 510999.
-my_constants.gab = 30.0
-my_constants.vb = 299625860.344456
-my_constants.c = 299792458.
-my_constants.adjust_factor = {{adjust_factor}}
+# diag
+diag.beam.variables = ux uy uz w
+diag.diag_type = Full
+diag.fields_to_plot = Er Et Ez rho
+diag.file_prefix = diag
+diag.format = openpmd
+diag.intervals = 1000
+diag.species = beam
 
-particles.E_ext_particle_init_style = parse_E_ext_particle_function
-particles.Ex_external_particle_function(x,y,z,t) = "( adjust_factor * gab * 2 * mcce * ga * x / (wlen * dlen) ) * ((gab*(z+vb*t))>=zlen) * ((gab*(z+vb*t))<=(zlen+wlen))"
-particles.Ey_external_particle_function(x,y,z,t) = "0."
-particles.Ez_external_particle_function(x,y,z,t) = "0."
+# diagnostics
+diagnostics.diags_names = diag
 
-particles.B_ext_particle_init_style = parse_B_ext_particle_function
-particles.Bx_external_particle_function(x,y,z,t) = "0."
-particles.By_external_particle_function(x,y,z,t) = "( - adjust_factor * vb * gab * 2 * mcce * ga * x / (wlen * dlen * c * c) ) * ((gab*(z+vb*t))>=zlen) * ((gab*(z+vb*t))<=(zlen+wlen))"
-particles.Bz_external_particle_function(x,y,z,t) = "0."
+# electrons1
+electrons1.charge = -q_e
+electrons1.density_function(x,y,z) = "n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*(0.5*(1.-cos(pi*(z-0.0)/Lplus)))*((z-0.0)<Lplus)+n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*((z-0.0)>=Lplus)*((z-0.0)<(Lplus+Lp))+n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*(0.5*(1.+cos(pi*((z-0.0)-Lplus-Lp)/Lminus)))*((z-0.0)>=(Lplus+Lp))*((z-0.0)<(Lplus+Lp+Lminus))"
+electrons1.do_continuous_injection = 1
+electrons1.initialize_self_fields = 0
+electrons1.injection_style = nuniformpercell
+electrons1.mass = m_e
+electrons1.momentum_distribution_type = constant
+electrons1.num_particles_per_cell_each_dim = 2 8 2
+electrons1.profile = parse_density_function
+electrons1.ux = 0.0
+electrons1.uy = 0.0
+electrons1.uz = 0.0
+electrons1.xmax = 0.0001
+electrons1.xmin = -0.0001
+electrons1.ymax = 0.0001
+electrons1.ymin = -0.0001
+electrons1.zmax = 0.32
+electrons1.zmin = 0.0
 
-warpx.num_mirrors=2
-warpx.mirror_z = 0.321 0.6695
-warpx.mirror_z_width = 8.0e-6  8.0e-6
-warpx.mirror_z_npoints = 4 4
+# electrons2
+electrons2.charge = -q_e
+electrons2.density_function(x,y,z) = "n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*(0.5*(1.-cos(pi*(z-0.35)/Lplus)))*((z-0.35)<Lplus)+n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*((z-0.35)>=Lplus)*((z-0.35)<(Lplus+Lp))+n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*(0.5*(1.+cos(pi*((z-0.35)-Lplus-Lp)/Lminus)))*((z-0.35)>=(Lplus+Lp))*((z-0.35)<(Lplus+Lp+Lminus))"
+electrons2.do_continuous_injection = 1
+electrons2.initialize_self_fields = 0
+electrons2.injection_style = nuniformpercell
+electrons2.mass = m_e
+electrons2.momentum_distribution_type = constant
+electrons2.num_particles_per_cell_each_dim = 2 8 2
+electrons2.profile = parse_density_function
+electrons2.ux = 0.0
+electrons2.uy = 0.0
+electrons2.uz = 0.0
+electrons2.xmax = 0.0001
+electrons2.xmin = -0.0001
+electrons2.ymax = 0.0001
+electrons2.ymin = -0.0001
+electrons2.zmax = 0.6699999999999999
+electrons2.zmin = 0.35
 
-#################################
-############# LASER #############
-#################################
+# geometry
+geometry.dims = RZ
+geometry.prob_hi = 128.e-6 0.
+geometry.prob_lo = 0.   -180.e-6
+
+# ions1
+ions1.charge = q_e
+ions1.density_function(x,y,z) = "n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*(0.5*(1.-cos(pi*(z-0.0)/Lplus)))*((z-0.0)<Lplus)+n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*((z-0.0)>=Lplus)*((z-0.0)<(Lplus+Lp))+n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*(0.5*(1.+cos(pi*((z-0.0)-Lplus-Lp)/Lminus)))*((z-0.0)>=(Lplus+Lp))*((z-0.0)<(Lplus+Lp+Lminus))"
+ions1.do_continuous_injection = 1
+ions1.initialize_self_fields = 0
+ions1.injection_style = nuniformpercell
+ions1.mass = m_p
+ions1.momentum_distribution_type = constant
+ions1.num_particles_per_cell_each_dim = 2 8 2
+ions1.profile = parse_density_function
+ions1.ux = 0.0
+ions1.uy = 0.0
+ions1.uz = 0.0
+ions1.xmax = 0.0001
+ions1.xmin = -0.0001
+ions1.ymax = 0.0001
+ions1.ymin = -0.0001
+ions1.zmax = 0.32
+ions1.zmin = 0.0
+
+# ions2
+ions2.charge = q_e
+ions2.density_function(x,y,z) = "n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*(0.5*(1.-cos(pi*(z-0.35)/Lplus)))*((z-0.35)<Lplus)+n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*((z-0.35)>=Lplus)*((z-0.35)<(Lplus+Lp))+n0*(1.+4.*(x**2+y**2)/(kp**2*Rc**4))*(0.5*(1.+cos(pi*((z-0.35)-Lplus-Lp)/Lminus)))*((z-0.35)>=(Lplus+Lp))*((z-0.35)<(Lplus+Lp+Lminus))"
+ions2.do_continuous_injection = 1
+ions2.initialize_self_fields = 0
+ions2.injection_style = nuniformpercell
+ions2.mass = m_p
+ions2.momentum_distribution_type = constant
+ions2.num_particles_per_cell_each_dim = 2 8 2
+ions2.profile = parse_density_function
+ions2.ux = 0.0
+ions2.uy = 0.0
+ions2.uz = 0.0
+ions2.xmax = 0.0001
+ions2.xmin = -0.0001
+ions2.ymax = 0.0001
+ions2.ymin = -0.0001
+ions2.zmax = 0.6699999999999999
+ions2.zmin = 0.35
+
+# laser1
+laser1.direction = 0.0 0.0 1.0
+laser1.do_continuous_injection = 0
+laser1.e_max = 6822740000000.0
+laser1.polarization = 0.0 1.0 0.0
+laser1.position = 0.0 0.0 -1e-09
+laser1.profile = Gaussian
+laser1.profile_duration = 7.33841e-14
+laser1.profile_focal_distance = 0.00875
+laser1.profile_t_peak = 1.46764864e-13
+laser1.profile_waist = 5e-05
+laser1.wavelength = 8e-07
+
+# laser2
+laser2.direction = 0.0 0.0 1.0
+laser2.do_continuous_injection = 1
+laser2.e_max = 6822740000000.0
+laser2.polarization = 0.0 1.0 0.0
+laser2.position = 0.0 0.0 0.34999999899999995
+laser2.profile = Gaussian
+laser2.profile_duration = 7.33841e-14
+laser2.profile_focal_distance = 0.00874999999999998
+laser2.profile_t_peak = 1.167621098057891e-09
+laser2.profile_waist = 5e-05
+laser2.wavelength = 8e-07
+
+# lasers
 lasers.names = laser1 laser2
 
-laser1.profile = Gaussian
-laser1.position = 0. 0. -1.e-9  # This point is on the laser plane
-laser1.direction = 0. 0. 1.      # The plane normal direction
-laser1.polarization = 0. 1. 0.      # The main polarization vector
-laser1.e_max = 6.82274e12       # Maximum amplitude of the laser field (in V/m)
-laser1.profile_waist = 50.e-6       # The waist of the laser (in meters)
-laser1.profile_duration = 7.33841e-14   # The duration of the laser (in seconds)
-laser1.profile_t_peak = 1.46764864e-13 # The time at which the laser reaches its peak (in seconds)
-laser1.profile_focal_distance = 0.00875  # Focal distance from the antenna (in meters)
-laser1.wavelength = 0.8e-6         # The wavelength of the laser (in meters)
+# my_constants
+my_constants.Lminus = 0.
+my_constants.Lp = 0.32
+my_constants.Lplus = 0.
+my_constants.Rc = 4e-05
+my_constants.kp = 77588.13070567355
+my_constants.n0 = 1.7e+23
+my_constants.pi = 3.141592653589793
 
-laser2.profile = Gaussian
-laser2.position = 0. 0. 0.348499999  # This point is on the laser plane
-laser2.direction = 0. 0. 1.      # The plane normal direction
-laser2.polarization = 0. 1. 0.      # The main polarization vector
-laser2.e_max = 6.82274e12       # Maximum amplitude of the laser field (in V/m)
-laser2.profile_waist = 50.e-6       # The waist of the laser (in meters)
-laser2.profile_duration = 7.33841e-14   # The duration of the laser (in seconds)
-laser2.profile_t_peak = 1.1626176366295598e-09  # The time at which the laser reaches its peak (in seconds)
-laser2.profile_focal_distance = 0.00875  # Focal distance from the antenna (in meters)
-laser2.wavelength = 0.8e-6         # The wavelength of the laser (in meters)
-laser2.do_continuous_injection = 1 # Lasers are initialized outside of initial box
+# particles
+particles.B_ext_particle_init_style = repeated_plasma_lens
+particles.repeated_plasma_lens_period = 0.35
+particles.repeated_plasma_lens_starts = {{zlen}}
+particles.repeated_plasma_lens_lengths = 0.003
+particles.repeated_plasma_lens_strengths_B = {{adjust_factor}}*1363607.21922141/3
+particles.rigid_injected_species = beam
+particles.species_names = electrons1 ions1 electrons2 ions2 beam
 
-diagnostics.diags_names = diag
-diag.diag_type = Full
-diag.intervals = 200
-diag.format = openpmd
-diag.species = beam
+# psatd
+psatd.current_correction = 1
+psatd.nox = 16
+psatd.noz = 16
+psatd.nx_guard = 32
+psatd.nz_guard = 32
+psatd.update_with_rho = 1
+psatd.v_galilean = 0.0 0.0 -0.9998611014647094
+
+# warpx
+warpx.boost_direction = z
+warpx.cfl = 0.9999
+warpx.do_moving_window = 1
+warpx.do_nodal = 0
+warpx.filter_npass_each_dir = 1 1
+warpx.gamma_boost = 60.0
+warpx.mirror_z = 0.321
+warpx.mirror_z_npoints = 4
+warpx.mirror_z_width = 8e-06
+warpx.moving_window_dir = z
+warpx.moving_window_v = 1.0
+warpx.n_rz_azimuthal_modes = 2
+warpx.num_mirrors = 1
+warpx.use_filter = 1
+warpx.use_filter_compensation = 0
+warpx.verbose = 2
+warpx.do_single_precision_comms = 1
+warpx.zmax_plasma_to_compute_max_step = 0.7
