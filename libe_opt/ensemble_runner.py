@@ -36,7 +36,9 @@ def run_ensemble(
     # Setup MPI executor
     exctr = MPIExecutor()
     if sim_template.endswith('.py'):
-        exctr.register_app(full_path='simulation_script.py', calc_type='sim')
+        sim_script = os.path.basename(sim_template)
+        sim_script = sim_script[len('template_'):]  # Strip 'template_' from name
+        exctr.register_app(full_path=sim_script, calc_type='sim')
     else:
         # By default, if the template is not a `.py` file, we run
         # it with an executable. The executable should start with `warpx`
