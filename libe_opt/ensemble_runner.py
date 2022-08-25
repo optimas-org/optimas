@@ -69,7 +69,7 @@ def run_ensemble(
     # Before starting libensemble, check whether there is past history file
     if past_history is not None and os.path.exists(past_history):
         H0 = np.load(past_history)
-        H0 = H0[ H0['sim_ended']==True ] # Only include runs that completed
+        H0 = H0[H0['sim_ended']]  # Only include runs that completed
         check_inputs(
             H0=H0, sim_specs=sim_specs, alloc_specs=alloc_specs,
             gen_specs=gen_specs)
