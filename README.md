@@ -48,7 +48,6 @@ pip install git+https://github.com/Libensemble/libensemble.git@develop
 git clone https://github.com/RemiLehe/libE_opt.git
 cd libE_opt
 pip install .
-source deactivate
 ```
 
 ### On Lawrencium
