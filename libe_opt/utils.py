@@ -78,7 +78,7 @@ def create_alloc_specs(gen_type, run_async=False):
         'alloc_f': get_alloc_function_from_gen_type(gen_type),
         'out': [('given_back', bool)]
         }
-    if gen_type in ['random', 'bo']:
+    if gen_type in ['bo', 'random', 'normal']:
         alloc_specs['user'] = {'async_return': run_async}
     elif gen_type in ['bo_mt']:
         warnings.warn(
@@ -151,12 +151,7 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None,
 
     # State the generating function, its arguments, output,
     # and necessary parameters.
-    if gen_type == 'random':
-        gen_specs['user']['gen_batch_size'] = nworkers-1
-
-    elif gen_type == 'bo':
-        gen_specs['user']['gen_batch_size'] = nworkers-1
-
+    if gen_type == 'bo':
         # Add Ax client
         if bo_backend == 'ax':
             gen_specs['user']['client'] = ax_client

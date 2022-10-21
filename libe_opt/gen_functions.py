@@ -1,12 +1,13 @@
-from libensemble.gen_funcs.persistent_sampling import (
-    persistent_uniform)
 from .persistent_gp import (
     persistent_gp_gen_f, persistent_gp_mf_gen_f, persistent_gp_mf_disc_gen_f,
     persistent_gp_ax_gen_f, persistent_gp_mt_ax_gen_f)
+from .persistent_sampling import (
+    persistent_normal, persistent_uniform)
 
 
 basic_functions = {
     'random': persistent_uniform,
+    'normal': persistent_normal
 }
 
 
