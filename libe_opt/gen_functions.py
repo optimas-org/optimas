@@ -6,8 +6,8 @@ from .persistent_sampling import (
 
 
 basic_functions = {
-    'random': persistent_uniform,
-    'normal': persistent_normal
+    'random_uniform': persistent_uniform,
+    'random_normal': persistent_normal
 }
 
 

@@ -78,7 +78,7 @@ def create_alloc_specs(gen_type, run_async=False):
         'alloc_f': get_alloc_function_from_gen_type(gen_type),
         'out': [('given_back', bool)]
         }
-    if gen_type in ['bo', 'random', 'normal']:
+    if gen_type in ['bo', 'random_uniform', 'random_normal']:
         alloc_specs['user'] = {'async_return': run_async}
     elif gen_type in ['bo_mt']:
         warnings.warn(
