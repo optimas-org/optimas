@@ -78,7 +78,7 @@ def create_alloc_specs(gen_type, run_async=False):
         'alloc_f': get_alloc_function_from_gen_type(gen_type),
         'out': [('given_back', bool)]
         }
-    if gen_type in ['random', 'bo']:
+    if gen_type in ['random', 'bo', 'grid_search_single', 'grid_search']:
         alloc_specs['user'] = {'async_return': run_async}
     elif gen_type in ['bo_mt']:
         warnings.warn(
@@ -151,7 +151,14 @@ def create_gen_specs(gen_type, nworkers, var_params, mf_params=None,
 
     # State the generating function, its arguments, output,
     # and necessary parameters.
-    if gen_type == 'random':
+    if gen_type == 'grid_search_single':
+        gen_specs['user']['nominal_value'] = np.array([ v[2] for v in var_params.values() ])
+        gen_specs['user']['n_steps'] = np.array([ v[3] for v in var_params.values() ])
+
+    elif gen_type == 'grid_search':
+        gen_specs['user']['n_steps'] = np.array([ v[2] for v in var_params.values() ])
+    
+    elif gen_type == 'random':
         gen_specs['user']['gen_batch_size'] = nworkers-1
 
     elif gen_type == 'bo':

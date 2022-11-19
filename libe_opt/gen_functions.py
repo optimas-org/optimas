@@ -3,10 +3,13 @@ from libensemble.gen_funcs.persistent_sampling import (
 from .persistent_gp import (
     persistent_gp_gen_f, persistent_gp_mf_gen_f, persistent_gp_mf_disc_gen_f,
     persistent_gp_ax_gen_f, persistent_gp_mt_ax_gen_f)
-
+from .persistent_gs import (
+    persistent_regular_grid_search_single, persistent_regular_grid_search)
 
 basic_functions = {
     'random': persistent_uniform,
+    'grid_search_single': persistent_regular_grid_search_single,
+    'grid_search': persistent_regular_grid_search,
 }
 
 
