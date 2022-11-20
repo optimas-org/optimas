@@ -108,6 +108,13 @@ class MultifidelityBayesianOptimization(AxOptimizer):
         self.gen_specs['out'].append(('z', fidel_type, fidel_len))
         self.gen_specs['user']['mf_params'] = {'name': self.fidel_name}
 
+    def _create_sim_specs(self):
+        super()._create_sim_specs()
+        self.sim_specs['in'].append('z')
+        fidel_type, fidel_len = self._determine_fidelity_type_and_length()
+        self.sim_specs['out'].append((self.fidel_name, fidel_type, fidel_len))
+        self.sim_specs['user']['z_name'] = self.fidel_name
+
     def _determine_fidelity_type_and_length(self):
         """
         Determine the type of the fidelity (i.e. float, int, str...) and, if it
