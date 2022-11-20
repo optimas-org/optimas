@@ -13,16 +13,25 @@ from .gen_functions import persistent_gp_mt_ax_gen_f
 class MultitaskBayesianOptimization(SearchMethod):
     def __init__(
             self, var_names, var_lb, var_ub, sim_template, analysis_func,
-            sim_number, mt_params, analyzed_params=[], sim_workers=1,
-            use_cuda=False, libE_specs={}, history=None):
-        self.mt_params = mt_params
+            name_hifi, name_lofi, n_init_hifi, n_init_lofi,
+            n_opt_hifi, n_opt_lofi, extra_args_hifi=None, extra_args_lofi=None,
+            analyzed_params=[], sim_workers=1, use_cuda=False, libE_specs={},
+            history=None):
+        self.name_hifi = name_hifi
+        self.name_lofi = name_lofi
+        self.n_init_hifi = n_init_hifi
+        self.n_init_lofi = n_init_lofi
+        self.n_opt_hifi = n_opt_hifi
+        self.n_opt_lofi = n_opt_lofi
+        self.extra_args_hifi = extra_args_hifi
+        self.extra_args_lofi = extra_args_lofi
         super().__init__(
             var_names=var_names,
             var_lb=var_lb,
             var_ub=var_ub,
             sim_template=sim_template,
             analysis_func=analysis_func,
-            sim_number=sim_number,
+            sim_number=n_init_hifi + n_init_lofi + n_opt_hifi + n_opt_lofi,
             analyzed_params=analyzed_params,
             sim_workers=sim_workers,
             run_async=False,
@@ -38,8 +47,8 @@ class MultitaskBayesianOptimization(SearchMethod):
     def _create_experiment(self):
 
         # Get task names.
-        hifi_task = self.mt_params['name_hifi']
-        lofi_task = self.mt_params['name_lofi']
+        hifi_task = self.name_hifi
+        lofi_task = self.name_lofi
 
         # Create search space.
         parameters = []
@@ -91,17 +100,22 @@ class MultitaskBayesianOptimization(SearchMethod):
         super()._create_sim_specs()
         self.sim_specs['in'].append('task')
         self.sim_specs['user']['extra_args'] = {}
-        if 'extra_args_lofi' in self.mt_params:
-            lofi_name = self.mt_params['name_lofi']
-            self.sim_specs['user']['extra_args'][lofi_name] = self.mt_params['extra_args_lofi']
-        if 'extra_args_hifi' in self.mt_params:
-            hifi_name = self.mt_params['name_hifi']
-            self.sim_specs['user']['extra_args'][hifi_name] = self.mt_params['extra_args_hifi']
+        if self.extra_args_lofi is not None:
+            self.sim_specs['user']['extra_args'][self.name_lofi] = self.extra_args_lofi
+        if self.extra_args_hifi is not None:
+            self.sim_specs['user']['extra_args'][self.name_hifi] = self.extra_args_hifi
 
     def _create_gen_specs(self):
         super()._create_gen_specs()
         self.gen_specs['out'].append(
-                ('task', str, max([len(self.mt_params['name_hifi']), len(self.mt_params['name_lofi'])]))
+                ('task', str, max([len(self.name_hifi), len(self.name_lofi)]))
                 )
-        self.gen_specs['user']['mt_params'] = self.mt_params
+        self.gen_specs['user']['mt_params'] = {
+            'name_hifi': self.name_hifi,
+            'name_lofi': self.name_lofi,
+            'n_init_hifi': self.n_init_hifi,
+            'n_init_lofi': self.n_init_lofi,
+            'n_opt_hifi': self.n_opt_hifi,
+            'n_opt_lofi': self.n_opt_lofi,
+        }
         self.gen_specs['user']['experiment'] = self.experiment
