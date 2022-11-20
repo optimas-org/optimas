@@ -91,3 +91,29 @@ class MultifidelityBayesianOptimization(AxOptimizer):
         )
 
         return ax_client
+
+    def _create_gen_specs(self):
+        super()._create_gen_specs()
+        self.gen_specs['in'].append('z')
+        self.gen_specs['persis_in'].append('z')
+        fidel_type, fidel_len = self._determine_fidelity_type_and_length()
+        self.gen_specs['out'].append(('z', fidel_type, fidel_len))
+        self.gen_specs['user']['mf_params'] = {'name': self.fidel_name}
+
+    def _determine_fidelity_type_and_length(self):
+        """
+        Determine the type of the fidelity (i.e. float, int, str...) and, if it
+        is a string, also its length.
+        """
+        # Check that all fidelities in 'range' are of the same type.
+        assert (
+            type(self.fidel_ub) == type(self.fidel_lb)
+        ), "The lower and upper bounds of the fidelity are of different types."
+
+        fidel_type = type(self.fidel_ub)
+        fidel_len = None
+        # If fidelities are strings, determine the lenght of the longest one
+        # so that it can be fully stored in a numpy array.
+        if fidel_type == str:
+            fidel_len = max(len(self.fidel_lb), len(self.fidel_ub))
+        return fidel_type, fidel_len
