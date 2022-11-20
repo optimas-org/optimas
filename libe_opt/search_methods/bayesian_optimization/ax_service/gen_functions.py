@@ -24,7 +24,10 @@ def persistent_ax_client(H, persis_info, gen_specs, libE_info):
     
     # Detemine if optimization uses multiple fidelities.
     use_mf = 'mf_params' in gen_specs['user']
-    fidel_name = gen_specs['user']['mf_params']['name']
+
+    # If so, get name of fidelity parameter.
+    if use_mf:
+        fidel_name = gen_specs['user']['mf_params']['name']
     
     # Metric name.
     metric_name = list(ax_client.experiment.metrics.keys())[0]
