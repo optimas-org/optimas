@@ -148,7 +148,7 @@ class SearchMethod():
         persis_info = add_unique_random_streams({}, self.sim_workers + 2)
         if self.use_cuda:
             persis_info['gen_resources'] = 1
-        H, persis_info, flag = libE(
+        history, persis_info, flag = libE(
             self.sim_specs,
             self.gen_specs,
             exit_criteria,
@@ -158,6 +158,9 @@ class SearchMethod():
             H0=self.history
         )
 
+        # Update history.
+        self.history = history
+
         if self.libE_specs["comms"] == "local":
             is_master = True
             nworkers = self.sim_workers + 1
@@ -166,4 +169,4 @@ class SearchMethod():
             nworkers = MPI.COMM_WORLD.Get_size() - 1
 
         if is_master:
-            save_libE_output(H, persis_info, __file__, nworkers)
+            save_libE_output(history, persis_info, __file__, nworkers)
