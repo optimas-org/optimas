@@ -22,6 +22,10 @@ def persistent_ax_client(H, persis_info, gen_specs, libE_info):
     # Create Ax client.
     ax_client = gen_specs['user']['client']
     
+    # Detemine if optimization uses multiple fidelities.
+    use_mf = 'mf_params' in gen_specs['user']
+    fidel_name = gen_specs['user']['mf_params']['name']
+    
     # Metric name.
     metric_name = list(ax_client.experiment.metrics.keys())[0]
 
@@ -39,6 +43,9 @@ def persistent_ax_client(H, persis_info, gen_specs, libE_info):
             for j, name in enumerate(names_list):
                 params[name] = H['x'][i][j]
 
+            if use_mf:
+                params[fidel_name] = H['z'][i]
+
             _, trial_id = ax_client.attach_trial(params)
             ax_client.complete_trial(trial_id, {metric_name: (H['f'][i], np.nan)})
 
@@ -52,6 +59,8 @@ def persistent_ax_client(H, persis_info, gen_specs, libE_info):
         H_o = np.zeros(number_of_gen_points, dtype=gen_specs['out'])
         for i in range(number_of_gen_points):
             parameters, _ = ax_client.get_next_trial()
+            if use_mf:
+                H_o['z'][i] = parameters.pop(fidel_name)
             H_o['x'][i] = list(parameters.values())
             H_o['resource_sets'][i] = 1
 
