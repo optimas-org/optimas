@@ -3,6 +3,7 @@ import torch
 from libe_opt.search_methods.base import SearchMethod
 from .gen_functions import persistent_ax_client
 
+
 class AxOptimizer(SearchMethod):
     def __init__(
             self, var_names, var_lb, var_ub, sim_template, analysis_func,

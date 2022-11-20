@@ -23,7 +23,7 @@ class SearchMethod():
         self.analysis_func = analysis_func
         self.sim_number = sim_number
         self.analyzed_params = analyzed_params
-        self.sim_workers=sim_workers
+        self.sim_workers = sim_workers
         self.run_async = run_async
         self.use_cuda = use_cuda
         self.libE_specs = libE_specs
@@ -44,17 +44,18 @@ class SearchMethod():
 
     def _create_sim_specs(self):
         self.sim_specs = {
-            # Function whose output is being minimized. The parallel WarpX run is
-            # launched from run_WarpX.
+            # Function whose output is being minimized.
             'sim_f': run_simulation,
             # Name of input for sim_f, that LibEnsemble is allowed to modify.
             # May be a 1D array.
             'in': ['x'],
-            'out': [ ('f', float) ] \
+            'out': (
+                [('f', float)]
                 # f is the single float output that LibEnsemble minimizes.
-                + [(name, float, (1,)) for name in self.analyzed_params] \
+                + [(name, float, (1,)) for name in self.analyzed_params]
                 # input parameters
-                + [(name, float, (1,)) for name in self.var_names],
+                + [(name, float, (1,)) for name in self.var_names]
+            ),
             'user': {
                 'var_params': self.var_names,
                 'analysis_func': self.analysis_func,
@@ -109,15 +110,15 @@ class SearchMethod():
                 'An executable must be provided for non-Python simulations')
             assert os.path.exists(self.executable), (
                 'Executable {} does not exist.'.format(self.executable))
-            executable_path='./' + self.executable
-            self.sim_files.append(self.executable)       
-        
+            executable_path = './' + self.executable
+            self.sim_files.append(self.executable)
+
         # Create executor and register app.
         exctr = MPIExecutor()
         exctr.register_app(
             full_path=executable_path,
             calc_type='sim'
-        )        
+        )
 
     def _set_default_libe_specs(self):
         # Add sim_template to the list of files to be copied
@@ -153,7 +154,7 @@ class SearchMethod():
                 # Load array.
                 history = np.load(history)
                 # Only include runs that completed
-                history = history[history['returned']==True]
+                history = history[history['sim_ended']]
             else:
                 raise ValueError(
                     'History file {} does not exist.'.format(history))

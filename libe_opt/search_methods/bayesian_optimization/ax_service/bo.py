@@ -53,14 +53,19 @@ class BayesianOptimization(AxOptimizer):
         # If there is no past history,
         # adds Sobol initialization with `batch_size` random trials:
         if self.history is None:
-            steps.append(GenerationStep(model=Models.SOBOL, num_trials=batch_size))
+            steps.append(
+                GenerationStep(
+                    model=Models.SOBOL,
+                    num_trials=batch_size
+                )
+            )
 
         # continue indefinitely with GPEI.
         steps.append(
             GenerationStep(
                 model=Models.GPEI,
                 num_trials=-1,
-                model_kwargs = {
+                model_kwargs={
                     'torch_dtype': torch.double,
                     'torch_device': torch.device(self.torch_device)
                 }

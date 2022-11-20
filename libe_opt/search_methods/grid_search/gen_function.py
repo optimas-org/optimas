@@ -47,7 +47,7 @@ def persistent_regular_grid_search(H, persis_info, gen_specs, libE_info):
             if i_last > n_configs:
                 i_last = n_configs
                 batch_size = i_last - i_first
-        
+
             # Create array of 'batch_size' zeros
             H_o = np.zeros(batch_size, dtype=gen_specs['out'])
 

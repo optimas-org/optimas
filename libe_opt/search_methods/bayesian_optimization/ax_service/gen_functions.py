@@ -2,7 +2,8 @@ import os
 
 import numpy as np
 import torch
-from libensemble.message_numbers import STOP_TAG, PERSIS_STOP, FINISHED_PERSISTENT_GEN_TAG, EVAL_GEN_TAG
+from libensemble.message_numbers import (
+    STOP_TAG, PERSIS_STOP, FINISHED_PERSISTENT_GEN_TAG, EVAL_GEN_TAG)
 from libensemble.tools.persistent_support import PersistentSupport
 from libensemble.resources.resources import Resources
 
@@ -21,14 +22,14 @@ def persistent_ax_client(H, persis_info, gen_specs, libE_info):
 
     # Create Ax client.
     ax_client = gen_specs['user']['client']
-    
+
     # Detemine if optimization uses multiple fidelities.
     use_mf = 'mf_params' in gen_specs['user']
 
     # If so, get name of fidelity parameter.
     if use_mf:
         fidel_name = gen_specs['user']['mf_params']['name']
-    
+
     # Metric name.
     metric_name = list(ax_client.experiment.metrics.keys())[0]
 
@@ -50,7 +51,10 @@ def persistent_ax_client(H, persis_info, gen_specs, libE_info):
                 params[fidel_name] = H['z'][i]
 
             _, trial_id = ax_client.attach_trial(params)
-            ax_client.complete_trial(trial_id, {metric_name: (H['f'][i], np.nan)})
+            ax_client.complete_trial(
+                trial_id,
+                {metric_name: (H['f'][i], np.nan)}
+            )
 
     # Receive information from the manager (or a STOP_TAG)
     tag = None
@@ -78,7 +82,10 @@ def persistent_ax_client(H, persis_info, gen_specs, libE_info):
                 trial_index = int(calc_in['sim_id'][i])
                 y = calc_in['f'][i]
                 # Register trial with unknown SEM
-                ax_client.complete_trial(trial_index, {metric_name: (y, np.nan)})
+                ax_client.complete_trial(
+                    trial_index,
+                    {metric_name: (y, np.nan)}
+                )
             # Set the number of points to generate to that number:
             number_of_gen_points = n
         else:

@@ -51,7 +51,7 @@ class MultifidelityBayesianOptimization(AxOptimizer):
 
         parameters.append(
             {
-                'name':self.fidel_name,
+                'name': self.fidel_name,
                 'type': 'range',
                 'bounds': [self.fidel_lb, self.fidel_ub],
                 'is_fidelity': True,
@@ -68,7 +68,12 @@ class MultifidelityBayesianOptimization(AxOptimizer):
         # If there is no past history,
         # adds Sobol initialization with `batch_size` random trials:
         if self.history is None:
-            steps.append(GenerationStep(model=Models.SOBOL, num_trials=batch_size))
+            steps.append(
+                GenerationStep(
+                    model=Models.SOBOL,
+                    num_trials=batch_size
+                )
+            )
 
         # continue indefinitely with GPKG.
         steps.append(
@@ -110,7 +115,7 @@ class MultifidelityBayesianOptimization(AxOptimizer):
         """
         # Check that all fidelities in 'range' are of the same type.
         assert (
-            type(self.fidel_ub) == type(self.fidel_lb)
+            isinstance(self.fidel_ub, type(self.fidel_lb))
         ), "The lower and upper bounds of the fidelity are of different types."
 
         fidel_type = type(self.fidel_ub)

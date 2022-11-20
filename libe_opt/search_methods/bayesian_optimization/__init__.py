@@ -1,5 +1,6 @@
-from .ax_developer import *
-from .ax_service import *
+from .ax_developer import MultitaskBayesianOptimization
+from .ax_service import (
+    AxClientOptimizer, BayesianOptimization, MultifidelityBayesianOptimization)
 
 
 __all__ = [

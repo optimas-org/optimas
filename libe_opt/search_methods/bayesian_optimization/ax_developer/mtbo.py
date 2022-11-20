@@ -62,7 +62,7 @@ class MultitaskBayesianOptimization(SearchMethod):
                     lower=float(lb),
                     upper=float(ub))
             )
-        search_space=SearchSpace(parameters=parameters)
+        search_space = SearchSpace(parameters=parameters)
 
         # Create metrics.
         hifi_objective = AxMetric(
@@ -101,11 +101,12 @@ class MultitaskBayesianOptimization(SearchMethod):
     def _create_sim_specs(self):
         super()._create_sim_specs()
         self.sim_specs['in'].append('task')
-        self.sim_specs['user']['extra_args'] = {}
+        extra_args = {}
         if self.extra_args_lofi is not None:
-            self.sim_specs['user']['extra_args'][self.name_lofi] = self.extra_args_lofi
+            extra_args[self.name_lofi] = self.extra_args_lofi
         if self.extra_args_hifi is not None:
-            self.sim_specs['user']['extra_args'][self.name_hifi] = self.extra_args_hifi
+            extra_args[self.name_hifi] = self.extra_args_hifi
+        self.sim_specs['user']['extra_args'] = extra_args
 
     def _create_gen_specs(self):
         super()._create_gen_specs()
