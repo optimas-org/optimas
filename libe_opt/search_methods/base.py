@@ -15,7 +15,7 @@ class SearchMethod():
             self, var_names, var_lb, var_ub, sim_template, analysis_func,
             sim_number, analyzed_params=[], sim_workers=1, run_async=True,
             use_cuda=False, libE_specs={}, gen_function=None,
-            history=None):
+            history=None, executable=None, sim_files=[]):
         self.var_names = var_names
         self.var_ub = var_ub
         self.var_lb = var_lb
@@ -29,6 +29,8 @@ class SearchMethod():
         self.libE_specs = libE_specs
         self.gen_function = gen_function
         self.history = self._load_history(history)
+        self.executable = executable
+        self.sim_files = sim_files
 
         self._initialize_model()
         self._create_sim_specs()
@@ -97,9 +99,25 @@ class SearchMethod():
         }
 
     def _create_executor(self):
-        exctr = MPIExecutor()
+        # Determine executable path.
         if self.sim_template.endswith('.py'):
-            exctr.register_app(full_path='simulation_script.py', calc_type='sim')
+            executable_path = 'simulation_script.py'
+        else:
+            # By default, if the template is not a `.py` file, we run
+            # it with an executable.
+            assert self.executable is not None, (
+                'An executable must be provided for non-Python simulations')
+            assert os.path.exists(self.executable), (
+                'Executable {} does not exist.'.format(self.executable))
+            executable_path='./' + self.executable
+            self.sim_files.append(self.executable)       
+        
+        # Create executor and register app.
+        exctr = MPIExecutor()
+        exctr.register_app(
+            full_path=executable_path,
+            calc_type='sim'
+        )        
 
     def _set_default_libe_specs(self):
         # Add sim_template to the list of files to be copied
@@ -108,6 +126,8 @@ class SearchMethod():
             self.libE_specs['sim_dir_copy_files'] = [self.sim_template]
         elif self.sim_template not in self.libE_specs['sim_dir_copy_files']:
             self.libE_specs['sim_dir_copy_files'].append(self.sim_template)
+        # Add all specified simulation files.
+        self.libE_specs['sim_dir_copy_files'].extend(self.sim_files)
         # Save H to file every N simulation evaluations
         # default value, if not defined
         if 'save_every_k_sims' not in self.libE_specs.keys():
