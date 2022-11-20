@@ -15,7 +15,7 @@ class SearchMethod():
             self, var_names, var_lb, var_ub, sim_template, analysis_func,
             sim_number, analyzed_params=[], sim_workers=1, run_async=True,
             use_cuda=False, libE_specs={}, gen_function=None,
-            past_history=None):
+            history=None):
         self.var_names = var_names
         self.var_ub = var_ub
         self.var_lb = var_lb
@@ -28,7 +28,7 @@ class SearchMethod():
         self.use_cuda = use_cuda
         self.libE_specs = libE_specs
         self.gen_function = gen_function
-        self.past_history = self._load_past_history(past_history)
+        self.history = self._load_history(history)
 
         self._initialize_model()
         self._create_sim_specs()
@@ -127,21 +127,21 @@ class SearchMethod():
             self.libE_specs["nworkers"] = self.sim_workers + 1
             self.libE_specs["comms"] = 'local'
 
-    def _load_past_history(self, past_history):
-        if isinstance(past_history, str):
-            if os.path.exists(past_history):
+    def _load_history(self, history):
+        if isinstance(history, str):
+            if os.path.exists(history):
                 # Load array.
-                past_history = np.load(past_history)
+                history = np.load(history)
                 # Only include runs that completed
-                past_history = past_history[past_history['returned']==True]
+                history = history[history['returned']==True]
             else:
                 raise ValueError(
-                    'History file {} does not exist.'.format(past_history))
+                    'History file {} does not exist.'.format(history))
         assert (
-            past_history is not None or
-            not isinstance(past_history, np.ndarray)
-        ), 'Type {} not valid for `past_history`'.format(type(past_history))
-        return past_history
+            history is not None or
+            not isinstance(history, np.ndarray)
+        ), 'Type {} not valid for `history`'.format(type(history))
+        return history
 
     def run(self):
         exit_criteria = {'sim_max': self.sim_number}
@@ -155,7 +155,7 @@ class SearchMethod():
             persis_info,
             self.alloc_specs,
             self.libE_specs,
-            H0=self.past_history
+            H0=self.history
         )
 
         if self.libE_specs["comms"] == "local":

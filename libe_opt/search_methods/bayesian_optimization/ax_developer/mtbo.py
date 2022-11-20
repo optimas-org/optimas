@@ -14,7 +14,7 @@ class MultitaskBayesianOptimization(SearchMethod):
     def __init__(
             self, var_names, var_lb, var_ub, sim_template, analysis_func,
             sim_number, mt_params, analyzed_params=[], sim_workers=1,
-            use_cuda=False, libE_specs={}, past_history=None):
+            use_cuda=False, libE_specs={}, history=None):
         self.mt_params = mt_params
         super().__init__(
             var_names=var_names,
@@ -28,7 +28,7 @@ class MultitaskBayesianOptimization(SearchMethod):
             run_async=False,
             use_cuda=use_cuda,
             libE_specs=libE_specs,
-            past_history=past_history,
+            history=history,
             gen_function=persistent_gp_mt_ax_gen_f
         )
 
