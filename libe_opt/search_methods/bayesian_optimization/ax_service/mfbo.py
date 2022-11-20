@@ -10,9 +10,13 @@ from .base import AxOptimizer
 class MultifidelityBayesianOptimization(AxOptimizer):
     def __init__(
             self, var_names, var_lb, var_ub, sim_template, analysis_func,
-            sim_number, mf_params, analyzed_params=[], sim_workers=1,
+            sim_number, fidel_name, fidel_lb, fidel_ub,
+            fidel_cost_intercept=1.0, analyzed_params=[], sim_workers=1,
             run_async=True, use_cuda=False, libE_specs={}, history=None):
-        self.mf_params = mf_params
+        self.fidel_name = fidel_name
+        self.fidel_lb = fidel_lb
+        self.fidel_ub = fidel_ub
+        self.fidel_cost_intercept = fidel_cost_intercept
         super().__init__(
             var_names=var_names,
             var_lb=var_lb,
@@ -44,11 +48,11 @@ class MultifidelityBayesianOptimization(AxOptimizer):
 
         parameters.append(
             {
-                'name':self. mf_params['name'],
+                'name':self.fidel_name,
                 'type': 'range',
-                'bounds': self.mf_params['range'],
+                'bounds': [self.fidel_lb, self.fidel_ub],
                 'is_fidelity': True,
-                'target_value': self.mf_params['range'][-1]
+                'target_value': self.fidel_ub
             }
         )
 
@@ -69,7 +73,7 @@ class MultifidelityBayesianOptimization(AxOptimizer):
                     model=Models.GPKG,
                     num_trials=-1,
                     model_kwargs={
-                        'cost_intercept': self.mf_params['cost_intercept'],
+                        'cost_intercept': self.fidel_cost_intercept,
                         'torch_dtype': torch.double,
                         'torch_device': torch.device(self.torch_device)
                     }
