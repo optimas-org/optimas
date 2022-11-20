@@ -11,7 +11,8 @@ class BayesianOptimization(AxOptimizer):
     def __init__(
             self, var_names, var_lb, var_ub, sim_template, analysis_func,
             sim_number, analyzed_params=[], sim_workers=1, run_async=True,
-            use_cuda=False, libE_specs={}, history=None):
+            use_cuda=False, libE_specs={}, history=None, executable=None,
+            sim_files=[]):
         super().__init__(
             var_names=var_names,
             var_lb=var_lb,
@@ -24,7 +25,9 @@ class BayesianOptimization(AxOptimizer):
             run_async=run_async,
             use_cuda=use_cuda,
             libE_specs=libE_specs,
-            history=history
+            history=history,
+            executable=executable,
+            sim_files=sim_files
         )
 
     def _create_ax_client(self):

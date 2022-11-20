@@ -16,7 +16,7 @@ class MultitaskBayesianOptimization(SearchMethod):
             name_hifi, name_lofi, n_init_hifi, n_init_lofi,
             n_opt_hifi, n_opt_lofi, extra_args_hifi=None, extra_args_lofi=None,
             analyzed_params=[], sim_workers=1, use_cuda=False, libE_specs={},
-            history=None):
+            history=None, executable=None, sim_files=[]):
         self.name_hifi = name_hifi
         self.name_lofi = name_lofi
         self.n_init_hifi = n_init_hifi
@@ -38,7 +38,9 @@ class MultitaskBayesianOptimization(SearchMethod):
             use_cuda=use_cuda,
             libE_specs=libE_specs,
             history=history,
-            gen_function=persistent_gp_mt_ax_gen_f
+            gen_function=persistent_gp_mt_ax_gen_f,
+            executable=executable,
+            sim_files=sim_files
         )
 
     def _initialize_model(self):

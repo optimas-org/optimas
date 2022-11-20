@@ -12,7 +12,8 @@ class MultifidelityBayesianOptimization(AxOptimizer):
             self, var_names, var_lb, var_ub, sim_template, analysis_func,
             sim_number, fidel_name, fidel_lb, fidel_ub,
             fidel_cost_intercept=1.0, analyzed_params=[], sim_workers=1,
-            run_async=True, use_cuda=False, libE_specs={}, history=None):
+            run_async=True, use_cuda=False, libE_specs={}, history=None,
+            executable=None, sim_files=[]):
         self.fidel_name = fidel_name
         self.fidel_lb = fidel_lb
         self.fidel_ub = fidel_ub
@@ -29,7 +30,9 @@ class MultifidelityBayesianOptimization(AxOptimizer):
             run_async=run_async,
             use_cuda=use_cuda,
             libE_specs=libE_specs,
-            history=history
+            history=history,
+            executable=executable,
+            sim_files=sim_files
         )
 
     def _create_ax_client(self):

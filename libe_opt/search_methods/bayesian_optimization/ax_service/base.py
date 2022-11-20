@@ -7,7 +7,8 @@ class AxOptimizer(SearchMethod):
     def __init__(
             self, var_names, var_lb, var_ub, sim_template, analysis_func,
             sim_number, analyzed_params=[], sim_workers=1, run_async=True,
-            use_cuda=False, libE_specs={}, history=None, ax_client=None):
+            use_cuda=False, libE_specs={}, history=None, ax_client=None,
+            executable=None, sim_files=[]):
         self.ax_client = ax_client
         super().__init__(
             var_names=var_names,
@@ -22,7 +23,9 @@ class AxOptimizer(SearchMethod):
             use_cuda=use_cuda,
             libE_specs=libE_specs,
             history=history,
-            gen_function=persistent_ax_client
+            gen_function=persistent_ax_client,
+            executable=executable,
+            sim_files=sim_files
         )
 
     def _initialize_model(self):

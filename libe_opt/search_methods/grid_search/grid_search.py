@@ -8,7 +8,7 @@ class GridSearch(SearchMethod):
     def __init__(
             self, var_names, var_lb, var_ub, var_steps, sim_template,
             analysis_func, analyzed_params=[], sim_workers=1,
-            run_async=True, libE_specs={}):
+            run_async=True, libE_specs={}, executable=None, sim_files=[]):
         self.var_steps = var_steps
         super().__init__(
             var_names=var_names,
@@ -22,7 +22,9 @@ class GridSearch(SearchMethod):
             run_async=run_async,
             use_cuda=False,
             libE_specs=libE_specs,
-            gen_function=persistent_regular_grid_search
+            gen_function=persistent_regular_grid_search,
+            executable=executable,
+            sim_files=sim_files
         )
 
     def _create_gen_specs(self):

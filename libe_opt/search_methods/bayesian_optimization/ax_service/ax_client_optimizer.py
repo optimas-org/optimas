@@ -6,7 +6,8 @@ class AxClientOptimizer(AxOptimizer):
     def __init__(
             self, ax_client, sim_template, analysis_func,
             sim_number, analyzed_params=[], sim_workers=1, run_async=True,
-            use_cuda=False, libE_specs={}, history=None):
+            use_cuda=False, libE_specs={}, history=None, executable=None,
+            sim_files=[]):
         var_names, var_lb, var_ub = self._get_var_params(ax_client)
         super().__init__(
             var_names=var_names,
@@ -22,7 +23,9 @@ class AxClientOptimizer(AxOptimizer):
             libE_specs=libE_specs,
             history=history,
             gen_function=persistent_ax_client,
-            ax_client=ax_client
+            ax_client=ax_client,
+            executable=executable,
+            sim_files=sim_files
         )
 
     def _get_var_params(self, ax_client):
