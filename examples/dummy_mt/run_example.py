@@ -1,19 +1,27 @@
-from libensemble.tools import parse_args
-from libe_opt.ensemble_runner import run_ensemble
+import numpy as np
+from libe_opt.search_methods import MultitaskBayesianOptimization
 
-from varying_parameters import varying_parameters
-from analysis_script import analyze_simulation, analyzed_quantities
-from mt_parameters import mt_parameters
+from analysis_script import analyze_simulation
 
 
-gen_type = 'bo'
-backend = 'ax'
-sim_max = 25
-run_async = False
-nworkers, is_master, libE_specs, _ = parse_args()
+var_names = ['x0', 'x1']
+var_lb = np.array([0., 0.])
+var_ub = np.array([15., 15.])
 
-run_ensemble(
-    nworkers, sim_max, is_master, gen_type,
-    analyzed_params=analyzed_quantities, var_params=varying_parameters,
-    analysis_func=analyze_simulation, mt_params=mt_parameters,
-    libE_specs=libE_specs, run_async=run_async, bo_backend=backend)
+
+mtbo = MultitaskBayesianOptimization(
+    var_names=var_names,
+    var_lb=var_lb,
+    var_ub=var_ub,
+    sim_workers=4,
+    sim_template='template_simulation_script.py',
+    analysis_func=analyze_simulation,
+    name_hifi='expensive_model',
+    name_lofi='cheap_model',
+    n_init_hifi=3,
+    n_init_lofi=10,
+    n_opt_hifi=1,
+    n_opt_lofi=3
+)
+
+mtbo.run()

@@ -1,17 +1,22 @@
-from libensemble.tools import parse_args
-from libe_opt.ensemble_runner import run_ensemble
+import numpy as np
+from libe_opt.search_methods import GridSearch
 
-from varying_parameters import varying_parameters
-from analysis_script import analyze_simulation, analyzed_quantities
+from analysis_script import analyze_simulation
 
+var_names = ['x0', 'x1']
+var_lb = np.array([0., 0.])
+var_ub = np.array([15., 15.])
+var_steps = np.array([5, 7])
 
-gen_type = 'grid_search'
-sim_max = 35
-run_async = True
-nworkers, is_master, libE_specs, _ = parse_args()
-
-run_ensemble(
-    nworkers, sim_max, is_master, gen_type,
-    analyzed_params=analyzed_quantities, var_params=varying_parameters,
+gs = GridSearch(
+    var_names=var_names,
+    var_lb=var_lb,
+    var_ub=var_ub,
+    var_steps=var_steps,
+    sim_workers=4,
+    sim_template='template_simulation_script.py',
     analysis_func=analyze_simulation,
-    libE_specs=libE_specs, run_async=run_async)
+    run_async=True
+)
+
+gs.run()
