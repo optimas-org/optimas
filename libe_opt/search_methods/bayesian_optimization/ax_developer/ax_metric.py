@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from ax import Metric
 from ax.core.data import Data
+from ax.utils.common.result import Ok
 
 
 class AxMetric(Metric):
@@ -17,4 +18,4 @@ class AxMetric(Metric):
                 "mean": trial.run_metadata[arm_name]['f'],
                 "sem": np.nan,
             })
-        return Data(df=pd.DataFrame.from_records(records))
+        return Ok(value=Data(df=pd.DataFrame.from_records(records)))
