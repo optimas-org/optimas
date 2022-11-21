@@ -14,7 +14,7 @@ bo = BayesianOptimization(
     sim_workers=4,
     sim_template='template_simulation_script.py',
     analysis_func=analyze_simulation,
-    analyzed_quantities=analyzed_quantities,
+    analyzed_params=analyzed_quantities,
     sim_number=10,
     run_async=True
 )

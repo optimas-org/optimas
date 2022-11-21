@@ -1,6 +1,6 @@
 import numpy as np
 from libe_opt.search_methods import MultifidelityBayesianOptimization
-from analysis_script import analyze_simulation
+from analysis_script import analyze_simulation, analyzed_quantities
 
 var_names = ['x0', 'x1']
 var_lb = np.array([0., 0.])
@@ -14,6 +14,7 @@ mfbo = MultifidelityBayesianOptimization(
     sim_workers=4,
     sim_template='template_simulation_script.py',
     analysis_func=analyze_simulation,
+    analyzed_params=analyzed_quantities,
     sim_number=10,
     fidel_name='resolution',
     fidel_lb=1.,

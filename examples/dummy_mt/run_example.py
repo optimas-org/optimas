@@ -1,7 +1,7 @@
 import numpy as np
 from libe_opt.search_methods import MultitaskBayesianOptimization
 
-from analysis_script import analyze_simulation
+from analysis_script import analyze_simulation, analyzed_quantities
 
 
 var_names = ['x0', 'x1']
@@ -16,6 +16,7 @@ mtbo = MultitaskBayesianOptimization(
     sim_workers=4,
     sim_template='template_simulation_script.py',
     analysis_func=analyze_simulation,
+    analyzed_params=analyzed_quantities,
     name_hifi='expensive_model',
     name_lofi='cheap_model',
     n_init_hifi=3,
