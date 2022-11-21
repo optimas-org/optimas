@@ -30,4 +30,5 @@ setup(name='libE_opt',
           "Programming Language :: Python :: 3",
           "Intended Audience :: Science/Research",
           "Operating System :: OS Independent"],
-      )
+      python_requires=">=3.8",
+      ),
