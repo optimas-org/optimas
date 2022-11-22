@@ -36,7 +36,9 @@ def run_ensemble(
     # Setup MPI executor
     exctr = MPIExecutor()
     if sim_template.endswith('.py'):
-        exctr.register_app(full_path='simulation_script.py', calc_type='sim')
+        sim_script = os.path.basename(sim_template)
+        sim_script = sim_script[len('template_'):]  # Strip 'template_' from name
+        exctr.register_app(full_path=sim_script, calc_type='sim')
     else:
         # By default, if the template is not a `.py` file, we run
         # it with an executable. The executable should start with `warpx`
@@ -67,7 +69,7 @@ def run_ensemble(
     # Before starting libensemble, check whether there is past history file
     if past_history is not None and os.path.exists(past_history):
         H0 = np.load(past_history)
-        H0 = H0[ H0['returned']==True ] # Only include runs that completed
+        H0 = H0[H0['sim_ended']]  # Only include runs that completed
         check_inputs(
             H0=H0, sim_specs=sim_specs, alloc_specs=alloc_specs,
             gen_specs=gen_specs)
