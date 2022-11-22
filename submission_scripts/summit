@@ -22,6 +22,7 @@ export FBPIC_DISABLE_CACHING=1
 # Script to run libEnsemble using multiprocessing on launch nodes.
 # Assumes Conda environment is set up.
 
-export LIBE_SIM_EXTRA_ARGS="-n 1 -a 1 -g 1 -c 1 --bind=packed:1"
+export LIBE_GPUS_PER_SIM=1
+export LIBE_SIM_EXTRA_ARGS="-a 1 -g 1 -c 1 --bind=packed:1"
 
 python run_example.py --comms local --nworkers {n_workers}

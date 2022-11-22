@@ -13,6 +13,7 @@ source activate libE_opt
 export MPICH_GPU_SUPPORT_ENABLED=0
 export FBPIC_ENABLE_GPUDIRECT=0
 
-export LIBE_SIM_EXTRA_ARGS="--exact -u -n 1 --gpus-per-task 1 -c 32 --mem-per-gpu=60G"
+export LIBE_GPUS_PER_SIM=1
+export LIBE_SIM_EXTRA_ARGS="--exact -u --gpus-per-task 1 -c 32 --mem-per-gpu=60G"
 
 python run_example.py --comms local --nworkers {n_workers}
