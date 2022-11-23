@@ -8,7 +8,7 @@ The scripts in this repository allow to optimize PIC simulation.
 
 Then install other dependencies:
 ```
-pip install git+https://github.com/Libensemble/libensemble.git@develop
+pip install libensemble
 pip install -r requirements.txt
 ```
 
@@ -31,7 +31,7 @@ https://fbpic.github.io/install/install_summit.html
 Then install other dependencies:
 ```
 source activate $SCRATCH/fbpic_env
-pip install git+https://github.com/Libensemble/libensemble.git@develop
+pip install libensemble
 git clone https://github.com/RemiLehe/libE_opt.git
 cd libE_opt
 pip install .
@@ -44,7 +44,7 @@ conda create -n libE_opt
 source activate libE_opt
 conda install -c conda-forge mamba
 mamba install -c conda-forge openpmd-viewer openpmd-api pandas botorch ax-platform
-pip install git+https://github.com/Libensemble/libensemble.git@develop
+pip install libensemble
 git clone https://github.com/RemiLehe/libE_opt.git
 cd libE_opt
 pip install .
@@ -57,7 +57,7 @@ https://fbpic.github.io/install/install_lawrencium.html
 
 Then install other dependencies:
 ```
-pip install git+https://github.com/Libensemble/libensemble.git@develop
+pip install libensemble
 pip install -r requirements.txt
 ```
 
