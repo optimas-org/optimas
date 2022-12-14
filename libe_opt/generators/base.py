@@ -15,6 +15,7 @@ class Generator():
 
     def ask(self, n_trials):
         trials = []
+        # Initialize as many trials as requested.
         for i in range(n_trials):
             trials.append(
                 Trial(
@@ -23,7 +24,11 @@ class Generator():
                     index=len(self._trials) + i
                 )
             )
+        # Ask the generator to fill them.
         trials = self._ask(trials)
+        # Keep only trials that have been given data.
+        trials = [trial for trial in trials if trial.variable_values]
+        # Store trials.
         self._trials.extend(trials)
         return trials
 
