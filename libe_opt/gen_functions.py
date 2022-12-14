@@ -29,6 +29,8 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
     # Number of points to generate initially.
     number_of_gen_points = gen_specs['user']['gen_batch_size']
 
+    n_failed_gens = 0
+
     # If there is any past history, feed it to the GP
     # if len(H) > 0:
     #     names_list = gen_specs['user']['params']
@@ -48,11 +50,16 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # Store this information in the format expected by libE
         H_o = np.zeros(number_of_gen_points, dtype=gen_specs['out'])
         for i in range(number_of_gen_points):
-            trial = generator.ask(1)[0]
-            for variable, value in zip(trial.variables, trial.variable_values):
-                H_o[variable.name][i] = value
-            H_o['trial_index'][i] = trial.index
-            H_o['resource_sets'][i] = 1
+            generated_trials = generator.ask(1)
+            if generated_trials:
+                trial = generated_trials[0]
+                for variable, value in zip(trial.variables, trial.variable_values):
+                    H_o[variable.name][i] = value
+                H_o['trial_index'][i] = trial.index
+                H_o['resource_sets'][i] = 1
+        n_failed_gens = np.sum(H_o['resource_sets'] == 0)
+        H_o = H_o[H_o['resource_sets'] > 0]
+
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager
@@ -71,7 +78,8 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                 # Register trial with unknown SEM
                 generator.tell([trial])
             # Set the number of points to generate to that number:
-            number_of_gen_points = n
+            number_of_gen_points = n + n_failed_gens
+            n_failed_gens = 0
         else:
             number_of_gen_points = 0
 
