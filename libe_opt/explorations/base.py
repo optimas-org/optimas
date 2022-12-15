@@ -6,6 +6,7 @@ from mpi4py import MPI
 from libensemble.libE import libE
 from libensemble.tools import save_libE_output, add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
+from libensemble.executors.mpi_executor import MPIExecutor
 
 
 class Exploration():
@@ -18,6 +19,8 @@ class Exploration():
         self.history = self._load_history(history)
         self._set_default_libe_specs()
         self._create_alloc_specs()
+        self._create_executor()
+        self._register_apps()
 
     def run(self):
         exit_criteria = {'sim_max': self.max_evals}
@@ -49,6 +52,11 @@ class Exploration():
         if is_master:
             save_libE_output(history, persis_info, __file__, nworkers)
 
+    def _create_executor(self):
+        self.executor = MPIExecutor()
+
+    def _register_apps(self):
+        self.evaluator.register_app(self.executor)
 
     def _load_history(self, history):
         if isinstance(history, str):
