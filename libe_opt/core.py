@@ -27,15 +27,22 @@ class ObjectiveEvaluation():
         self.sem = sem
 
 
+class Task():
+    def __init__(self, name, n_init, n_opt):
+        self.name = name
+        self.n_init = n_init
+        self.n_opt = n_opt
+
+
 class Trial():
     def __init__(
-            self, variables, objectives, variable_values=[],
-            objective_evaluations=[], index=None, **kwargs):
+            self, variables, objectives, variable_values=None,
+            objective_evaluations=None, index=None, **kwargs):
         
         self.variables = variables
-        self.variable_values = variable_values
+        self.variable_values = [] if variable_values is None else variable_values
         self.objectives = objectives
-        self.objective_evaluations = objective_evaluations
+        self.objective_evaluations = [] if objective_evaluations is None else objective_evaluations
         self.index = index
 
         for k, v in kwargs.items():
