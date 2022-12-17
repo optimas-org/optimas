@@ -34,10 +34,7 @@ class Evaluator:
     def initialize(self):
         if not self._initialized:
             self._initialize()
-            self._initialized = True     
-
-    def _get_sim_specs(self, variables, objectives):
-        raise NotImplementedError
+            self._initialized = True
         
     def _initialize(self):
         pass
