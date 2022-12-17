@@ -70,10 +70,9 @@ class Exploration():
             else:
                 raise ValueError(
                     'History file {} does not exist.'.format(history))
-        assert (
-            history is not None or
-            not isinstance(history, np.ndarray)
-        ), 'Type {} not valid for `history`'.format(type(history))
+        assert history is None or isinstance(history, np.ndarray), (
+            'Type {} not valid for `history`'.format(type(history))
+        )
         return history
 
     def _set_default_libe_specs(self):
