@@ -14,7 +14,7 @@ class TemplateEvaluator(Evaluator):
             sim_function=run_template_simulation,
             analyzed_params=analyzed_params,
             n_gpus=n_gpus)
-        self.sim_template = os.path.basename(sim_template)
+        self.sim_template = sim_template
         self.analysis_func = analysis_func
         self.executable = executable
         self.sim_files = [] if sim_files is None else sim_files
@@ -24,7 +24,7 @@ class TemplateEvaluator(Evaluator):
     def get_sim_specs(self, variables, objectives):
         sim_specs = super().get_sim_specs(variables, objectives)
         sim_specs['user']['analysis_func'] = self.analysis_func
-        sim_specs['user']['sim_template'] = self.sim_template
+        sim_specs['user']['sim_template'] = os.path.basename(self.sim_template)
         sim_specs['user']['app_name'] = self._app_name
         sim_specs['user']['n_proc'] = self.n_proc
         return sim_specs
