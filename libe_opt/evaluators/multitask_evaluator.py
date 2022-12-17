@@ -4,9 +4,11 @@ from .template_evaluator import TemplateEvaluator
 
 class MultitaskEvaluator(Evaluator):
     def __init__(self, tasks, task_evaluators):
-        super().__init__()
         self._check_tasks(tasks)
         self._check_evaluators(task_evaluators)
+        super().__init__(
+            sim_function=task_evaluators[0].sim_function
+        )
         self.tasks = tasks
         self.task_evaluators = task_evaluators
 
@@ -19,13 +21,10 @@ class MultitaskEvaluator(Evaluator):
         assert tasks[0].name != tasks[1].name
 
     def get_sim_specs(self, variables, objectives):
-        sim_specs = {}
+        sim_specs = super().get_sim_specs(variables, objectives)
         sim_specs_1 = self.task_evaluators[0].get_sim_specs(variables, objectives)
         sim_specs_2 = self.task_evaluators[1].get_sim_specs(variables, objectives)
 
-        sim_specs['sim_f'] = sim_specs_1['sim_f']
-        sim_specs['in'] = sim_specs_1['in']
-        sim_specs['out'] = sim_specs_1['out']
         sim_specs['user'] = {
             self.tasks[0].name: sim_specs_1['user'],
             self.tasks[1].name: sim_specs_2['user'],
@@ -36,14 +35,14 @@ class MultitaskEvaluator(Evaluator):
         return sim_specs
 
     def get_libe_specs(self):
-        libE_specs = {}
-        libe_specs_1 = self.task_evaluators[0].get_libe_specs()
-        libe_specs_2 = self.task_evaluators[1].get_libe_specs()
-        libE_specs['sim_dir_copy_files'] = list(
-            set(libe_specs_1['sim_dir_copy_files'] +
-                libe_specs_2['sim_dir_copy_files'])
-        )
-        return libE_specs
+        libE_specs_1 = self.task_evaluators[0].get_libe_specs()
+        libE_specs_2 = self.task_evaluators[1].get_libe_specs()
+        if 'sim_dir_copy_files' in libE_specs_1:
+            libE_specs_1['sim_dir_copy_files'] = list(
+                set(libE_specs_1['sim_dir_copy_files'] +
+                    libE_specs_2['sim_dir_copy_files'])
+            )
+        return libE_specs_1
 
     def _initialize(self):
         if isinstance(self.task_evaluators[0], TemplateEvaluator):
