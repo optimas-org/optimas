@@ -34,10 +34,17 @@ class AxServiceGenerator(Generator):
             objective_eval = {}
             for oe in trial.objective_evaluations:
                 objective_eval[oe.objective.name] = (oe.value, oe.sem)
-            self.ax_client.complete_trial(
-                        trial_index=trial.ax_trial_id,
-                        raw_data=objective_eval
-                    )
+            try:
+                self.ax_client.complete_trial(
+                            trial_index=trial.ax_trial_id,
+                            raw_data=objective_eval
+                        )
+            except AttributeError:
+                params = {}
+                for var, value in zip(trial.variables, trial.variable_values):
+                    params[var.name] = value
+                _, trial_id = self.ax_client.attach_trial(params)
+                self.ax_client.complete_trial(trial_id, objective_eval)
 
     def _create_ax_client(self):
         raise NotImplementedError

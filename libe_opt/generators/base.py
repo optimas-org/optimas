@@ -1,5 +1,5 @@
 from libe_opt.gen_functions import persistent_generator
-from libe_opt.core import Variable, Objective, Trial, Evaluation
+from libe_opt.core import Variable, Objective, Trial, Evaluation, ObjectiveEvaluation
 
 
 class Generator():
@@ -33,7 +33,30 @@ class Generator():
         return trials
 
     def tell(self, trials):
+        for trial in trials:
+            if trial not in self._trials:
+                trial.index = len(self._trials)
+                self._trials.append(trial)
         self._tell(trials)
+
+    def incorporate_history(self, history):
+        # Keep only evaluations where the simulation finished sucessfully.
+        history = history[history['sim_ended']]
+        n_sims = len(history)
+        for i in range(n_sims):
+            trial = Trial(
+                        variables=self.variables,
+                        variable_values=[
+                            history[var.name][i] for var in self.variables],
+                        objectives=self.objectives,
+                        objective_evaluations=[
+                            ObjectiveEvaluation(
+                                objective=obj,
+                                value=history[obj.name][i]
+                            ) for obj in self.objectives
+                        ]
+                    )
+            self.tell([trial])
 
     def get_gen_specs(self, sim_workers):
         gen_specs = {

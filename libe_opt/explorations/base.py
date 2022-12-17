@@ -31,6 +31,8 @@ class Exploration():
             persis_info['gen_resources'] = 1
         gen_specs = self.generator.get_gen_specs(self.sim_workers)
         sim_specs = self.evaluator.get_sim_specs(self.generator.variables, self.generator.objectives)
+        if self.history is not None:
+            self.generator.incorporate_history(self.history)
         history, persis_info, flag = libE(
             sim_specs,
             gen_specs,
