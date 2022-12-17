@@ -114,3 +114,57 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         analysis_func(task.workdir, libE_output)
 
     return libE_output, persis_info, calc_status
+
+
+def run_function(H, persis_info, sim_specs, libE_info):
+    """
+    This function runs a simulation and returns quantity 'f' as well as
+    other physical quantities measured in the run for convenience. Status check
+    is done periodically on the simulation, provided by LibEnsemble.
+    """
+    # By default, indicate that task failed
+    calc_status = TASK_FAILED
+
+    input_values = {}
+    for name in H.dtype.names:
+        value = H[name][0]
+        if isinstance(value, str):
+            value = "'{}'".format(value)
+        input_values[name] = value
+
+    # Get user specs.
+    if 'task' in H.dtype.names:
+        task_name = H['task'][0]
+        user_specs = sim_specs['user'][task_name]
+    else:
+        user_specs = sim_specs['user']
+    evaluation_func = user_specs['evaluation_func']
+    n_gpus = user_specs['n_gpus']
+
+    # Launch the executor to actually run the WarpX simulation
+    resources = Resources.resources.worker_resources
+    slots = resources.slots
+    if Resources.resources.glob_resources.launcher != 'jsrun':
+        # Use specified number of GPUs (1 by default).
+        resources.set_env_to_slots('CUDA_VISIBLE_DEVICES', multiplier=n_gpus)
+        cores_per_node = resources.slot_count * n_gpus  # One CPU per GPU
+    else:
+        cores_per_node = resources.slot_count  # One CPU per GPU
+    num_nodes = resources.local_node_count
+
+    print(
+        'Worker {}: CUDA_VISIBLE_DEVICES={}  \tnodes {} ppn {}  slots {}'.format(
+            libE_info['workerID'], os.environ["CUDA_VISIBLE_DEVICES"], num_nodes, cores_per_node, slots
+        ),
+        flush=True
+    )
+
+    # Prepare the array that is returned to libE
+    # Automatically include the input parameters
+    libE_output = np.zeros(1, dtype=sim_specs['out'])
+    for name in H.dtype.names:
+        libE_output[name] = H[name][0]
+
+    evaluation_func(input_values, libE_output)
+
+    return libE_output, persis_info, calc_status
