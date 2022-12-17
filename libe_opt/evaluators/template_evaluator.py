@@ -10,14 +10,12 @@ class TemplateEvaluator(Evaluator):
     def __init__(
             self, sim_template, analysis_func, analyzed_params=None,
             executable=None, sim_files=None, n_gpus=1, n_proc=1):
-        super().__init__()
+        super().__init__(analyzed_params=analyzed_params, n_gpus=n_gpus)
         self.sim_template = os.path.basename(sim_template)
         self.analysis_func = analysis_func
-        self.analyzed_params = [] if analyzed_params is None else analyzed_params
         self.executable = executable
         self.sim_files = [] if sim_files is None else sim_files
         self.sim_function = run_template_simulation
-        self.n_gpus = n_gpus
         self.n_proc = n_proc
         self._app_name = 'sim'
 

@@ -3,13 +3,10 @@ from .base import Evaluator
 
 
 class FunctionEvaluator(Evaluator):
-    def __init__(self, function, analyzed_params, n_gpus, n_proc):
-        super().__init__()
+    def __init__(self, function, analyzed_params=None, n_gpus=1):
+        super().__init__(analyzed_params=analyzed_params, n_gpus=n_gpus)
         self.function = function
-        self.analyzed_params = analyzed_params
         self.sim_function = run_function
-        self.n_gpus = n_gpus
-        self.n_proc = n_proc
 
     def get_sim_specs(self, variables, objectives):
         sim_specs = {
@@ -27,7 +24,6 @@ class FunctionEvaluator(Evaluator):
             ),
             'user': {
                 'n_gpus': self.n_gpus,
-                'n_proc': self.n_proc,
                 'evaluation_func': self.function
             }
         }
