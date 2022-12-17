@@ -58,6 +58,10 @@ class AxMultitaskGenerator(Generator):
             'Multitask generator supports only a single objective. '
             'Objectives given: {}.'.format(n_objectives)
         )
+        assert lofi_task.n_opt >= hifi_task.n_opt, (
+            'The number of low-fidelity trials must be larger than or equal '
+            'to the number of high-fidelity trials'
+        )
 
     def _ask(self, trials):
         for trial in trials:
