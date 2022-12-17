@@ -13,6 +13,12 @@ class Variable():
         self.target_value = target_value
 
 
+class AnalyzedParameter():
+    def __init__(self, name, type=float):
+        self.name = name
+        self.type = type
+
+
 class Evaluation():
     def __init__(self, objectives, values, noises=None):
         self.objectives = objectives

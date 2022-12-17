@@ -30,7 +30,7 @@ class TemplateEvaluator():
             'out': (
                 [(obj.name, float) for obj in objectives]
                 # f is the single float output that LibEnsemble minimizes.
-                + [(name, float) for name in self.analyzed_params]
+                + [(par.name, par.type) for par in self.analyzed_params]
                 # input parameters
                 + [(var.name, float) for var in variables]
             ),
