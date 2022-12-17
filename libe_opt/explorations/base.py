@@ -20,7 +20,7 @@ class Exploration():
         self._set_default_libe_specs()
         self._create_alloc_specs()
         self._create_executor()
-        self._register_apps()
+        self._initialize_evaluator()
 
     def run(self):
         exit_criteria = {'sim_max': self.max_evals}
@@ -55,8 +55,8 @@ class Exploration():
     def _create_executor(self):
         self.executor = MPIExecutor()
 
-    def _register_apps(self):
-        self.evaluator.register_app(self.executor)
+    def _initialize_evaluator(self):
+        self.evaluator.initialize()
 
     def _load_history(self, history):
         if isinstance(history, str):
@@ -79,9 +79,6 @@ class Exploration():
         # Save H to file every N simulation evaluations
         # default value, if not defined
         libE_specs['save_every_k_sims'] = 5
-        # Force libEnsemble to create a directory for each simulation
-        # default value, if not defined
-        libE_specs['sim_dirs_make'] = True
         # Force central mode
         libE_specs['dedicated_mode'] = False
         # It not using CUDA, do not allocate resources for generator.
