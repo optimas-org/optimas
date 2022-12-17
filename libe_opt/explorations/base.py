@@ -10,13 +10,15 @@ from libensemble.executors.mpi_executor import MPIExecutor
 
 
 class Exploration():
-    def __init__(self, generator, evaluator, max_evals, sim_workers, run_async=True, history=None):
+    def __init__(self, generator, evaluator, max_evals, sim_workers,
+            run_async=True, history=None, exploration_dir_path='./exploration'):
         self.generator = generator
         self.evaluator = evaluator
         self.max_evals = max_evals
         self.sim_workers = sim_workers
         self.run_async = run_async
         self.history = self._load_history(history)
+        self.exploration_dir_path = exploration_dir_path
         self._set_default_libe_specs()
         self._create_alloc_specs()
         self._create_executor()
@@ -86,6 +88,8 @@ class Exploration():
         if MPI.COMM_WORLD.Get_size() <= 1:
             libE_specs["nworkers"] = self.sim_workers + 1
             libE_specs["comms"] = 'local'
+        # Set exploration directory path.
+        libE_specs['ensemble_dir_path'] = self.exploration_dir_path
 
         # get specs from generator and evaluator
         gen_libE_specs = self.generator.get_libe_specs()
