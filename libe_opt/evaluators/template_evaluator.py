@@ -78,4 +78,7 @@ class TemplateEvaluator(Evaluator):
         libE_specs = {}
         # Add sim_template and sim_files to the list of files to be copied
         libE_specs['sim_dir_copy_files'] = [self.sim_template] + self.sim_files
+        # Force libEnsemble to create a directory for each simulation
+        # default value, if not defined
+        libE_specs['sim_dirs_make'] = True
         return libE_specs
