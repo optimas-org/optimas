@@ -1,12 +1,16 @@
 import os
 
+from libensemble.executors.executor import Executor
+
 from libe_opt.sim_functions import run_template_simulation
+from .base import Evaluator
 
 
-class TemplateEvaluator():
+class TemplateEvaluator(Evaluator):
     def __init__(
             self, sim_template, analysis_func, analyzed_params=None,
             executable=None, sim_files=None, n_gpus=1, n_proc=1):
+        super().__init__()
         self.sim_template = os.path.basename(sim_template)
         self.analysis_func = analysis_func
         self.analyzed_params = [] if analyzed_params is None else analyzed_params
@@ -16,7 +20,6 @@ class TemplateEvaluator():
         self.n_gpus = n_gpus
         self.n_proc = n_proc
         self._app_name = 'sim'
-        self._app_registered = False
 
     def get_sim_specs(self, variables, objectives):
         if not self._app_registered:
@@ -45,14 +48,13 @@ class TemplateEvaluator():
         }
         return sim_specs
 
-    def register_app(self, executor, app_name=None):
-        if self._app_registered:
-            print('App already registered.')
-            return
-        if app_name is None:
-            app_name = self._app_name
-        else:
-            self._app_name = app_name
+    def set_app_name(self, name):
+        self._app_name = name
+
+    def _initialize(self):
+        self._register_app()
+
+    def _register_app(self):
         # Determine executable path.
         if self.sim_template.endswith('.py'):
             executable_path = 'simulation_script.py'
@@ -67,11 +69,10 @@ class TemplateEvaluator():
             self.sim_files.append(self.executable)
 
         # Register app.
-        executor.register_app(
+        Executor.executor.register_app(
             full_path=executable_path,
-            app_name=app_name
+            app_name=self._app_name
         )
-        self._app_registered = True
 
     def get_libe_specs(self):
         libE_specs = {}

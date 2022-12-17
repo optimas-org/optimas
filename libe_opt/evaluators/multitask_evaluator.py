@@ -1,5 +1,10 @@
-class MultitaskEvaluator():
+from .base import Evaluator
+from .template_evaluator import TemplateEvaluator
+
+
+class MultitaskEvaluator(Evaluator):
     def __init__(self, tasks, task_evaluators):
+        super().__init__()
         self._check_tasks(tasks)
         self._check_evaluators(task_evaluators)
         self.tasks = tasks
@@ -11,6 +16,7 @@ class MultitaskEvaluator():
 
     def _check_tasks(self, tasks):
         assert len(tasks) == 2
+        assert tasks[0].name != tasks[1].name
 
     def get_sim_specs(self, variables, objectives):
         sim_specs = {}
@@ -39,6 +45,9 @@ class MultitaskEvaluator():
         )
         return libE_specs
 
-    def register_app(self, executor):
-        for task, evaluator in zip(self.tasks, self.task_evaluators):
-            evaluator.register_app(executor, app_name=task.name)
+    def _initialize(self):
+        if isinstance(self.task_evaluators[0], TemplateEvaluator):
+            for task, evaluator in zip(self.tasks, self.task_evaluators):
+                evaluator.set_app_name(task.name)
+        for evaluator in self.task_evaluators:
+            evaluator.initialize()
