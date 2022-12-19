@@ -3,6 +3,7 @@ from copy import deepcopy
 import numpy as np
 import torch
 
+from ax.core.arm import Arm
 from ax.core.multi_type_experiment import MultiTypeExperiment
 from ax.core.parameter import RangeParameter, ParameterType
 from ax.core.search_space import SearchSpace
@@ -14,6 +15,7 @@ from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 
 from libe_opt.generators.base import Generator
+from libe_opt.core import TrialMetadata
 from .ax_metric import AxMetric
 
 
@@ -27,8 +29,14 @@ class AxMultitaskGenerator(Generator):
     def __init__(
             self, variables, objectives, lofi_task, hifi_task,
             use_cuda=False):
+        custom_trial_metadata = [
+            TrialMetadata('arm_name', 'ax_arm_name', type='U32'),
+            TrialMetadata('trial_type', 'ax_trial_type', type='U32'),
+            TrialMetadata('trial_index', 'ax_trial_index', type=int)
+        ]
         self._check_inputs(variables, objectives, lofi_task, hifi_task)
-        super().__init__(variables, objectives, use_cuda=use_cuda)
+        super().__init__(variables, objectives, use_cuda=use_cuda,
+                         custom_trial_metadata=custom_trial_metadata)
         self.lofi_task = lofi_task
         self.hifi_task = hifi_task
         self.model_iteration = 0
@@ -39,6 +47,7 @@ class AxMultitaskGenerator(Generator):
         self.returned_lofi_trials = 0
         self.returned_hifi_trials = 0
         self.init_batch_limit = 1000
+        self.current_trial = None
         self._determine_torch_device()
         self._create_experiment()
 
@@ -67,14 +76,72 @@ class AxMultitaskGenerator(Generator):
         for trial in trials:
             next_trial = self._get_next_trial_arm()
             if next_trial is not None:
-                arm, trial_type = next_trial
+                arm, trial_type, trial_index = next_trial
                 trial.variable_values = [arm.parameters.get(var.name) for var in self.variables]
                 trial.trial_type = trial_type
                 trial.arm_name = arm.name
+                trial.trial_index = trial_index
         return trials
 
     def _tell(self, trials):
+        if self.gen_state == NOT_STARTED:
+            self._incorporate_external_data(trials)
+        else:
+            self._complete_evaluations(trials)
+
+    def _incorporate_external_data(self, trials):
+        # Get trial indices.
+        trial_indices = []
         for trial in trials:
+            trial_indices.append(trial.trial_index)
+        trial_indices = np.unique(np.array(trial_indices))
+
+        # Group trials by index.
+        grouped_trials = {}
+        for index in trial_indices:
+            grouped_trials[index] = []
+        for trial in trials:
+            grouped_trials[trial.trial_index].append(trial)
+
+        # Add trials to experiment.
+        for index in trial_indices:
+            # Get all trials with current index.
+            trials_i = grouped_trials[index]
+            trial_type = trials_i[0].trial_type
+            # Create arms.
+            arms = []
+            for trial in trials_i:
+                params = {}
+                for var, val in zip(trial.variables, trial.variable_values):
+                    params[var.name] = val
+                arms.append(Arm(parameters=params, name=trial.arm_name))
+            # Create new batch trial.
+            gr = GeneratorRun(arms=arms, weights=[1.] * len(arms))
+            ax_trial = self.experiment.new_batch_trial(
+                generator_run=gr,
+                trial_type=trial_type)
+            ax_trial.run()
+            # Incorporate observations.
+            for trial in trials_i:
+                objective_eval = {}
+                oe = trial.objective_evaluations[0]
+                objective_eval['f'] = (oe.value, oe.sem)
+                ax_trial.run_metadata[trial.arm_name] = objective_eval
+            # Mark batch trial as completed.
+            ax_trial.mark_completed()
+            # Keep track of high-fidelity trials.
+            if trial_type == self.hifi_task.name:
+                self.hifi_trials.append(index)
+
+    def _complete_evaluations(self, trials):
+        for trial in trials:
+            # Make sure trial is part of current batch trial.
+            current_trial_arms = list(self.current_trial.arms_by_name.keys())
+            assert trial.arm_name in current_trial_arms, (
+                'Arm {} is not part of current trial. '
+                'External data can only be loaded into generator before '
+                'initialization.'
+            )
             objective_eval = {}
             oe = trial.objective_evaluations[0]
             objective_eval['f'] = (oe.value, oe.sem)
@@ -142,10 +209,10 @@ class AxMultitaskGenerator(Generator):
     def _get_next_trial_arm(self):
         if self.gen_state in [NOT_STARTED, HIFI_RETURNED]:
             trial = self._get_lofi_batch()
-            self.trials_list = [(arm, trial.trial_type) for arm in trial.arms]
+            self.trials_list = [(arm, trial.trial_type, trial.index) for arm in trial.arms]
         elif self.gen_state in [LOFI_RETURNED]:
             trial = self._get_hifi_batch()
-            self.trials_list = [(arm, trial.trial_type) for arm in trial.arms]
+            self.trials_list = [(arm, trial.trial_type, trial.index) for arm in trial.arms]
             self.model_iteration += 1
         if self.trials_list:
             return self.trials_list.pop(0)
