@@ -19,6 +19,13 @@ class AnalyzedParameter():
         self.type = type
 
 
+class TrialMetadata():
+    def __init__(self, name, save_name=None, type=float):
+        self.name = name
+        self.save_name = name if save_name is None else save_name
+        self.type = type
+
+
 class Evaluation():
     def __init__(self, objectives, values, noises=None):
         self.objectives = objectives
@@ -43,16 +50,21 @@ class Task():
 class Trial():
     def __init__(
             self, variables, objectives, variable_values=None,
-            objective_evaluations=None, index=None, **kwargs):
+            objective_evaluations=None, index=None, custom_metadata=None):
         
         self.variables = variables
         self.variable_values = [] if variable_values is None else variable_values
         self.objectives = objectives
         self.objective_evaluations = [] if objective_evaluations is None else objective_evaluations
         self.index = index
+        self.custom_metadata = [] if custom_metadata is None else custom_metadata
 
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+        for param in self.custom_metadata:
+            setattr(self, param.name, None)
+            # self.custom_metadata[param.name] = None
+
+        # for k, v in kwargs.items():
+        #     setattr(self, k, v)
 
     def complete_evaluation(self, objective_evaluation):
         self.objective_evaluations.append(objective_evaluation)

@@ -31,17 +31,6 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
 
     n_failed_gens = 0
 
-    # If there is any past history, feed it to the GP
-    # if len(H) > 0:
-    #     names_list = gen_specs['user']['params']
-    #     params = dict.fromkeys(names_list)
-
-    #     for i in range(len(H)):
-    #         for j, name in enumerate(names_list):
-    #             params[name] = H['x'][i][j]
-
-    #         generator.tell(params, (H['f'][i], np.nan))
-
     # Receive information from the manager (or a STOP_TAG)
     tag = None
     while tag not in [STOP_TAG, PERSIS_STOP]:
@@ -57,6 +46,9 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                     H_o[variable.name][i] = value
                 if 'task' in H_o.dtype.names:
                     H_o['task'][i] = trial.trial_type
+                if trial.custom_metadata is not None:
+                    for par in trial.custom_metadata:
+                        H_o[par.save_name][i] = getattr(trial, par.name)
                 H_o['trial_index'][i] = trial.index
                 H_o['resource_sets'][i] = 1
         n_failed_gens = np.sum(H_o['resource_sets'] == 0)

@@ -3,12 +3,14 @@ from libe_opt.core import Variable, Objective, Trial, Evaluation, ObjectiveEvalu
 
 
 class Generator():
-    def __init__(self, variables, objectives=None, constraints=None, use_cuda=False):
+    def __init__(self, variables, objectives=None, constraints=None,
+                 use_cuda=False, custom_trial_metadata=None):
         if objectives is None:
             objectives = [Objective()]
         self.variables = variables
         self.objectives = objectives
         self.constraints = constraints
+        self.custom_trial_metadata = [] if custom_trial_metadata is None else custom_trial_metadata
         self.use_cuda = use_cuda
         self.gen_function = persistent_generator
         self._trials = []
@@ -21,7 +23,8 @@ class Generator():
                 Trial(
                     variables=self.variables,
                     objectives=self.objectives,
-                    index=len(self._trials) + i
+                    index=len(self._trials) + i,
+                    custom_metadata=self.custom_trial_metadata
                 )
             )
         # Ask the generator to fill them.
@@ -43,20 +46,25 @@ class Generator():
         # Keep only evaluations where the simulation finished sucessfully.
         history = history[history['sim_ended']]
         n_sims = len(history)
+        trials = []
         for i in range(n_sims):
             trial = Trial(
-                        variables=self.variables,
-                        variable_values=[
-                            history[var.name][i] for var in self.variables],
-                        objectives=self.objectives,
-                        objective_evaluations=[
-                            ObjectiveEvaluation(
-                                objective=obj,
-                                value=history[obj.name][i]
-                            ) for obj in self.objectives
-                        ]
-                    )
-            self.tell([trial])
+                variables=self.variables,
+                variable_values=[
+                    history[var.name][i] for var in self.variables],
+                objectives=self.objectives,
+                objective_evaluations=[
+                    ObjectiveEvaluation(
+                        objective=obj,
+                        value=history[obj.name][i]
+                    ) for obj in self.objectives
+                ],
+                custom_metadata=self.custom_trial_metadata
+            )
+            for par in self.custom_trial_metadata:
+                setattr(trial, par.name, history[par.save_name][i])
+            trials.append(trial)
+        self.tell(trials)
 
     def get_gen_specs(self, sim_workers):
         gen_specs = {
@@ -68,7 +76,7 @@ class Generator():
             'out': [(var.name, float) for var in self.variables] + [
                 ('resource_sets', int),
                 ('trial_index', int),
-            ],
+            ] + [(par.save_name, par.type) for par in self.custom_trial_metadata],
             'user': {
                 'generator': self,
                 # Total max number of sims running concurrently.
