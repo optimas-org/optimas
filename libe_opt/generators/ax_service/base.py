@@ -10,8 +10,8 @@ from libe_opt.generators.base import Generator
 
 
 class AxServiceGenerator(Generator):
-    def __init__(self, variables, objectives=None, n_init=4):
-        super().__init__(variables, objectives)
+    def __init__(self, variables, objectives=None, n_init=4, use_cuda=False):
+        super().__init__(variables, objectives, use_cuda=use_cuda)
         self.n_init = n_init
         self._determine_torch_device()
         self._create_ax_client()

@@ -10,9 +10,10 @@ from .base import AxServiceGenerator
 
 
 class AxMultiFidelityGenerator(AxServiceGenerator):
-    def __init__(self, variables, objectives=None, n_init=4, fidel_cost_intercept=1.):
+    def __init__(self, variables, objectives=None, n_init=4,
+                 fidel_cost_intercept=1., use_cuda=False):
         self.fidel_cost_intercept = fidel_cost_intercept
-        super().__init__(variables, objectives, n_init)
+        super().__init__(variables, objectives, n_init, use_cuda=use_cuda)
 
     def _create_ax_client(self):
         # Create parameter list.

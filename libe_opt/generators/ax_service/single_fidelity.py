@@ -11,8 +11,8 @@ from .base import AxServiceGenerator
 
 class AxSingleFidelityGenerator(AxServiceGenerator):
 
-    def __init__(self, variables, objectives=None, n_init=4):
-        super().__init__(variables, objectives, n_init)
+    def __init__(self, variables, objectives=None, n_init=4, use_cuda=False):
+        super().__init__(variables, objectives, n_init, use_cuda=use_cuda)
 
     def _create_ax_client(self):
         # Create parameter list.
