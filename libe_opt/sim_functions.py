@@ -6,6 +6,10 @@ from libensemble.resources.resources import Resources
 from libensemble.executors.executor import Executor
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
+from libe_opt.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 def run_template_simulation(H, persis_info, sim_specs, libE_info):
     """
@@ -56,11 +60,14 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         cores_per_node = resources.slot_count  # One CPU per GPU
     num_nodes = resources.local_node_count
 
-    print(
+    logger.debug(
         'Worker {}: CUDA_VISIBLE_DEVICES={}  \tnodes {} ppn {}  slots {}'.format(
-            libE_info['workerID'], os.environ["CUDA_VISIBLE_DEVICES"], num_nodes, cores_per_node, slots
-        ),
-        flush=True
+            libE_info['workerID'],
+            os.environ["CUDA_VISIBLE_DEVICES"],
+            num_nodes,
+            cores_per_node,
+            slots
+        )
     )
 
     # Get extra args.
@@ -152,11 +159,14 @@ def run_function(H, persis_info, sim_specs, libE_info):
         cores_per_node = resources.slot_count  # One CPU per GPU
     num_nodes = resources.local_node_count
 
-    print(
+    logger.debug(
         'Worker {}: CUDA_VISIBLE_DEVICES={}  \tnodes {} ppn {}  slots {}'.format(
-            libE_info['workerID'], os.environ["CUDA_VISIBLE_DEVICES"], num_nodes, cores_per_node, slots
-        ),
-        flush=True
+            libE_info['workerID'],
+            os.environ["CUDA_VISIBLE_DEVICES"],
+            num_nodes,
+            cores_per_node,
+            slots
+        )
     )
 
     # Prepare the array that is returned to libE
