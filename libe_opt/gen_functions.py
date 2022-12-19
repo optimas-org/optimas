@@ -5,7 +5,7 @@ from libensemble.message_numbers import (
 from libensemble.tools.persistent_support import PersistentSupport
 from libensemble.resources.resources import Resources
 
-from libe_opt.core import Evaluation, ObjectiveEvaluation
+from libe_opt.core import ObjectiveEvaluation
 
 
 def persistent_generator(H, persis_info, gen_specs, libE_info):
@@ -42,12 +42,12 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             generated_trials = generator.ask(1)
             if generated_trials:
                 trial = generated_trials[0]
-                for variable, value in zip(trial.variables, trial.variable_values):
-                    H_o[variable.name][i] = value
+                for var, val in zip(trial.varying_parameters, trial.parameter_values):
+                    H_o[var.name][i] = val
                 if 'task' in H_o.dtype.names:
                     H_o['task'][i] = trial.trial_type
-                if trial.custom_metadata is not None:
-                    for par in trial.custom_metadata:
+                if trial.custom_parameters is not None:
+                    for par in trial.custom_parameters:
                         H_o[par.save_name][i] = getattr(trial, par.name)
                 H_o['trial_index'][i] = trial.index
                 H_o['resource_sets'][i] = 1

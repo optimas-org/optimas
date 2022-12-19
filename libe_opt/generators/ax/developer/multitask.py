@@ -15,7 +15,7 @@ from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 
 from libe_opt.generators.ax.base import AxGenerator
-from libe_opt.core import TrialMetadata
+from libe_opt.core import TrialParameter
 from .ax_metric import AxMetric
 
 
@@ -27,16 +27,16 @@ HIFI_RETURNED = 'hifi_returned'
 
 class AxMultitaskGenerator(AxGenerator):
     def __init__(
-            self, variables, objectives, lofi_task, hifi_task,
+            self, varying_parameters, objectives, lofi_task, hifi_task,
             use_cuda=False):
-        custom_trial_metadata = [
-            TrialMetadata('arm_name', 'ax_arm_name', type='U32'),
-            TrialMetadata('trial_type', 'ax_trial_type', type='U32'),
-            TrialMetadata('trial_index', 'ax_trial_index', type=int)
+        custom_trial_parameters = [
+            TrialParameter('arm_name', 'ax_arm_name', dtype='U32'),
+            TrialParameter('trial_type', 'ax_trial_type', dtype='U32'),
+            TrialParameter('trial_index', 'ax_trial_index', dtype=int)
         ]
-        self._check_inputs(variables, objectives, lofi_task, hifi_task)
-        super().__init__(variables, objectives, use_cuda=use_cuda,
-                         custom_trial_metadata=custom_trial_metadata)
+        self._check_inputs(varying_parameters, objectives, lofi_task, hifi_task)
+        super().__init__(varying_parameters, objectives, use_cuda=use_cuda,
+                         custom_trial_parameters=custom_trial_parameters)
         self.lofi_task = lofi_task
         self.hifi_task = hifi_task
         self.model_iteration = 0
@@ -60,7 +60,7 @@ class AxMultitaskGenerator(AxGenerator):
         )
         return gen_specs
 
-    def _check_inputs(self, variables, objectives, lofi_task, hifi_task):
+    def _check_inputs(self, varying_parameters, objectives, lofi_task, hifi_task):
         n_objectives = len(objectives)
         assert n_objectives == 1, (
             'Multitask generator supports only a single objective. '
@@ -76,7 +76,7 @@ class AxMultitaskGenerator(AxGenerator):
             next_trial = self._get_next_trial_arm()
             if next_trial is not None:
                 arm, trial_type, trial_index = next_trial
-                trial.variable_values = [arm.parameters.get(var.name) for var in self.variables]
+                trial.parameter_values = [arm.parameters.get(var.name) for var in self._varying_parameters]
                 trial.trial_type = trial_type
                 trial.arm_name = arm.name
                 trial.trial_index = trial_index
@@ -111,12 +111,12 @@ class AxMultitaskGenerator(AxGenerator):
             arms = []
             for trial in trials_i:
                 params = {}
-                for var, val in zip(trial.variables, trial.variable_values):
+                for var, val in zip(trial.varying_parameters, trial.parameter_values):
                     params[var.name] = val
                 arms.append(Arm(parameters=params, name=trial.arm_name))
             # Create new batch trial.
             gr = GeneratorRun(arms=arms, weights=[1.] * len(arms))
-            ax_trial = self.experiment.new_batch_trial(
+            ax_trial = self._experiment.new_batch_trial(
                 generator_run=gr,
                 trial_type=trial_type)
             ax_trial.run()
@@ -159,7 +159,7 @@ class AxMultitaskGenerator(AxGenerator):
     def _create_experiment(self):
         # Create search space.
         parameters = []
-        for var in self.variables:
+        for var in self._varying_parameters:
             parameters.append(
                 RangeParameter(
                     name=var.name,
@@ -203,7 +203,7 @@ class AxMultitaskGenerator(AxGenerator):
             canonical_name='hifi_metric')
 
         # Store experiment.
-        self.experiment = experiment
+        self._experiment = experiment
 
     def _get_next_trial_arm(self):
         if self.gen_state in [NOT_STARTED, HIFI_RETURNED]:
@@ -221,14 +221,14 @@ class AxMultitaskGenerator(AxGenerator):
     def _get_lofi_batch(self):
         if self.model_iteration == 0:
             # Generate first batch using a Sobol sequence.
-            m = get_sobol(self.experiment.search_space, scramble=True)            
+            m = get_sobol(self._experiment.search_space, scramble=True)            
             n_gen = self.lofi_task.n_init
             gr = m.gen(n_gen)
         else:
             m = get_MTGP(
-                experiment=self.experiment,
-                data=self.experiment.fetch_data(),
-                search_space=self.experiment.search_space,
+                experiment=self._experiment,
+                data=self._experiment.fetch_data(),
+                search_space=self._experiment.search_space,
                 dtype=torch.double,
                 device=torch.device(self.torch_device)
             )
@@ -240,7 +240,7 @@ class AxMultitaskGenerator(AxGenerator):
                     # Try to generate the new points.
                     gr = m.gen(
                         n=n_gen,
-                        optimization_config=self.experiment.optimization_config,
+                        optimization_config=self._experiment.optimization_config,
                         fixed_features=ObservationFeatures(
                             parameters={}, trial_index=self.hifi_trials[-1]),
                         model_gen_options={
@@ -270,7 +270,7 @@ class AxMultitaskGenerator(AxGenerator):
                     'Failed to generate multitask trials. '
                     'Not sufficient memory is available.')
         self.gr_lofi = gr
-        trial = self.experiment.new_batch_trial(
+        trial = self._experiment.new_batch_trial(
             trial_type=self.lofi_task.name,
             generator_run=gr
         )
@@ -283,14 +283,14 @@ class AxMultitaskGenerator(AxGenerator):
 
     def _get_hifi_batch(self):
         if self.model_iteration == 0:
-            m = get_sobol(self.experiment.search_space, scramble=True)
+            m = get_sobol(self._experiment.search_space, scramble=True)
             n_gen = self.hifi_task.n_init
             gr = m.gen(n_gen)
         else:
             m = get_MTGP(
-                experiment=self.experiment,
-                data=self.experiment.fetch_data(),
-                search_space=self.experiment.search_space,
+                experiment=self._experiment,
+                data=self._experiment.fetch_data(),
+                search_space=self._experiment.search_space,
                 dtype=torch.double,
                 device=torch.device(self.torch_device)
             )
@@ -304,7 +304,7 @@ class AxMultitaskGenerator(AxGenerator):
                 gr=self.gr_lofi,
                 hifi_task=self.hifi_task.name
             )
-        trial = self.experiment.new_batch_trial(
+        trial = self._experiment.new_batch_trial(
             trial_type=self.hifi_task.name,
             generator_run=gr
         )

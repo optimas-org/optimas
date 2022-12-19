@@ -11,13 +11,15 @@ from .base import AxServiceGenerator
 
 class AxSingleFidelityGenerator(AxServiceGenerator):
 
-    def __init__(self, variables, objectives=None, n_init=4, use_cuda=False):
-        super().__init__(variables, objectives, n_init, use_cuda=use_cuda)
+    def __init__(self, varying_parameters, objectives=None, n_init=4,
+                 use_cuda=False):
+        super().__init__(varying_parameters, objectives, n_init,
+                         use_cuda=use_cuda)
 
     def _create_ax_client(self):
         # Create parameter list.
         parameters = list()
-        for var in self.variables:
+        for var in self._varying_parameters:
             parameters.append(
                 {
                     'name': var.name,
@@ -35,7 +37,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         steps.append(
             GenerationStep(
                 model=Models.SOBOL,
-                num_trials=self.n_init
+                num_trials=self._n_init
             )
         )
 
@@ -55,7 +57,8 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
 
         ax_objectives = {}
         for obj in self.objectives:
-            ax_objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
+            ax_objectives[obj.name] = ObjectiveProperties(
+                minimize=obj.minimize)
 
         # Create client and experiment.
         ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
@@ -64,4 +67,4 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             objectives=ax_objectives
         )
 
-        self.ax_client = ax_client
+        self._ax_client = ax_client

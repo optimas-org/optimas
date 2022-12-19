@@ -10,15 +10,16 @@ from .base import AxServiceGenerator
 
 
 class AxMultiFidelityGenerator(AxServiceGenerator):
-    def __init__(self, variables, objectives=None, n_init=4,
+    def __init__(self, varying_parameters, objectives=None, n_init=4,
                  fidel_cost_intercept=1., use_cuda=False):
         self.fidel_cost_intercept = fidel_cost_intercept
-        super().__init__(variables, objectives, n_init, use_cuda=use_cuda)
+        super().__init__(varying_parameters, objectives, n_init,
+                         use_cuda=use_cuda)
 
     def _create_ax_client(self):
         # Create parameter list.
         parameters = list()
-        for var in self.variables:
+        for var in self._varying_parameters:
             parameters.append(
                 {
                     'name': var.name,
@@ -38,7 +39,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         steps.append(
             GenerationStep(
                 model=Models.SOBOL,
-                num_trials=self.n_init
+                num_trials=self._n_init
             )
         )
 
@@ -68,4 +69,4 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             objectives=ax_objectives
         )
 
-        self.ax_client = ax_client
+        self._ax_client = ax_client
