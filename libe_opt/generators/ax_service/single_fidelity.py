@@ -58,7 +58,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             ax_objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
 
         # Create client and experiment.
-        ax_client = AxClient(generation_strategy=gs)
+        ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         ax_client.create_experiment(
             parameters=parameters,
             objectives=ax_objectives

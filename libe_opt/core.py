@@ -61,13 +61,21 @@ class Trial():
 
         for param in self.custom_metadata:
             setattr(self, param.name, None)
-            # self.custom_metadata[param.name] = None
-
-        # for k, v in kwargs.items():
-        #     setattr(self, k, v)
 
     def complete_evaluation(self, objective_evaluation):
         self.objective_evaluations.append(objective_evaluation)
+
+    def parameters_as_dict(self):
+        params = {}
+        for var, val in zip(self.variables, self.variable_values):
+            params[var.name] = val
+        return params
+
+    def objectives_as_dict(self):
+        params = {}
+        for obj, oe in zip(self.objectives, self.objective_evaluations):
+            params[obj.name] = (oe.value, oe.sem)
+        return params
 
 
 # class Trial2():

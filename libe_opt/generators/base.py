@@ -1,5 +1,8 @@
+from libe_opt.utils.logger import get_logger
 from libe_opt.gen_functions import persistent_generator
 from libe_opt.core import Variable, Objective, Trial, Evaluation, ObjectiveEvaluation
+
+logger = get_logger(__name__)
 
 
 class Generator():
@@ -31,6 +34,10 @@ class Generator():
         trials = self._ask(trials)
         # Keep only trials that have been given data.
         trials = [trial for trial in trials if trial.variable_values]
+        for trial in trials:
+            logger.info(
+                'Generated trial {} with parameters {}'.format(
+                    trial.index, trial.parameters_as_dict()))
         # Store trials.
         self._trials.extend(trials)
         return trials
@@ -41,6 +48,10 @@ class Generator():
                 trial.index = len(self._trials)
                 self._trials.append(trial)
         self._tell(trials)
+        for trial in trials:
+            logger.info(
+                'Completed trial {} with data {}'.format(
+                    trial.index, trial.objectives_as_dict()))
 
     def incorporate_history(self, history):
         # Keep only evaluations where the simulation finished sucessfully.
