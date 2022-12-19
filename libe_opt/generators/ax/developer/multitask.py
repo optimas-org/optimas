@@ -14,7 +14,7 @@ from ax.modelbridge.factory import get_sobol, get_MTGP
 from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 
-from libe_opt.generators.base import Generator
+from libe_opt.generators.ax.base import AxGenerator
 from libe_opt.core import TrialMetadata
 from .ax_metric import AxMetric
 
@@ -25,7 +25,7 @@ LOFI_RETURNED = 'lofi_returned'
 HIFI_RETURNED = 'hifi_returned'
 
 
-class AxMultitaskGenerator(Generator):
+class AxMultitaskGenerator(AxGenerator):
     def __init__(
             self, variables, objectives, lofi_task, hifi_task,
             use_cuda=False):
@@ -48,7 +48,6 @@ class AxMultitaskGenerator(Generator):
         self.returned_hifi_trials = 0
         self.init_batch_limit = 1000
         self.current_trial = None
-        self._determine_torch_device()
         self._create_experiment()
 
     def get_gen_specs(self, sim_workers):
@@ -316,13 +315,6 @@ class AxMultitaskGenerator(Generator):
         self.returned_hifi_trials = 0
         self.hifi_trials.append(trial.index)
         return trial
-
-    def _determine_torch_device(self):
-        # If CUDA is available, run BO loop on the GPU.
-        if self.use_cuda and torch.cuda.is_available():
-            self.torch_device = 'cuda'
-        else:
-            self.torch_device = 'cpu'
 
 
 def max_utility_from_GP(n, m, gr, hifi_task):

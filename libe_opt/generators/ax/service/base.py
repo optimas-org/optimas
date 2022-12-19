@@ -1,19 +1,10 @@
-import torch
-
-from ax.service.ax_client import AxClient
-from ax.modelbridge.generation_strategy import (
-    GenerationStep, GenerationStrategy)
-from ax.modelbridge.registry import Models
-from ax.service.utils.instantiation import ObjectiveProperties
-
-from libe_opt.generators.base import Generator
+from libe_opt.generators.ax.base import AxGenerator
 
 
-class AxServiceGenerator(Generator):
-    def __init__(self, variables, objectives=None, n_init=4, use_cuda=False):
+class AxServiceGenerator(AxGenerator):
+    def __init__(self, variables, objectives, n_init=4, use_cuda=False):
         super().__init__(variables, objectives, use_cuda=use_cuda)
         self.n_init = n_init
-        self._determine_torch_device()
         self._create_ax_client()
 
     def _ask(self, trials):
@@ -21,12 +12,6 @@ class AxServiceGenerator(Generator):
             parameters, trial_id = self.ax_client.get_next_trial()
             trial.variable_values = [parameters.get(var.name) for var in self.variables]
             trial.ax_trial_id = trial_id
-            # trials.append(
-            #     Trial(
-            #         variables=self.variables,
-            #         values=[parameters.get(var.name) for var in self.variables]
-            #     )
-            # )
         return trials
 
     def _tell(self, trials):
@@ -48,10 +33,3 @@ class AxServiceGenerator(Generator):
 
     def _create_ax_client(self):
         raise NotImplementedError
-
-    def _determine_torch_device(self):
-        # If CUDA is available, run BO loop on the GPU.
-        if self.use_cuda and torch.cuda.is_available():
-            self.torch_device = 'cuda'
-        else:
-            self.torch_device = 'cpu'
