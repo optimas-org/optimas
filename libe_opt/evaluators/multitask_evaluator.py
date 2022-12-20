@@ -14,7 +14,7 @@ class MultitaskEvaluator(Evaluator):
 
     def _check_evaluators(self, evaluators):
         assert len(evaluators) == 2
-        assert type(evaluators[0]) is type(evaluators[1])
+        assert isinstance(evaluators[0], type(evaluators[1]))
 
     def _check_tasks(self, tasks):
         assert len(tasks) == 2
@@ -22,8 +22,10 @@ class MultitaskEvaluator(Evaluator):
 
     def get_sim_specs(self, varying_parameters, objectives):
         sim_specs = super().get_sim_specs(varying_parameters, objectives)
-        sim_specs_1 = self.task_evaluators[0].get_sim_specs(varying_parameters, objectives)
-        sim_specs_2 = self.task_evaluators[1].get_sim_specs(varying_parameters, objectives)
+        sim_specs_1 = self.task_evaluators[0].get_sim_specs(
+            varying_parameters, objectives)
+        sim_specs_2 = self.task_evaluators[1].get_sim_specs(
+            varying_parameters, objectives)
 
         sim_specs['user'] = {
             self.tasks[0].name: sim_specs_1['user'],

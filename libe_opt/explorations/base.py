@@ -11,7 +11,8 @@ from libensemble.executors.mpi_executor import MPIExecutor
 
 class Exploration():
     def __init__(self, generator, evaluator, max_evals, sim_workers,
-            run_async=True, history=None, exploration_dir_path='./exploration'):
+                 run_async=True, history=None,
+                 exploration_dir_path='./exploration'):
         self.generator = generator
         self.evaluator = evaluator
         self.max_evals = max_evals

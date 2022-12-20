@@ -23,7 +23,7 @@ class VaryingParameter(Parameter):
     @property
     def lower_bound(self):
         return self._lower_bound
-    
+
     @property
     def upper_bound(self):
         return self._upper_bound

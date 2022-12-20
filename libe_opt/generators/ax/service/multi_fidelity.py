@@ -58,15 +58,15 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
 
         gs = GenerationStrategy(steps)
 
-        ax_objectives = {}
+        ax_objs = {}
         for obj in self.objectives:
-            ax_objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
+            ax_objs[obj.name] = ObjectiveProperties(minimize=obj.minimize)
 
         # Create client and experiment.
         ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         ax_client.create_experiment(
             parameters=parameters,
-            objectives=ax_objectives
+            objectives=ax_objs
         )
 
         self._ax_client = ax_client

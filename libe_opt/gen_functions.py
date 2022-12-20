@@ -42,7 +42,8 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             generated_trials = generator.ask(1)
             if generated_trials:
                 trial = generated_trials[0]
-                for var, val in zip(trial.varying_parameters, trial.parameter_values):
+                for var, val in zip(trial.varying_parameters,
+                                    trial.parameter_values):
                     H_o[var.name][i] = val
                 if 'task' in H_o.dtype.names:
                     H_o['task'][i] = trial.trial_type
@@ -53,7 +54,6 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                 H_o['resource_sets'][i] = 1
         n_failed_gens = np.sum(H_o['resource_sets'] == 0)
         H_o = H_o[H_o['resource_sets'] > 0]
-
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager

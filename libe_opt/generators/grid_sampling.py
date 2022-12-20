@@ -18,13 +18,13 @@ class GridSamplingGenerator(Generator):
         var_mgrids_flat = [np.ravel(var_mgrid) for var_mgrid in var_mgrids]
 
         all_configs = []
-        n_trials = np.prod(self._n_steps)  
+        n_trials = np.prod(self._n_steps)
         for i in range(n_trials):
             config = {}
             for var, mgrid in zip(self._varying_parameters, var_mgrids_flat):
                 config[var.name] = mgrid[i]
             all_configs.append(config)
-        
+
         self._all_configs = all_configs
 
     def _ask(self, trials):

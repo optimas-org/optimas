@@ -100,11 +100,16 @@ class Generator():
             'gen_f': self._gen_function,
             # Generator input. This is a RNG, no need for inputs.
             'in': ['sim_id'],
-            'persis_in': ['sim_id', 'trial_index'] + [obj.name for obj in self._objectives],
-            'out': [(var.name, float) for var in self._varying_parameters] + [
-                ('resource_sets', int),
-                ('trial_index', int),
-            ] + [(par.save_name, par.dtype) for par in self._custom_trial_parameters],
+            'persis_in': (
+                ['sim_id', 'trial_index'] +
+                [obj.name for obj in self._objectives]
+            ),
+            'out': (
+                [(var.name, float) for var in self._varying_parameters] +
+                [('resource_sets', int), ('trial_index', int)] +
+                [(par.save_name, par.dtype)
+                 for par in self._custom_trial_parameters]
+            ),
             'user': {
                 'generator': self,
                 # Total max number of sims running concurrently.
@@ -114,7 +119,7 @@ class Generator():
             }
         }
         return gen_specs
-    
+
     def get_libe_specs(self):
         libE_specs = {}
         # If not using CUDA, do not allocate resources for generator.
@@ -125,5 +130,5 @@ class Generator():
     def _ask(self, trials):
         pass
 
-    def _tell(self, val, noise=None):
+    def _tell(self, trials):
         pass

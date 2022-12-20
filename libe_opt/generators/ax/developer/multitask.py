@@ -34,7 +34,8 @@ class AxMultitaskGenerator(AxGenerator):
             TrialParameter('trial_type', 'ax_trial_type', dtype='U32'),
             TrialParameter('trial_index', 'ax_trial_index', dtype=int)
         ]
-        self._check_inputs(varying_parameters, objectives, lofi_task, hifi_task)
+        self._check_inputs(varying_parameters, objectives, lofi_task,
+                           hifi_task)
         super().__init__(varying_parameters, objectives, use_cuda=use_cuda,
                          custom_trial_parameters=custom_trial_parameters)
         self.lofi_task = lofi_task
@@ -52,15 +53,12 @@ class AxMultitaskGenerator(AxGenerator):
 
     def get_gen_specs(self, sim_workers):
         gen_specs = super().get_gen_specs(sim_workers)
-        gen_specs['out'].append(
-            ('task', str, max(
-                [len(self.lofi_task.name), len(self.hifi_task.name)]
-                )
-            )
-        )
+        max_length = max([len(self.lofi_task.name), len(self.hifi_task.name)])
+        gen_specs['out'].append(('task', str, max_length))
         return gen_specs
 
-    def _check_inputs(self, varying_parameters, objectives, lofi_task, hifi_task):
+    def _check_inputs(self, varying_parameters, objectives, lofi_task,
+                      hifi_task):
         n_objectives = len(objectives)
         assert n_objectives == 1, (
             'Multitask generator supports only a single objective. '
@@ -76,7 +74,8 @@ class AxMultitaskGenerator(AxGenerator):
             next_trial = self._get_next_trial_arm()
             if next_trial is not None:
                 arm, trial_type, trial_index = next_trial
-                trial.parameter_values = [arm.parameters.get(var.name) for var in self._varying_parameters]
+                trial.parameter_values = [arm.parameters.get(var.name)
+                                          for var in self._varying_parameters]
                 trial.trial_type = trial_type
                 trial.arm_name = arm.name
                 trial.trial_index = trial_index
@@ -111,7 +110,8 @@ class AxMultitaskGenerator(AxGenerator):
             arms = []
             for trial in trials_i:
                 params = {}
-                for var, val in zip(trial.varying_parameters, trial.parameter_values):
+                for var, val in zip(trial.varying_parameters,
+                                    trial.parameter_values):
                     params[var.name] = val
                 arms.append(Arm(parameters=params, name=trial.arm_name))
             # Create new batch trial.
@@ -208,10 +208,12 @@ class AxMultitaskGenerator(AxGenerator):
     def _get_next_trial_arm(self):
         if self.gen_state in [NOT_STARTED, HIFI_RETURNED]:
             trial = self._get_lofi_batch()
-            self.trials_list = [(arm, trial.trial_type, trial.index) for arm in trial.arms]
+            self.trials_list = [(arm, trial.trial_type, trial.index)
+                                for arm in trial.arms]
         elif self.gen_state in [LOFI_RETURNED]:
             trial = self._get_hifi_batch()
-            self.trials_list = [(arm, trial.trial_type, trial.index) for arm in trial.arms]
+            self.trials_list = [(arm, trial.trial_type, trial.index)
+                                for arm in trial.arms]
             self.model_iteration += 1
         if self.trials_list:
             return self.trials_list.pop(0)
@@ -221,7 +223,7 @@ class AxMultitaskGenerator(AxGenerator):
     def _get_lofi_batch(self):
         if self.model_iteration == 0:
             # Generate first batch using a Sobol sequence.
-            m = get_sobol(self._experiment.search_space, scramble=True)            
+            m = get_sobol(self._experiment.search_space, scramble=True)
             n_gen = self.lofi_task.n_init
             gr = m.gen(n_gen)
         else:
@@ -240,7 +242,8 @@ class AxMultitaskGenerator(AxGenerator):
                     # Try to generate the new points.
                     gr = m.gen(
                         n=n_gen,
-                        optimization_config=self._experiment.optimization_config,
+                        optimization_config=(
+                            self._experiment.optimization_config),
                         fixed_features=ObservationFeatures(
                             parameters={}, trial_index=self.hifi_trials[-1]),
                         model_gen_options={

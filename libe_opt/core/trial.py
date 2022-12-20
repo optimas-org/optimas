@@ -2,7 +2,7 @@ class Trial():
     def __init__(
             self, varying_parameters, objectives, parameter_values=None,
             objective_evaluations=None, index=None, custom_parameters=None):
-        
+
         self._varying_parameters = varying_parameters
         self._objectives = objectives
         self._parameter_values = (

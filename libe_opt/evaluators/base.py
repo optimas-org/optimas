@@ -4,11 +4,12 @@ class Evaluator:
         self._analyzed_parameters = (
             [] if analyzed_parameters is None else analyzed_parameters)
         self._n_gpus = n_gpus
-        self._initialized= False
+        self._initialized = False
 
     def get_sim_specs(self, varying_parameters, objectives):
         if not self._initialized:
-            raise RuntimeError('Evaluator must be initialized before generating sim_specs')
+            raise RuntimeError(
+                'Evaluator must be initialized before generating sim_specs')
         sim_specs = {
             # Function whose output is being minimized.
             'sim_f': self.sim_function,
@@ -36,6 +37,6 @@ class Evaluator:
         if not self._initialized:
             self._initialize()
             self._initialized = True
-        
+
     def _initialize(self):
         pass

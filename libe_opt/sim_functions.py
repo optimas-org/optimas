@@ -1,4 +1,5 @@
-import os, time
+import os
+import time
 import jinja2
 import numpy as np
 
@@ -37,12 +38,12 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
     analysis_func = user_specs['analysis_func']
     app_name = user_specs['app_name']
     n_gpus = user_specs['n_gpus']
-    n_proc = user_specs['n_proc']
+    # n_proc = user_specs['n_proc']
 
     # Create simulation input file.
-    sim_script = sim_template[len('template_'):] # Strip 'template_' from name
+    sim_script = sim_template[len('template_'):]  # Strip 'template_' from name
     with open(sim_template, 'r') as f:
-        template = jinja2.Template( f.read() )
+        template = jinja2.Template(f.read())
     with open(sim_script, 'w') as f:
         f.write(template.render(input_values))
     os.remove(sim_template)
@@ -61,7 +62,7 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
     num_nodes = resources.local_node_count
 
     logger.debug(
-        'Worker {}: CUDA_VISIBLE_DEVICES={}  \tnodes {} ppn {}  slots {}'.format(
+        'Worker {}: CUDA_VISIBLE_DEVICES={} \tnodes {} ppn {} slots {}'.format(
             libE_info['workerID'],
             os.environ["CUDA_VISIBLE_DEVICES"],
             num_nodes,
@@ -71,7 +72,7 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
     )
 
     # Get extra args.
-    extra_args = os.environ.get( 'LIBE_SIM_EXTRA_ARGS', None )
+    extra_args = os.environ.get('LIBE_SIM_EXTRA_ARGS', None)
 
     # Submit simulation.
     if extra_args is not None:
@@ -94,7 +95,7 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
 
     # Periodically check the status of the simulation
     poll_interval = 10  # secs
-    while(not task.finished):
+    while (not task.finished):
         time.sleep(poll_interval)
         task.poll()
 
@@ -160,7 +161,7 @@ def run_function(H, persis_info, sim_specs, libE_info):
     num_nodes = resources.local_node_count
 
     logger.debug(
-        'Worker {}: CUDA_VISIBLE_DEVICES={}  \tnodes {} ppn {}  slots {}'.format(
+        'Worker {}: CUDA_VISIBLE_DEVICES={} \tnodes {} ppn {} slots {}'.format(
             libE_info['workerID'],
             os.environ["CUDA_VISIBLE_DEVICES"],
             num_nodes,
