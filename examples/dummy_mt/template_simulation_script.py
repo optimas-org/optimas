@@ -1,5 +1,5 @@
 """
-Dummy script for fast test ; this does not actually run fbpic,
+Dummy script for fast test; this does not actually run a simulation,
 but instead calculate the result of a test function and store
 the results in a file result.txt
 """

@@ -1,22 +1,52 @@
-import numpy as np
-from libe_opt.search_methods import GridSearch
+from libe_opt.core import VaryingParameter, Objective
+from libe_opt.generators import GridSamplingGenerator
+from libe_opt.evaluators import TemplateEvaluator
+from libe_opt.explorations import Exploration
 
-from analysis_script import analyze_simulation
 
-var_names = ['x0', 'x1']
-var_lb = np.array([0., 0.])
-var_ub = np.array([15., 15.])
-var_steps = np.array([5, 7])
+def analyze_simulation(simulation_directory, output_params):
+    """Function that analyzes the simulation output and fills in the
+    dictionary of output parameters."""
+    # Read back result from file
+    with open('result.txt') as f:
+        result = float( f.read() )
+    # Fill in output parameters.
+    output_params['f'] = result
+    return output_params
 
-gs = GridSearch(
-    var_names=var_names,
-    var_lb=var_lb,
-    var_ub=var_ub,
-    var_steps=var_steps,
-    sim_workers=4,
+
+# Create varying parameters and objectives.
+var_1 = VaryingParameter('x0', 0., 15.)
+var_2 = VaryingParameter('x1', 0., 15.)
+obj = Objective('f', minimize=True)
+
+
+# Create generator.
+gen = GridSamplingGenerator(
+    varying_parameters=[var_1, var_2],
+    objectives=[obj],
+    n_steps=[5, 7]
+)
+
+
+# Create evaluator.
+ev = TemplateEvaluator(
     sim_template='template_simulation_script.py',
-    analysis_func=analyze_simulation,
+    analysis_func=analyze_simulation
+)
+
+
+# Create exploration.
+exp = Exploration(
+    generator=gen,
+    evaluator=ev,
+    max_evals=10,
+    sim_workers=4,
     run_async=True
 )
 
-gs.run()
+
+# To safely perform exploration, run it in the block below (this is needed
+# for some flavours of multiprocessing, namely spawn and forkserver)
+if __name__ == '__main__':
+    exp.run()
