@@ -60,7 +60,7 @@ ev = MultitaskEvaluator(
 exp = Exploration(
     generator=gen,
     evaluator=ev,
-    max_evals=10,
+    max_evals=30,
     sim_workers=4,
     run_async=True
 )
