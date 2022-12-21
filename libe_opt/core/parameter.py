@@ -13,12 +13,12 @@ class Parameter(NamedBase):
 
 class VaryingParameter(Parameter):
     def __init__(self, name, lower_bound, upper_bound, is_fidelity=False,
-                 target_value=None, dtype=float):
+                 fidelity_target_value=None, dtype=float):
         super().__init__(name, dtype)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._is_fidelity = is_fidelity
-        self._target_value = target_value
+        self._fidelity_target_value = fidelity_target_value
 
     @property
     def lower_bound(self):
@@ -33,8 +33,8 @@ class VaryingParameter(Parameter):
         return self._is_fidelity
 
     @property
-    def target_value(self):
-        return self._target_value
+    def fidelity_target_value(self):
+        return self._fidelity_target_value
 
 
 class TrialParameter(Parameter):

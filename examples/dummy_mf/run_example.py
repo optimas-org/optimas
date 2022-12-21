@@ -18,7 +18,8 @@ def analyze_simulation(simulation_directory, output_params):
 # Create varying parameters (including fidelity) and objectives.
 var_1 = VaryingParameter('x0', 0., 15.)
 var_2 = VaryingParameter('x1', 0., 15.)
-res = VaryingParameter('resolution', 1., 8., is_fidelity=True, target_value=8.)
+res = VaryingParameter('resolution', 1., 8., is_fidelity=True,
+                       fidelity_target_value=8.)
 obj = Objective('f', minimize=True)
 
 

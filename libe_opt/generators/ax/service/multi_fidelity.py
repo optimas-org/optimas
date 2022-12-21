@@ -26,7 +26,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
                     'type': 'range',
                     'bounds': [var.lower_bound, var.upper_bound],
                     'is_fidelity': var.is_fidelity,
-                    'target_value': var.target_value
+                    'target_value': var.fidelity_target_value
                 }
             )
 
