@@ -1,3 +1,6 @@
+import numpy as np
+
+
 class Trial():
     def __init__(
             self, varying_parameters, objectives, parameter_values=None,
@@ -31,6 +34,7 @@ class Trial():
     @parameter_values.setter
     def parameter_values(self, values):
         assert len(values) == len(self._varying_parameters)
+        values = np.array(values) if isinstance(values, list) else values
         self._parameter_values = values
 
     @property

@@ -50,7 +50,7 @@ class Generator():
         # Ask the generator to fill them.
         trials = self._ask(trials)
         # Keep only trials that have been given data.
-        trials = [trial for trial in trials if trial.parameter_values]
+        trials = [trial for trial in trials if len(trial.parameter_values) > 0]
         for trial in trials:
             logger.info(
                 'Generated trial {} with parameters {}'.format(
