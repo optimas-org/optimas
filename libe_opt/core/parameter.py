@@ -41,6 +41,7 @@ class VaryingParameter(Parameter):
     def default_value(self):
         return self._default_value
 
+
 class TrialParameter(Parameter):
     def __init__(self, name, save_name=None, dtype=float):
         super().__init__(name, dtype=dtype)
