@@ -48,6 +48,11 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         f.write(template.render(input_values))
     os.remove(sim_template)
 
+    # If the template is a python file, no need to provide it as argument
+    # (it has already been registered by libEnsemble as such).
+    if sim_script.endswith('.py'):
+        sim_script = None
+
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
     # Launch the executor to actually run the WarpX simulation
