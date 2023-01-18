@@ -1,3 +1,5 @@
+import os
+
 from libe_opt.utils.logger import get_logger
 from libe_opt.gen_functions import persistent_generator
 from libe_opt.core import Objective, Trial, ObjectiveEvaluation
@@ -7,15 +9,21 @@ logger = get_logger(__name__)
 
 class Generator():
     def __init__(self, varying_parameters, objectives=None, constraints=None,
-                 use_cuda=False, custom_trial_parameters=None):
+                 use_cuda=False, save_model=False, model_save_period=5,
+                 model_history_dir='model_history',
+                 custom_trial_parameters=None):
         if objectives is None:
             objectives = [Objective()]
         self._varying_parameters = varying_parameters
         self._objectives = objectives
         self._constraints = constraints
+        self._save_model = save_model
+        self._model_save_period = model_save_period
+        self._model_history_dir = model_history_dir
+        self._n_completed_trials_last_saved = 0
+        self._use_cuda = use_cuda
         self._custom_trial_parameters = (
             [] if custom_trial_parameters is None else custom_trial_parameters)
-        self._use_cuda = use_cuda
         self._gen_function = persistent_generator
         self._trials = []
 
@@ -59,7 +67,7 @@ class Generator():
         self._trials.extend(trials)
         return trials
 
-    def tell(self, trials):
+    def tell(self, trials, allow_saving_model=True):
         for trial in trials:
             if trial not in self._trials:
                 trial.index = len(self._trials)
@@ -69,6 +77,8 @@ class Generator():
             logger.info(
                 'Completed trial {} with data {}'.format(
                     trial.index, trial.objectives_as_dict()))
+        if allow_saving_model and self._save_model:
+            self.save_model_to_file()
 
     def incorporate_history(self, history):
         # Keep only evaluations where the simulation finished sucessfully.
@@ -90,9 +100,25 @@ class Generator():
                 custom_parameters=self._custom_trial_parameters
             )
             for par in self._custom_trial_parameters:
-                setattr(trial, par.name, history[par.save_name][i])
+                setattr(trial, par.name, history[par.save_name][i].item())
             trials.append(trial)
-        self.tell(trials)
+        self.tell(trials, allow_saving_model=False)
+
+    def save_model_to_file(self):
+        n_completed_trials = 0
+        for trial in self._trials:
+            if trial.completed():
+                n_completed_trials += 1
+        n_new = n_completed_trials - self._n_completed_trials_last_saved
+        if n_new >= self._model_save_period:
+            self._n_completed_trials_last_saved = n_completed_trials
+            if not os.path.exists(self._model_history_dir):
+                os.mkdir(self._model_history_dir)
+            self._save_model_to_file()
+            logger.info(
+                'Saved model to file after {} completed trials.'.format(
+                    n_completed_trials)
+            )
 
     def get_gen_specs(self, sim_workers):
         gen_specs = {
@@ -131,4 +157,7 @@ class Generator():
         pass
 
     def _tell(self, trials):
+        pass
+
+    def _save_model_to_file(self):
         pass

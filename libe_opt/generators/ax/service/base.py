@@ -1,10 +1,16 @@
+import os
+
 from libe_opt.generators.ax.base import AxGenerator
 
 
 class AxServiceGenerator(AxGenerator):
     def __init__(self, varying_parameters, objectives, n_init=4,
-                 use_cuda=False):
-        super().__init__(varying_parameters, objectives, use_cuda=use_cuda)
+                 use_cuda=False, save_model=True, model_save_period=5,
+                 model_history_dir='model_history'):
+        super().__init__(varying_parameters, objectives, use_cuda=use_cuda,
+                         save_model=save_model,
+                         model_save_period=model_save_period,
+                         model_history_dir=model_history_dir)
         self._n_init = n_init
         self._create_ax_client()
 
@@ -36,3 +42,11 @@ class AxServiceGenerator(AxGenerator):
 
     def _create_ax_client(self):
         raise NotImplementedError
+
+    def _save_model_to_file(self):
+        file_path = os.path.join(
+            self._model_history_dir,
+            'ax_client_at_eval_{}.json'.format(
+                self._n_completed_trials_last_saved)
+        )
+        self._ax_client.save_to_json_file(file_path)

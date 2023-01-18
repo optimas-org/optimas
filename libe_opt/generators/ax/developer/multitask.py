@@ -1,3 +1,4 @@
+import os
 from copy import deepcopy
 
 import numpy as np
@@ -13,6 +14,8 @@ from ax.runners import SyntheticRunner
 from ax.modelbridge.factory import get_sobol, get_MTGP
 from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
+from ax.storage.json_store.save import save_experiment
+from ax.storage.metric_registry import register_metric
 
 from libe_opt.generators.ax.base import AxGenerator
 from libe_opt.core import TrialParameter
@@ -28,7 +31,8 @@ HIFI_RETURNED = 'hifi_returned'
 class AxMultitaskGenerator(AxGenerator):
     def __init__(
             self, varying_parameters, objectives, lofi_task, hifi_task,
-            use_cuda=False):
+            use_cuda=False, save_model=True, model_save_period=5,
+            model_history_dir='model_history'):
         custom_trial_parameters = [
             TrialParameter('arm_name', 'ax_arm_name', dtype='U32'),
             TrialParameter('trial_type', 'ax_trial_type', dtype='U32'),
@@ -37,6 +41,9 @@ class AxMultitaskGenerator(AxGenerator):
         self._check_inputs(varying_parameters, objectives, lofi_task,
                            hifi_task)
         super().__init__(varying_parameters, objectives, use_cuda=use_cuda,
+                         save_model=save_model,
+                         model_save_period=model_save_period,
+                         model_history_dir=model_history_dir,
                          custom_trial_parameters=custom_trial_parameters)
         self.lofi_task = lofi_task
         self.hifi_task = hifi_task
@@ -205,6 +212,11 @@ class AxMultitaskGenerator(AxGenerator):
         # Store experiment.
         self._experiment = experiment
 
+        # Register metric in order to be able to save experiment to json file.
+        _, encoder_registry, decoder_registry = register_metric(AxMetric)
+        self._encoder_registry = encoder_registry
+        self._decoder_registry = decoder_registry
+
     def _get_next_trial_arm(self):
         if self.gen_state in [NOT_STARTED, HIFI_RETURNED]:
             trial = self._get_lofi_batch()
@@ -318,6 +330,18 @@ class AxMultitaskGenerator(AxGenerator):
         self.returned_hifi_trials = 0
         self.hifi_trials.append(trial.index)
         return trial
+
+    def _save_model_to_file(self):
+        file_path = os.path.join(
+            self._model_history_dir,
+            'ax_experiment_at_eval_{}.json'.format(
+                self._n_completed_trials_last_saved)
+        )
+        save_experiment(
+            experiment=self._experiment,
+            filepath=file_path,
+            encoder_registry=self._encoder_registry
+        )
 
 
 def max_utility_from_GP(n, m, gr, hifi_task):

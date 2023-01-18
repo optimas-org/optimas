@@ -67,3 +67,9 @@ class Trial():
         for obj, oe in zip(self._objectives, self._objective_evaluations):
             params[obj.name] = (oe.value, oe.sem)
         return params
+
+    def completed(self):
+        evaluated_objectives = [
+            oe.objective.name for oe in self._objective_evaluations]
+        objectives = [obj.name for obj in self._objectives]
+        return set(evaluated_objectives) == set(objectives)
