@@ -5,7 +5,7 @@ from libensemble.message_numbers import (
 from libensemble.tools.persistent_support import PersistentSupport
 from libensemble.resources.resources import Resources
 
-from libe_opt.core import ObjectiveEvaluation
+from libe_opt.core import Evaluation
 
 
 def persistent_generator(H, persis_info, gen_specs, libE_info):
@@ -20,9 +20,10 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         resources = Resources.resources.worker_resources
         resources.set_env_to_slots('CUDA_VISIBLE_DEVICES')
 
-    # Get generator.
+    # Get generator, objectives, and parameters to analyze.
     generator = gen_specs['user']['generator']
     objectives = generator.objectives
+    analyzed_parameters = generator.analyzed_parameters
 
     ps = PersistentSupport(libE_info, EVAL_GEN_TAG)
 
@@ -65,9 +66,9 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             for i in range(n):
                 trial_index = int(calc_in['trial_index'][i])
                 trial = generator._trials[trial_index]
-                for objective in objectives:
-                    y = calc_in[objective.name][i]
-                    ev = ObjectiveEvaluation(objective=objective, value=y)
+                for par in objectives + analyzed_parameters:
+                    y = calc_in[par.name][i]
+                    ev = Evaluation(parameter=par, value=y)
                     trial.complete_evaluation(ev)
                 # Register trial with unknown SEM
                 generator.tell([trial])

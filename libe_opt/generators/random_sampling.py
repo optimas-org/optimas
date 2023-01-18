@@ -5,8 +5,9 @@ from .base import Generator
 
 class RandomSamplingGenerator(Generator):
     def __init__(self, varying_parameters, objectives, distribution='uniform',
-                 seed=None):
-        super().__init__(varying_parameters, objectives)
+                 seed=None, analyzed_parameters=None):
+        super().__init__(varying_parameters, objectives,
+                         analyzed_parameters=analyzed_parameters)
         self._generate_sampling = {
             'uniform': self._generate_uniform_sampling,
             'normal': self._generate_normal_sampling,

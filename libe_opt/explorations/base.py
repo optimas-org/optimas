@@ -33,7 +33,8 @@ class Exploration():
         gen_specs = self.generator.get_gen_specs(self.sim_workers)
         sim_specs = self.evaluator.get_sim_specs(
             self.generator.varying_parameters,
-            self.generator.objectives
+            self.generator.objectives,
+            self.generator.analyzed_parameters
         )
         if self.history is not None:
             self.generator.incorporate_history(self.history)

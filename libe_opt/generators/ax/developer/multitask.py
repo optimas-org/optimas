@@ -31,8 +31,8 @@ HIFI_RETURNED = 'hifi_returned'
 class AxMultitaskGenerator(AxGenerator):
     def __init__(
             self, varying_parameters, objectives, lofi_task, hifi_task,
-            use_cuda=False, save_model=True, model_save_period=5,
-            model_history_dir='model_history'):
+            analyzed_parameters=None, use_cuda=False, save_model=True,
+            model_save_period=5, model_history_dir='model_history'):
         custom_trial_parameters = [
             TrialParameter('arm_name', 'ax_arm_name', dtype='U32'),
             TrialParameter('trial_type', 'ax_trial_type', dtype='U32'),
@@ -40,7 +40,10 @@ class AxMultitaskGenerator(AxGenerator):
         ]
         self._check_inputs(varying_parameters, objectives, lofi_task,
                            hifi_task)
-        super().__init__(varying_parameters, objectives, use_cuda=use_cuda,
+        super().__init__(varying_parameters,
+                         objectives,
+                         analyzed_parameters=analyzed_parameters,
+                         use_cuda=use_cuda,
                          save_model=save_model,
                          model_save_period=model_save_period,
                          model_history_dir=model_history_dir,

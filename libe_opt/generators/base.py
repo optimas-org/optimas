@@ -2,28 +2,32 @@ import os
 
 from libe_opt.utils.logger import get_logger
 from libe_opt.gen_functions import persistent_generator
-from libe_opt.core import Objective, Trial, ObjectiveEvaluation
+from libe_opt.core import Objective, Trial, Evaluation
 
 logger = get_logger(__name__)
 
 
 class Generator():
     def __init__(self, varying_parameters, objectives=None, constraints=None,
-                 use_cuda=False, save_model=False, model_save_period=5,
-                 model_history_dir='model_history',
+                 analyzed_parameters=None, use_cuda=False, save_model=False,
+                 model_save_period=5, model_history_dir='model_history',
                  custom_trial_parameters=None):
         if objectives is None:
             objectives = [Objective()]
         self._varying_parameters = varying_parameters
         self._objectives = objectives
         self._constraints = constraints
+        self._analyzed_parameters = (
+            [] if analyzed_parameters is None else analyzed_parameters
+        )
         self._save_model = save_model
         self._model_save_period = model_save_period
         self._model_history_dir = model_history_dir
         self._n_completed_trials_last_saved = 0
         self._use_cuda = use_cuda
         self._custom_trial_parameters = (
-            [] if custom_trial_parameters is None else custom_trial_parameters)
+            [] if custom_trial_parameters is None else custom_trial_parameters
+        )
         self._gen_function = persistent_generator
         self._trials = []
 
@@ -40,6 +44,10 @@ class Generator():
         return self._constraints
 
     @property
+    def analyzed_parameters(self):
+        return self._analyzed_parameters
+
+    @property
     def use_cuda(self):
         return self._use_cuda
 
@@ -51,6 +59,7 @@ class Generator():
                 Trial(
                     varying_parameters=self._varying_parameters,
                     objectives=self._objectives,
+                    analyzed_parameters=self._analyzed_parameters,
                     index=len(self._trials) + i,
                     custom_parameters=self._custom_trial_parameters
                 )
@@ -74,9 +83,12 @@ class Generator():
                 self._trials.append(trial)
         self._tell(trials)
         for trial in trials:
-            logger.info(
-                'Completed trial {} with data {}'.format(
-                    trial.index, trial.objectives_as_dict()))
+            log_msg = 'Completed trial {} with objective(s) {}'.format(
+                trial.index, trial.objectives_as_dict())
+            if trial.analyzed_parameters:
+                log_msg += ' and analyzed parameter(s) {}'.format(
+                    trial.analyzed_parameters_as_dict())
+            logger.info(log_msg)
         if allow_saving_model and self._save_model:
             self.save_model_to_file()
 
@@ -91,11 +103,12 @@ class Generator():
                 parameter_values=[
                     history[var.name][i] for var in self.varying_parameters],
                 objectives=self._objectives,
-                objective_evaluations=[
-                    ObjectiveEvaluation(
-                        objective=obj,
-                        value=history[obj.name][i]
-                    ) for obj in self._objectives
+                analyzed_parameters=self._analyzed_parameters,
+                evaluations=[
+                    Evaluation(
+                        parameter=par,
+                        value=history[par.name][i]
+                    ) for par in self._objectives + self._analyzed_parameters
                 ],
                 custom_parameters=self._custom_trial_parameters
             )
@@ -128,7 +141,8 @@ class Generator():
             'in': ['sim_id'],
             'persis_in': (
                 ['sim_id', 'trial_index'] +
-                [obj.name for obj in self._objectives]
+                [obj.name for obj in self._objectives] +
+                [par.name for par in self._analyzed_parameters]
             ),
             'out': (
                 [(var.name, float) for var in self._varying_parameters] +

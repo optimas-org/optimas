@@ -1,12 +1,12 @@
-class ObjectiveEvaluation():
-    def __init__(self, objective, value, sem=None):
-        self._objective = objective
+class Evaluation():
+    def __init__(self, parameter, value, sem=None):
+        self._parameter = parameter
         self._value = value
         self._sem = sem
 
     @property
-    def objective(self):
-        return self._objective
+    def parameter(self):
+        return self._parameter
 
     @property
     def value(self):

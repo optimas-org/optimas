@@ -1,12 +1,11 @@
 class Evaluator:
-    def __init__(self, sim_function, analyzed_parameters=None, n_gpus=1):
+    def __init__(self, sim_function, n_gpus=1):
         self.sim_function = sim_function
-        self._analyzed_parameters = (
-            [] if analyzed_parameters is None else analyzed_parameters)
         self._n_gpus = n_gpus
         self._initialized = False
 
-    def get_sim_specs(self, varying_parameters, objectives):
+    def get_sim_specs(self, varying_parameters, objectives,
+                      analyzed_parameters):
         if not self._initialized:
             raise RuntimeError(
                 'Evaluator must be initialized before generating sim_specs')
@@ -19,7 +18,7 @@ class Evaluator:
             'out': (
                 [(obj.name, float) for obj in objectives]
                 # f is the single float output that LibEnsemble minimizes.
-                + [(par.name, par.type) for par in self._analyzed_parameters]
+                + [(par.name, par.dtype) for par in analyzed_parameters]
                 # input parameters
                 + [(var.name, float) for var in varying_parameters]
             ),

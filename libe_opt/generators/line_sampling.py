@@ -4,8 +4,10 @@ from .base import Generator
 
 
 class LineSamplingGenerator(Generator):
-    def __init__(self, varying_parameters, objectives, n_steps):
-        super().__init__(varying_parameters, objectives)
+    def __init__(self, varying_parameters, objectives, n_steps,
+                 analyzed_parameters=None):
+        super().__init__(varying_parameters, objectives,
+                         analyzed_parameters=analyzed_parameters)
         self._check_inputs(varying_parameters, objectives, n_steps)
         self._n_steps = n_steps if n_steps is np.ndarray else np.array(n_steps)
         self._create_configurations()

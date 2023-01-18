@@ -50,3 +50,13 @@ class TrialParameter(Parameter):
     @property
     def save_name(self):
         return self._save_name
+
+
+class Objective(Parameter):
+    def __init__(self, name='f', minimize=True):
+        super().__init__(name)
+        self._minimize = minimize
+
+    @property
+    def minimize(self):
+        return self._minimize

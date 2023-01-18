@@ -1,9 +1,8 @@
-from .objective import Objective
-from .objective_evaluation import ObjectiveEvaluation
-from .parameter import Parameter, VaryingParameter, TrialParameter
+from .evaluation import Evaluation
+from .parameter import Parameter, VaryingParameter, TrialParameter, Objective
 from .task import Task
 from .trial import Trial
 
 
-__all__ = ['Objective', 'ObjectiveEvaluation', 'Parameter', 'VaryingParameter',
-           'TrialParameter', 'Task', 'Trial']
+__all__ = ['Evaluation', 'Parameter', 'VaryingParameter', 'TrialParameter',
+           'Objective', 'Task', 'Trial']

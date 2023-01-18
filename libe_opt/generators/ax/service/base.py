@@ -4,10 +4,14 @@ from libe_opt.generators.ax.base import AxGenerator
 
 
 class AxServiceGenerator(AxGenerator):
-    def __init__(self, varying_parameters, objectives, n_init=4,
-                 use_cuda=False, save_model=True, model_save_period=5,
+    def __init__(self, varying_parameters, objectives,
+                 analyzed_parameters=None, n_init=4, use_cuda=False,
+                 save_model=True, model_save_period=5,
                  model_history_dir='model_history'):
-        super().__init__(varying_parameters, objectives, use_cuda=use_cuda,
+        super().__init__(varying_parameters,
+                         objectives,
+                         analyzed_parameters=analyzed_parameters,
+                         use_cuda=use_cuda,
                          save_model=save_model,
                          model_save_period=model_save_period,
                          model_history_dir=model_history_dir)
@@ -25,13 +29,13 @@ class AxServiceGenerator(AxGenerator):
     def _tell(self, trials):
         for trial in trials:
             objective_eval = {}
-            for oe in trial.objective_evaluations:
-                objective_eval[oe.objective.name] = (oe.value, oe.sem)
+            for ev in trial.objective_evaluations:
+                objective_eval[ev.parameter.name] = (ev.value, ev.sem)
             try:
                 self._ax_client.complete_trial(
                             trial_index=trial.ax_trial_id,
                             raw_data=objective_eval
-                        )
+                )
             except AttributeError:
                 params = {}
                 for var, value in zip(trial.varying_parameters,

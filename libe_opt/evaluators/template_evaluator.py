@@ -8,11 +8,10 @@ from .base import Evaluator
 
 class TemplateEvaluator(Evaluator):
     def __init__(
-            self, sim_template, analysis_func, analyzed_parameters=None,
+            self, sim_template, analysis_func,
             executable=None, sim_files=None, n_gpus=1, n_proc=1):
         super().__init__(
             sim_function=run_template_simulation,
-            analyzed_parameters=analyzed_parameters,
             n_gpus=n_gpus)
         self.sim_template = sim_template
         self.analysis_func = analysis_func
@@ -21,8 +20,10 @@ class TemplateEvaluator(Evaluator):
         self.n_proc = n_proc
         self._app_name = 'sim'
 
-    def get_sim_specs(self, varying_parameters, objectives):
-        sim_specs = super().get_sim_specs(varying_parameters, objectives)
+    def get_sim_specs(self, varying_parameters, objectives,
+                      analyzed_parameters):
+        sim_specs = super().get_sim_specs(varying_parameters, objectives,
+                                          analyzed_parameters)
         sim_specs['user']['analysis_func'] = self.analysis_func
         sim_specs['user']['sim_template'] = os.path.basename(self.sim_template)
         sim_specs['user']['app_name'] = self._app_name
