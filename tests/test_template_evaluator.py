@@ -1,5 +1,7 @@
+import os
+
 from libe_opt.explorations import Exploration
-from libe_opt.generators import AxSingleFidelityGenerator
+from libe_opt.generators import RandomSamplingGenerator
 from libe_opt.evaluators import TemplateEvaluator
 from libe_opt.core import VaryingParameter, Objective
 
@@ -19,14 +21,18 @@ def test_template_evaluator():
     obj = Objective('f', minimize=False)
 
     # Define variables and objectives.
-    gen = AxSingleFidelityGenerator(
+    gen = RandomSamplingGenerator(
         varying_parameters=[var1, var2],
         objectives=[obj]
     )
 
     # Create template evaluator.
     ev = TemplateEvaluator(
-        sim_template='./resources/template_simulation_script.py',
+        sim_template=os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'resources',
+            'template_simulation_script.py'
+        ),
         analysis_func=analysis_func
     )
 
@@ -34,8 +40,8 @@ def test_template_evaluator():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=20,
-        sim_workers=4,
+        max_evals=10,
+        sim_workers=2,
         exploration_dir_path='./tests_output/test_template_evaluator'
     )
 

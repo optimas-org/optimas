@@ -1,7 +1,7 @@
 import numpy as np
 
 from libe_opt.explorations import Exploration
-from libe_opt.generators import AxSingleFidelityGenerator
+from libe_opt.generators import RandomSamplingGenerator
 from libe_opt.evaluators import FunctionEvaluator
 from libe_opt.core import VaryingParameter, Objective
 
@@ -22,7 +22,7 @@ def test_function_evaluator():
     obj = Objective('f', minimize=False)
 
     # Create generator.
-    gen = AxSingleFidelityGenerator(
+    gen = RandomSamplingGenerator(
         varying_parameters=[var1, var2],
         objectives=[obj]
     )
@@ -34,8 +34,8 @@ def test_function_evaluator():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=20,
-        sim_workers=4,
+        max_evals=10,
+        sim_workers=2,
         exploration_dir_path='./tests_output/test_function_evaluator'
     )
 

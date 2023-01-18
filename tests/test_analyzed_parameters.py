@@ -1,7 +1,7 @@
 import numpy as np
 
 from libe_opt.explorations import Exploration
-from libe_opt.generators import AxSingleFidelityGenerator
+from libe_opt.generators import RandomSamplingGenerator
 from libe_opt.evaluators import FunctionEvaluator
 from libe_opt.core import VaryingParameter, Objective, Parameter
 
@@ -31,7 +31,7 @@ def test_analyzed_parameters():
     par2 = Parameter('analyzed_parameter_2')
 
     # Create generator.
-    gen = AxSingleFidelityGenerator(
+    gen = RandomSamplingGenerator(
         varying_parameters=[var1, var2],
         objectives=[obj],
         analyzed_parameters=[par1, par2]
@@ -44,8 +44,8 @@ def test_analyzed_parameters():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=20,
-        sim_workers=4,
+        max_evals=10,
+        sim_workers=2,
         exploration_dir_path='./tests_output/test_analyzed_parameters'
     )
 
@@ -87,7 +87,7 @@ def test_analyzed_parameters_from_history():
     par2 = Parameter('analyzed_parameter_2')
 
     # Create generator.
-    gen = AxSingleFidelityGenerator(
+    gen = RandomSamplingGenerator(
         varying_parameters=[var1, var2],
         objectives=[obj],
         analyzed_parameters=[par1, par2]
@@ -100,8 +100,8 @@ def test_analyzed_parameters_from_history():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=20,
-        sim_workers=4,
+        max_evals=10,
+        sim_workers=2,
         history='./tests_output/ax_sf_history_with_analyzed_parameters.npy',
         exploration_dir_path='./tests_output/test_analyzed_parameters_with_history'
     )

@@ -54,7 +54,7 @@ def test_ax_single_fidelity():
         generator=gen,
         evaluator=ev,
         max_evals=10,
-        sim_workers=4,
+        sim_workers=2,
         exploration_dir_path='./tests_output/test_ax_single_fidelity'
     )
 
@@ -81,8 +81,9 @@ def test_ax_multi_fidelity():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=8,
-        sim_workers=4,
+        max_evals=6,
+        sim_workers=2,
+        run_async=False,
         exploration_dir_path='./tests_output/test_ax_multi_fidelity'
     )
 
@@ -114,8 +115,8 @@ def test_ax_multitask():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=20,
-        sim_workers=4,
+        max_evals=15,
+        sim_workers=2,
         exploration_dir_path='./tests_output/test_ax_multitask'
     )
 
@@ -144,7 +145,7 @@ def test_ax_single_fidelity_with_history():
         generator=gen,
         evaluator=ev,
         max_evals=10,
-        sim_workers=4,
+        sim_workers=2,
         history='./tests_output/ax_sf_history.npy',
         exploration_dir_path='./tests_output/test_ax_single_fidelity_with_history'
     )
@@ -173,7 +174,8 @@ def test_ax_multi_fidelity_with_history():
         generator=gen,
         evaluator=ev,
         max_evals=4,
-        sim_workers=4,
+        sim_workers=2,
+        run_async=False,
         history='./tests_output/ax_mf_history.npy',
         exploration_dir_path='./tests_output/test_ax_multi_fidelity_with_history'
     )
@@ -207,7 +209,7 @@ def test_ax_multitask_with_history():
         generator=gen,
         evaluator=ev,
         max_evals=10,
-        sim_workers=4,
+        sim_workers=2,
         history='./tests_output/ax_mt_history.npy',
         exploration_dir_path='./tests_output/test_ax_multitask_with_history'
     )
