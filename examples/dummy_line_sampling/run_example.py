@@ -1,5 +1,5 @@
 from libe_opt.core import VaryingParameter, Objective
-from libe_opt.generators import GridSamplingGenerator
+from libe_opt.generators import LineSamplingGenerator
 from libe_opt.evaluators import TemplateEvaluator
 from libe_opt.explorations import Exploration
 
@@ -16,13 +16,13 @@ def analyze_simulation(simulation_directory, output_params):
 
 
 # Create varying parameters and objectives.
-var_1 = VaryingParameter('x0', 0., 15.)
-var_2 = VaryingParameter('x1', 0., 15.)
+var_1 = VaryingParameter('x0', 0., 15., default_value=5.)
+var_2 = VaryingParameter('x1', 0., 15., default_value=5.)
 obj = Objective('f')
 
 
 # Create generator.
-gen = GridSamplingGenerator(
+gen = LineSamplingGenerator(
     varying_parameters=[var_1, var_2],
     objectives=[obj],
     n_steps=[5, 7]

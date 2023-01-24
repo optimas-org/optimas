@@ -1,5 +1,5 @@
 from libe_opt.core import VaryingParameter, Objective
-from libe_opt.generators import GridSamplingGenerator
+from libe_opt.generators import RandomSamplingGenerator
 from libe_opt.evaluators import TemplateEvaluator
 from libe_opt.explorations import Exploration
 
@@ -22,10 +22,10 @@ obj = Objective('f')
 
 
 # Create generator.
-gen = GridSamplingGenerator(
+gen = RandomSamplingGenerator(
     varying_parameters=[var_1, var_2],
     objectives=[obj],
-    n_steps=[5, 7]
+    distribution='normal'
 )
 
 
