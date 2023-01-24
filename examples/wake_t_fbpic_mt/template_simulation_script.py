@@ -13,7 +13,8 @@ from wake_t.beamline_elements import ActivePlasmaLens
 
 # FBPIC imports.
 from fbpic.main import Simulation
-from fbpic.openpmd_diag import BoostedFieldDiagnostic, BoostedParticleDiagnostic
+from fbpic.openpmd_diag import (
+    BoostedFieldDiagnostic, BoostedParticleDiagnostic)
 from fbpic.lpa_utils.boosted_frame import BoostConverter
 from fbpic.lpa_utils.bunch import add_particle_bunch_from_arrays
 from fbpic.lpa_utils.external_fields import ExternalField
@@ -90,7 +91,6 @@ def run_fbpic(bunch, g_lens):
     p_nz = 4         # Number of particles per cell along z
     p_nr = 2         # Number of particles per cell along r
     p_nt = 6         # Number of particles per cell along theta
-    uz_m = 0.        # Initial momentum of the electrons in the lab frame
 
     # Grid settings
     dz = 1e-6/2
@@ -126,20 +126,15 @@ def run_fbpic(bunch, g_lens):
     # Number of discrete diagnostic snapshots in the lab frame
     N_lab_diag = int(T_lab_interact / dt_lab_diag_period)
 
-    # In boosted frame:
+    # Box length.
     L_box = zmax-zmin
-    L_box_boost, dz_boost = boost.copropag_length(
-        [L_box, dz], beta_object=v_window / ct.c)
-    dt_boost = dz_boost / ct.c
-    v_window_boosted, = boost.velocity([v_window])
-    L_plasma_boost, = boost.static_length([L_plasma])
 
     # Interaction time in boosted frame
     T_interact = boost.interaction_time(
         L_lab_interact, (zmax - zmin), v_window)
 
-    # Period of writing the cached backtransformed lab frame diagnostics to disk
-    # (in number of iterations)
+    # Period of writing the cached backtransformed lab frame diagnostics to
+    # disk (in number of iterations)
     write_period = 200
 
     track_bunch = False  # Whether to tag and track the particles of the bunch
@@ -213,7 +208,7 @@ def run_fbpic(bunch, g_lens):
         BoostedParticleDiagnostic(zmin, zmax, ct.c, dt_lab_diag_period,
                                   N_lab_diag, gamma_boost, write_period,
                                   sim.fld, select={'uz': [0., None]},
-                                  species={'bunch': sim.ptcl[2]}, 
+                                  species={'bunch': sim.ptcl[2]},
                                   comm=sim.comm)
     ]
     # Number of iterations to perform

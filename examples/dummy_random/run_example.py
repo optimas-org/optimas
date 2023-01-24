@@ -9,7 +9,7 @@ def analyze_simulation(simulation_directory, output_params):
     dictionary of output parameters."""
     # Read back result from file
     with open('result.txt') as f:
-        result = float( f.read() )
+        result = float(f.read())
     # Fill in output parameters.
     output_params['f'] = result
     return output_params

@@ -17,7 +17,7 @@ def get_emittance(ts, t):
 
 
 def analyze_simulation(simulation_directory, output_params):
-    """    
+    """
     Define/calculate the objective function 'f' as well as the diagnostic
     quantities listed as `analyzed_parameters` in the generator.
     """

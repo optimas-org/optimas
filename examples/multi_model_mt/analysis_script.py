@@ -3,7 +3,7 @@ import numpy as np
 import visualpic as vp
 
 
-def analyze_simulation( simulation_directory, output_params ):
+def analyze_simulation(simulation_directory, output_params):
 
     # Load simulation data.
     dc = vp.DataContainer(
@@ -27,14 +27,14 @@ def analyze_simulation( simulation_directory, output_params ):
     # Calculate relevant quantities.
     q_tot = np.abs(np.sum(q)) * 1e12  # pC
     q_ref = 10  # pC
-    med, mad = weighted_mad(pz* 0.511, q)
+    med, mad = weighted_mad(pz * 0.511, q)
     mad_rel = mad/med
-    med *= 1e-3 # GeV
+    med *= 1e-3  # GeV
     mad_rel_ref = 1e-2
 
     # Calculate value of objective function.
     f = np.log(med * q_tot / q_ref / (mad_rel / mad_rel_ref))
-    
+
     # Fill output dictionary.
     output_params['f'] = -f
     output_params['charge'] = q_tot
@@ -48,7 +48,7 @@ def analyze_simulation( simulation_directory, output_params ):
 
 
 def weighted_mad(x, w):
-    med = weighted_median(x,w)
+    med = weighted_median(x, w)
     mad = weighted_median(np.abs(x-med), w)
     return med, mad
 
@@ -69,7 +69,7 @@ def weighted_median(data, weights):
     quantile_1D : float
         The output value.
     """
-    quantile=.5
+    quantile = .5
     # Check the data
     if not isinstance(data, np.matrix):
         data = np.asarray(data)
@@ -92,7 +92,7 @@ def weighted_median(data, weights):
     # Compute the auxiliary arrays
     Sn = np.cumsum(sorted_weights)
     # TODO: Check that the weights do not sum zero
-    #assert Sn != 0, "The sum of the weights must not be zero"
+    # assert Sn != 0, "The sum of the weights must not be zero"
     Pn = (Sn-0.5*sorted_weights)/Sn[-1]
     # Get the value of the weighted median
     return np.interp(quantile, Pn, sorted_data)

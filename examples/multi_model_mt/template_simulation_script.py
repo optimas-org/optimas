@@ -4,8 +4,6 @@ from wake_t import GaussianPulse, PlasmaStage, ParticleBunch
 import aptools.plasma_accel.general_equations as ge
 from bunch_utils import trapezoidal_bunch
 from fbpic.main import Simulation
-# from fbpic.openpmd_diag import (
-#     BackTransformedFieldDiagnostic, BackTransformedParticleDiagnostic)
 from custom_fld_diags import BackTransformedFieldDiagnostic
 from custom_ptcl_diags import BackTransformedParticleDiagnostic
 from fbpic.lpa_utils.boosted_frame import BoostConverter
@@ -72,7 +70,6 @@ def run_simulation():
     p_rmax = 2.5*w0_laser
 
     # Box lenght.
-    l_p = ge.plasma_wavelength(n_p_plateau*1e-6)
     l_box = dz_lb + 90e-6
 
     # Number of diagnostics
@@ -93,7 +90,7 @@ def determine_laser_a0(ene, tau_fwhm, w0, lambda0):
     k0 = 2. * np.pi / lambda0  # Laser wavenumber
     PA = ct.epsilon_0 * ct.c**5 * ct.m_e**2 / ct.e**2  # Power constant
     P0 = ene / (np.sqrt(2 * np.pi) * (tau / 2))
-    i0 = P0 / ((np.pi / 2)* w0**2)
+    i0 = P0 / ((np.pi / 2) * w0**2)
     a0 = np.sqrt(i0 / (PA * k0**2 / 2))
     return a0
 
@@ -104,7 +101,7 @@ def density_profile(z):
     # Make zero before plateau
     n = np.where(z < 0, 0, n)
     # Make zero after plateau
-    n = np.where( z >= l_plateau, 0, n)
+    n = np.where(z >= l_plateau, 0, n)
     # Return absolute density
     return n * n_p_plateau
 
@@ -112,7 +109,7 @@ def density_profile(z):
 def run_wake_t(
         a0, w0, tau_fwhm, lambda0, bunch, n_p, l_plasma, pc, p_rmax, dz_lb,
         l_box, n_out):
-    
+
     # Create laser.
     laser = GaussianPulse(
         xi_c=0., l_0=lambda0, w_0=w0, a_0=a0, tau=tau_fwhm, z_foc=0.)
@@ -158,14 +155,15 @@ def run_fbpic(
 
     # The laser (Gaussian)
     lambda0 = 0.8e-6    # Laser wavelength
-    tau = tau_fwhm / np.sqrt(2. * np.log(2))  # Laser duration (2 sigmas) in intensity
+    # Laser duration (2 sigmas) in intensity
+    tau = tau_fwhm / np.sqrt(2. * np.log(2))
     ctau = tau * ct.c
 
     # The simulation box
     zmin = -l_box      # Left  edge of the simulation box (meters)
     zmax = 0.e-6       # Right edge of the simulation box (meters)
     rmax = w0 * 4
-    dz_adv = lambda0 / 40. /2  # Advised longitudinal resolution
+    dz_adv = lambda0 / 40. / 2  # Advised longitudinal resolution
     Nz_adv = int(l_box / dz_adv)
     Nz = Nz_adv     # Number of gridpoints along z
     Nm = 3            # Number of modes used
@@ -196,34 +194,35 @@ def run_fbpic(
 
     # The interaction length of the simulation (meters)
     L_lab_interact = l_plasma
-    # Interaction time (seconds) (to calculate number of PIC iterations)
-    T_lab_interact = (L_lab_interact + (zmax - zmin)) / v_window
 
+    # Duration of plasma interaction (i.e. the time it takes for the moving
+    # window to slide across the plasma)
     T_lab_interact_plasma = L_lab_interact / v_window
-    # (i.e. the time it takes for the moving window to slide across the plasma)
 
     # Number of discrete diagnostic snapshots in the lab frame
     N_lab_diag = n_out
 
     # data dumping period in dt units:
-    dt_lab_diag_period = T_lab_interact_plasma/(N_lab_diag-1)  # Period of the diagnostics (seconds)
+    dt_lab_diag_period = T_lab_interact_plasma / \
+        (N_lab_diag-1)  # Period of the diagnostics (seconds)
 
     # In boosted frame:
     v_window_boosted, = boost.velocity([v_window])
 
     # Interaction time in boosted frame
-    T_interact = boost.interaction_time( L_lab_interact, (zmax - zmin), v_window)
+    T_interact = boost.interaction_time(
+        L_lab_interact, (zmax - zmin), v_window)
 
-    # Period of writing the cached backtransformed lab frame diagnostics to disk
-    # (in number of iterations)
+    # Period of writing the cached backtransformed lab frame diagnostics to
+    # disk (in number of iterations)
     write_period = 200
 
     # Density function
-    def dens_func( z, r):
+    def dens_func(z, r):
         z_lab = z * gamma_boost
         n = density_profile(z_lab) / n_p
         n = n * (1. + pc * r**2)
-        return(n)
+        return (n)
 
     # External bunch
     if bunch is not None:
@@ -239,14 +238,14 @@ def run_fbpic(
         n_order=n_order, use_cuda=use_cuda,
         boundaries={'z': 'open', 'r': 'reflective'},
         particle_shape='cubic')
-    
+
     # Add the Helium ions (full pre-ionized: levels 1 and 2)
-    plasma_ions = sim.add_new_species(
+    sim.add_new_species(
         q=ct.e, m=ct.m_p, n=n_p, dens_func=dens_func, p_nz=p_nz, p_nr=p_nr,
         p_nt=p_nt, p_zmin=p_zmin, p_rmax=p_rmax)
 
     # Plasma electrons: coming from helium
-    plasma_elec = sim.add_new_species(
+    sim.add_new_species(
         q=-ct.e, m=ct.m_e, n=n_p, dens_func=dens_func, p_nz=p_nz, p_nr=p_nr,
         p_nt=p_nt, p_zmin=p_zmin, p_rmax=p_rmax)
 
@@ -260,7 +259,7 @@ def run_fbpic(
     add_laser(sim, a0, w0, ctau, z0, lambda0=lambda0, zf=0.,
               gamma_boost=boost.gamma0, method='antenna', z0_antenna=0.,
               cep_phase=np.pi)
-    
+
     # Configure the moving window
     sim.set_moving_window(v=v_window_boosted)
 
@@ -279,13 +278,17 @@ def run_fbpic(
         BackTransformedFieldDiagnostic(
             zmin, zmax, v_window, T_start_lab, dt_lab_diag_period, N_lab_diag,
             boost.gamma0, fieldtypes=['E', 'B', 'rho'], period=write_period,
-            fldobject=sim.fld, comm=sim.comm, write_dir=write_dir)]
+            fldobject=sim.fld, comm=sim.comm, write_dir=write_dir
+        )
+    ]
     if bunch is not None:
         sim.diags += [
-        BackTransformedParticleDiagnostic(
-            zmin, zmax, v_window, T_start_lab, dt_lab_diag_period, N_lab_diag,
-            boost.gamma0, write_period, sim.fld, species={'bunch':sim.ptcl[2]},
-            comm=sim.comm, write_dir=write_dir)
+            BackTransformedParticleDiagnostic(
+                zmin, zmax, v_window, T_start_lab, dt_lab_diag_period,
+                N_lab_diag, boost.gamma0, write_period, sim.fld,
+                species={'bunch': sim.ptcl[2]},
+                comm=sim.comm, write_dir=write_dir
+            )
         ]
 
     # Number of iterations to perform
