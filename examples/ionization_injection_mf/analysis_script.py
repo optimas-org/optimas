@@ -2,20 +2,11 @@
 Contains the function that analyzes the simulation results,
 after the simulation was run.
 """
-# This must include all quantities calculated by this script, except from f
-# These parameters are not used by libEnsemble, but they provide additional
-# information / diagnostic for the user
-# The third parameter is the shape of the corresponding array
-analyzed_quantities = [
-    ('energy_med', float, (1,)),
-    # Final average energy, in MeV.
-    ('energy_mad', float, (1,)),
-    # Final beam charge.
-    ('charge', float, (1,)),
-]
-
+import os
+from openpmd_viewer.addons import LpaDiagnostics
 import numpy as np
 from scipy.constants import e
+
 
 def weighted_median(data, weights):
     """
@@ -61,16 +52,14 @@ def weighted_median(data, weights):
     # Get the value of the weighted median
     return np.interp(quantile, Pn, sorted_data)
 
+
 def weighted_mad(x, w):
     med = weighted_median(x,w)
     mad = weighted_median(np.abs(x-med), w)
     return med, mad
 
-def analyze_simulation( simulation_directory, libE_output ):
 
-    import os
-    from openpmd_viewer.addons import LpaDiagnostics
-
+def analyze_simulation(simulation_directory, output_params):
     # Define/calculate the objective function 'f'
     # as well as the diagnostic quantities listed in `analyzed_quantities` above
     d = LpaDiagnostics( os.path.join(simulation_directory, 'diags/hdf5') )
@@ -78,13 +67,13 @@ def analyze_simulation( simulation_directory, libE_output ):
     uz,w = d.get_particle(['uz','w'], iteration=1,
                 select={'uz':[10,None],'x':[-15e-6,15e-6],'y':[-15e-6,15e-6]})
     q = w.sum()*e*1e12
-    if len(w) < 2: # Need at least two particles to calculate the energy spread
-        libE_output['f'] = 0
+    if len(w) < 2: # Need at least 2 particles to calculate energy spread
+        output_params['f'] = 0
     else:
         med, mad = weighted_mad(uz/2, w)
-        libE_output['f'] = -np.sqrt(q)*med/mad/100
-        libE_output['charge'] = q
-        libE_output['energy_med'] = med
-        libE_output['energy_mad'] = mad
+        output_params['f'] = -np.sqrt(q)*med/mad/100
+        output_params['charge'] = q
+        output_params['energy_med'] = med
+        output_params['energy_mad'] = mad
 
-    return libE_output
+    return output_params

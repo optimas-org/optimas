@@ -56,7 +56,7 @@ Lmax = np.amax(dens_z+zmax-zmin)
 # The simulation timestep
 dt = min( rmax/(2*gamma_boost*Nr), (zmax-zmin)/Nz/c )  # Timestep (seconds)
 
-n_order = -1
+n_order = 32
 
 boost = BoostConverter(gamma_boost)
 

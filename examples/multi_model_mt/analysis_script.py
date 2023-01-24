@@ -3,16 +3,7 @@ import numpy as np
 import visualpic as vp
 
 
-analyzed_quantities = [
-    ('energy_med', float, (1,)),
-    # Final average energy, in MeV.
-    ('energy_mad', float, (1,)),
-    # Final beam charge.
-    ('charge', float, (1,)),
-]
-
-
-def analyze_simulation( simulation_directory, libE_output ):
+def analyze_simulation( simulation_directory, output_params ):
 
     # Load simulation data.
     dc = vp.DataContainer(
@@ -45,15 +36,15 @@ def analyze_simulation( simulation_directory, libE_output ):
     f = np.log(med * q_tot / q_ref / (mad_rel / mad_rel_ref))
     
     # Fill output dictionary.
-    libE_output['f'] = -f
-    libE_output['charge'] = q_tot
-    libE_output['energy_med'] = med
-    libE_output['energy_mad'] = mad
+    output_params['f'] = -f
+    output_params['charge'] = q_tot
+    output_params['energy_med'] = med
+    output_params['energy_mad'] = mad
 
     # For convenience, save value of objective to text file.
     np.savetxt('f.txt', np.array([f]))
 
-    return libE_output
+    return output_params
 
 
 def weighted_mad(x, w):

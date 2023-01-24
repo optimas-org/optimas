@@ -1,6 +1,6 @@
 import numpy as np
 from wake_t.utilities.bunch_generation import get_gaussian_bunch_from_twiss
-from wake_t.beamline_elements import PlasmaLens
+from wake_t.beamline_elements import ActivePlasmaLens
 from aptools.data_analysis.beam_diagnostics import twiss_parameters
 
 
@@ -20,7 +20,7 @@ def run_simulation(g_lens):
         n_part=n_part)
 
     # Define plasma lens.
-    p_lens = PlasmaLens(3e-2, g_lens, n_out=2)
+    p_lens = ActivePlasmaLens(3e-2, g_lens, n_out=2)
 
     # Perform tracking.
     p_lens.track(bunch)
@@ -29,8 +29,7 @@ def run_simulation(g_lens):
     a_x, b_x, g_x = twiss_parameters(bunch.x, bunch.px, bunch.pz, w=bunch.q)
 
     # Save parameter to file for `analysis_script.py`.
-    file_name = 'a_x_abs-{:0.3f}'.format(g_lens)
-    np.save(file_name, np.abs(a_x))
+    np.save('a_x_abs', np.abs(a_x))
 
 
 if __name__ == '__main__':

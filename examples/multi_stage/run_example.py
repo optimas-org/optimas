@@ -1,17 +1,65 @@
-from libensemble.tools import parse_args
-from libe_opt.ensemble_runner import run_ensemble
+"""
+This example optimizes an multistage setup using Warp-X.
 
-from varying_parameters import varying_parameters
-from analysis_script import analyze_simulation, analyzed_quantities
+The Warp-X simulations are performed using the template defined in the
+`template_simulation_script` file.
+
+In addition to the objective `f`, four additional parameters
+are analyzed for each simulation and included in the optimization
+history. The calculation of `f` and the additional parameters is performed
+in the `analyze_simulation` function, which for convenience is here defined in
+the `analysis_script.py` file.
+"""
+from libe_opt.core import Parameter, VaryingParameter, Objective
+from libe_opt.generators import AxSingleFidelityGenerator
+from libe_opt.evaluators import TemplateEvaluator
+from libe_opt.explorations import Exploration
+
+from analysis_script import analyze_simulation
 
 
-gen_type = 'bo'
-sim_max = 1000
-run_async = True
-nworkers, is_master, libE_specs, _ = parse_args()
+# Create varying parameters and objectives.
+var_1 = VaryingParameter('adjust_factor', 0.7, 1.05)
+var_2 = VaryingParameter('zlen', 3., 7.5)
+obj = Objective('f', minimize=True)
 
-run_ensemble(
-    nworkers, sim_max, is_master, gen_type,
-    analyzed_params=analyzed_quantities, var_params=varying_parameters,
+
+# Define additional parameters to analyze.
+energy_std = Parameter('energy_std')
+energy_avg = Parameter('energy_avg')
+charge = Parameter('charge')
+emittance = Parameter('emittance')
+
+
+# Create generator.
+gen = AxSingleFidelityGenerator(
+    varying_parameters=[var_1, var_2],
+    objectives=[obj],
+    analyzed_parameters=[energy_std, energy_avg, charge, emittance],
+    n_init=4
+)
+
+
+# Create evaluator.
+ev = TemplateEvaluator(
+    sim_template='template_simulation_script',
     analysis_func=analyze_simulation,
-    libE_specs=libE_specs, run_async=run_async)
+    executable='warpx',
+    n_gpus=1
+)
+
+
+# Create exploration.
+exp = Exploration(
+    generator=gen,
+    evaluator=ev,
+    max_evals=1000,
+    sim_workers=2,
+    run_async=True
+)
+
+
+# To safely perform exploration, run it in the block below (this is needed
+# for some flavours of multiprocessing, namely spawn and forkserver)
+if __name__ == '__main__':
+    exp.run()
