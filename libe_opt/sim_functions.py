@@ -85,7 +85,7 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
                             num_nodes=num_nodes,
                             procs_per_node=cores_per_node,
                             extra_args=extra_args,
-                            app_args=sim_script,
+                            app_args=app_args,
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_start=True)
@@ -93,7 +93,7 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         task = exctr.submit(app_name=app_name,
                             num_nodes=num_nodes,
                             procs_per_node=cores_per_node,
-                            app_args=sim_script,
+                            app_args=app_args,
                             stdout='out.txt',
                             stderr='err.txt',
                             wait_on_start=True)
