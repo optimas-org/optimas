@@ -10,10 +10,10 @@ The calculation of the objective `f` is performed in the `analyze_simulation`
 function, which for convenience is here defined in the `analysis_script.py`
 file.
 """
-from libe_opt.core import VaryingParameter, Objective, Task
-from libe_opt.generators import AxMultitaskGenerator
-from libe_opt.evaluators import TemplateEvaluator, MultitaskEvaluator
-from libe_opt.explorations import Exploration
+from optimas.core import VaryingParameter, Objective, Task
+from optimas.generators import AxMultitaskGenerator
+from optimas.evaluators import TemplateEvaluator, MultitaskEvaluator
+from optimas.explorations import Exploration
 
 from analysis_script import analyze_simulation
 

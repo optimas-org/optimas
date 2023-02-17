@@ -86,6 +86,6 @@ You can also resume a previous `libE` optimization (of the exact same problem), 
 
 You can easily postprocess the optimization in a Jupyter notebook by using:
 ```
-from libe_opt.post_processing import PostProcOptimization
+from optimas.post_processing import PostProcOptimization
 pp = PostProcOptimization('path/to/your/optimization')
 ```

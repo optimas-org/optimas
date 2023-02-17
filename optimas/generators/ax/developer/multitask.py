@@ -17,8 +17,8 @@ from ax.core.generator_run import GeneratorRun
 from ax.storage.json_store.save import save_experiment
 from ax.storage.metric_registry import register_metric
 
-from libe_opt.generators.ax.base import AxGenerator
-from libe_opt.core import TrialParameter
+from optimas.generators.ax.base import AxGenerator
+from optimas.core import TrialParameter
 from .ax_metric import AxMetric
 
 

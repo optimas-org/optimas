@@ -1,7 +1,7 @@
-from libe_opt.core import VaryingParameter, Objective
-from libe_opt.generators import LineSamplingGenerator
-from libe_opt.evaluators import TemplateEvaluator
-from libe_opt.explorations import Exploration
+from optimas.core import VaryingParameter, Objective
+from optimas.generators import LineSamplingGenerator
+from optimas.evaluators import TemplateEvaluator
+from optimas.explorations import Exploration
 
 
 def analyze_simulation(simulation_directory, output_params):

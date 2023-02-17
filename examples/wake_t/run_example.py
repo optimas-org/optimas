@@ -9,10 +9,10 @@ The calculation of the objective `f` is performed in the `analyze_simulation`
 function, which for convenience is here defined in the `analysis_script.py`
 file.
 """
-from libe_opt.core import VaryingParameter, Objective
-from libe_opt.generators import AxSingleFidelityGenerator
-from libe_opt.evaluators import TemplateEvaluator
-from libe_opt.explorations import Exploration
+from optimas.core import VaryingParameter, Objective
+from optimas.generators import AxSingleFidelityGenerator
+from optimas.evaluators import TemplateEvaluator
+from optimas.explorations import Exploration
 
 from analysis_script import analyze_simulation
 

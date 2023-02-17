@@ -1,9 +1,9 @@
 import os
 
-from libe_opt.explorations import Exploration
-from libe_opt.generators import RandomSamplingGenerator
-from libe_opt.evaluators import TemplateEvaluator
-from libe_opt.core import VaryingParameter, Objective
+from optimas.explorations import Exploration
+from optimas.generators import RandomSamplingGenerator
+from optimas.evaluators import TemplateEvaluator
+from optimas.core import VaryingParameter, Objective
 
 
 def analysis_func(sim_dir, output_params):

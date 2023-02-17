@@ -2,7 +2,7 @@ import os
 
 from libensemble.executors.executor import Executor
 
-from libe_opt.sim_functions import run_template_simulation
+from optimas.sim_functions import run_template_simulation
 from .base import Evaluator
 
 

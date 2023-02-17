@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-from libe_opt.__version__ import __version__
+from optimas.__version__ import __version__
 
 # Read long description
 with open("README.md", "r") as fh:
