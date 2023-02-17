@@ -1,9 +1,9 @@
 <p align="center">
-    <img width="400" src="https://user-images.githubusercontent.com/20479420/219680583-34ac9525-7715-4e2a-b4fe-74848e9f59b2.png" alt="optimas logo"/>
+    <img width="450" src="https://user-images.githubusercontent.com/20479420/219680583-34ac9525-7715-4e2a-b4fe-74848e9f59b2.png" alt="optimas logo"/>
 </p>
 <!-- <hr/> -->
 
-# Optimization and exploration at scale, powered by [libEnsemble](https://libensemble.readthedocs.io/)
+# Optimization at scale, powered by [libEnsemble](https://libensemble.readthedocs.io/)
 
 ## Installing
 
@@ -18,14 +18,14 @@ pip install mpi4py
 ```
 which will link to the existing MPI on your system.
 
-Alternatively, if installing in a local computer, `mpi4py` can also be installed from `conda`
+Alternatively, if installing on a local computer, `mpi4py` can also be installed from `conda`
 ```
 conda install -c conda-forge mpi4py
 ```
 
 ## Optimization with PIC simulations
 
-Additonal instructions to install FBPIC and WarpX on different systems.
+If using optimas with PIC codes such as FBPIC or WarpX, follow these instructions to install them on different systems.
 
 ### On Summit
 
@@ -86,19 +86,19 @@ output to extract the objective function(s) and other metrics.
 
 The following example assumes that the template script is called
 `template_simulation_script.py`, which takes 2 input parameters `x0`, `x1` to
-optimize a single objective `f` using Baysian optimization.
+minimize a single objective `f` using Baysian optimization.
 The analysis function `analyze_simulation`
 can also be defined in a separate file.
 
 ```python
-from libe_opt.core import VaryingParameter, Objective
-from libe_opt.generators import AxSingleFidelityGenerator
-from libe_opt.evaluators import TemplateEvaluator
-from libe_opt.explorations import Exploration
+from optimas.core import VaryingParameter, Objective
+from optimas.generators import AxSingleFidelityGenerator
+from optimas.evaluators import TemplateEvaluator
+from optimas.explorations import Exploration
 
 
 def analyze_simulation(simulation_directory, output_params):
-    """Analyzes simulation output fills in output parameters."""
+    """Analyze simulation output fill in output parameters."""
     # Read simulation data to determine `result`
     ...
     # Fill in output parameters.
