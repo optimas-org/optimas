@@ -8,7 +8,7 @@
 #SBATCH --gpus-per-task=1
 
 module load python
-source activate libE_opt
+source activate optimas
 
 export MPICH_GPU_SUPPORT_ENABLED=0
 export FBPIC_ENABLE_GPUDIRECT=0

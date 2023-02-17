@@ -14,8 +14,8 @@ pip install -r requirements.txt
 
 Then
 ```
-git clone https://github.com/RemiLehe/libE_opt.git
-cd libE_opt
+git clone https://github.com/optimas-org/optimas.git
+cd 
 pip install .
 ```
 
@@ -32,21 +32,21 @@ Then install other dependencies:
 ```
 source activate $SCRATCH/fbpic_env
 pip install libensemble
-git clone https://github.com/RemiLehe/libE_opt.git
-cd libE_opt
+git clone https://github.com/optimas-org/optimas.git
+cd 
 pip install .
 source deactivate
 ```
 
 #### For WarpX simulations
 ```
-conda create -n libE_opt
-source activate libE_opt
+conda create -n 
+source activate 
 conda install -c conda-forge mamba
 mamba install -c conda-forge openpmd-viewer openpmd-api pandas botorch ax-platform
 pip install libensemble
-git clone https://github.com/RemiLehe/libE_opt.git
-cd libE_opt
+git clone https://github.com/optimas-org/optimas.git
+cd 
 pip install .
 ```
 
@@ -63,8 +63,8 @@ pip install -r requirements.txt
 
 `cd` into your `$SCRATCH` folder, and create a dedicated directory. Then run:
 ```
-git clone https://github.com/RemiLehe/libE_opt.git
-cd libE_opt
+git clone https://github.com/optimas-org/optimas.git
+cd 
 pip install .
 ```
 
@@ -86,6 +86,6 @@ You can also resume a previous `libE` optimization (of the exact same problem), 
 
 You can easily postprocess the optimization in a Jupyter notebook by using:
 ```
-from libe_opt.post_processing import PostProcOptimization
+from optimas.post_processing import PostProcOptimization
 pp = PostProcOptimization('path/to/your/optimization')
 ```

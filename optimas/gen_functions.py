@@ -5,7 +5,7 @@ from libensemble.message_numbers import (
 from libensemble.tools.persistent_support import PersistentSupport
 from libensemble.resources.resources import Resources
 
-from libe_opt.core import Evaluation
+from optimas.core import Evaluation
 
 
 def persistent_generator(H, persis_info, gen_specs, libE_info):

@@ -7,7 +7,7 @@ from libensemble.resources.resources import Resources
 from libensemble.executors.executor import Executor
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
-from libe_opt.utils.logger import get_logger
+from optimas.utils.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -1,8 +1,8 @@
 import os
 
-from libe_opt.utils.logger import get_logger
-from libe_opt.gen_functions import persistent_generator
-from libe_opt.core import Objective, Trial, Evaluation
+from optimas.utils.logger import get_logger
+from optimas.gen_functions import persistent_generator
+from optimas.core import Objective, Trial, Evaluation
 
 logger = get_logger(__name__)
 

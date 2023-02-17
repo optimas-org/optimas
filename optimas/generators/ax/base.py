@@ -1,6 +1,6 @@
 import torch
 
-from libe_opt.generators.base import Generator
+from optimas.generators.base import Generator
 
 
 class AxGenerator(Generator):

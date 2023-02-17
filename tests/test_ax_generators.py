@@ -1,10 +1,10 @@
 import numpy as np
 
-from libe_opt.explorations import Exploration
-from libe_opt.generators import (
+from optimas.explorations import Exploration
+from optimas.generators import (
     AxSingleFidelityGenerator, AxMultiFidelityGenerator, AxMultitaskGenerator)
-from libe_opt.evaluators import FunctionEvaluator, MultitaskEvaluator
-from libe_opt.core import VaryingParameter, Objective, Task
+from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
+from optimas.core import VaryingParameter, Objective, Task
 
 
 def eval_func_sf(input_params, output_params):

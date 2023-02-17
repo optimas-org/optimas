@@ -1,4 +1,4 @@
-from libe_opt.sim_functions import run_function
+from optimas.sim_functions import run_function
 from .base import Evaluator
 
 

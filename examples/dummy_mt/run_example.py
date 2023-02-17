@@ -1,7 +1,7 @@
-from libe_opt.core import VaryingParameter, Objective, Task
-from libe_opt.generators import AxMultitaskGenerator
-from libe_opt.evaluators import TemplateEvaluator, MultitaskEvaluator
-from libe_opt.explorations import Exploration
+from optimas.core import VaryingParameter, Objective, Task
+from optimas.generators import AxMultitaskGenerator
+from optimas.evaluators import TemplateEvaluator, MultitaskEvaluator
+from optimas.explorations import Exploration
 
 
 def analyze_simulation(simulation_directory, output_params):

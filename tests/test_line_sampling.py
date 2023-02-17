@@ -3,10 +3,10 @@ import re
 import numpy as np
 import pytest
 
-from libe_opt.explorations import Exploration
-from libe_opt.generators import LineSamplingGenerator
-from libe_opt.evaluators import FunctionEvaluator
-from libe_opt.core import VaryingParameter, Objective
+from optimas.explorations import Exploration
+from optimas.generators import LineSamplingGenerator
+from optimas.evaluators import FunctionEvaluator
+from optimas.core import VaryingParameter, Objective
 
 
 def eval_func(input_params, output_params):

@@ -1,6 +1,6 @@
 import os
 
-from libe_opt.generators.ax.base import AxGenerator
+from optimas.generators.ax.base import AxGenerator
 
 
 class AxServiceGenerator(AxGenerator):

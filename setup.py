@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-from libe_opt.__version__ import __version__
+from optimas.__version__ import __version__
 
 # Read long description
 with open("README.md", "r") as fh:
@@ -13,7 +13,7 @@ def read_requirements():
 
 
 # Main setup command
-setup(name='libE_opt',
+setup(name='optimas',
       version=__version__,
       author='',
       author_email="",
