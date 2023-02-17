@@ -13,7 +13,7 @@ def read_requirements():
 
 
 # Main setup command
-setup(name='libE_opt',
+setup(name='optimas',
       version=__version__,
       author='',
       author_email="",
