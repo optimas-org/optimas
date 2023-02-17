@@ -1,17 +1,52 @@
-from libensemble.tools import parse_args
-from libe_opt.ensemble_runner import run_ensemble
+from libe_opt.core import VaryingParameter, Objective
+from libe_opt.generators import AxSingleFidelityGenerator
+from libe_opt.evaluators import TemplateEvaluator
+from libe_opt.explorations import Exploration
 
-from varying_parameters import varying_parameters
-from analysis_script import analyze_simulation, analyzed_quantities
+
+def analyze_simulation(simulation_directory, output_params):
+    """Function that analyzes the simulation output and fills in the
+    dictionary of output parameters."""
+    # Read back result from file
+    with open('result.txt') as f:
+        result = float(f.read())
+    # Fill in output parameters.
+    output_params['f'] = result
+    return output_params
 
 
-gen_type = 'bo'
-sim_max = 10
-run_async = True
-nworkers, is_master, libE_specs, _ = parse_args()
+# Create varying parameters and objectives.
+var_1 = VaryingParameter('x0', 0., 15.)
+var_2 = VaryingParameter('x1', 0., 15.)
+obj = Objective('f', minimize=True)
 
-run_ensemble(
-    nworkers, sim_max, is_master, gen_type,
-    analyzed_params=analyzed_quantities, var_params=varying_parameters,
-    analysis_func=analyze_simulation,
-    libE_specs=libE_specs, run_async=run_async)
+
+# Create generator.
+gen = AxSingleFidelityGenerator(
+    varying_parameters=[var_1, var_2],
+    objectives=[obj],
+    n_init=4
+)
+
+
+# Create evaluator.
+ev = TemplateEvaluator(
+    sim_template='template_simulation_script.py',
+    analysis_func=analyze_simulation
+)
+
+
+# Create exploration.
+exp = Exploration(
+    generator=gen,
+    evaluator=ev,
+    max_evals=10,
+    sim_workers=4,
+    run_async=True
+)
+
+
+# To safely perform exploration, run it in the block below (this is needed
+# for some flavours of multiprocessing, namely spawn and forkserver)
+if __name__ == '__main__':
+    exp.run()

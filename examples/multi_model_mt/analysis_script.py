@@ -3,16 +3,7 @@ import numpy as np
 import visualpic as vp
 
 
-analyzed_quantities = [
-    ('energy_med', float, (1,)),
-    # Final average energy, in MeV.
-    ('energy_mad', float, (1,)),
-    # Final beam charge.
-    ('charge', float, (1,)),
-]
-
-
-def analyze_simulation( simulation_directory, libE_output ):
+def analyze_simulation(simulation_directory, output_params):
 
     # Load simulation data.
     dc = vp.DataContainer(
@@ -36,28 +27,28 @@ def analyze_simulation( simulation_directory, libE_output ):
     # Calculate relevant quantities.
     q_tot = np.abs(np.sum(q)) * 1e12  # pC
     q_ref = 10  # pC
-    med, mad = weighted_mad(pz* 0.511, q)
+    med, mad = weighted_mad(pz * 0.511, q)
     mad_rel = mad/med
-    med *= 1e-3 # GeV
+    med *= 1e-3  # GeV
     mad_rel_ref = 1e-2
 
     # Calculate value of objective function.
     f = np.log(med * q_tot / q_ref / (mad_rel / mad_rel_ref))
-    
+
     # Fill output dictionary.
-    libE_output['f'] = -f
-    libE_output['charge'] = q_tot
-    libE_output['energy_med'] = med
-    libE_output['energy_mad'] = mad
+    output_params['f'] = -f
+    output_params['charge'] = q_tot
+    output_params['energy_med'] = med
+    output_params['energy_mad'] = mad
 
     # For convenience, save value of objective to text file.
     np.savetxt('f.txt', np.array([f]))
 
-    return libE_output
+    return output_params
 
 
 def weighted_mad(x, w):
-    med = weighted_median(x,w)
+    med = weighted_median(x, w)
     mad = weighted_median(np.abs(x-med), w)
     return med, mad
 
@@ -78,7 +69,7 @@ def weighted_median(data, weights):
     quantile_1D : float
         The output value.
     """
-    quantile=.5
+    quantile = .5
     # Check the data
     if not isinstance(data, np.matrix):
         data = np.asarray(data)
@@ -101,7 +92,7 @@ def weighted_median(data, weights):
     # Compute the auxiliary arrays
     Sn = np.cumsum(sorted_weights)
     # TODO: Check that the weights do not sum zero
-    #assert Sn != 0, "The sum of the weights must not be zero"
+    # assert Sn != 0, "The sum of the weights must not be zero"
     Pn = (Sn-0.5*sorted_weights)/Sn[-1]
     # Get the value of the weighted median
     return np.interp(quantile, Pn, sorted_data)

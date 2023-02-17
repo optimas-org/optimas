@@ -1,6 +1,5 @@
 # For simulation/analysis
 libensemble >= 0.9.2
 jinja2
-dragonfly-opt
 pandas
-ax-platform
+ax-platform >= 0.2.9

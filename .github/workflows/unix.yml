@@ -4,11 +4,10 @@ on: [push, pull_request]
 
 jobs:
   test:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7]
-        os: [ubuntu-20.04]
-    runs-on: ${{ matrix.os }}
+        python-version: [3.8]
 
     steps:
     - uses: actions/checkout@v2
@@ -32,42 +31,17 @@ jobs:
     - shell: bash -l {0}
       name: Install dependencies
       run: |
-        conda install -c conda-forge python=${{ matrix.python-version }} numpy mpi4py;
-        pip3 install pyflakes;
-        pip3 install ax-platform;
-        pip3 install libensemble;
-        pip3 install -r requirements.txt;
+        conda install mpich
+        conda install mpi4py
+        pip install flake8 pytest
+        pip install -r requirements.txt
         python setup.py install
     - shell: bash -l {0}
-      name: pyflakes
-      run: python -m pyflakes libe_opt
-    - shell: bash -l {0}
-      name: test dummy example
+      name: Lint with flake8
       run: |
-        cd optimization_folder;
-        ./create_new_optimization.py --name test --from dummy --machine local --n_sim_workers 2;
-        cd test; python run_example.py --comms local --nworkers 3
+        flake8 ./libe_opt
+        flake8 ./examples --extend-ignore F821 --exclude custom_fld_diags.py,custom_ptcl_diags.py
     - shell: bash -l {0}
-      name: test dummy_mf example
+      name: Run unit tests
       run: |
-        cd optimization_folder;
-        ./create_new_optimization.py --name test_mf --from dummy_mf --machine local --n_sim_workers 2;
-        cd test_mf; python run_example.py --comms local --nworkers 3
-    - shell: bash -l {0}
-      name: test dummy_mf_disc example
-      run: |
-        cd optimization_folder;
-        ./create_new_optimization.py --name test_mf_disc --from dummy_mf_disc --machine local --n_sim_workers 2;
-        cd test_mf_disc; python run_example.py --comms local --nworkers 3
-    - shell: bash -l {0}
-      name: test dummy_ax example
-      run: |
-        cd optimization_folder;
-        ./create_new_optimization.py --name test_dummy_ax --from dummy_ax --machine local --n_sim_workers 2;
-        cd test_dummy_ax; python run_example.py --comms local --nworkers 3
-    - shell: bash -l {0}
-      name: test dummy_mt example
-      run: |
-        cd optimization_folder;
-        ./create_new_optimization.py --name test_dummy_mt --from dummy_mt --machine local --n_sim_workers 2;
-        cd test_dummy_mt; python run_example.py --comms local --nworkers 3
+        python -m pytest tests/

@@ -5,12 +5,12 @@ from scipy.constants import c
 def gaussian_bunch(q_tot, n_part, gamma0, s_g, s_z, emit_x, s_x,
                    zf=0., tf=0, x_c=0.):
     n_part = int(n_part)
-    
+
     np.random.seed(42)
     z = zf + s_z * np.random.standard_normal(n_part)
     x = x_c + s_x * np.random.standard_normal(n_part)
     y = s_x * np.random.standard_normal(n_part)
-        
+
     gamma = np.random.normal(gamma0, s_g, n_part)
 
     s_ux = emit_x / s_x
@@ -27,7 +27,7 @@ def gaussian_bunch(q_tot, n_part, gamma0, s_g, s_z, emit_x, s_x,
     q = np.ones(n_part) * q_tot / n_part
 
     return x, y, z, ux, uy, uz, q
-    
+
 
 def flattop_bunch(q_tot, n_part, gamma0, s_g, length, s_z, emit_x, s_x,
                   emit_y, s_y, zf=0., tf=0, x_c=0., y_c=0):
@@ -45,13 +45,13 @@ def flattop_bunch(q_tot, n_part, gamma0, s_g, length, s_z, emit_x, s_x,
     z = np.concatenate((z_gaus[np.where(z_gaus <= 0)],
                         z_plat,
                         z_gaus[np.where(z_gaus > 0)] + length))
-       
+
     z = z - length / 2. + zf  # shift to final position
-    
+
     n_part = len(z)
     x = x_c + s_x * np.random.standard_normal(n_part)
     y = y_c + s_y * np.random.standard_normal(n_part)
-        
+
     gamma = np.random.normal(gamma0, s_g, n_part)
 
     s_ux = emit_x / s_x
@@ -66,7 +66,7 @@ def flattop_bunch(q_tot, n_part, gamma0, s_g, length, s_z, emit_x, s_x,
         x = x - ux * c * tf / gamma
         y = y - uy * c * tf / gamma
         z = z - uz * c * tf / gamma
-    
+
     q = np.ones(n_part) * q_tot / n_part
 
     return x, y, z, ux, uy, uz, q

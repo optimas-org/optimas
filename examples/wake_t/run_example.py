@@ -1,18 +1,53 @@
-from libensemble.tools import parse_args
-from libe_opt.ensemble_runner import run_ensemble
+"""
+This example optimizes the focusing strength of an active plasma lens using
+Wake-T simulations.
 
-from varying_parameters import varying_parameters
-from analysis_script import analyze_simulation, analyzed_quantities
+The Wake-T simulations are performed using the template defined in the
+`template_simulation_script.py` file.
+
+The calculation of the objective `f` is performed in the `analyze_simulation`
+function, which for convenience is here defined in the `analysis_script.py`
+file.
+"""
+from libe_opt.core import VaryingParameter, Objective
+from libe_opt.generators import AxSingleFidelityGenerator
+from libe_opt.evaluators import TemplateEvaluator
+from libe_opt.explorations import Exploration
+
+from analysis_script import analyze_simulation
 
 
-gen_type = 'bo'
-sim_max = 10
-run_async = True
-nworkers, is_master, libE_specs, _ = parse_args()
+# Create varying parameters and objectives.
+var_1 = VaryingParameter('g_lens', 100., 1000.)
+obj = Objective('f', minimize=True)
 
 
-run_ensemble(
-    nworkers, sim_max, is_master, gen_type,
-    analyzed_params=analyzed_quantities, var_params=varying_parameters,
+# Create generator.
+gen = AxSingleFidelityGenerator(
+    varying_parameters=[var_1],
+    objectives=[obj],
+    n_init=12
+)
+
+
+# Create evaluator.
+ev = TemplateEvaluator(
+    sim_template='template_simulation_script.py',
     analysis_func=analyze_simulation,
-    libE_specs=libE_specs, run_async=run_async)
+)
+
+
+# Create exploration.
+exp = Exploration(
+    generator=gen,
+    evaluator=ev,
+    max_evals=100,
+    sim_workers=12,
+    run_async=False
+)
+
+
+# To safely perform exploration, run it in the block below (this is needed
+# for some flavours of multiprocessing, namely spawn and forkserver)
+if __name__ == '__main__':
+    exp.run()
