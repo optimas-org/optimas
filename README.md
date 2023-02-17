@@ -78,7 +78,7 @@ pip install .
 
 ## Usage
 
-A typical use case for `optimas` is to perform an optimization where each
+A typical use case for optimas is to perform an optimization where each
 evaluation is a numerical simulation. In this case, a simulation
 script templated with `jinja2` syntax needs to be provided. In addition,
 an analysis function needs to be defined that reads the simulation
@@ -111,7 +111,6 @@ var_1 = VaryingParameter('x0', 0., 15.)
 var_2 = VaryingParameter('x1', 0., 15.)
 obj = Objective('f', minimize=True)
 
-
 # Create generator.
 gen = AxSingleFidelityGenerator(
     varying_parameters=[var_1, var_2],
@@ -119,13 +118,11 @@ gen = AxSingleFidelityGenerator(
     n_init=4
 )
 
-
 # Create evaluator.
 ev = TemplateEvaluator(
     sim_template='template_simulation_script.py',
     analysis_func=analyze_simulation
 )
-
 
 # Create exploration.
 exp = Exploration(
@@ -135,7 +132,6 @@ exp = Exploration(
     sim_workers=4,
     run_async=True
 )
-
 
 # To safely perform exploration, run it in the block below (this is needed
 # for some flavours of multiprocessing, namely spawn and forkserver)
