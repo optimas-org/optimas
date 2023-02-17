@@ -82,11 +82,11 @@ A typical use case for optimas is to perform an optimization where each
 evaluation is a numerical simulation. In this case, a simulation
 script templated with `jinja2` syntax needs to be provided. In addition,
 an analysis function needs to be defined that reads the simulation
-output to extract the objective function(s) and other metrics.
+output and extracts the objective function(s) and other metrics.
 
 The following example assumes that the template script is called
 `template_simulation_script.py`, which takes 2 input parameters `x0`, `x1` to
-minimize a single objective `f` using Baysian optimization.
+minimize a single objective `f` using Bayesian optimization.
 The analysis function `analyze_simulation`
 can also be defined in a separate file.
 
@@ -140,10 +140,10 @@ if __name__ == '__main__':
 ```
 
 Check the [examples](https://github.com/optimas-org/optimas/tree/main/examples)
- folder for more details.
+folder for more details.
 
 
-You can easily postprocess the optimization in a Jupyter notebook by using:
+You can easily post-process the optimization in a Jupyter notebook by using:
 ```python
 from optimas.post_processing import PostProcOptimization
 pp = PostProcOptimization('path/to/your/optimization')
