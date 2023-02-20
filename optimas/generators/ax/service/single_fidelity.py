@@ -13,13 +13,16 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
 
     def __init__(self, varying_parameters, objectives=None,
                  analyzed_parameters=None, n_init=4, use_cuda=False,
-                 save_model=True, model_save_period=5,
-                 model_history_dir='model_history'):
+                 gpu_id=0, dedicated_resources=False, save_model=True,
+                 model_save_period=5, model_history_dir='model_history'):
         super().__init__(varying_parameters,
                          objectives,
                          analyzed_parameters=analyzed_parameters,
                          n_init=n_init,
-                         use_cuda=use_cuda, save_model=save_model,
+                         use_cuda=use_cuda,
+                         gpu_id=gpu_id,
+                         dedicated_resources=dedicated_resources,
+                         save_model=save_model,
                          model_save_period=model_save_period,
                          model_history_dir=model_history_dir)
 
