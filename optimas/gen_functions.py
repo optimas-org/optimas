@@ -1,5 +1,6 @@
-import numpy as np
+import os
 
+import numpy as np
 from libensemble.message_numbers import (
     STOP_TAG, PERSIS_STOP, FINISHED_PERSISTENT_GEN_TAG, EVAL_GEN_TAG)
 from libensemble.tools.persistent_support import PersistentSupport
@@ -18,7 +19,17 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
     # If CUDA is available, run BO loop on the GPU.
     if gen_specs['user']['use_cuda']:
         resources = Resources.resources.worker_resources
-        resources.set_env_to_slots('CUDA_VISIBLE_DEVICES')
+        # If there is no dedicated slot for the generator, use the GPU
+        # specified by the user. This GPU will be shared with the simulation
+        # workers.
+        if resources.slot_count is None:
+            gpu_id = str(gen_specs['user']['gpu_id'])
+            os.environ['CUDA_VISIBLE_DEVICES'] = gpu_id
+        # If there is a dedicated slot for the generator, use the corresponding
+        # GPU. This GPU will only be used for the generator and will not be
+        # available for the simulation workers.
+        else:
+            resources.set_env_to_slots('CUDA_VISIBLE_DEVICES')
 
     # Get generator, objectives, and parameters to analyze.
     generator = gen_specs['user']['generator']
