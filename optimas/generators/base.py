@@ -53,11 +53,11 @@ class Generator():
     @property
     def use_cuda(self):
         return self._use_cuda
-    
+
     @property
     def gpu_id(self):
         return self._gpu_id
-    
+
     @property
     def dedicated_resources(self):
         return self._dedicated_resources
