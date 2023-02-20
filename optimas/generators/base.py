@@ -175,9 +175,6 @@ class Generator():
 
     def get_libe_specs(self):
         libE_specs = {}
-        # If not using CUDA, do not allocate resources for generator.
-        if not self._use_cuda:
-            libE_specs['zero_resource_workers'] = [1]
         return libE_specs
 
     def _ask(self, trials):

@@ -28,7 +28,7 @@ class Exploration():
     def run(self):
         exit_criteria = {'sim_max': self.max_evals}
         persis_info = add_unique_random_streams({}, self.sim_workers + 2)
-        if self.generator.use_cuda:
+        if self.generator.dedicated_resources:
             persis_info['gen_resources'] = 1
         gen_specs = self.generator.get_gen_specs(self.sim_workers)
         sim_specs = self.evaluator.get_sim_specs(
