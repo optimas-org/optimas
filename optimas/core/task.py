@@ -1,16 +1,34 @@
+"""Contains the definition of the Task class used for multitask optimization"""
+
 from .base import NamedBase
 
 
 class Task(NamedBase):
-    def __init__(self, name, n_init, n_opt):
+    """Defines a task to be used in multitask optimization.
+    
+    Parameters
+    ----------
+    name : str
+        Name of the task.
+    n_init : int
+        Number of task evaluations to perform during initialization.
+    n_opt : int
+        Number of task evaluations to perform during optimization.
+    """
+    def __init__(
+        self,
+        name: str,
+        n_init: int,
+        n_opt: int
+    ) -> None:
         super().__init__(name)
         self._n_init = n_init
         self._n_opt = n_opt
 
     @property
-    def n_init(self):
+    def n_init(self) -> int:
         return self._n_init
 
     @property
-    def n_opt(self):
+    def n_opt(self) -> int:
         return self._n_opt
