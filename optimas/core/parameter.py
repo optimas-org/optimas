@@ -20,7 +20,7 @@ class Parameter(NamedBase):
     def __init__(
         self,
         name: str,
-        dtype: Optional[np.dtype] = np.float
+        dtype: Optional[np.dtype] = float
     ):
         super().__init__(name)
         self._dtype = dtype
@@ -105,7 +105,7 @@ class TrialParameter(Parameter):
         self,
         name: str,
         save_name: Optional[str] = None,
-        dtype: Optional[np.dtype] = np.float
+        dtype: Optional[np.dtype] = float
     ) -> None:
         super().__init__(name, dtype=dtype)
         self._save_name = name if save_name is None else save_name
