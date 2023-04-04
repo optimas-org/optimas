@@ -10,7 +10,7 @@ from .base import Evaluator
 class FunctionEvaluator(Evaluator):
     """Evaluator class to use when the evaluations are carried out by calling
     a function.
-    
+
     Parameters
     ----------
     function : callable

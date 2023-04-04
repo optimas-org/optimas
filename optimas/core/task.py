@@ -5,7 +5,7 @@ from .base import NamedBase
 
 class Task(NamedBase):
     """Defines a task to be used in multitask optimization.
-    
+
     Parameters
     ----------
     name : str

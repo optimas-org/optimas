@@ -9,7 +9,7 @@ from .base import NamedBase
 
 class Parameter(NamedBase):
     """Base class for all optimization parameters.
-    
+
     Parameters
     ----------
     name : str
@@ -33,7 +33,7 @@ class Parameter(NamedBase):
 
 class VaryingParameter(Parameter):
     """Defines an input parameter to be varied during optimization.
-    
+
     Parameters
     ----------
     name : str
@@ -90,7 +90,7 @@ class VaryingParameter(Parameter):
 
 class TrialParameter(Parameter):
     """Defines a parameter that can be attached to a trial.
-    
+
     Parameters
     ----------
     name : str
@@ -125,7 +125,7 @@ class Objective(Parameter):
     minimize : bool, optional
         Indicates whether the objective should be minimized or,
         otherwise, maximized. By default, ``True``.
-    """    
+    """
     def __init__(
         self,
         name: Optional[str] = 'f',

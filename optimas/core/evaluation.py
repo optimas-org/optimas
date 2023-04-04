@@ -7,9 +7,9 @@ from .parameter import Parameter
 
 class Evaluation():
     """Class used to store the evaluation of a parameter.
-    
+
     The evaluation consists of the observed value and the observation noise.
-    
+
     Parameters
     ----------
     parameter : Parameter

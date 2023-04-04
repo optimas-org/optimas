@@ -7,7 +7,7 @@ from optimas.core import VaryingParameter, Objective, Parameter
 
 class Evaluator:
     """Base class for all evaluators.
-    
+
     Parameters
     ----------
     sim_function : callable

@@ -13,7 +13,7 @@ from .base import Evaluator
 class TemplateEvaluator(Evaluator):
     """Evaluator class to use when the evaluations are carried out by
     executing a templated script.
-    
+
     Parameters
     ----------
     sim_template : str

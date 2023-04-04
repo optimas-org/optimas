@@ -10,7 +10,7 @@ from .evaluation import Evaluation
 
 class Trial():
     """Defines a trial to be evaluated.
-    
+
     Parameters
     ----------
     varying_parameters : list of VaryingParameter
@@ -28,7 +28,7 @@ class Trial():
         Index of the trial.
     custom_parameters : list of TrialParameter, optional
         Additional parameters needed to identify or carry out the trial, and
-        which will be included in the optimization history.    
+        which will be included in the optimization history.
     """
     def __init__(
         self,
@@ -102,11 +102,11 @@ class Trial():
         return self._custom_parameters
 
     def complete_evaluation(
-            self,
-            evaluation: Evaluation
-        ) -> None:
+        self,
+        evaluation: Evaluation
+    ) -> None:
         """Complete the evaluation of an objective or analyzed parameter.
-        
+
         Parameters
         ----------
         evaluation : Evaluation
@@ -137,7 +137,7 @@ class Trial():
             params[obj.name] = (ev.value, ev.sem)
         return params
 
-    def analyzed_parameters_as_dict(self) -> Dict:        
+    def analyzed_parameters_as_dict(self) -> Dict:
         """
         Return a dictionary that maps the name of the analyzed parameters
         to their values.
