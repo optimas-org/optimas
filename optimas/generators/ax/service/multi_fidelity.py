@@ -1,30 +1,77 @@
-import torch
+"""Contains the definition of the single-fidelity Ax generator."""
 
+from typing import List, Optional
+
+import torch
 from ax.service.ax_client import AxClient
 from ax.modelbridge.generation_strategy import (
     GenerationStep, GenerationStrategy)
 from ax.modelbridge.registry import Models
 from ax.service.utils.instantiation import ObjectiveProperties
 
+from optimas.core import Objective, VaryingParameter, Parameter
 from .base import AxServiceGenerator
 
 
 class AxMultiFidelityGenerator(AxServiceGenerator):
-    def __init__(self, varying_parameters, objectives=None,
-                 analyzed_parameters=None, n_init=4, fidel_cost_intercept=1.,
-                 use_cuda=False, save_model=True, model_save_period=5,
-                 model_history_dir='model_history'):
-        self.fidel_cost_intercept = fidel_cost_intercept
-        super().__init__(varying_parameters,
-                         objectives,
-                         analyzed_parameters=analyzed_parameters,
-                         n_init=n_init,
-                         use_cuda=use_cuda,
-                         save_model=save_model,
-                         model_save_period=model_save_period,
-                         model_history_dir=model_history_dir)
+    """Generator for performing multifidelity Bayesian optimization using the
+    Ax service API.
 
-    def _create_ax_client(self):
+    Parameters
+    ----------
+    varying_parameters : list of VaryingParameter
+        List of input parameters to vary. One them should be a fidelity.
+    objectives : list of Objective
+        List of optimization objectives.
+    analyzed_parameters : list of Parameter, optional
+        List of parameters to analyze at each trial, but which are not
+        optimization objectives. By default ``None``.
+    n_init : int, optional
+        Number of evaluations to perform during the initialization phase using
+        Sobol sampling. By default, ``4``.
+    fidel_cost_intercept : float, optional
+        The cost intercept for the affine cost of the form
+        `cost_intercept + n`, where `n` is the number of generated points.
+        Used for the knowledge gradient acquisition function. By default, 1.
+    use_cuda : bool, optional
+        Whether to allow the generator to run on a CUDA GPU. By default
+        ``False``.
+    save_model : bool, optional
+        Whether to save the optimization model (in this case, the Ax client) to
+        disk. By default ``True``.
+    model_save_period : int, optional
+        Periodicity, in number of evaluated Trials, with which to save the
+        model to disk. By default, ``5``.
+    model_history_dir : str, optional
+        Name of the directory in which the model will be saved. By default,
+        ``'model_history'``.
+    """
+    def __init__(
+        self,
+        varying_parameters: List[VaryingParameter],
+        objectives: List[Objective],
+        analyzed_parameters: Optional[List[Parameter]] = None,
+        n_init: Optional[int] = 4,
+        fidel_cost_intercept: Optional[float] = 1.,
+        use_cuda: Optional[bool] = False,
+        save_model: Optional[bool] = True,
+        model_save_period: Optional[int] = 5,
+        model_history_dir: Optional[str] = 'model_history',
+    ) -> None:
+        self.fidel_cost_intercept = fidel_cost_intercept
+        super().__init__(
+            varying_parameters=varying_parameters,
+            objectives=objectives,
+            analyzed_parameters=analyzed_parameters,
+            n_init=n_init,
+            use_cuda=use_cuda,
+            save_model=save_model,
+            model_save_period=model_save_period,
+            model_history_dir=model_history_dir
+        )
+
+    def _create_ax_client(self) -> None:
+        """Create multifidelity Ax client."""
         # Create parameter list.
         parameters = list()
         for var in self._varying_parameters:
@@ -77,4 +124,4 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             objectives=ax_objs
         )
 
-        self._ax_client = ax_client
+        return ax_client

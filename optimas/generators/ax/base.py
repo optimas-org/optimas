@@ -1,24 +1,66 @@
+"""Contains the definition of the base Ax generator."""
+from typing import List, Optional
+
 import torch
 
+from optimas.core import Objective, TrialParameter, VaryingParameter, Parameter
 from optimas.generators.base import Generator
 
 
 class AxGenerator(Generator):
-    def __init__(self, varying_parameters, objectives,
-                 analyzed_parameters=None, use_cuda=False, save_model=False,
-                 model_save_period=5, model_history_dir='model_history',
-                 custom_trial_parameters=None):
-        super().__init__(varying_parameters,
-                         objectives,
-                         analyzed_parameters=analyzed_parameters,
-                         use_cuda=use_cuda,
-                         save_model=save_model,
-                         model_save_period=model_save_period,
-                         model_history_dir=model_history_dir,
-                         custom_trial_parameters=custom_trial_parameters)
+    """Base class for all Ax generators.
+
+    Parameters
+    ----------
+    varying_parameters : list of VaryingParameter
+        List of input parameters to vary.
+    objectives : list of Objective
+        List of optimization objectives.
+    analyzed_parameters : list of Parameter, optional
+        List of parameters to analyze at each trial, but which are not
+        optimization objectives. By default ``None``.
+    use_cuda : bool, optional
+        Whether to allow the generator to run on a CUDA GPU. By default
+        ``False``.
+    save_model : bool, optional
+        Whether to save the optimization model (e.g., the surrogate model) to
+        disk. By default ``False``.
+    model_save_period : int, optional
+        Periodicity, in number of evaluated Trials, with which to save the
+        model to disk. By default, ``5``.
+    model_history_dir : str, optional
+        Name of the directory in which the model will be saved. By default,
+        ``'model_history'``.
+    custom_trial_parameters : list of TrialParameter
+        For some generators, it might be necessary to attach additional
+        parameters to the trials. If so, they can be given here as a list.
+        By default, ``None``.
+    """
+    def __init__(
+        self,
+        varying_parameters: List[VaryingParameter],
+        objectives: List[Objective],
+        analyzed_parameters: Optional[List[Parameter]] = None,
+        use_cuda: Optional[bool] = False,
+        save_model: Optional[bool] = False,
+        model_save_period: Optional[int] = 5,
+        model_history_dir: Optional[str] = 'model_history',
+        custom_trial_parameters: Optional[TrialParameter] = None
+    ) -> None:
+        super().__init__(
+            varying_parameters=varying_parameters,
+            objectives=objectives,
+            analyzed_parameters=analyzed_parameters,
+            use_cuda=use_cuda,
+            save_model=save_model,
+            model_save_period=model_save_period,
+            model_history_dir=model_history_dir,
+            custom_trial_parameters=custom_trial_parameters
+        )
         self._determine_torch_device()
 
-    def _determine_torch_device(self):
+    def _determine_torch_device(self) -> None:
+        """Determine whether to run the generator on GPU (CUDA) or CPU."""
         # Use CUDA if available.
         if self.use_cuda and torch.cuda.is_available():
             self.torch_device = 'cuda'

@@ -1,24 +1,30 @@
+"""Contains the definition of the multitask Ax generator."""
+
 import os
 from copy import deepcopy
+from typing import List, Dict, Tuple, Optional, Union
 
 import numpy as np
 import torch
 
 from ax.core.arm import Arm
+from ax.core.batch_trial import BatchTrial
 from ax.core.multi_type_experiment import MultiTypeExperiment
 from ax.core.parameter import RangeParameter, ParameterType
 from ax.core.search_space import SearchSpace
 from ax.core.optimization_config import OptimizationConfig
-from ax.core.objective import Objective
+from ax.core.objective import Objective as AxObjective
 from ax.runners import SyntheticRunner
 from ax.modelbridge.factory import get_sobol, get_MTGP
+from ax.modelbridge.torch import TorchModelBridge
 from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 from ax.storage.json_store.save import save_experiment
 from ax.storage.metric_registry import register_metric
 
 from optimas.generators.ax.base import AxGenerator
-from optimas.core import TrialParameter
+from optimas.core import (TrialParameter, VaryingParameter, Objective,
+                          Parameter, Task, Trial)
 from .ax_metric import AxMetric
 
 
@@ -29,10 +35,50 @@ HIFI_RETURNED = 'hifi_returned'
 
 
 class AxMultitaskGenerator(AxGenerator):
+    """Generator for performing multitask Bayesian optimization using the
+    Ax developer API.
+
+    Two tasks need to be provided: one for low-fidelity evaluations and
+    another for high-fidelity evaluations. The objective will be optimized
+    by maximizing (or minimizing) its high-fidelity value. Only one objective
+    can be provided.
+
+    Parameters
+    ----------
+    varying_parameters : list of VaryingParameter
+        List of input parameters to vary. One them should be a fidelity.
+    objectives : list of Objective
+        List of optimization objectives. Only one objective is supported.
+    lofi_task, hifi_task : Task
+        The low- and high-fidelity tasks.
+    analyzed_parameters : list of Parameter, optional
+        List of parameters to analyze at each trial, but which are not
+        optimization objectives. By default ``None``.
+    use_cuda : bool, optional
+        Whether to allow the generator to run on a CUDA GPU. By default
+        ``False``.
+    save_model : bool, optional
+        Whether to save the optimization model (in this case, the Ax
+        experiment) to disk. By default ``True``.
+    model_save_period : int, optional
+        Periodicity, in number of evaluated Trials, with which to save the
+        model to disk. By default, ``5``.
+    model_history_dir : str, optional
+        Name of the directory in which the model will be saved. By default,
+        ``'model_history'``.
+    """
     def __init__(
-            self, varying_parameters, objectives, lofi_task, hifi_task,
-            analyzed_parameters=None, use_cuda=False, save_model=True,
-            model_save_period=5, model_history_dir='model_history'):
+        self,
+        varying_parameters: List[VaryingParameter],
+        objectives: List[Objective],
+        lofi_task: Task,
+        hifi_task: Task,
+        analyzed_parameters: Optional[List[Parameter]] = None,
+        use_cuda: Optional[bool] = False,
+        save_model: Optional[bool] = True,
+        model_save_period: Optional[int] = 5,
+        model_history_dir: Optional[str] = 'model_history'
+    ) -> None:
         custom_trial_parameters = [
             TrialParameter('arm_name', 'ax_arm_name', dtype='U32'),
             TrialParameter('trial_type', 'ax_trial_type', dtype='U32'),
@@ -40,14 +86,16 @@ class AxMultitaskGenerator(AxGenerator):
         ]
         self._check_inputs(varying_parameters, objectives, lofi_task,
                            hifi_task)
-        super().__init__(varying_parameters,
-                         objectives,
-                         analyzed_parameters=analyzed_parameters,
-                         use_cuda=use_cuda,
-                         save_model=save_model,
-                         model_save_period=model_save_period,
-                         model_history_dir=model_history_dir,
-                         custom_trial_parameters=custom_trial_parameters)
+        super().__init__(
+            varying_parameters=varying_parameters,
+            objectives=objectives,
+            analyzed_parameters=analyzed_parameters,
+            use_cuda=use_cuda,
+            save_model=save_model,
+            model_save_period=model_save_period,
+            model_history_dir=model_history_dir,
+            custom_trial_parameters=custom_trial_parameters
+        )
         self.lofi_task = lofi_task
         self.hifi_task = hifi_task
         self.model_iteration = 0
@@ -59,27 +107,46 @@ class AxMultitaskGenerator(AxGenerator):
         self.returned_hifi_trials = 0
         self.init_batch_limit = 1000
         self.current_trial = None
-        self._create_experiment()
+        self._experiment = self._create_experiment()
 
-    def get_gen_specs(self, sim_workers):
+    def get_gen_specs(
+        self,
+        sim_workers: int
+    ) -> Dict:
+        """Get the libEnsemble gen_specs."""
+        # Get base specs.
         gen_specs = super().get_gen_specs(sim_workers)
+        # Add task to output parameters.
         max_length = max([len(self.lofi_task.name), len(self.hifi_task.name)])
         gen_specs['out'].append(('task', str, max_length))
         return gen_specs
 
-    def _check_inputs(self, varying_parameters, objectives, lofi_task,
-                      hifi_task):
+    def _check_inputs(
+        self,
+        varying_parameters: List[VaryingParameter],
+        objectives: List[Objective],
+        lofi_task: Task,
+        hifi_task: Task
+    ) -> None:
+        """Check that the generator inputs are valid."""
+        # Check that only one objective has been given.
         n_objectives = len(objectives)
         assert n_objectives == 1, (
             'Multitask generator supports only a single objective. '
             'Objectives given: {}.'.format(n_objectives)
         )
+        # Check that the number of low-fidelity trials per iteration is larger
+        # than that of high-fidelity trials.
         assert lofi_task.n_opt >= hifi_task.n_opt, (
             'The number of low-fidelity trials must be larger than or equal '
             'to the number of high-fidelity trials'
         )
 
-    def _ask(self, trials):
+    def _ask(
+        self,
+        trials: List[Trial]
+    ) -> List[Trial]:
+        """Fill in the parameter values of the requested trials."""
         for trial in trials:
             next_trial = self._get_next_trial_arm()
             if next_trial is not None:
@@ -91,13 +158,21 @@ class AxMultitaskGenerator(AxGenerator):
                 trial.trial_index = trial_index
         return trials
 
-    def _tell(self, trials):
+    def _tell(
+        self,
+        trials: List[Trial]
+    ) -> None:
+        """Incorporate evaluated trials into experiment."""
         if self.gen_state == NOT_STARTED:
             self._incorporate_external_data(trials)
         else:
             self._complete_evaluations(trials)
 
-    def _incorporate_external_data(self, trials):
+    def _incorporate_external_data(
+        self,
+        trials: List[Trial]
+    ) -> None:
+        """Incorporate external data (e.g., from history) into experiment."""
         # Get trial indices.
         trial_indices = []
         for trial in trials:
@@ -142,7 +217,11 @@ class AxMultitaskGenerator(AxGenerator):
             if trial_type == self.hifi_task.name:
                 self.hifi_trials.append(index)
 
-    def _complete_evaluations(self, trials):
+    def _complete_evaluations(
+        self,
+        trials: List[Trial]
+    ) -> None:
+        """Complete evaluated trials."""
         for trial in trials:
             # Make sure trial is part of current batch trial.
             current_trial_arms = list(self.current_trial.arms_by_name.keys())
@@ -166,7 +245,8 @@ class AxMultitaskGenerator(AxGenerator):
                     self.current_trial.mark_completed()
                     self.gen_state = HIFI_RETURNED
 
-    def _create_experiment(self):
+    def _create_experiment(self) -> MultiTypeExperiment:
+        """Create Ax experiment."""
         # Create search space.
         parameters = []
         for var in self._varying_parameters:
@@ -194,7 +274,7 @@ class AxMultitaskGenerator(AxGenerator):
 
         # Create optimization config.
         opt_config = OptimizationConfig(
-            objective=Objective(hifi_objective, minimize=minimize))
+            objective=AxObjective(hifi_objective, minimize=minimize))
 
         # Create experiment.
         experiment = MultiTypeExperiment(
@@ -212,15 +292,15 @@ class AxMultitaskGenerator(AxGenerator):
             trial_type=self.lofi_task.name,
             canonical_name='hifi_metric')
 
-        # Store experiment.
-        self._experiment = experiment
-
         # Register metric in order to be able to save experiment to json file.
         _, encoder_registry, decoder_registry = register_metric(AxMetric)
         self._encoder_registry = encoder_registry
         self._decoder_registry = decoder_registry
 
-    def _get_next_trial_arm(self):
+        return experiment
+
+    def _get_next_trial_arm(self) -> Union[Tuple[Arm, str, int], None]:
+        """Get the next trial arm to evaluate."""
         if self.gen_state in [NOT_STARTED, HIFI_RETURNED]:
             trial = self._get_lofi_batch()
             self.trials_list = [(arm, trial.trial_type, trial.index)
@@ -235,7 +315,8 @@ class AxMultitaskGenerator(AxGenerator):
         else:
             return None
 
-    def _get_lofi_batch(self):
+    def _get_lofi_batch(self) -> BatchTrial:
+        """Get the next batch of low-fidelity trials to evaluate."""
         if self.model_iteration == 0:
             # Generate first batch using a Sobol sequence.
             m = get_sobol(self._experiment.search_space, scramble=True)
@@ -299,7 +380,8 @@ class AxMultitaskGenerator(AxGenerator):
         self.returned_lofi_trials = 0
         return trial
 
-    def _get_hifi_batch(self):
+    def _get_hifi_batch(self) -> BatchTrial:
+        """Get the next batch of high-fidelity trials to evaluate."""
         if self.model_iteration == 0:
             m = get_sobol(self._experiment.search_space, scramble=True)
             n_gen = self.hifi_task.n_init
@@ -334,7 +416,8 @@ class AxMultitaskGenerator(AxGenerator):
         self.hifi_trials.append(trial.index)
         return trial
 
-    def _save_model_to_file(self):
+    def _save_model_to_file(self) -> None:
+        """Save experiment to json file."""
         file_path = os.path.join(
             self._model_history_dir,
             'ax_experiment_at_eval_{}.json'.format(
@@ -347,7 +430,12 @@ class AxMultitaskGenerator(AxGenerator):
         )
 
 
-def max_utility_from_GP(n, m, gr, hifi_task):
+def max_utility_from_GP(
+    n: int,
+    m: TorchModelBridge,
+    gr: GeneratorRun,
+    hifi_task: str
+) -> GeneratorRun:
     """
     High fidelity batches are constructed by selecting the maximum utility
     points from the low fidelity batch, after updating the model with the low
