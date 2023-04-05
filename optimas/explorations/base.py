@@ -69,8 +69,8 @@ class Exploration():
         # Create persis_info.
         persis_info = add_unique_random_streams({}, self.sim_workers + 2)
 
-        # If using CUDA, allocate resources for the generator.
-        if self.generator.use_cuda:
+        # If specified, allocate dedicated resources for the generator.
+        if self.generator.dedicated_resources:
             persis_info['gen_resources'] = 1
 
         # Get gen_specs and sim_specs.

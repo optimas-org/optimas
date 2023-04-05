@@ -57,6 +57,12 @@ class AxMultitaskGenerator(AxGenerator):
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
+    gpu_id : int, optional
+        The ID of the GPU in which to run the generator. By default, ``0``.
+    dedicated_resources : bool, optional
+        Whether to allocated dedicated resources (e.g., the GPU) for the
+        generator. These resources will not be available to the
+        simulation workers. By default, ``True``.
     save_model : bool, optional
         Whether to save the optimization model (in this case, the Ax
         experiment) to disk. By default ``True``.
@@ -75,6 +81,8 @@ class AxMultitaskGenerator(AxGenerator):
         hifi_task: Task,
         analyzed_parameters: Optional[List[Parameter]] = None,
         use_cuda: Optional[bool] = False,
+        gpu_id: Optional[int] = 0,
+        dedicated_resources: Optional[bool] = True,
         save_model: Optional[bool] = True,
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = 'model_history'
@@ -91,6 +99,8 @@ class AxMultitaskGenerator(AxGenerator):
             objectives=objectives,
             analyzed_parameters=analyzed_parameters,
             use_cuda=use_cuda,
+            gpu_id=gpu_id,
+            dedicated_resources=dedicated_resources,
             save_model=save_model,
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,

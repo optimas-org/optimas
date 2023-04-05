@@ -31,6 +31,12 @@ class Generator():
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
+    gpu_id : int, optional
+        The ID of the GPU in which to run the generator. By default, ``0``.
+    dedicated_resources : bool, optional
+        Whether to allocated dedicated resources (e.g., the GPU) for the
+        generator. These resources will not be available to the
+        simulation workers. By default, ``True``.
     save_model : bool, optional
         Whether to save the optimization model (e.g., the surrogate model) to
         disk. By default ``False``.
@@ -52,6 +58,8 @@ class Generator():
         constraints: Optional[List[Parameter]] = None,
         analyzed_parameters: Optional[List[Parameter]] = None,
         use_cuda: Optional[bool] = False,
+        gpu_id: Optional[int] = 0,
+        dedicated_resources: Optional[bool] = True,
         save_model: Optional[bool] = False,
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = 'model_history',
@@ -70,6 +78,8 @@ class Generator():
         self._model_history_dir = model_history_dir
         self._n_completed_trials_last_saved = 0
         self._use_cuda = use_cuda
+        self._gpu_id = gpu_id
+        self._dedicated_resources = dedicated_resources
         self._custom_trial_parameters = (
             [] if custom_trial_parameters is None else custom_trial_parameters
         )
@@ -96,6 +106,14 @@ class Generator():
     def use_cuda(self):
         return self._use_cuda
 
+    @property
+    def gpu_id(self):
+        return self._gpu_id
+
+    @property
+    def dedicated_resources(self):
+        return self._dedicated_resources
+        
     def ask(
         self,
         n_trials: int
@@ -254,7 +272,9 @@ class Generator():
                 # Total max number of sims running concurrently.
                 'gen_batch_size': sim_workers,
                 # Allow generator to run on GPU.
-                'use_cuda': self._use_cuda
+                'use_cuda': self._use_cuda,
+                # GPU in which to run generator.
+                'gpu_id': self._gpu_id
             }
         }
         return gen_specs
@@ -262,9 +282,6 @@ class Generator():
     def get_libe_specs(self) -> Dict:
         """Get the libEnsemble libe_specs."""
         libE_specs = {}
-        # If not using CUDA, do not allocate resources for generator.
-        if not self._use_cuda:
-            libE_specs['zero_resource_workers'] = [1]
         return libE_specs
 
     def _ask(
