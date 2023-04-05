@@ -5,13 +5,16 @@ from optimas.generators.base import Generator
 
 class AxGenerator(Generator):
     def __init__(self, varying_parameters, objectives,
-                 analyzed_parameters=None, use_cuda=False, save_model=False,
+                 analyzed_parameters=None, use_cuda=False, gpu_id=0,
+                 dedicated_resources=False, save_model=False,
                  model_save_period=5, model_history_dir='model_history',
                  custom_trial_parameters=None):
         super().__init__(varying_parameters,
                          objectives,
                          analyzed_parameters=analyzed_parameters,
                          use_cuda=use_cuda,
+                         gpu_id=gpu_id,
+                         dedicated_resources=dedicated_resources,
                          save_model=save_model,
                          model_save_period=model_save_period,
                          model_history_dir=model_history_dir,

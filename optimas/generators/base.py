@@ -9,7 +9,8 @@ logger = get_logger(__name__)
 
 class Generator():
     def __init__(self, varying_parameters, objectives=None, constraints=None,
-                 analyzed_parameters=None, use_cuda=False, save_model=False,
+                 analyzed_parameters=None, use_cuda=False, gpu_id=0,
+                 dedicated_resources=False, save_model=False,
                  model_save_period=5, model_history_dir='model_history',
                  custom_trial_parameters=None):
         if objectives is None:
@@ -25,6 +26,8 @@ class Generator():
         self._model_history_dir = model_history_dir
         self._n_completed_trials_last_saved = 0
         self._use_cuda = use_cuda
+        self._gpu_id = gpu_id
+        self._dedicated_resources = dedicated_resources
         self._custom_trial_parameters = (
             [] if custom_trial_parameters is None else custom_trial_parameters
         )
@@ -50,6 +53,14 @@ class Generator():
     @property
     def use_cuda(self):
         return self._use_cuda
+
+    @property
+    def gpu_id(self):
+        return self._gpu_id
+
+    @property
+    def dedicated_resources(self):
+        return self._dedicated_resources
 
     def ask(self, n_trials):
         trials = []
@@ -155,16 +166,15 @@ class Generator():
                 # Total max number of sims running concurrently.
                 'gen_batch_size': sim_workers,
                 # Allow generator to run on GPU.
-                'use_cuda': self._use_cuda
+                'use_cuda': self._use_cuda,
+                # GPU in which to run generator.
+                'gpu_id': self._gpu_id
             }
         }
         return gen_specs
 
     def get_libe_specs(self):
         libE_specs = {}
-        # If not using CUDA, do not allocate resources for generator.
-        if not self._use_cuda:
-            libE_specs['zero_resource_workers'] = [1]
         return libE_specs
 
     def _ask(self, trials):

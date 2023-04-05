@@ -12,7 +12,8 @@ from .base import AxServiceGenerator
 class AxMultiFidelityGenerator(AxServiceGenerator):
     def __init__(self, varying_parameters, objectives=None,
                  analyzed_parameters=None, n_init=4, fidel_cost_intercept=1.,
-                 use_cuda=False, save_model=True, model_save_period=5,
+                 use_cuda=False, gpu_id=0, dedicated_resources=False,
+                 save_model=True, model_save_period=5,
                  model_history_dir='model_history'):
         self.fidel_cost_intercept = fidel_cost_intercept
         super().__init__(varying_parameters,
@@ -20,6 +21,8 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
                          analyzed_parameters=analyzed_parameters,
                          n_init=n_init,
                          use_cuda=use_cuda,
+                         gpu_id=gpu_id,
+                         dedicated_resources=dedicated_resources,
                          save_model=save_model,
                          model_save_period=model_save_period,
                          model_history_dir=model_history_dir)
