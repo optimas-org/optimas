@@ -113,7 +113,7 @@ class Generator():
     @property
     def dedicated_resources(self):
         return self._dedicated_resources
-        
+
     def ask(
         self,
         n_trials: int
