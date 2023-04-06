@@ -11,7 +11,7 @@ from libensemble.executors.mpi_executor import MPIExecutor
 class Exploration():
     def __init__(self, generator, evaluator, max_evals, sim_workers,
                  run_async=True, history=None,
-                 exploration_dir_path='./exploration'):
+                 exploration_dir_path='./exploration', libe_comms='local'):
         self.generator = generator
         self.evaluator = evaluator
         self.max_evals = max_evals
@@ -19,6 +19,7 @@ class Exploration():
         self.run_async = run_async
         self.history = self._load_history(history)
         self.exploration_dir_path = exploration_dir_path
+        self.libe_comms = libe_comms
         self._set_default_libe_specs()
         self._create_alloc_specs()
         self._create_executor()
@@ -54,17 +55,7 @@ class Exploration():
             is_master = True
             nworkers = self.sim_workers + 1
         else:
-            # Only import MPI here, otherwise it can cause issues when running
-            # in local mode with openmpi.
             from mpi4py import MPI
-            # Warn user if openmpi is being used.
-            # When running with MPI communications, openmpi cannot be used as
-            # it does not support nesting MPI.
-            if 'openmpi' in MPI.Get_library_version().lower():
-                raise RuntimeError(
-                    'Running with mpi communications is not supported with '
-                    'openMPI. Please use MPICH (linux and macOS) or MSMPI '
-                    '(Windows) instead.')
             is_master = (MPI.COMM_WORLD.Get_rank() == 0)
             nworkers = MPI.COMM_WORLD.Get_size() - 1
 
@@ -99,11 +90,22 @@ class Exploration():
         libE_specs['save_every_k_sims'] = 5
         # Force central mode
         libE_specs['dedicated_mode'] = False
-        # It not using CUDA, do not allocate resources for generator.
-        # If not running in parallel, set communications to `local`.
-        if MPI.COMM_WORLD.Get_size() <= 1:
+        # Set communications and corresponding number of workers.
+        libE_specs["comms"] = self.libe_comms
+        if self.libe_comms == 'local':
             libE_specs["nworkers"] = self.sim_workers + 1
-            libE_specs["comms"] = 'local'
+        elif self.libe_comms == 'mpi':
+            # Warn user if openmpi is being used.
+            # When running with MPI communications, openmpi cannot be used as
+            # it does not support nesting MPI.
+            # MPI is only imported here to avoid issues with openmpi when
+            # running with local communications.
+            from mpi4py import MPI
+            if 'openmpi' in MPI.Get_library_version().lower():
+                raise RuntimeError(
+                    'Running with mpi communications is not supported with '
+                    'openMPI. Please use MPICH (linux and macOS) or MSMPI '
+                    '(Windows) instead.')
         # Set exploration directory path.
         libE_specs['ensemble_dir_path'] = self.exploration_dir_path
 
