@@ -1,7 +1,6 @@
 import os
 
 import numpy as np
-from mpi4py import MPI
 
 from libensemble.libE import libE
 from libensemble.tools import save_libE_output, add_unique_random_streams
@@ -55,6 +54,9 @@ class Exploration():
             is_master = True
             nworkers = self.sim_workers + 1
         else:
+            # Only import MPI here, otherwise it can cause issues when running
+            # in local mode with openmpi.
+            from mpi4py import MPI
             is_master = (MPI.COMM_WORLD.Get_rank() == 0)
             nworkers = MPI.COMM_WORLD.Get_size() - 1
 
