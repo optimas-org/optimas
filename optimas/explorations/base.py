@@ -57,6 +57,14 @@ class Exploration():
             # Only import MPI here, otherwise it can cause issues when running
             # in local mode with openmpi.
             from mpi4py import MPI
+            # Warn user if openmpi is being used.
+            # When running with MPI communications, openmpi cannot be used as
+            # it does not support nesting MPI.
+            if 'openmpi' in MPI.Get_library_version().lower():
+                raise RuntimeError(
+                    'Running with mpi communications is not supported with '
+                    'openMPI. Please use MPICH (linux and macOS) or MSMPI '
+                    '(Windows) instead.')
             is_master = (MPI.COMM_WORLD.Get_rank() == 0)
             nworkers = MPI.COMM_WORLD.Get_size() - 1
 
