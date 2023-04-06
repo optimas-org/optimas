@@ -52,4 +52,5 @@ jobs:
     - shell: bash -l {0}
       name: Run unit tests with openMPI
       run: |
+        rm -r tests_output
         python -m pytest tests/
