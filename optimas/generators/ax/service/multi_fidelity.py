@@ -1,4 +1,4 @@
-"""Contains the definition of the single-fidelity Ax generator."""
+"""Contains the definition of the multi-fidelity Ax generator."""
 
 from typing import List, Optional
 
