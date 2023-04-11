@@ -170,6 +170,11 @@ class Exploration():
                     'Running with mpi communications is not supported with '
                     'openMPI. Please use MPICH (linux and macOS) or MSMPI '
                     '(Windows) instead.')
+        else:
+            raise ValueError(
+                "Communication mode '{}'".format(self.libe_comms)
+                + " not recognized. Possible values are 'local' or 'mpi'."
+            )
         # Set exploration directory path.
         libE_specs['ensemble_dir_path'] = self.exploration_dir_path
 
