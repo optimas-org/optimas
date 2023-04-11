@@ -23,7 +23,7 @@ class GridSamplingGenerator(Generator):
         List of input parameters to vary.
     objectives : list of Objective
         List of optimization objectives.
-    n_steps : int
+    n_steps : list of int
         Number of grid steps along each direction.
     analyzed_parameters : list of Parameter, optional
         List of parameters to analyze at each trial, but which are not
@@ -33,7 +33,7 @@ class GridSamplingGenerator(Generator):
         self,
         varying_parameters: List[VaryingParameter],
         objectives: List[Objective],
-        n_steps: int,
+        n_steps: List[int],
         analyzed_parameters: Optional[List[Parameter]] = None,
     ) -> None:
         super().__init__(
