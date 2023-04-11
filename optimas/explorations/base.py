@@ -4,7 +4,6 @@ import os
 from typing import Optional, Union
 
 import numpy as np
-from mpi4py import MPI
 
 from libensemble.libE import libE
 from libensemble.tools import save_libE_output, add_unique_random_streams
@@ -38,6 +37,15 @@ class Exploration():
         the new one. By default, None.
     exploration_dir_path : str, optional.
         Path to the exploration directory. By default, ``'./exploration'``.
+    libe_comms :  {'local', 'mpi'}, optional.
+        The communication mode for libEnseble. Determines whether to use
+        Python ``multiprocessing`` (local mode) or MPI for the communication
+        between the manager and workers. If running in ``'mpi'`` mode, the
+        Optimas script should be launched with ``mpirun`` or equivalent, for
+        example, ``mpirun -np N python myscript.py``. This will launch one
+        manager and ``N-1`` simulation workers. In this case, the
+        ``sim_workers`` parameter is ignored. By default, ``'local'`` mode
+        is used.
     """
     def __init__(
         self,
@@ -47,7 +55,8 @@ class Exploration():
         sim_workers: int,
         run_async: Optional[bool] = True,
         history: Optional[str] = None,
-        exploration_dir_path: Optional[str] = './exploration'
+        exploration_dir_path: Optional[str] = './exploration',
+        libe_comms: Optional[str] = 'local'
     ) -> None:
         self.generator = generator
         self.evaluator = evaluator
@@ -56,6 +65,7 @@ class Exploration():
         self.run_async = run_async
         self.history = self._load_history(history)
         self.exploration_dir_path = exploration_dir_path
+        self.libe_comms = libe_comms
         self._set_default_libe_specs()
         self._create_alloc_specs()
         self._create_executor()
@@ -104,6 +114,7 @@ class Exploration():
             is_master = True
             nworkers = self.sim_workers + 1
         else:
+            from mpi4py import MPI
             is_master = (MPI.COMM_WORLD.Get_rank() == 0)
             nworkers = MPI.COMM_WORLD.Get_size() - 1
 
@@ -143,11 +154,27 @@ class Exploration():
         libE_specs['save_every_k_sims'] = 5
         # Force central mode
         libE_specs['dedicated_mode'] = False
-        # It not using CUDA, do not allocate resources for generator.
-        # If not running in parallel, set communications to `local`.
-        if MPI.COMM_WORLD.Get_size() <= 1:
+        # Set communications and corresponding number of workers.
+        libE_specs["comms"] = self.libe_comms
+        if self.libe_comms == 'local':
             libE_specs["nworkers"] = self.sim_workers + 1
-            libE_specs["comms"] = 'local'
+        elif self.libe_comms == 'mpi':
+            # Warn user if openmpi is being used.
+            # When running with MPI communications, openmpi cannot be used as
+            # it does not support nesting MPI.
+            # MPI is only imported here to avoid issues with openmpi when
+            # running with local communications.
+            from mpi4py import MPI
+            if 'openmpi' in MPI.Get_library_version().lower():
+                raise RuntimeError(
+                    'Running with mpi communications is not supported with '
+                    'openMPI. Please use MPICH (linux and macOS) or MSMPI '
+                    '(Windows) instead.')
+        else:
+            raise ValueError(
+                "Communication mode '{}'".format(self.libe_comms)
+                + " not recognized. Possible values are 'local' or 'mpi'."
+            )
         # Set exploration directory path.
         libE_specs['ensemble_dir_path'] = self.exploration_dir_path
 
