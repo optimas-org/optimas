@@ -27,3 +27,4 @@ different HPC clusters:
    installation_local
    installation_maxwell
    installation_juwels
+   installation_perlmutter
