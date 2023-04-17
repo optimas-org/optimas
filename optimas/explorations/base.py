@@ -35,6 +35,9 @@ class Exploration():
     history : str, optional
         Path to a history file of a past exploration from which to restart
         the new one. By default, None.
+    history_save_period : int, optional
+        Periodicity, in number of evaluated Trials, with which to save the
+        history file to disk. By default equals to ``sim_workers``.
     exploration_dir_path : str, optional.
         Path to the exploration directory. By default, ``'./exploration'``.
     libe_comms :  {'local', 'mpi'}, optional.
@@ -55,6 +58,7 @@ class Exploration():
         sim_workers: int,
         run_async: Optional[bool] = True,
         history: Optional[str] = None,
+        history_save_period: Optional[int] = None,
         exploration_dir_path: Optional[str] = './exploration',
         libe_comms: Optional[str] = 'local'
     ) -> None:
@@ -64,6 +68,10 @@ class Exploration():
         self.sim_workers = sim_workers
         self.run_async = run_async
         self.history = self._load_history(history)
+        if history_save_period is None:
+            self.history_save_period = sim_workers
+        else:
+            self.history_save_period = history_save_period
         self.exploration_dir_path = exploration_dir_path
         self.libe_comms = libe_comms
         self._set_default_libe_specs()
@@ -151,7 +159,7 @@ class Exploration():
         libE_specs = {}
         # Save H to file every N simulation evaluations
         # default value, if not defined
-        libE_specs['save_every_k_sims'] = 5
+        libE_specs['save_every_k_sims'] = self.history_save_period
         # Force central mode
         libE_specs['dedicated_mode'] = False
         # Set communications and corresponding number of workers.
