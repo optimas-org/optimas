@@ -83,7 +83,9 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
                 {
                     'name': var.name,
                     'type': 'range',
-                    'bounds': [var.lower_bound, var.upper_bound]
+                    'bounds': [var.lower_bound, var.upper_bound],
+                    # Suppresses warning when the type is not given explicitly
+                    'value_type': var.dtype.__name__
                 }
             )
 
