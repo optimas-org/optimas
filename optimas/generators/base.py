@@ -261,7 +261,7 @@ class Generator():
                 [par.name for par in self._analyzed_parameters]
             ),
             'out': (
-                [(var.name, float) for var in self._varying_parameters] +
+                [(var.name, var.dtype) for var in self._varying_parameters] +
                 [('resource_sets', int), ('trial_index', int)] +
                 [(par.save_name, par.dtype)
                  for par in self._custom_trial_parameters]
