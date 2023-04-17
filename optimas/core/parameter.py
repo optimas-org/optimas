@@ -58,9 +58,9 @@ class VaryingParameter(Parameter):
         is_fidelity: Optional[bool] = False,
         fidelity_target_value: Optional[float] = None,
         default_value: Optional[float] = None,
-        # dtype=float  TODO: Only floats are currently supported.
+        dtype: Optional[np.dtype] = float
     ) -> None:
-        super().__init__(name)
+        super().__init__(name, dtype)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._is_fidelity = is_fidelity
