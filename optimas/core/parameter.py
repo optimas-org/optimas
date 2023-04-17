@@ -60,13 +60,12 @@ class VaryingParameter(Parameter):
         default_value: Optional[float] = None,
         dtype: Optional[np.dtype] = float
     ) -> None:
-        super().__init__(name)
+        super().__init__(name, dtype)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._is_fidelity = is_fidelity
         self._fidelity_target_value = fidelity_target_value
         self._default_value = default_value
-        self._dtype = dtype
 
     @property
     def lower_bound(self) -> float:
