@@ -9,6 +9,7 @@ from libensemble.libE import libE
 from libensemble.tools import save_libE_output, add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
+import warnings
 
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
@@ -147,8 +148,9 @@ class Exploration():
                 # Only include runs that completed
                 history = history[history['sim_ended']]
             else:
-                raise ValueError(
+                warnings.warn(
                     'History file {} does not exist.'.format(history))
+                history = None
         assert history is None or isinstance(history, np.ndarray), (
             'Type {} not valid for `history`'.format(type(history))
         )
