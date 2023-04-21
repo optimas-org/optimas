@@ -50,20 +50,18 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
         H_o = np.zeros(number_of_gen_points, dtype=gen_specs['out'])
-        for i in range(number_of_gen_points):
-            generated_trials = generator.ask(1)
-            if generated_trials:
-                trial = generated_trials[0]
-                for var, val in zip(trial.varying_parameters,
-                                    trial.parameter_values):
-                    H_o[var.name][i] = val
-                if 'task' in H_o.dtype.names:
-                    H_o['task'][i] = trial.trial_type
-                if trial.custom_parameters is not None:
-                    for par in trial.custom_parameters:
-                        H_o[par.save_name][i] = getattr(trial, par.name)
-                H_o['trial_index'][i] = trial.index
-                H_o['resource_sets'][i] = 1
+        generated_trials = generator.ask(number_of_gen_points)
+        for i, trial in enumerate(generated_trials):
+            for var, val in zip(trial.varying_parameters,
+                                trial.parameter_values):
+                H_o[var.name][i] = val
+            if 'task' in H_o.dtype.names:
+                H_o['task'][i] = trial.trial_type
+            if trial.custom_parameters is not None:
+                for par in trial.custom_parameters:
+                    H_o[par.save_name][i] = getattr(trial, par.name)
+            H_o['trial_index'][i] = trial.index
+            H_o['resource_sets'][i] = 1
         n_failed_gens = np.sum(H_o['resource_sets'] == 0)
         H_o = H_o[H_o['resource_sets'] > 0]
 
