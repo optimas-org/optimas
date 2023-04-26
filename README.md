@@ -4,5 +4,6 @@
 <!-- <hr/> -->
 
 # Optimization at scale, powered by [libEnsemble](https://libensemble.readthedocs.io/)
+[![Documentation Status](https://readthedocs.org/projects/optimas/badge/?version=latest)](https://optimas.readthedocs.io/en/latest/?badge=latest)
 
-TODO: Add link to readthedocs
+Optimas is a Python library for scalable optimization in massively-parallel supercomputers. See the [documentation](https://optimas.readthedocs.io/) for installation instructions, tutorials, and more information.
