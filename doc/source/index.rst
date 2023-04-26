@@ -4,9 +4,9 @@ Optimas |release| documentation
 .. warning::
         Optimas is currently in early development, and the documentation is
         therefore still incomplete. In the meantime, feel free to create an
-        issue on [GitHub](https://github.com/optimas-org/optimas) if you need
+        issue on `GitHub <https://github.com/optimas-org/optimas>`_ if you need
         additional support, or reach out to us on
-        [Slack](https://optimas.slack.com/).
+        `Slack <https://optimas.slack.com/>`_.
 
 
 .. grid:: 2
