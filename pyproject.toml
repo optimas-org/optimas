@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = 'optimas'
+description = 'Optimization at scale, powered by libEnsemble'
+authors = [
+    {name = 'Optimas Developers', email = 'angel.ferran.pousa@desy.de'},
+]
+readme = 'README.md'
+requires-python = '>=3.8'
+keywords = ['optimization', 'scale', 'bayesian']
+license = {text = 'BSD-3-Clause-LBNL'}
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Science/Research',
+    'Topic :: Scientific/Engineering',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+]
+dependencies = [
+    'libensemble >= 0.9.2',
+    'jinja2',
+    'ax-platform >= 0.2.9',
+    'mpi4py',
+]
+dynamic = ['version']
+
+[project.optional-dependencies]
+test = [
+    'flake8',
+    'pytest',
+]
+
+[project.urls]
+Documentation = 'https://optimas.readthedocs.io/'
+
+[tool.setuptools.dynamic]
+version = {attr = "optimas.__version__"}
+
+[tool.setuptools.packages.find]
+include = [
+    'optimas',
+]

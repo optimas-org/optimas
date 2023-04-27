@@ -33,8 +33,7 @@ jobs:
       run: |
         conda install numpy pandas pytorch cpuonly -c pytorch
         conda install -c conda-forge mpi4py mpich
-        pip install .
-        pip install flake8 pytest
+        pip install .[test]
     - shell: bash -l {0}
       name: Lint with flake8
       run: |
