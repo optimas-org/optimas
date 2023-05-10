@@ -24,7 +24,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # workers.
         if resources.slot_count is None:
             gpu_id = str(gen_specs['user']['gpu_id'])
-            os.environ['CUDA_VISIBLE_DEVICES'] = gpu_id
+            os.environ['CUDA_VISIBLE_DEVICES'] = gpu_id  # TODO SH: what to do about this?
         # If there is a dedicated slot for the generator, use the corresponding
         # GPU. This GPU will only be used for the generator and will not be
         # available for the simulation workers.
@@ -63,9 +63,20 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                     for par in trial.custom_parameters:
                         H_o[par.save_name][i] = getattr(trial, par.name)
                 H_o['trial_index'][i] = trial.index
-                H_o['resource_sets'][i] = 1
-        n_failed_gens = np.sum(H_o['resource_sets'] == 0)
-        H_o = H_o[H_o['resource_sets'] > 0]
+
+                #TODO SH: How to access n_proc / n_gpus here? Below is proof of principle
+                if trial.trial_type == 'fbpic':
+                    H_o['num_procs'][i] = 2
+                    H_o['num_gpus'][i] = 2
+                elif trial.trial_type == 'wake-t':
+                    H_o['num_procs'][i] = 1
+                    H_o['num_gpus'][i] = 0
+                else:
+                    H_o['num_procs'][i] = 1
+                    H_o['num_gpus'][i] = 1
+
+        n_failed_gens = np.sum(H_o['num_procs'] == 0)
+        H_o = H_o[H_o['num_procs'] > 0]
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager

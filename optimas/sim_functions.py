@@ -37,7 +37,7 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
     sim_template = user_specs['sim_template']
     analysis_func = user_specs['analysis_func']
     app_name = user_specs['app_name']
-    n_gpus = user_specs['n_gpus']
+    # n_gpus = user_specs['n_gpus']
     # n_proc = user_specs['n_proc']
 
     # Create simulation input file.
@@ -55,54 +55,15 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
 
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
-    # Launch the executor to actually run the WarpX simulation
-    resources = Resources.resources.worker_resources
-    slots = resources.slots
-    if Resources.resources.glob_resources.launcher != 'jsrun':
-        # Use specified number of GPUs (1 by default).
-        resources.set_env_to_slots('CUDA_VISIBLE_DEVICES', multiplier=n_gpus)
-        cores_per_node = resources.slot_count * n_gpus  # One CPU per GPU
-    else:
-        cores_per_node = resources.slot_count  # One CPU per GPU
-    num_nodes = resources.local_node_count
 
-    logger.debug(
-        'Worker {}: CUDA_VISIBLE_DEVICES={} \tnodes {} ppn {} slots {}'.format(
-            libE_info['workerID'],
-            os.environ["CUDA_VISIBLE_DEVICES"],
-            num_nodes,
-            cores_per_node,
-            slots
-        )
-    )
+    task = exctr.submit(app_name=app_name,
+                        app_args=sim_script,
+                        stdout='out.txt',
+                        stderr='err.txt',
+                        )
 
-    # Get extra args.
-    extra_args = os.environ.get('LIBE_SIM_EXTRA_ARGS', None)
-
-    # Submit simulation.
-    if extra_args is not None:
-        task = exctr.submit(app_name=app_name,
-                            num_nodes=num_nodes,
-                            procs_per_node=cores_per_node,
-                            extra_args=extra_args,
-                            app_args=sim_script,
-                            stdout='out.txt',
-                            stderr='err.txt',
-                            wait_on_start=True)
-    else:
-        task = exctr.submit(app_name=app_name,
-                            num_nodes=num_nodes,
-                            procs_per_node=cores_per_node,
-                            app_args=sim_script,
-                            stdout='out.txt',
-                            stderr='err.txt',
-                            wait_on_start=True)
-
-    # Periodically check the status of the simulation
-    poll_interval = 10  # secs
-    while (not task.finished):
-        time.sleep(poll_interval)
-        task.poll()
+    # Wait for simulation to complete
+    task.wait()
 
     # Set calc_status with optional prints.
     if task.finished:
