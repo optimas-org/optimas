@@ -45,4 +45,5 @@ version = {attr = "optimas.__version__"}
 [tool.setuptools.packages.find]
 include = [
     'optimas',
+    'optimas.*',
 ]
