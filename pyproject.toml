@@ -43,6 +43,4 @@ Documentation = 'https://optimas.readthedocs.io/'
 version = {attr = "optimas.__version__"}
 
 [tool.setuptools.packages.find]
-include = [
-    'optimas',
-]
+where = ['optimas']
