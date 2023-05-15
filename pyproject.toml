@@ -42,5 +42,8 @@ Documentation = 'https://optimas.readthedocs.io/'
 [tool.setuptools.dynamic]
 version = {attr = "optimas.__version__"}
 
-[tool.setuptools]
-packages = ['optimas']
+[tool.setuptools.packages.find]
+include = [
+    'optimas',
+    'optimas.*',
+]
