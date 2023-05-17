@@ -241,7 +241,8 @@ class Generator():
 
     def get_gen_specs(
         self,
-        sim_workers: int
+        sim_workers: int,
+        run_params: dict
     ) -> Dict:
         """Get the libEnsemble gen_specs.
 
@@ -262,7 +263,8 @@ class Generator():
             ),
             'out': (
                 [(var.name, var.dtype) for var in self._varying_parameters] +
-                [('num_procs', int), ('num_gpus', int),  ('trial_index', int)] +
+                [('num_procs', int), ('num_gpus', int)] +
+                [('trial_index', int)] +
                 [(par.save_name, par.dtype)
                  for par in self._custom_trial_parameters]
             ),
@@ -274,7 +276,9 @@ class Generator():
                 # Allow generator to run on GPU.
                 'use_cuda': self._use_cuda,
                 # GPU in which to run generator.
-                'gpu_id': self._gpu_id
+                'gpu_id': self._gpu_id,
+                # num of procs and gpus required
+                'run_params': run_params
             }
         }
         return gen_specs

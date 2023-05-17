@@ -92,7 +92,8 @@ class Exploration():
             persis_info['gen_resources'] = 1
 
         # Get gen_specs and sim_specs.
-        gen_specs = self.generator.get_gen_specs(self.sim_workers)
+        run_params = self.evaluator.get_run_params()
+        gen_specs = self.generator.get_gen_specs(self.sim_workers, run_params)
         sim_specs = self.evaluator.get_sim_specs(
             self.generator.varying_parameters,
             self.generator.objectives,
@@ -159,6 +160,7 @@ class Exploration():
         libE_specs = {}
         # Save H to file every N simulation evaluations
         # default value, if not defined
+
         libE_specs['save_every_k_sims'] = self.history_save_period
         # Force central mode
         libE_specs['dedicated_mode'] = False

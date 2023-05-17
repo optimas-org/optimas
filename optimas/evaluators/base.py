@@ -67,6 +67,11 @@ class Evaluator:
         libE_specs = {}
         return libE_specs
 
+    def get_run_params(self) -> Dict:
+        """Return run parameters for this evaluator."""
+        run_params = {'num_gpus': self._n_gpus}
+        return run_params
+
     def initialize(self) -> None:
         """Initialize the evaluator."""
         if not self._initialized:

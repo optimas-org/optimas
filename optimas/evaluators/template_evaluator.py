@@ -95,6 +95,12 @@ class TemplateEvaluator(Evaluator):
         libE_specs['sim_dirs_make'] = True
         return libE_specs
 
+    def get_run_params(self) -> Dict:
+        """Return run parameters for this evaluator."""
+        run_params = super().get_run_params()
+        run_params['num_procs'] = self.n_proc
+        return run_params
+
     def _initialize(self) -> None:
         self._register_app()
 
