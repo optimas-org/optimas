@@ -90,6 +90,7 @@ class Exploration():
         # If specified, allocate dedicated resources for the generator.
         if self.generator.dedicated_resources:
             persis_info['gen_resources'] = 1
+            persis_info['gen_use_gpus'] = True
 
         # Get gen_specs and sim_specs.
         run_params = self.evaluator.get_run_params()
