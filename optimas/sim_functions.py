@@ -112,26 +112,17 @@ def run_function(H, persis_info, sim_specs, libE_info):
     else:
         user_specs = sim_specs['user']
     evaluation_func = user_specs['evaluation_func']
-    n_gpus = user_specs['n_gpus']
 
     # Launch the executor to actually run the WarpX simulation
     resources = Resources.resources.worker_resources
-    slots = resources.slots
     if Resources.resources.glob_resources.launcher != 'jsrun':
         # Use specified number of GPUs (1 by default).
-        resources.set_env_to_slots('CUDA_VISIBLE_DEVICES', multiplier=n_gpus)
-        cores_per_node = resources.slot_count * n_gpus  # One CPU per GPU
-    else:
-        cores_per_node = resources.slot_count  # One CPU per GPU
-    num_nodes = resources.local_node_count
+        resources.set_env_to_gpus('CUDA_VISIBLE_DEVICES')
 
     logger.debug(
-        'Worker {}: CUDA_VISIBLE_DEVICES={} \tnodes {} ppn {} slots {}'.format(
+        'Worker {}: CUDA_VISIBLE_DEVICES={}'.format(
             libE_info['workerID'],
             os.environ["CUDA_VISIBLE_DEVICES"],
-            num_nodes,
-            cores_per_node,
-            slots
         )
     )
 

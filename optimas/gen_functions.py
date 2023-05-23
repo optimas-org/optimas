@@ -29,7 +29,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # GPU. This GPU will only be used for the generator and will not be
         # available for the simulation workers.
         else:
-            resources.set_env_to_slots('CUDA_VISIBLE_DEVICES')
+            resources.set_env_to_gpus('CUDA_VISIBLE_DEVICES')
 
     # Get generator, objectives, and parameters to analyze.
     generator = gen_specs['user']['generator']
