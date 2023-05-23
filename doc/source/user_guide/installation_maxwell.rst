@@ -8,7 +8,7 @@ Log into a Maxwell display node
     ssh username@max-display.desy.de
 
 
-Create a `profile.optimas` file in your home directory with the following content
+Create a ``profile.optimas`` file in your home directory with the following content
 
 .. code::
 
