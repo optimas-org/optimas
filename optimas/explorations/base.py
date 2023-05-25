@@ -130,7 +130,9 @@ class Exploration():
 
         # Save history.
         if is_master:
-            save_libE_output(history, persis_info, __file__, nworkers)
+            save_libE_output(
+                history, persis_info, __file__, nworkers,
+                dest_path=os.path.abspath(self.exploration_dir_path))
 
     def _create_executor(self) -> None:
         """Create libEnsemble executor."""
@@ -187,7 +189,9 @@ class Exploration():
                 + " not recognized. Possible values are 'local' or 'mpi'."
             )
         # Set exploration directory path.
-        libE_specs['ensemble_dir_path'] = self.exploration_dir_path
+        libE_specs['ensemble_dir_path'] = 'evaluations'
+        libE_specs['use_workflow_dir'] = True
+        libE_specs['workflow_dir_path'] = self.exploration_dir_path
 
         # get specs from generator and evaluator
         gen_libE_specs = self.generator.get_libe_specs()
