@@ -2,7 +2,6 @@ import os
 import jinja2
 import numpy as np
 
-from libensemble.resources.resources import Resources
 from libensemble.executors.executor import Executor
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
