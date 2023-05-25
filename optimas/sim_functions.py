@@ -113,19 +113,6 @@ def run_function(H, persis_info, sim_specs, libE_info):
         user_specs = sim_specs['user']
     evaluation_func = user_specs['evaluation_func']
 
-    # Launch the executor to actually run the WarpX simulation
-    resources = Resources.resources.worker_resources
-    if Resources.resources.glob_resources.launcher != 'jsrun':
-        # Use specified number of GPUs (1 by default).
-        resources.set_env_to_gpus('CUDA_VISIBLE_DEVICES')
-
-    logger.debug(
-        'Worker {}: CUDA_VISIBLE_DEVICES={}'.format(
-            libE_info['workerID'],
-            os.environ["CUDA_VISIBLE_DEVICES"],
-        )
-    )
-
     # Prepare the array that is returned to libE
     # Automatically include the input parameters
     libE_output = np.zeros(1, dtype=sim_specs['out'])
