@@ -13,16 +13,34 @@ class Evaluator:
     sim_function : callable
         The simulation function (as defined in libEnsemble) to be used for
         carrying out the evaluations.
+    n_procs : int, optional
+        The number of processes that will be used for each evaluation. By
+        default, ``n_procs=1`` if ``n_gpus`` is not given. Otherwise, the
+        default behavior is to match the number of processes to the number
+        of GPUs, i.e., ``n_procs=n_gpus``.
     n_gpus : int, optional
-        The number of GPUs that will be made available for each evaluation. BY
-        default, 1.
+        The number of GPUs that will be made available for each evaluation. By
+        default, 0.
     """
     def __init__(
         self,
         sim_function: Callable,
-        n_gpus: Optional[int] = 1
+        n_procs: Optional[int] = None,
+        n_gpus: Optional[int] = None
     ) -> None:
         self.sim_function = sim_function
+        # If no resources are specified, use 1 CPU an 0 GPUs.
+        if n_procs is None and n_gpus is None:
+            n_procs = 1
+            n_gpus = 0
+        # If `n_gpus` is given without specifying `n_procs`, match processes
+        # to GPUs.
+        elif n_procs is None:
+            n_procs = n_gpus
+        # If `n_procs` is given without specifying `n_gpus`, do not use GPUs.
+        elif n_gpus is None:
+            n_gpus = 0
+        self._n_procs = n_procs
         self._n_gpus = n_gpus
         self._initialized = False
 
@@ -55,6 +73,7 @@ class Evaluator:
                 + [(var.name, float) for var in varying_parameters]
             ),
             'user': {
+                'n_procs': self._n_procs,
                 'n_gpus': self._n_gpus,
             }
         }
@@ -69,7 +88,10 @@ class Evaluator:
 
     def get_run_params(self) -> Dict:
         """Return run parameters for this evaluator."""
-        run_params = {'num_gpus': self._n_gpus}
+        run_params = {
+            'num_procs': self._n_procs,
+            'num_gpus': self._n_gpus
+        }
         return run_params
 
     def initialize(self) -> None:

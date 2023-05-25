@@ -27,12 +27,14 @@ class TemplateEvaluator(Evaluator):
     sim_files : list of str, optional.
         List of files that are needed to carry out the simulation and that
         will be copied to the simulation directory.
+    n_procs : int, optional
+        The number of processes that will be used for each evaluation. By
+        default, ``n_procs=1`` if ``n_gpus`` is not given. Otherwise, the
+        default behavior is to match the number of processes to the number
+        of GPUs, i.e., ``n_procs=n_gpus``.
     n_gpus : int, optional
-        The number of GPUs that will be made available for each simulation. By
-        default, 1.
-    n_proc : int, optional
-        The number of processes that will be made used for each simulation. By
-        default, 1. (Currently unused)
+        The number of GPUs that will be made available for each evaluation. By
+        default, 0.
     """
     def __init__(
         self,
@@ -40,17 +42,18 @@ class TemplateEvaluator(Evaluator):
         analysis_func: Callable,
         executable: Optional[str] = None,
         sim_files: Optional[List[str]] = None,
-        n_gpus: Optional[int] = 1,
-        n_proc: Optional[int] = 1
+        n_procs: Optional[int] = None,
+        n_gpus: Optional[int] = None
     ) -> None:
         super().__init__(
             sim_function=run_template_simulation,
-            n_gpus=n_gpus)
+            n_procs=n_procs,
+            n_gpus=n_gpus
+        )
         self.sim_template = sim_template
         self.analysis_func = analysis_func
         self.executable = executable
         self.sim_files = [] if sim_files is None else sim_files
-        self.n_proc = n_proc
         self._app_name = 'sim'
 
     @property
@@ -80,7 +83,6 @@ class TemplateEvaluator(Evaluator):
         sim_specs['user']['analysis_func'] = self.analysis_func
         sim_specs['user']['sim_template'] = os.path.basename(self.sim_template)
         sim_specs['user']['app_name'] = self._app_name
-        sim_specs['user']['n_proc'] = self.n_proc
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
@@ -94,12 +96,6 @@ class TemplateEvaluator(Evaluator):
         # default value, if not defined
         libE_specs['sim_dirs_make'] = True
         return libE_specs
-
-    def get_run_params(self) -> Dict:
-        """Return run parameters for this evaluator."""
-        run_params = super().get_run_params()
-        run_params['num_procs'] = self.n_proc
-        return run_params
 
     def _initialize(self) -> None:
         self._register_app()
