@@ -9,7 +9,9 @@ from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
 from optimas.core import VaryingParameter, Objective, Task
 
 
-os.makedirs('./tests_output')
+output_dir = './tests_output'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 
 def eval_func_sf(input_params, output_params):

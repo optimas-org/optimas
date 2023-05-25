@@ -8,7 +8,9 @@ from optimas.evaluators import FunctionEvaluator
 from optimas.core import VaryingParameter, Objective, Parameter
 
 
-os.makedirs('./tests_output')
+output_dir = './tests_output'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 
 def eval_func(input_params, output_params):

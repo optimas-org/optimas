@@ -6,7 +6,9 @@ from optimas.evaluators import TemplateEvaluator
 from optimas.core import VaryingParameter, Objective
 
 
-os.makedirs('./tests_output')
+output_dir = './tests_output'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 
 def analysis_func(sim_dir, output_params):
