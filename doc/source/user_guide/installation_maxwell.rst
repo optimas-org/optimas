@@ -58,6 +58,34 @@ Install ``optimas``
     pip install git+https://github.com/optimas-org/optimas.git
 
 
+Installing FBPIC and Wake-T (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Most likely, you will be using ``optimas`` to optimize the output of a plasma
+simulation with FBPIC or Wake-T (or both). If so, you can follow the
+instructions below to install them in your ``optimas_env`` environment.
+
+Install FBPIC:
+
+.. code::
+
+    mamba install cudatoolkit=11.3
+    pip install cupy-cuda113
+    pip install fbpic
+
+
+Install Wake-T:
+
+.. code::
+
+    pip install Wake-T
+
+Install openPMD-viewer for data analysis
+
+.. code::
+
+    pip install openPMD-viewer
+
+
 Running an optimas job
 ~~~~~~~~~~~~~~~~~~~~~~
 The following script can be used to submit an ``optimas`` job to Maxwell.
@@ -85,4 +113,3 @@ need 4 GPUs (NVIDIA A100) and that your optimas script is called
     mamba activate optimas_env
 
     python run_optimization.py
-
