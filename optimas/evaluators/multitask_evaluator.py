@@ -82,8 +82,8 @@ class MultitaskEvaluator(Evaluator):
     def get_run_params(self) -> Dict:
         """Return run parameters for this evaluator."""
         run_params = {}
-        for task in self.task_evaluators:
-            run_params[task._app_name] = task.get_run_params()
+        for task, evaluator in zip(self.tasks, self.task_evaluators):
+            run_params[task.name] = evaluator.get_run_params()
         return run_params
 
     def _initialize(self) -> None:
