@@ -1,3 +1,4 @@
+import os
 import re
 
 import numpy as np
@@ -7,6 +8,9 @@ from optimas.explorations import Exploration
 from optimas.generators import LineSamplingGenerator
 from optimas.evaluators import FunctionEvaluator
 from optimas.core import VaryingParameter, Objective
+
+
+os.makedirs('./tests_output')
 
 
 def eval_func(input_params, output_params):

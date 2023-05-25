@@ -6,6 +6,9 @@ from optimas.evaluators import TemplateEvaluator
 from optimas.core import VaryingParameter, Objective
 
 
+os.makedirs('./tests_output')
+
+
 def analysis_func(sim_dir, output_params):
     """Analysis function used by the template evaluator."""
     # Read back result from file

@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 
 from optimas.explorations import Exploration
@@ -5,6 +7,9 @@ from optimas.generators import (
     AxSingleFidelityGenerator, AxMultiFidelityGenerator, AxMultitaskGenerator)
 from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
 from optimas.core import VaryingParameter, Objective, Task
+
+
+os.makedirs('./tests_output')
 
 
 def eval_func_sf(input_params, output_params):
