@@ -54,7 +54,7 @@ def test_uniform_sampling():
         generator=gen,
         evaluator=ev,
         max_evals=n_evals,
-        sim_workers=4,
+        sim_workers=2,
         exploration_dir_path='./tests_output/test_uniform_sampling'
     )
     exploration.run()
@@ -109,7 +109,7 @@ def test_normal_sampling():
         generator=gen,
         evaluator=ev,
         max_evals=n_evals,
-        sim_workers=4,
+        sim_workers=2,
         exploration_dir_path='./tests_output/test_normal_sampling'
     )
     exploration.run()
