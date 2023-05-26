@@ -1,5 +1,0 @@
-# For simulation/analysis
-libensemble @ git+https://github.com/Libensemble/libensemble@develop
-jinja2
-pandas
-ax-platform >= 0.2.9

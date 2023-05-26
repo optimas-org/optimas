@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Import version ----------------------------------------------------------
-from optimas.__version__ import __version__  # noqa: E402
+from optimas import __version__  # noqa: E402
 
 
 # -- Project information -----------------------------------------------------
