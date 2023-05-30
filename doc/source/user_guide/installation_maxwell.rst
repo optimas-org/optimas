@@ -5,7 +5,7 @@ Log into a Maxwell display node
 
 .. code::
 
-    ssh username@max-display.desy.de
+    ssh <username>@max-display.desy.de
 
 
 Create a ``profile.optimas`` file in your home directory with the following content
@@ -60,7 +60,7 @@ Install ``optimas``
 
 Installing FBPIC and Wake-T (optional)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-A common use case for ``optimas`` is to optimize the output of a plasma
+A common use case for ``optimas`` is to optimize the output of a plasma acceleration
 simulation with FBPIC or Wake-T (or both). If you need any of these tools, you
 can follow the instructions below to install them in your ``optimas_env``
 environment.
@@ -91,7 +91,7 @@ Running an optimas job
 ~~~~~~~~~~~~~~~~~~~~~~
 The following script can be used to submit an ``optimas`` job to Maxwell.
 This example sends the job to the ``maxgpu`` queue. It assumes that you
-need one ode with 4 GPUs (NVIDIA A100) and that your optimas script is called
+need one node with 4 GPUs (NVIDIA A100) and that your optimas script is called
 ``run_optimization.py``.
 
 .. code::
