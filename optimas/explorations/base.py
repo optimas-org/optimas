@@ -74,10 +74,10 @@ class Exploration():
             self.history_save_period = history_save_period
         self.exploration_dir_path = exploration_dir_path
         self.libe_comms = libe_comms
-        self._set_default_libe_specs()
         self._create_alloc_specs()
         self._create_executor()
         self._initialize_evaluator()
+        self._set_default_libe_specs()
 
     def run(self) -> None:
         """Run the exploration."""
