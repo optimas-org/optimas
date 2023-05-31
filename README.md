@@ -4,6 +4,9 @@
 <!-- <hr/> -->
 
 # Optimization at scale, powered by [libEnsemble](https://libensemble.readthedocs.io/)
+[![PyPI](https://img.shields.io/pypi/v/optimas)](https://pypi.org/project/optimas/)
+[![tests badge](https://github.com/optimas-org/optimas/actions/workflows/unix.yml/badge.svg)](https://github.com/optimas-org/optimas/actions)
 [![Documentation Status](https://readthedocs.org/projects/optimas/badge/?version=latest)](https://optimas.readthedocs.io/en/latest/?badge=latest)
+[![DOI](https://zenodo.org/badge/287560975.svg)](https://zenodo.org/badge/latestdoi/287560975)
 
 Optimas is a Python library for scalable optimization on massively-parallel supercomputers. See the [documentation](https://optimas.readthedocs.io/) for installation instructions, tutorials, and more information.
