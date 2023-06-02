@@ -49,9 +49,9 @@ class AxClientGenerator(AxServiceGenerator):
     -----
     If the ``AxClient`` contains ``outcome_constraints``, these will appear in
     the ``optimas`` log as optimization objectives. They are still being
-    correctly used as constrains by the ``AxClient``, and the optimization
+    correctly used as constraints by the ``AxClient``, and the optimization
     will work as expected. This is only an issue on ``optimas``, which fails to
-    properly recognize them because optimization constrains have not yet been
+    properly recognize them because optimization constraints have not yet been
     implemented.
     """
     def __init__(
@@ -123,10 +123,10 @@ class AxClientGenerator(AxServiceGenerator):
         objectives: List[Objective],
         ax_client: AxClient
     ):
-        """Add outcome constrains in the AxClient to the list of objectives.
+        """Add outcome constraints in the AxClient to the list of objectives.
 
         This is currently needed because optimas does not yet have a
-        proper definition of constrains. The constrains will be correctly
+        proper definition of constraints. The constraints will be correctly
         handled and given to the AxClient, but will appear as objectives
         in the optimization log.
         """
