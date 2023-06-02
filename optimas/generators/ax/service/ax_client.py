@@ -27,14 +27,14 @@ class AxClientGenerator(AxServiceGenerator):
         optimization objectives. By default ``None``.
     gpu_id : int, optional
         The ID of the GPU in which to run the generator. By default, ``0``.
-        This parameter will only have an effect if any of the
-        ``GenerationStep``s in the ``AxClient`` uses a GPU.
+        This parameter will only have an effect if any ``GenerationStep`` in
+        the ``AxClient`` uses a GPU.
     dedicated_resources : bool, optional
         Whether to allocated dedicated resources (e.g., the GPU) for the
         generator. These resources will not be available to the
         simulation workers. By default, ``True``.
-        This parameter will only have an effect if any of the
-        ``GenerationStep``s in the ``AxClient`` uses a GPU.
+        This parameter will only have an effect if any ``GenerationStep`` in
+        the ``AxClient`` uses a GPU.
     save_model : bool, optional
         Whether to save the optimization model (in this case, the Ax client) to
         disk. By default ``True``.
