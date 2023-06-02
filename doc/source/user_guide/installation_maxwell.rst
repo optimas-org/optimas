@@ -55,7 +55,7 @@ Install ``optimas``
 
 .. code::
 
-    pip install git+https://github.com/optimas-org/optimas.git
+    pip install optimas
 
 
 Installing FBPIC and Wake-T (optional)
