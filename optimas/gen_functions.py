@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 
 import numpy as np
 from libensemble.message_numbers import (
@@ -90,6 +91,6 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             number_of_gen_points = 0
 
     # Add updated generator to `persis_info`.
-    persis_info['generator'] = generator
+    persis_info['generator'] = deepcopy(generator)
 
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
