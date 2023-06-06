@@ -1,5 +1,6 @@
 """Contains the definition of the base Generator class."""
 
+from __future__ import annotations
 import os
 from typing import List, Dict, Optional
 
@@ -284,7 +285,22 @@ class Generator():
         libE_specs = {}
         return libE_specs
 
-    def update(self, new_generator):
+    def _update(
+        self,
+        new_generator: Generator
+    ):
+        """Update generator with the attributes of a newer one.
+
+        This method is only intended to be used internally by an
+        ``Exploration`` after a run is completed. It is needed because the
+        ``Generator`` given to ``libEnsemble`` is passed as a copy to the
+        generator worker and is therefore not updated during the run.
+
+        Parameters
+        ----------
+        new_generator : Generator
+            The newer version of the generator returned in ``persis_info``.
+        """
         for key, value in vars(new_generator).items():
             setattr(self, key, value)
 
