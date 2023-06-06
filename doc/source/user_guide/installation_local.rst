@@ -57,8 +57,8 @@ On Windows:
 
 Install Optimas
 ~~~~~~~~~~~~~~~
-Install the latest version directly from GitHub:
+Install the latest release from PyPI
 
 .. code::
 
-    pip install git+https://github.com/optimas-org/optimas.git
+    pip install optimas

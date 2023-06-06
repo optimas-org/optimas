@@ -135,7 +135,7 @@ if __name__ == '__main__':
                      initialize_ions=False, n_order=n_order, use_cuda=True,
                      v_comoving=v_comoving, gamma_boost=gamma_boost,
                      verbose_level=2, particle_shape='cubic',
-                     use_galilean=True, use_all_mpi_ranks=False)
+                     use_galilean=True)
     # By default the simulation initializes an electron species (sim.ptcl[0])
     # Because we did not pass the arguments `n`, `p_nz`, `p_nr`, `p_nz`,
     # this electron species does not contain any macroparticles.
