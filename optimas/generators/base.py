@@ -284,6 +284,10 @@ class Generator():
         libE_specs = {}
         return libE_specs
 
+    def update(self, new_generator):
+        for key, value in vars(new_generator).items():
+            setattr(self, key, value)
+
     def _ask(
         self,
         trials: List[Trial]

@@ -117,6 +117,9 @@ class Exploration():
         # Update history.
         self.history = history
 
+        # Update generator with the one received from libE.
+        self.generator.update(persis_info[1]['generator'])
+
         # Determine if current rank is master.
         if self.libE_specs["comms"] == "local":
             is_master = True
