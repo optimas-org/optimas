@@ -67,13 +67,13 @@ class Exploration():
         self.max_evals = max_evals
         self.sim_workers = sim_workers
         self.run_async = run_async
-        self.history = self._load_history(history)
         if history_save_period is None:
             self.history_save_period = sim_workers
         else:
             self.history_save_period = history_save_period
         self.exploration_dir_path = exploration_dir_path
         self.libe_comms = libe_comms
+        self._load_history(history)
         self._create_alloc_specs()
         self._create_executor()
         self._initialize_evaluator()
@@ -98,10 +98,6 @@ class Exploration():
             self.generator.objectives,
             self.generator.analyzed_parameters
         )
-
-        # If provided, incorporate history into generator.
-        if self.history is not None:
-            self.generator.incorporate_history(self.history)
 
         # Launch exploration with libEnsemble.
         history, persis_info, flag = libE(
@@ -141,7 +137,10 @@ class Exploration():
         """Initialize exploration evaluator."""
         self.evaluator.initialize()
 
-    def _load_history(self, history: Union[str, np.ndarray, None]) -> None:
+    def _load_history(
+        self,
+        history: Union[str, np.ndarray, None]
+    ) -> None:
         """Load history file."""
         if isinstance(history, str):
             if os.path.exists(history):
@@ -155,7 +154,10 @@ class Exploration():
         assert history is None or isinstance(history, np.ndarray), (
             'Type {} not valid for `history`'.format(type(history))
         )
-        return history
+        # Incorporate history into generator.
+        if history is not None:
+            self.generator.incorporate_history(history)
+        self.history = history
 
     def _set_default_libe_specs(self) -> None:
         """Set default exploration libe_specs."""
