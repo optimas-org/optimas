@@ -7,6 +7,7 @@ from typing import List, Dict, Optional
 import numpy as np
 
 from optimas.utils.logger import get_logger
+from optimas.utils.other import update_object
 from optimas.gen_functions import persistent_generator
 from optimas.core import (Objective, Trial, Evaluation, VaryingParameter,
                           Parameter, TrialParameter)
@@ -318,8 +319,7 @@ class Generator():
         new_generator : Generator
             The newer version of the generator returned in ``persis_info``.
         """
-        for key, value in vars(new_generator).items():
-            setattr(self, key, value)
+        update_object(self, new_generator)
 
     def _ask(
         self,

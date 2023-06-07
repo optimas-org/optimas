@@ -6,6 +6,7 @@ import os
 
 from ax.service.ax_client import AxClient
 
+from optimas.utils.other import update_object
 from optimas.core import Objective, Trial, VaryingParameter, Parameter
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
@@ -148,6 +149,5 @@ class AxServiceGenerator(AxGenerator):
         """
         original_ax_client = self._ax_client
         super()._update(new_generator)
-        for key, value in vars(new_generator._ax_client).items():
-            setattr(original_ax_client, key, value)
+        update_object(original_ax_client, new_generator._ax_client)
         self._ax_client = original_ax_client
