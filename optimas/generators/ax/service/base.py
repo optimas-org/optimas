@@ -125,7 +125,9 @@ class AxServiceGenerator(AxGenerator):
         pytorch tensors that prevent serialization.
         """
         generation_strategy = self._ax_client.generation_strategy
-        del generation_strategy._curr.model_spec._fitted_model
-        del generation_strategy._model
-        generation_strategy._model = None
-        generation_strategy._curr.model_spec._fitted_model = None
+        if hasattr(generation_strategy._curr.model_spec, '_fitted_model'):
+            del generation_strategy._curr.model_spec._fitted_model
+            generation_strategy._curr.model_spec._fitted_model = None
+        if hasattr(generation_strategy, '_model'):
+            del generation_strategy._model
+            generation_strategy._model = None
