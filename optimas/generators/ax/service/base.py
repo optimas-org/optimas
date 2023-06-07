@@ -117,3 +117,15 @@ class AxServiceGenerator(AxGenerator):
                 self._n_completed_trials_last_saved)
         )
         self._ax_client.save_to_json_file(file_path)
+
+    def _prepare_to_send(self):
+        """Prepare generator to send to another process.
+
+        Delete the fitted model from the generation strategy. It can contain
+        pytorch tensors that prevent serialization.
+        """
+        generation_strategy = self._ax_client.generation_strategy
+        del generation_strategy._curr.model_spec._fitted_model
+        del generation_strategy._model
+        generation_strategy._model = None
+        generation_strategy._curr.model_spec._fitted_model = None

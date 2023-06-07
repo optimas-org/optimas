@@ -117,6 +117,7 @@ class AxMultitaskGenerator(AxGenerator):
         self.returned_hifi_trials = 0
         self.init_batch_limit = 1000
         self.current_trial = None
+        self.gr_lofi = None
         self._experiment = self._create_experiment()
 
     def get_gen_specs(
@@ -438,6 +439,15 @@ class AxMultitaskGenerator(AxGenerator):
             filepath=file_path,
             encoder_registry=self._encoder_registry
         )
+
+    def _prepare_to_send(self):
+        """Prepare generator to send to another process.
+
+        Delete stored generator run. It can contain pytorch tensors that
+        prevent serialization.
+        """
+        del self.gr_lofi
+        self.gr_lofi = None
 
 
 def max_utility_from_GP(
