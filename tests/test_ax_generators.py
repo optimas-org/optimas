@@ -42,7 +42,10 @@ def eval_func_task_2(input_params, output_params):
 
 
 def test_ax_single_fidelity():
-    """Test that an exploration with a single-fidelity generator runs"""
+    """
+    Test that an exploration with a single-fidelity generator runs
+    and that the generator and Ax client are updated after running.
+    """
 
     var1 = VaryingParameter('x0', -50., 5.)
     var2 = VaryingParameter('x1', -5., 15.)
@@ -58,7 +61,18 @@ def test_ax_single_fidelity():
         exploration_dir_path='./tests_output/test_ax_single_fidelity'
     )
 
+    # Get reference to original AxClient.
+    ax_client = gen._ax_client
+
+    # Run exploration.
     exploration.run()
+
+    # Check that the generator has been updated.
+    assert len(gen._trials) == exploration.history.shape[0]
+
+    # Check that the original ax client has been updated.
+    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
+    assert n_ax_trials == exploration.history.shape[0]
 
     # Save history for later restart test
     np.save('./tests_output/ax_sf_history' , exploration.history)
