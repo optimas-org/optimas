@@ -9,6 +9,9 @@ from libensemble.libE import libE
 from libensemble.tools import save_libE_output, add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
+from libensemble.resources.resources import Resources
+from libensemble.executors.executor import Executor
+from libensemble.logger import LogConfig
 
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
@@ -136,6 +139,9 @@ class Exploration():
                 history, persis_info, __file__, nworkers,
                 dest_path=os.path.abspath(self.exploration_dir_path))
 
+        # Reset state of libEnsemble.
+        self._reset_libensemble()
+
     def _create_executor(self) -> None:
         """Create libEnsemble executor."""
         self.executor = MPIExecutor()
@@ -209,3 +215,19 @@ class Exploration():
                 'async_return': self.run_async
             }
         }
+
+    def _reset_libensemble(self) -> None:
+        """Reset the state of libEnsemble.
+
+        After calling `libE`, some libEnsemble attributes do not come back to
+        their original states. This leads to issues if another `Exploration`
+        run is launched within the same script. This method resets the
+        necessary libEnsemble attributes to their original state.
+        """
+        if Resources.resources is not None:
+            del Resources.resources
+            Resources.resources = None
+        if Executor.executor is not None:
+            del Executor.executor
+            Executor.executor = None
+        LogConfig.config.logger_set = False
