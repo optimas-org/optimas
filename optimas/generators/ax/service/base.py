@@ -8,6 +8,7 @@ from ax.service.ax_client import AxClient
 
 from optimas.core import Objective, Trial, VaryingParameter, Parameter
 from optimas.generators.ax.base import AxGenerator
+from optimas.generators.base import Generator
 
 
 class AxServiceGenerator(AxGenerator):
@@ -130,3 +131,23 @@ class AxServiceGenerator(AxGenerator):
             generation_strategy._curr.model_spec._fitted_model = None
             del generation_strategy._model
             generation_strategy._model = None
+
+    def _update(
+        self,
+        new_generator: Generator
+    ) -> None:
+        """Update generator with the attributes of a newer one.
+
+        This method is overrides the base one to make sure that the original
+        AxClient is updated and not simply replaced.
+
+        Parameters
+        ----------
+        new_generator : Generator
+            The newer version of the generator returned in ``persis_info``.
+        """
+        original_ax_client = self._ax_client
+        super()._update(new_generator)
+        for key, value in vars(new_generator._ax_client).items():
+            setattr(original_ax_client, key, value)
+        self._ax_client = original_ax_client
