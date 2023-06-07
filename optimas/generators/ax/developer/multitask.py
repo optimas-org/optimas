@@ -440,7 +440,7 @@ class AxMultitaskGenerator(AxGenerator):
             encoder_registry=self._encoder_registry
         )
 
-    def _prepare_to_send(self):
+    def _prepare_to_send(self) -> None:
         """Prepare generator to send to another process.
 
         Delete stored generator run. It can contain pytorch tensors that

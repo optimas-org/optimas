@@ -118,7 +118,7 @@ class AxServiceGenerator(AxGenerator):
         )
         self._ax_client.save_to_json_file(file_path)
 
-    def _prepare_to_send(self):
+    def _prepare_to_send(self) -> None:
         """Prepare generator to send to another process.
 
         Delete the fitted model from the generation strategy. It can contain

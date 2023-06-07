@@ -286,7 +286,7 @@ class Generator():
         libE_specs = {}
         return libE_specs
 
-    def _prepare_to_send(self):
+    def _prepare_to_send(self) -> None:
         """Prepare generator to send to another process.
 
         This method is necessary because the generator, when given to
@@ -305,7 +305,7 @@ class Generator():
     def _update(
         self,
         new_generator: Generator
-    ):
+    ) -> None:
         """Update generator with the attributes of a newer one.
 
         This method is only intended to be used internally by an
