@@ -82,7 +82,9 @@ html_theme_options = {
             "url": "https://optimas.slack.com/",
             "icon": "fa-brands fa-slack",
         },
-    ]
+    ],
+    "pygment_light_style": "default",
+    "pygment_dark_style": "monokai"
 }
 
 # Do not show type hints.
