@@ -84,7 +84,15 @@ html_theme_options = {
         },
     ],
     "pygment_light_style": "default",
-    "pygment_dark_style": "monokai"
+    "pygment_dark_style": "monokai",
+    "use_edit_page_button": True,
+}
+
+html_context = {
+    "github_user": "optimas-org",
+    "github_repo": "optimas",
+    "github_version": "main",
+    "doc_path": "doc/source",
 }
 
 # Do not show type hints.
