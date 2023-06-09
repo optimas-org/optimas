@@ -75,12 +75,12 @@ html_theme_options = {
         {
             "name": "GitHub",
             "url": "https://github.com/optimas-org/optimas",
-            "icon": "fab fa-github-square",
+            "icon": "fa-brands fa-github",
         },
         {
             "name": "Slack",
             "url": "https://optimas.slack.com/",
-            "icon": "fab fa-slack",
+            "icon": "fa-brands fa-slack",
         },
     ]
 }
