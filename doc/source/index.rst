@@ -16,7 +16,7 @@ Optimas |release| documentation
         :text-align: center
 
         Instructions for getting the code up and running and basic information 
-        about Optimas.
+        about optimas.
 
         +++
 
@@ -58,7 +58,7 @@ Optimas |release| documentation
     .. grid-item-card:: API reference
         :text-align: center
         
-        Detailed documentation of the Optimas API.
+        Detailed documentation of the optimas API.
 
         +++
 

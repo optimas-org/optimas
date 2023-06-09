@@ -21,9 +21,9 @@ from optimas import __version__  # noqa: E402
 
 
 # -- Project information -----------------------------------------------------
-project = 'Optimas'
-project_copyright = '2023-%s, the Optimas collaborators' % date.today().year
-author = 'The Optimas collaboratorsa'
+project = 'optimas'
+project_copyright = '2023-%s, the optimas collaborators' % date.today().year
+author = 'The optimas collaborators'
 
 # The full version, including alpha/beta/rc tags
 release = __version__
