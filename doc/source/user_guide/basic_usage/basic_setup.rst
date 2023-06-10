@@ -1,15 +1,28 @@
 Setting up an optimas run
 =========================
 
-Optimas is a library built on top of `libEnsemble <https://libensemble.readthedocs.io/>`_ that allows the execution of large parallel explorations (typically parameter scans or optimizations). The evaluations, which typically consist of resource-intensive simulations, can be carried out concurrently and with dedicated computational resources.
+This section covers the basic workflow of setting up an optimas
+:class:`~optimas.explorations.Exploration`, which is typically used to launch
+an optimization or parameter scan. This involves:
 
-This section covers the basics components of optimas that are needed to set up a Python script for launching an :class:`~optimas.explorations.Exploration`.
+- Specifying the parameters that should be varied during the exploration.
+- Specifying the optimization objectives and other parameters that should
+  analyzed for each evaluation.
+- Choosing a generator. This determines the strategy with which new evaluations
+  are generated.
+- Choosing an evaluator. This determines how the evaluations are performed and
+  which computational resources are assigned to them.
+- Specifying how many evaluations should be carried out in parallel and the
+  criteria for ending the exploration.
+
 
 Parameters to vary
 ~~~~~~~~~~~~~~~~~~
-The first thing that needs to be specified is a list of parameters that should be varied during the optimization or scan. These are instances of :class:`~optimas.core.VaryingParameter`.
-
-As an example, the code below shows how to define two parameters named ``x0`` and ``x1`` that can vary in the ranges [0, 15] and [-5, 5], respectively.
+The parameters to vary (:class:`~optimas.core.VaryingParameter`) are the
+parameters that should be tuned or scanned during the exploration.
+For example, if we want to see how the outcome of an evaluation depends on two
+parameters named ``x0`` and ``x1`` that can vary in the ranges [0, 15] and
+[-5, 5], we would define them as
 
 .. code-block:: python
 
@@ -21,11 +34,17 @@ As an example, the code below shows how to define two parameters named ``x0`` an
 
 Objectives and other analyzed parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Next, a list of objectives (:class:`~optimas.core.Objective`) should be provided. These are the quantities that are obtained from each evaluation and that the optimas will try to maximize or minimize (in case of an optimization) or simply to explore (in case of a parameter scan).
+The objectives (:class:`~optimas.core.Objective`) define the outcomes of an
+evaluation that optimas should optimize (maximize or minimize) or scan.
 
-Optionally, a list of parameters (:class:`~optimas.core.Parameter`) that do not play a role in the optimization, but that should be analyzed at each evaluation (for example, because they provide useful information about the evaluations) can also be given.
+Optionally, a list of parameters (:class:`~optimas.core.Parameter`) that do not
+play a role in the optimization but that should be analyzed at each evaluation
+(for example, because they provide useful information about the evaluations)
+can also be given.
 
-The following code shows how to define one objective, named ``'f'``, that should be minimized and two diagnostics ``'diag_1'`` and ``'diag_2'`` that will also be calculated at each evaluation.
+The following code shows how to define one objective ``'f'`` that
+should be minimized and two diagnostics ``'diag_1'`` and ``'diag_2'`` that will
+also be calculated for each evaluation.
 
 .. code-block:: python
 
@@ -38,9 +57,17 @@ The following code shows how to define one objective, named ``'f'``, that should
 
 Generator
 ~~~~~~~~~
-The generator defines the strategy with which new points should be generated during the exploration. There are multiple generators implemented in optimas (see :ref:`generators`) that allow for various optimization strategies or parameter scans.
+The generator defines the strategy with which new points are generated
+during the exploration. There are multiple generators implemented in optimas
+(see :ref:`generators`) that allow for various optimization strategies or
+parameter scans.
 
-In the example below, the varying parameters, objectives and diagnostics defined in the previous sections are used to set up a generator for Bayesian optimization based on `Ax <https://ax.dev/>`_ that uses a single fidelity. ``n_init=4`` indicates that 4 random samples will be generated before the Bayesian optimization loop is started (see :class:`~optimas.generators.AxSingleFidelityGenerator` for more details).
+In the example below, the varying parameters, objectives and diagnostics
+defined in the previous sections are used to set up a single-fidelity Bayesian
+optimizer based on `Ax <https://ax.dev/>`_.
+``n_init=4`` indicates that 4 random samples will be generated before the
+Bayesian optimization loop is started (see
+:class:`~optimas.generators.AxSingleFidelityGenerator` for more details).
 
 .. code-block:: python
 
@@ -56,14 +83,33 @@ In the example below, the varying parameters, objectives and diagnostics defined
 
 Evaluator
 ~~~~~~~~~
-The evaluator is in charge of getting the trials suggested by the generator and evaluating them, returning the value of the objectives and other analyzed parameters.
+The evaluator is in charge of getting the trials suggested by the generator and
+evaluating them, returning the value of the objectives and other analyzed
+parameters.
 
 There are two types of evaluators:
 
-- :class:`~optimas.evaluators.FunctionEvaluator`: used to evaluate simple functions that do not demand large computational resources.
-- :class:`~optimas.evaluators.TemplateEvaluator`: used to carry out expensive evaluations that are executed by running an external script. In this case, a template script should be given from which the scripts of each evaluation will be generated (see :ref:`simulation template` for more details). After executing the script, the evaluator analyzes the output of the evaluation with a user-provided function (see :ref:`analysis function` for more details).
+- :class:`~optimas.evaluators.FunctionEvaluator`: used to evaluate Python
+  functions that do not demand large computational resources. Each evaluation
+  will be carried out in a different process using either
+  `multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_
+  or MPI.
+- :class:`~optimas.evaluators.TemplateEvaluator`: used to carry out expensive
+  evaluations that are executed by running an external script. In this case, a
+  template script should be given from which the scripts of each evaluation
+  will be generated (see :ref:`simulation template` for more details).
+  Each evaluation is executed using MPI with the amount or resources (number of
+  processes and GPUs) specified by the user. After executing the script, the
+  output of the evaluation is analyzed with a user-defined function that
+  calculates the value of the objectives and other analyzed parameters
+  (see :ref:`analysis function` for more details).
 
-The code below shows how to define a :class:`~optimas.evaluators.TemplateEvaluator` that executes a script generated from the template ``'template_simulation_script.py'`` and whose output is analyzed by a function ``analyze_simulation``. The script is executed with MPI, using by default a single process and no GPUs. This can be changed by specifying the ``n_procs`` and ``n_gpus`` attributes.
+The code below shows an example of how to define a
+:class:`~optimas.evaluators.TemplateEvaluator` that executes a script generated
+from the template ``'template_simulation_script.py'`` and whose output is
+analyzed by a function ``analyze_simulation``. The script is executed with MPI,
+using by default a single process and no GPUs. This can be
+changed by specifying the ``n_procs`` and ``n_gpus`` attributes.
 
 .. code-block:: python
 
@@ -79,9 +125,14 @@ The code below shows how to define a :class:`~optimas.evaluators.TemplateEvaluat
 
 Exploration
 ~~~~~~~~~~~
-To create an :class:`~optimas.explorations.Exploration`, all that is needed is to indicate the generator and evaluator to use, as well as the maximum evaluations to perform and the number of simulation workers.
+The :class:`~optimas.explorations.Exploration` is the main class that
+coordinates the generation and execution of evaluations. In addition to
+the generator and evaluator to use, it requires the user to specify the maximum
+number evaluations to perform and the number of simulation workers.
 
-In the example below a maximim of 100 evaluations are carried out using 4 simulation workers. This means that up to 4 evaluation can be carried out in parallel at any time.
+In the example below, a maximum of 100 evaluations will be carried out using 4
+simulation workers. This means that up to 4 evaluation will be performed in
+parallel at any time.
 
 .. code-block:: python
 
@@ -94,11 +145,15 @@ In the example below a maximim of 100 evaluations are carried out using 4 simula
         sim_workers=4
     )
 
-To start the exploration, simply call ``exp.run()`` inside a ``if __name__ == '__main__':`` block such as
+The exploration is started by executing ``exp.run()`` inside a
+``if __name__ == '__main__':`` block:
 
 .. code-block:: python
 
     if __name__ == '__main__':
         exp.run()
 
-This is needed in order to safely execute the parallel evaluations with some `mutliprocessing <https://docs.python.org/3/library/multiprocessing.html>`_ methods such as ``'spawn'`` (default on macOS).
+This is needed in order to safely execute the exploration in systems using the
+``'spawn'``
+`multiprocessing <https://docs.python.org/3/library/multiprocessing.html>`_
+method (default on macOS).
