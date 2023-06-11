@@ -5,4 +5,4 @@ Examples
    :caption: Bayesian optimization
    :maxdepth: 2
 
-   dummy
+   bo_basic
