@@ -41,7 +41,8 @@ extensions = [
     # 'sphinx.ext.intersphinx',
     'sphinx_design',
     # 'sphinx_gallery.gen_gallery',
-    'numpydoc'
+    'numpydoc',
+    "matplotlib.sphinxext.plot_directive",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -108,6 +109,38 @@ autosummary_generate = True
 autosummary_context = {
     # Methods that should be skipped when generating the docs
     "skipmethods": ["__init__"]
+}
+
+# ------------------------------------------------------------------------------
+# Matplotlib plot_directive options
+# ------------------------------------------------------------------------------
+
+plot_include_source = False
+plot_formats = [("png", 300)]
+plot_html_show_formats = False
+plot_html_show_source_link = False
+
+import math
+
+base_fig_size = 4
+phi = (math.sqrt(5) + 1) / 2
+
+font_size = 9
+
+plot_rcparams = {
+    "font.size": font_size,
+    "axes.titlesize": font_size,
+    "axes.labelsize": font_size,
+    "xtick.labelsize": font_size,
+    "ytick.labelsize": font_size,
+    "legend.fontsize": font_size,
+    "figure.figsize": (base_fig_size * phi, base_fig_size),
+    "figure.subplot.bottom": 0.15,
+    "figure.subplot.left": 0.15,
+    "figure.subplot.right": 0.95,
+    "figure.subplot.top": 0.95,
+    "figure.subplot.wspace": 0.4,
+    "text.usetex": False,
 }
 
 # # Configuration for generating tutorials.
