@@ -38,7 +38,7 @@ def analyze_simulation(simulation_directory, output_params):
 
 # Create varying parameters and objectives.
 var_1 = VaryingParameter('x0', 0., 15., default_value=5.)
-var_2 = VaryingParameter('x1', 0., 15., default_value=5.)
+var_2 = VaryingParameter('x1', 0., 15., default_value=6.)
 obj = Objective('f')
 
 
