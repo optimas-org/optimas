@@ -87,6 +87,7 @@ html_theme_options = {
     "pygment_light_style": "default",
     "pygment_dark_style": "monokai",
     "use_edit_page_button": True,
+    "navigation_depth": 2
 }
 
 html_context = {
