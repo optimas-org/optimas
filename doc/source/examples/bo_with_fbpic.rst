@@ -1,6 +1,10 @@
 Optimization with FBPIC
 =======================
 
+
+Description
+~~~~~~~~~~~
+
 This examples shows how to perform a Bayesian optimization of a laser-plasma
 accelerator (LPA) using FBPIC simulations.
 
@@ -37,6 +41,10 @@ optimas script.
 
 The example is set up to make use of a system of 4 GPUs, where each FBPIC
 simulation uses a single GPU and 4 simulations are carried out in parallel.
+
+
+Scripts
+~~~~~~~
 
 The files needed to run the optimization should be located in a folder
 (named e.g., ``optimization``) with the following structure:

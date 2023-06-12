@@ -1,6 +1,10 @@
 Grid sampling
 =============
 
+
+Description
+~~~~~~~~~~~
+
 This example shows how to perform a grid sampling parameter scan using a
 :class:`~optimas.generators.GridSamplingGenerator` and a
 :class:`~optimas.evaluators.TemplateEvaluator`.
@@ -61,6 +65,9 @@ where :math:`l_b=0` and :math:`u_b=15`, the grid of sample looks like:
    )
    ax.legend(loc='upper right')
 
+
+Scripts
+~~~~~~~
 
 The two files needed to run this example should be located in the same folder
 (named e.g., ``example``):

@@ -1,6 +1,10 @@
 Basic optimization with simulations
 ===================================
 
+
+Description
+~~~~~~~~~~~
+
 This example illustrates how to run a generic Bayesian optimization with
 simulations. This typically requires:
 
@@ -21,6 +25,10 @@ this expression can be replaced by an actual simulation script.
 
    For additional details about how to set up an template simulation script see
    :ref:`simulation template`.
+
+
+Scripts
+~~~~~~~
 
 The two files needed to run the optimization should be located in a folder
 (named e.g., ``optimization``) with the following structure:

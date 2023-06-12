@@ -1,6 +1,10 @@
 Random sampling
 ===============
 
+
+Description
+~~~~~~~~~~~
+
 This example shows how to perform a random parameter scan using a
 :class:`~optimas.generators.RandomSamplingGenerator` and a
 :class:`~optimas.evaluators.TemplateEvaluator`.
@@ -71,6 +75,9 @@ distribution such as:
    ax.add_patch(ellipse)
    ax.legend(loc='upper right')
 
+
+Scripts
+~~~~~~~
 
 The two files needed to run this example should be located in the same folder
 (named e.g., ``example``):

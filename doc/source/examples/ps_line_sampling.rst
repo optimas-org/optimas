@@ -1,6 +1,10 @@
 Line sampling
 =============
 
+
+Description
+~~~~~~~~~~~
+
 This example shows how to perform a line sampling parameter scan using a
 :class:`~optimas.generators.LineSamplingGenerator` and a
 :class:`~optimas.evaluators.TemplateEvaluator`.
@@ -64,6 +68,9 @@ where :math:`x_0` and :math:`x_1` have a default values of :math:`5` and
    )
    ax.legend(loc='upper right')
 
+
+Scripts
+~~~~~~~
 
 The two files needed to run this example should be located in the same folder
 (named e.g., ``example``):
