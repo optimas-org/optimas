@@ -24,7 +24,7 @@ var_1 = VaryingParameter('laser_scale', 0.7, 1.05)
 var_2 = VaryingParameter('z_foc', 3., 7.5)
 var_3 = VaryingParameter('mult', 0.1, 1.5)
 var_4 = VaryingParameter('plasma_scale', 0.6, 0.8)
-obj = Objective('f', minimize=True)
+obj = Objective('f', minimize=False)
 
 
 # Define additional parameters to analyze.
@@ -46,7 +46,7 @@ gen = AxSingleFidelityGenerator(
 ev = TemplateEvaluator(
     sim_template='template_simulation_script.py',
     analysis_func=analyze_simulation,
-    n_gpus=2  # Use 1 GPU per simulation.
+    n_gpus=1  # Use 1 GPU per simulation.
 )
 
 
@@ -55,7 +55,7 @@ exp = Exploration(
     generator=gen,
     evaluator=ev,
     max_evals=100,
-    sim_workers=2,
+    sim_workers=4,
     run_async=True
 )
 
