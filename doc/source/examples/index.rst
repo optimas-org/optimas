@@ -16,4 +16,4 @@ Examples
 
    bo_basic
    bo_with_fbpic
-   .. bo_multitask_fbpic_waket
+   bo_multitask_fbpic_waket
