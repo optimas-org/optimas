@@ -1,3 +1,5 @@
+.. _bo-with-fbpic:
+
 Optimization with FBPIC
 =======================
 
