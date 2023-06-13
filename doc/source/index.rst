@@ -17,7 +17,7 @@ Optimas |release| documentation
     .. grid-item-card:: User guide
         :text-align: center
 
-        :material-outlined:`menu_book;3em`
+        :octicon:`book;3em`
 
         Instructions for getting the code up and running and basic information 
         about optimas.
@@ -34,7 +34,7 @@ Optimas |release| documentation
     .. grid-item-card:: Tutorials
         :text-align: center
         
-        :material-outlined:`school;3em`
+        :octicon:`mortar-board;3em`
               
         Step-by-step tutorials.
 
@@ -50,7 +50,7 @@ Optimas |release| documentation
     .. grid-item-card:: Examples
         :text-align: center
         
-        :material-outlined:`lightbulb;3em`
+        :octicon:`light-bulb;3em`
 
         Quick examples showcasing how to use the code.
 
@@ -66,7 +66,7 @@ Optimas |release| documentation
     .. grid-item-card:: API reference
         :text-align: center
         
-        :material-outlined:`data_array;3em`
+        :octicon:`code;3em`
 
         Detailed documentation of the optimas API.
 
