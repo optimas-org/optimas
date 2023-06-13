@@ -7,8 +7,8 @@ from xopt import VOCS
 from xopt.generators import NelderMeadGenerator as XoptNelderMeadGenerator
 from xopt.generators.scipy.neldermead import NelderMeadOptions
 
-from optimas.core import (Objective, TrialParameter, VaryingParameter,
-                          Parameter, Evaluation, Trial)
+from optimas.core import (Objective, VaryingParameter, Parameter, Evaluation,
+                          Trial)
 from optimas.generators.base import Generator
 
 
@@ -18,25 +18,17 @@ class NelderMeadGenerator(Generator):
         varying_parameters: List[VaryingParameter],
         objectives: List[Objective],
         analyzed_parameters: Optional[List[Parameter]] = None,
-        use_cuda: Optional[bool] = False,
-        gpu_id: Optional[int] = 0,
-        dedicated_resources: Optional[bool] = True,
         save_model: Optional[bool] = False,
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = 'model_history',
-        custom_trial_parameters: Optional[TrialParameter] = None
     ) -> None:
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
             analyzed_parameters=analyzed_parameters,
-            use_cuda=use_cuda,
-            gpu_id=gpu_id,
-            dedicated_resources=dedicated_resources,
             save_model=save_model,
             model_save_period=model_save_period,
-            model_history_dir=model_history_dir,
-            custom_trial_parameters=custom_trial_parameters
+            model_history_dir=model_history_dir
         )
         self._create_xopt_generator()
 
