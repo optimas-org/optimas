@@ -86,8 +86,8 @@ The example is executed by running
 
 .. literalinclude:: ../../../examples/dummy_grid_sampling/run_example.py
    :language: python
-   :caption: run_example.py
+   :caption: run_example.py (:download:`download <../../../examples/dummy_grid_sampling/run_example.py>`)
 
 .. literalinclude:: ../../../examples/dummy_grid_sampling/template_simulation_script.py
    :language: python
-   :caption: template_simulation_script.py
+   :caption: template_simulation_script.py (:download:`download <../../../examples/dummy_grid_sampling/template_simulation_script.py>`)

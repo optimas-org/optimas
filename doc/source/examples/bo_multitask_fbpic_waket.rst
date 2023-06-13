@@ -12,12 +12,12 @@ Multitask optimization with FBPIC and Wake-T
 
 .. literalinclude:: ../../../examples/multi_model_mt/run_opt.py
    :language: python
-   :caption: run_opt.py
+   :caption: run_opt.py (:download:`download <../../../examples/multi_model_mt/run_opt.py>`)
 
 .. literalinclude:: ../../../examples/multi_model_mt/template_simulation_script.py
    :language: python
-   :caption: template_simulation_script.py
+   :caption: template_simulation_script.py (:download:`download <../../../examples/multi_model_mt/template_simulation_script.py>`)
 
 .. literalinclude:: ../../../examples/multi_model_mt/analysis_script.py
    :language: python
-   :caption: analysis_script.py
+   :caption: analysis_script.py (:download:`download <../../../examples/multi_model_mt/analysis_script.py>`)

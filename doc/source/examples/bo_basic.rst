@@ -47,10 +47,11 @@ The optimization is started by executing:
 
 You can find both example scripts below.
 
+
 .. literalinclude:: ../../../examples/dummy/run_example.py
    :language: python
-   :caption: run_example.py
+   :caption: run_example.py (:download:`download <../../../examples/dummy/run_example.py>`)
 
 .. literalinclude:: ../../../examples/dummy/template_simulation_script.py
    :language: python
-   :caption: template_simulation_script.py
+   :caption: template_simulation_script.py  (:download:`download <../../../examples/dummy/template_simulation_script.py>`)

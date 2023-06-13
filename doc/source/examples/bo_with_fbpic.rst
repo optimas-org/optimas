@@ -66,15 +66,15 @@ The scripts needed to run this example can be seen below.
 
 .. literalinclude:: ../../../examples/ionization_injection/run_example.py
    :language: python
-   :caption: run_example.py
+   :caption: run_example.py (:download:`download <../../../examples/ionization_injection/run_example.py>`)
 
 .. literalinclude:: ../../../examples/ionization_injection/template_simulation_script.py
    :language: python
-   :caption: template_simulation_script.py
+   :caption: template_simulation_script.py (:download:`download <../../../examples/ionization_injection/template_simulation_script.py>`)
 
 .. literalinclude:: ../../../examples/ionization_injection/analysis_script.py
    :language: python
-   :caption: analysis_script.py
+   :caption: analysis_script.py (:download:`download <../../../examples/ionization_injection/analysis_script.py>`)
 
 
 References
