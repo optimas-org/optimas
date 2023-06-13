@@ -115,12 +115,13 @@ For example, running a simulation with 2 GPUs and one MPI process per GPU
 would be done with
 
 .. code-block:: python
+   :emphasize-lines: 4
 
-    ev = TemplateEvaluator(
-        sim_template='template_simulation_script.py',
-        analysis_func=analyze_simulation,
-        n_gpus=2
-    )
+   ev = TemplateEvaluator(
+       sim_template='template_simulation_script.py',
+       analysis_func=analyze_simulation,
+       n_gpus=2
+   )
 
 
 Including additional simulation files
@@ -134,6 +135,7 @@ These files will be copied to the simulation directory together with the
 simulation script.
 
 .. code-block:: python
+   :emphasize-lines: 4
 
    ev = TemplateEvaluator(
        sim_template='template_simulation_script.py',
@@ -149,6 +151,7 @@ If your template is a not a Python script, make sure to specify the name or
 path to the ``executable`` that will run your simulation.
 
 .. code-block:: python
+   :emphasize-lines: 3
 
    ev = TemplateEvaluator(
        sim_template='template_simulation_script.txt',
