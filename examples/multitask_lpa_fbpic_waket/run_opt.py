@@ -33,6 +33,7 @@ gen = AxMultitaskGenerator(
     objectives=[obj],
     analyzed_parameters=[par_1, par_2, par_3],
     use_cuda=True,
+    dedicated_resources=True,
     hifi_task=hifi_task,
     lofi_task=lofi_task
 )
