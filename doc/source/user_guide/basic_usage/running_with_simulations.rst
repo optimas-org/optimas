@@ -45,7 +45,7 @@ computes ``x + y``, and stores the result in a text file would look like:
    result = {{x}} + {{y}}
 
    with open('result.txt', 'w') as f:
-    f.write("%f" % result)
+       f.write("%f" % result)
 
 
 To see a more elaborate template script that actually launches a simulation,
