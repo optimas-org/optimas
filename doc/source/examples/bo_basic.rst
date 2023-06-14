@@ -1,3 +1,5 @@
+.. _bo-basic:
+
 Basic optimization with simulations
 ===================================
 
