@@ -21,8 +21,7 @@ simply reads the value in this file.
 
 You can adapt this example to your needs by replacing this
 basic template with an actual simulation and writing the corresponding
-analysis function. See see :ref:`simulation template` and
-:ref:`analysis function` for more details.
+analysis function. See see :ref:`optimas-with-simulations` for more details.
 
 The :class:`~optimas.generators.GridSamplingGenerator` generates a uniform
 multidimensional grid of samples to evaluate. The grid extends from the lower

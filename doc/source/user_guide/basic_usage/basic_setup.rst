@@ -97,12 +97,13 @@ There are two types of evaluators:
 - :class:`~optimas.evaluators.TemplateEvaluator`: used to carry out expensive
   evaluations that are executed by running an external script. In this case, a
   template script should be given from which the scripts of each evaluation
-  will be generated (see :ref:`simulation template` for more details).
+  will be generated.
   Each evaluation is executed using MPI with the amount or resources (number of
   processes and GPUs) specified by the user. After executing the script, the
   output of the evaluation is analyzed with a user-defined function that
-  calculates the value of the objectives and other analyzed parameters
-  (see :ref:`analysis function` for more details).
+  calculates the value of the objectives and other analyzed parameters.
+  See :ref:`optimas-with-simulations` for more details about how to use a
+  :class:`~optimas.evaluators.TemplateEvaluator`.
 
 The code below shows an example of how to define a
 :class:`~optimas.evaluators.TemplateEvaluator` that executes a script generated

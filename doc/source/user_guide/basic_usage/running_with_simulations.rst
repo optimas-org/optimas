@@ -1,4 +1,4 @@
-.. _simulation template:
+.. _optimas-with-simulations:
 
 Running optimas with simulations
 ================================

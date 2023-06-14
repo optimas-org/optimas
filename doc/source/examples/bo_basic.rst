@@ -24,7 +24,7 @@ this expression can be replaced by an actual simulation script.
    the path to the executable that will run your simulation script.
 
    For additional details about how to set up an template simulation script see
-   :ref:`simulation template`.
+   :ref:`optimas-with-simulations`.
 
 
 Scripts
