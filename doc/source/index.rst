@@ -6,10 +6,11 @@ optimas documentation
 
 **Date**: |today| **Version**: |release|
 
-``optimas`` is an open-source Python library that enables highly scalable
+``optimas`` is an `open-source <https://github.com/optimas-org/optimas>`_
+Python library that enables highly scalable
 parallel optimization, from a typical laptop to exascale HPC systems. It is
 built on top of 
-`libEnsemble <https://libensemble.readthedocs.io/l>`_.
+`libEnsemble <https://libensemble.readthedocs.io/>`_.
 
 .. grid:: 2
     :gutter: 2
