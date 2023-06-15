@@ -2,5 +2,6 @@ pydata-sphinx-theme
 sphinx-design
 sphinx-gallery
 numpydoc
+matplotlib
 libensemble >= 0.9.2
 ax-platform >= 0.2.9
