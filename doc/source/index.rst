@@ -83,7 +83,9 @@ built on top of
 Contributing institutions
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-|pic1| |pic1b|  |nbsp| |nbsp| |nbsp|  |pic2| |pic2b| |nbsp| |nbsp| |nbsp| |pic3| |pic3b|
+.. rst-class:: text-center
+
+   |pic1| |pic1b|  |nbsp| |nbsp| |nbsp|  |pic2| |pic2b| |nbsp| |nbsp| |nbsp| |pic3| |pic3b|
 
 
 .. |nbsp| unicode:: U+00A0 .. NO-BREAK SPACE
