@@ -27,7 +27,7 @@ class AxGenerator(Generator):
     dedicated_resources : bool, optional
         Whether to allocated dedicated resources (e.g., the GPU) for the
         generator. These resources will not be available to the
-        simulation workers. By default, ``True``.
+        simulation workers. By default, ``False``.
     save_model : bool, optional
         Whether to save the optimization model (e.g., the surrogate model) to
         disk. By default ``False``.
@@ -49,7 +49,7 @@ class AxGenerator(Generator):
         analyzed_parameters: Optional[List[Parameter]] = None,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
-        dedicated_resources: Optional[bool] = True,
+        dedicated_resources: Optional[bool] = False,
         save_model: Optional[bool] = False,
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = 'model_history',
