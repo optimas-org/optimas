@@ -12,7 +12,7 @@ parallel optimization, from a typical laptop to exascale HPC systems. It is
 built on top of 
 `libEnsemble <https://libensemble.readthedocs.io/>`_.
 
-.. grid:: 2
+.. grid:: 3
     :gutter: 2
 
     .. grid-item-card:: User guide
@@ -32,21 +32,6 @@ built on top of
 
             To the user guide
 
-    .. grid-item-card:: Tutorials
-        :text-align: center
-        
-        :octicon:`mortar-board;3em`
-              
-        Step-by-step tutorials.
-
-        +++
-
-        .. button-ref:: tutorials/index
-            :expand:
-            :color: primary
-            :click-parent:
-
-            To the tutorials
 
     .. grid-item-card:: Examples
         :text-align: center
@@ -127,7 +112,6 @@ Contributing institutions
    :maxdepth: 4
 
    user_guide/index
-   tutorials/index
    examples/index
    api/index
 
