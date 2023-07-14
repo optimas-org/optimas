@@ -1,8 +1,11 @@
 import numpy as np
+from ax.service.ax_client import AxClient, ObjectiveProperties
+from ax.utils.measurement.synthetic_functions import hartmann6
 
 from optimas.explorations import Exploration
 from optimas.generators import (
-    AxSingleFidelityGenerator, AxMultiFidelityGenerator, AxMultitaskGenerator)
+    AxSingleFidelityGenerator, AxMultiFidelityGenerator, AxMultitaskGenerator,
+    AxClientGenerator)
 from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
 from optimas.core import VaryingParameter, Objective, Task
 
@@ -23,6 +26,13 @@ def eval_func_mf(input_params, output_params):
     result = -((x0 + 10 * np.cos(x0 + 0.1 * resolution)) *
                (x1 + 5 * np.cos(x1 - 0.2 * resolution)))
     output_params['f'] = result
+
+
+def eval_func_ax_client(input_params, output_params):
+    """Evaluation function for the AxClient test"""
+    x = np.array([input_params.get(f"x{i+1}") for i in range(6)])
+    output_params['hartmann6'] = hartmann6(x)
+    output_params['l2norm'] = np.sqrt((x ** 2).sum())
 
 
 def eval_func_task_1(input_params, output_params):
@@ -126,6 +136,65 @@ def test_ax_multitask():
     np.save('./tests_output/ax_mt_history' , exploration.history)
 
 
+def test_ax_client():
+    """Test that an exploration with a user-given AxClient runs"""
+    # Create the AxClient from https://ax.dev/tutorials/gpei_hartmann_service.html.
+    ax_client = AxClient()
+    ax_client.create_experiment(
+        name="hartmann_test_experiment",
+        parameters=[
+            {
+                "name": "x1",
+                "type": "range",
+                "bounds": [0.0, 1.0],
+            },
+            {
+                "name": "x2",
+                "type": "range",
+                "bounds": [0.0, 1.0],
+            },
+            {
+                "name": "x3",
+                "type": "range",
+                "bounds": [0.0, 1.0],
+            },
+            {
+                "name": "x4",
+                "type": "range",
+                "bounds": [0.0, 1.0],
+            },
+            {
+                "name": "x5",
+                "type": "range",
+                "bounds": [0.0, 1.0],
+            },
+            {
+                "name": "x6",
+                "type": "range",
+                "bounds": [0.0, 1.0],
+            },
+        ],
+        objectives={
+            "hartmann6": ObjectiveProperties(minimize=True),
+            },
+        parameter_constraints=["x1 + x2 <= 2.0"],  # Optional.
+        outcome_constraints=["l2norm <= 1.25"],  # Optional.
+    )
+
+    gen = AxClientGenerator(ax_client=ax_client)
+    ev = FunctionEvaluator(function=eval_func_ax_client)
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        max_evals=6,
+        sim_workers=2,
+        run_async=False,
+        exploration_dir_path='./tests_output/test_ax_client'
+    )
+
+    exploration.run()
+
+
 def test_ax_single_fidelity_with_history():
     """
     Test that an exploration with a single-fidelity generator runs when
@@ -220,6 +289,7 @@ if __name__ == '__main__':
     test_ax_single_fidelity()
     test_ax_multi_fidelity()
     test_ax_multitask()
+    test_ax_client()
     test_ax_single_fidelity_with_history()
     test_ax_multi_fidelity_with_history()
     test_ax_multitask_with_history()
