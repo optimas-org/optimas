@@ -35,8 +35,6 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
     sim_template = user_specs['sim_template']
     analysis_func = user_specs['analysis_func']
     app_name = user_specs['app_name']
-    # n_gpus = user_specs['n_gpus']
-    # n_proc = user_specs['n_proc']
 
     # Create simulation input file.
     sim_script = sim_template[len('template_'):]  # Strip 'template_' from name

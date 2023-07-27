@@ -176,7 +176,6 @@ class Exploration():
         libE_specs = {}
         # Save H to file every N simulation evaluations
         # default value, if not defined
-
         libE_specs['save_every_k_sims'] = self.history_save_period
         # Force central mode
         libE_specs['dedicated_mode'] = False
