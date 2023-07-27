@@ -29,7 +29,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # GPU. This GPU will only be used for the generator and will not be
         # available for the simulation workers.
         else:
-            resources.set_env_to_slots('CUDA_VISIBLE_DEVICES')
+            resources.set_env_to_gpus('CUDA_VISIBLE_DEVICES')
 
     # Get generator, objectives, and parameters to analyze.
     generator = gen_specs['user']['generator']
@@ -57,15 +57,19 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                 for var, val in zip(trial.varying_parameters,
                                     trial.parameter_values):
                     H_o[var.name][i] = val
+                run_params = gen_specs['user']['run_params']
                 if 'task' in H_o.dtype.names:
                     H_o['task'][i] = trial.trial_type
+                    run_params = run_params[trial.trial_type]
                 if trial.custom_parameters is not None:
                     for par in trial.custom_parameters:
                         H_o[par.save_name][i] = getattr(trial, par.name)
                 H_o['trial_index'][i] = trial.index
-                H_o['resource_sets'][i] = 1
-        n_failed_gens = np.sum(H_o['resource_sets'] == 0)
-        H_o = H_o[H_o['resource_sets'] > 0]
+                H_o['num_procs'][i] = run_params["num_procs"]
+                H_o['num_gpus'][i] = run_params["num_gpus"]
+
+        n_failed_gens = np.sum(H_o['num_procs'] == 0)
+        H_o = H_o[H_o['num_procs'] > 0]
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager

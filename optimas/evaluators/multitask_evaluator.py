@@ -79,6 +79,13 @@ class MultitaskEvaluator(Evaluator):
         # Use only the combined specs.
         return libE_specs_1
 
+    def get_run_params(self) -> Dict:
+        """Return run parameters for this evaluator."""
+        run_params = {}
+        for task, evaluator in zip(self.tasks, self.task_evaluators):
+            run_params[task.name] = evaluator.get_run_params()
+        return run_params
+
     def _initialize(self) -> None:
         """Initialize the evaluator."""
         if isinstance(self.task_evaluators[0], TemplateEvaluator):

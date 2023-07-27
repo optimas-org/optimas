@@ -9,6 +9,9 @@ from libensemble.libE import libE
 from libensemble.tools import save_libE_output, add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
+from libensemble.resources.resources import Resources
+from libensemble.executors.executor import Executor
+from libensemble.logger import LogConfig
 
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
@@ -88,11 +91,15 @@ class Exploration():
         persis_info = add_unique_random_streams({}, self.sim_workers + 2)
 
         # If specified, allocate dedicated resources for the generator.
-        if self.generator.dedicated_resources:
+        if self.generator.dedicated_resources and self.generator.use_cuda:
             persis_info['gen_resources'] = 1
+            persis_info['gen_use_gpus'] = True
+        else:
+            self.libE_specs['zero_resource_workers'] = [1]
 
         # Get gen_specs and sim_specs.
-        gen_specs = self.generator.get_gen_specs(self.sim_workers)
+        run_params = self.evaluator.get_run_params()
+        gen_specs = self.generator.get_gen_specs(self.sim_workers, run_params)
         sim_specs = self.evaluator.get_sim_specs(
             self.generator.varying_parameters,
             self.generator.objectives,
@@ -127,7 +134,12 @@ class Exploration():
 
         # Save history.
         if is_master:
-            save_libE_output(history, persis_info, __file__, nworkers)
+            save_libE_output(
+                history, persis_info, __file__, nworkers,
+                dest_path=os.path.abspath(self.exploration_dir_path))
+
+        # Reset state of libEnsemble.
+        self._reset_libensemble()
 
     def _create_executor(self) -> None:
         """Create libEnsemble executor."""
@@ -189,7 +201,9 @@ class Exploration():
                 + " not recognized. Possible values are 'local' or 'mpi'."
             )
         # Set exploration directory path.
-        libE_specs['ensemble_dir_path'] = self.exploration_dir_path
+        libE_specs['ensemble_dir_path'] = 'evaluations'
+        libE_specs['use_workflow_dir'] = True
+        libE_specs['workflow_dir_path'] = self.exploration_dir_path
 
         # get specs from generator and evaluator
         gen_libE_specs = self.generator.get_libe_specs()
@@ -205,3 +219,19 @@ class Exploration():
                 'async_return': self.run_async
             }
         }
+
+    def _reset_libensemble(self) -> None:
+        """Reset the state of libEnsemble.
+
+        After calling `libE`, some libEnsemble attributes do not come back to
+        their original states. This leads to issues if another `Exploration`
+        run is launched within the same script. This method resets the
+        necessary libEnsemble attributes to their original state.
+        """
+        if Resources.resources is not None:
+            del Resources.resources
+            Resources.resources = None
+        if Executor.executor is not None:
+            del Executor.executor
+            Executor.executor = None
+        LogConfig.config.logger_set = False
