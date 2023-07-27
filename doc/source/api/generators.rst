@@ -12,3 +12,4 @@ Generators
     AxSingleFidelityGenerator
     AxMultiFidelityGenerator
     AxMultitaskGenerator
+    AxClientGenerator
