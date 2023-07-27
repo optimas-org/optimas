@@ -20,7 +20,7 @@ Create a ``profile.optimas`` file in your home directory with the following cont
     module load maxwell mamba
     . mamba-init
 
-you can do this from the command line by executing ``cat > profile.optimas`` and
+you can do this from the command line by executing ``cat > ~/profile.optimas`` and
 pasting the lines above. To save the file, finalize by pressing ``Ctrl+D``.
 
 Load the source file
