@@ -1,7 +1,6 @@
 """
-Dummy script for fast test; this does not actually run a simulation,
-but instead calculate the result of a test function and store
-the results in a file result.txt
+Simple template script that evaluates an analytical expression and stores
+the results in a `result.txt` file.
 """
 import numpy as np
 import time

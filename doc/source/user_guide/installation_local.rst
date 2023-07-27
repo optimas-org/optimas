@@ -1,7 +1,7 @@
 Installation on a local computer
 --------------------------------
 
-The recommended approach is to install Optimas in a ``conda`` environment.
+The recommended approach is to install optimas in a ``conda`` environment.
 
 Install basic dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -20,7 +20,7 @@ If your computer does not feature a CUDA-capable GPU, install PyTorch for CPU:
     conda install pytorch cpuonly -c pytorch
 
 
-If you have a CUDA-capable GPU and want to take make it available to Optimas,
+If you have a CUDA-capable GPU and want to take make it available to optimas,
 install PyTorch with:
 
 .. code::
@@ -36,7 +36,7 @@ using ``pip``:
 
     pip install mpi4py
 
-This will make sure that Optimas uses the existing MPI. The recommended
+This will make sure that optimas uses the existing MPI. The recommended
 MPI implementation is MPICH.
 
 If you don't have an existing MPI installation, the recommended approach is to
@@ -55,7 +55,7 @@ On Windows:
 
     conda install -c conda-forge mpi4py msmpi
 
-Install Optimas
+Install optimas
 ~~~~~~~~~~~~~~~
 Install the latest release from PyPI
 
