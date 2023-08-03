@@ -42,9 +42,12 @@ gen = AxSingleFidelityGenerator(
 ev = TemplateEvaluator(
     sim_template='template_simulation_script',
     analysis_func=analyze_simulation,
-    executable='hipace',
-    env_file='profile.hipace',
-    n_gpus=2  # Use 2 GPUs per simulation.
+    executable='/path/to/build/bin/hipace',
+    n_gpus=2,  # Use 2 GPUs per simulation.
+    # Uncomment if HiPACE is installed in a different enviroment than optimas.
+    # env_script='/path/to/profile.hipace',
+    # Uncomment if `env_script` loads a different MPI to that used by optimas.
+    # env_mpi='openmpi'
 )
 
 
@@ -53,7 +56,7 @@ exp = Exploration(
     generator=gen,
     evaluator=ev,
     max_evals=100,
-    sim_workers=4,
+    sim_workers=2,
     run_async=True
 )
 

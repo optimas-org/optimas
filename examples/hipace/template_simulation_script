@@ -1,10 +1,10 @@
 max_step = 300
-amr.n_cell = 1024 1024 1024
+amr.n_cell = 256 256 256
 
 amr.max_level = 0
 
 hipace.max_time = 0.3/clight
-diagnostic.output_period = 1
+diagnostic.output_period = 30
 hipace.verbose = 1
 
 hipace.numprocs_x = 1
@@ -33,7 +33,7 @@ witness.position_mean = 0. 0. -160.e-6
 witness.position_std = 2.e-6 2.e-6 5.e-6
 witness.injection_type = fixed_weight
 witness.num_particles = 1000000
-witness.total_charge = {witness_charge}e-9
+witness.total_charge = {{witness_charge}}e-9
 witness.u_mean = 0. 0. 1000.
 witness.u_std = 2. 2. 10.
 witness.do_symmetrize = 1

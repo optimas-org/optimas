@@ -35,7 +35,8 @@ def analyze_simulation(simulation_directory, output_params):
 
     # Get beam particles with `u_z >= 10` and transverse offset no larger than
     # 15 µm in `x` and `y`.
-    uz, w = d.get_particle(['uz', 'w'], iteration=d.iterations[-1])
+    uz, w = d.get_particle(['uz', 'w'], iteration=d.iterations[-1],
+                           species='witness')
 
     # Convert charge to pC.
     q = w.sum()*e*1e12
