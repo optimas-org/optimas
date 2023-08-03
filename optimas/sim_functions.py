@@ -1,8 +1,10 @@
 import os
+
 import jinja2
 import numpy as np
 
 from libensemble.executors.executor import Executor
+from libensemble.executors.mpi_runner import MPIRunner
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
 from optimas.utils.logger import get_logger
@@ -52,11 +54,23 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
 
-    task = exctr.submit(app_name=app_name,
-                        app_args=sim_script,
-                        stdout='out.txt',
-                        stderr='err.txt',
-                        )
+    # If the evaluation requires a specific MPI (different than the one in
+    # the optimas environment), comunicate this to the executor.
+    mpi_type = user_specs['env_mpi']
+    if mpi_type is not None:
+        old_runner_type = exctr.mpi_runner_type
+        old_runner = exctr.mpi_runner
+        exctr.mpi_runner_type = mpi_type
+        exctr.mpi_runner = MPIRunner.get_runner(exctr.mpi_runner_type)
+
+    # Launch simulation.
+    task = exctr.submit(
+        app_name=app_name,
+        app_args=sim_script,
+        stdout='out.txt',
+        stderr='err.txt',
+        env_script=user_specs['env_script']
+    )
 
     # Wait for simulation to complete
     task.wait()
@@ -70,6 +84,12 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         if task.state not in ['FINISHED', 'FAILED', 'USER_KILLED']:
             print("Warning: Task {} in unknown state {}. Error code {}"
                   .format(task.name, task.state, task.errcode))
+
+    # If the mpi runner was changed, set it back to the original value for
+    # future simulations.
+    if mpi_type is not None:
+        exctr.mpi_runner_type = old_runner_type
+        exctr.mpi_runner = old_runner
 
     # Prepare the array that is returned to libE
     # Automatically include the input parameters
