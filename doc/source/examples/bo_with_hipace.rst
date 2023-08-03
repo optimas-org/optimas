@@ -8,7 +8,7 @@ Description
 ~~~~~~~~~~~
 
 This examples shows how to perform a Bayesian optimization of a PWFA using
-HiPACE++.
+`HiPACE++ <https://github.com/Hi-PACE/hipace/>`_.
 
 The setup is a simple driver-witness configuration where the witness is
 optimized to maximize the objetive
@@ -32,9 +32,11 @@ The optimization is carried out using an
 in a separate file ``analysis_script.py`` and imported into the main
 optimas script.
 
-The example is set up to make use of a system of 4 GPUs, where each FBPIC
-simulation uses a single GPU and 4 simulations are carried out in parallel.
+The example is set up to make use of a system of 4 GPUs, where each HiPACE++
+simulation uses a 2 GPUs and 2 simulations are carried out in parallel.
 
+If HiPACE++ is installed in a different environment than ``optimas``, make
+sure to specify ``env_script`` and ``env_mpi`` in the ``TemplateEvaluator``.
 
 Scripts
 ~~~~~~~

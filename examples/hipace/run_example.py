@@ -56,8 +56,7 @@ exp = Exploration(
     generator=gen,
     evaluator=ev,
     max_evals=100,
-    sim_workers=2,
-    run_async=True
+    sim_workers=2
 )
 
 
