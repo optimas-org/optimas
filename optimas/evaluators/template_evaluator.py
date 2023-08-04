@@ -18,9 +18,12 @@ class TemplateEvaluator(Evaluator):
     ----------
     sim_template : str
         Path to the simulation template file.
-    analysis_func : Callable
+    analysis_func : Callable, optional
         Function that will analyze the simulation output to obtain the value
-        of the objective(s) and other analyzed parameters.
+        of the objective(s) and other analyzed parameters. This parameter
+        is only optional if the `TemplateEvaluator` is included in a
+        `ChainEvaluator`. In this case, at least one of the chained evaluators
+        should have an analysis function.
     executable : str, optional.
         Path to the executable that will run the simulation. Only needed if
         the simulation template is not a Python script.
@@ -39,7 +42,7 @@ class TemplateEvaluator(Evaluator):
     def __init__(
         self,
         sim_template: str,
-        analysis_func: Callable,
+        analysis_func: Optional[Callable] = None,
         executable: Optional[str] = None,
         sim_files: Optional[List[str]] = None,
         n_procs: Optional[int] = None,

@@ -107,9 +107,10 @@ def execute_and_analyze_simulation(app_name, sim_template, input_values,
 
     # Data analysis from the last simulation
     if calc_status == WORKER_DONE:
-        # Extract the objective function for the current simulation,
-        # as well as a few diagnostics
-        analysis_func(task.workdir, libE_output)
+        if analysis_func is not None:
+            # Extract the objective function for the current simulation,
+            # as well as a few diagnostics
+            analysis_func(task.workdir, libE_output)
 
     return calc_status
 
