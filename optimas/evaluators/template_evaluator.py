@@ -83,6 +83,8 @@ class TemplateEvaluator(Evaluator):
         sim_specs['user']['analysis_func'] = self.analysis_func
         sim_specs['user']['sim_template'] = os.path.basename(self.sim_template)
         sim_specs['user']['app_name'] = self._app_name
+        sim_specs['user']['num_procs'] = self._n_procs
+        sim_specs['user']['num_gpus'] = self._n_gpus
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
