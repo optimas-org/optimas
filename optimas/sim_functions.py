@@ -1,4 +1,3 @@
-import os
 import jinja2
 import numpy as np
 
