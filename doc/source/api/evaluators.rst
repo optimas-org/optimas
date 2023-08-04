@@ -9,3 +9,4 @@ Evaluators
     FunctionEvaluator
     TemplateEvaluator
     MultitaskEvaluator
+    ChainEvaluator
