@@ -110,10 +110,7 @@ class TemplateEvaluator(Evaluator):
         """Register the executable as an app in the libEnsemble executor."""
         # Determine executable path.
         if self.sim_template.endswith('.py'):
-            sim_script = os.path.basename(self.sim_template)
-            # Strip 'template_' from name
-            sim_script = sim_script[len('template_'):]
-            executable_path = sim_script
+            executable_path = os.path.basename(self.sim_template)
         else:
             # By default, if the template is not a `.py` file, we run
             # it with an executable.
