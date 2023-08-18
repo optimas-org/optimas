@@ -22,7 +22,7 @@
     <br />
     <a href="https://optimas.readthedocs.io/en/latest/examples/index.html">View Examples</a>
     ·
-    <a href="https://optimas.slack.com/">Support</a>
+    <a href="https://optimas-group.slack.com/">Support</a>
     ·
     <a href="https://optimas.readthedocs.io/en/latest/api/index.html">API Reference</a>
   </p>
