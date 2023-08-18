@@ -12,7 +12,7 @@ parallel optimization, from a typical laptop to exascale HPC systems. It is
 built on top of 
 `libEnsemble <https://libensemble.readthedocs.io/>`_.
 
-.. grid:: 3
+.. grid:: 1 1 3 3
     :gutter: 2
 
     .. grid-item-card:: User guide
