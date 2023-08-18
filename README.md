@@ -31,11 +31,21 @@
 Optimas is a Python library for scalable optimization on massively-parallel supercomputers. See the [documentation](https://optimas.readthedocs.io/) for installation instructions, tutorials, and more information.
 
 ## Installation
-Optimas can be directly installed form PyPI
+From PyPI
 ```sh
 pip install optimas
 ```
-For detailed instructions about how to install optimas in HPC systems check the [guide](https://optimas.readthedocs.io/en/latest/user_guide/installation.html#instructions) in the documentation.
+From GitHub
+```sh
+pip install git+https://github.com/optimas-org/optimas.git
+```
+Make sure `mpi4py` is available in your environment prior to installing optimas (see [here](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html) for more details).
+
+Optimas is regularly used and tested in large distributed HPC systems.
+We have prepared installation instructions for
+[JUWELS (JSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_juwels.html),
+[Maxwell (DESY)](https://optimas.readthedocs.io/en/latest/user_guide/installation_maxwell.html) and
+[Perlmutter (NERSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_perlmutter.html).
 
 ## Citing optimas
 If your usage of `optimas` leads to a scientific publication, please consider citing the optimas paper:
