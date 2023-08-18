@@ -48,7 +48,7 @@ We have prepared installation instructions for
 [Perlmutter (NERSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_perlmutter.html).
 
 ## Citing optimas
-If your usage of `optimas` leads to a scientific publication, please consider citing the optimas paper:
+If your usage of `optimas` leads to a scientific publication, please consider citing the original [paper](https://link.aps.org/doi/10.1103/PhysRevAccelBeams.26.084601):
 ```bibtex
 @article{PhysRevAccelBeams.26.084601,
     title     = {Bayesian optimization of laser-plasma accelerators assisted by reduced physical models},

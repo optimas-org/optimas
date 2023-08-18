@@ -20,3 +20,9 @@ User guide
    basic_usage/basic_setup
    basic_usage/running_with_simulations
    basic_usage/analyze_output
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Citation
+
+   citation
