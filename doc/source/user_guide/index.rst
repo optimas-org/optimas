@@ -4,10 +4,14 @@ User guide
 ==========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Installation
 
-   installation
+   dependencies
+   installation_local
+   installation_maxwell
+   installation_juwels
+   installation_perlmutter
 
 .. toctree::
    :maxdepth: 2
