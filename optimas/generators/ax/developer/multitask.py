@@ -15,12 +15,17 @@ from ax.core.search_space import SearchSpace
 from ax.core.optimization_config import OptimizationConfig
 from ax.core.objective import Objective as AxObjective
 from ax.runners import SyntheticRunner
-from ax.modelbridge.factory import get_sobol, get_MTGP
+from ax.modelbridge.factory import get_sobol
 from ax.modelbridge.torch import TorchModelBridge
 from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 from ax.storage.json_store.save import save_experiment
 from ax.storage.metric_registry import register_metric
+try:
+    from ax.modelbridge.factory import get_MTGP
+except ImportError:
+    # For Ax >= 0.3.4
+    from ax.modelbridge.factory import get_MTGP_LEGACY as get_MTGP
 
 from optimas.generators.ax.base import AxGenerator
 from optimas.core import (TrialParameter, VaryingParameter, Objective,
