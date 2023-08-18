@@ -3,7 +3,7 @@ name: Unix
 on:
   push:
   pull_request:
-  # Run daily at midnight.
+  # Run daily at midnight (UTC).
   schedule:
     - cron: '0 0 * * *'
 
