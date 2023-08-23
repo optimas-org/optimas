@@ -57,7 +57,7 @@ generated. This is the case, for example, of the
 ``AxClient`` with the surrogate model used for Bayesian optimization.
 
 Generators that have this capability can also save the internal model
-model to file with a certain periodicity (set by the ``model_save_period``
+to file with a certain periodicity (set by the ``model_save_period``
 attribute). By default, these models will be saved in a
 ``exploration/model_history`` directory.
 
