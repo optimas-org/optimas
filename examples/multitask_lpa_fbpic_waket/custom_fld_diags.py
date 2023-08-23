@@ -326,10 +326,10 @@ class BackTransformedFieldDiagnostic(FieldDiagnostic):
             The indices between which the slices will be written
             iz_min is inclusice and iz_max is exclusive
 
-        snapshot: a LabSnaphot object
+        snapshot: a LabSnapshot object
 
         f2i: dict
-            Dictionary of correspondance between the field names
+            Dictionary of correspondence between the field names
             and the integer index in the field_array
         """
         # Open the file without parallel I/O in this implementation
@@ -457,10 +457,10 @@ class LabSnapshot:
         """
         # Find the index of the slice in the lab frame
         if self.buffer_z_indices == []:
-            # No previous index: caculate it from the absolute z_lab
+            # No previous index: calculate it from the absolute z_lab
             iz_lab = int( (self.current_z_lab - self.zmin_lab)*inv_dz_lab )
         else:
-            # By construction, this index shoud be the previous index - 1
+            # By construction, this index should be the previous index - 1
             # Handling integers avoids unstable roundoff errors, when
             # self.current_z_lab is very close to zmin_lab + iz_lab*dz_lab
             iz_lab = self.buffer_z_indices[-1] - 1
@@ -543,7 +543,7 @@ class SliceHandler:
         self.beta_boost = beta_boost
         self.Nr_output = Nr_output
 
-        # Create a dictionary that contains the correspondance
+        # Create a dictionary that contains the correspondence
         # between the field names and array index
         self.field_to_index = {'Er':0, 'Et':1, 'Ez':2, 'Br':3,
                 'Bt':4, 'Bz':5, 'Jr':6, 'Jt':7, 'Jz':8, 'rho':9}
@@ -561,7 +561,7 @@ class SliceHandler:
             The object from which to extract the fields
 
         comm: a BoundaryCommunicator object
-            Contains information about the gard cells in particular
+            Contains information about the guard cells in particular
 
         z_boost: float (meters)
             Position of the slice in the boosted frame
@@ -574,7 +574,7 @@ class SliceHandler:
             An array of reals that packs together the slices of the
             different fields (always on array on the CPU).
             The first index of this array corresponds to the field type
-            (10 different field types), and the correspondance
+            (10 different field types), and the correspondence
             between the field type and integer index is given field_to_index
             The shape of this arrays is (10, 2*Nm-1, Nr_output)
         """
@@ -631,7 +631,7 @@ class SliceHandler:
         slice_array: np.ndarray
             Array of shape (10, 2*Nm-1, Nr_output )
         """
-        # Shortcut for the correspondance between field and integer index
+        # Shortcut for the correspondence between field and integer index
         f2i = self.field_to_index
 
         # Loop through the fields, and extract the proper slice for each field
@@ -708,7 +708,7 @@ class SliceHandler:
         gamma = self.gamma_boost
         cbeta = c*self.beta_boost
         beta_c = self.beta_boost/c
-        # Shortcut to give the correspondance between field name
+        # Shortcut to give the correspondence between field name
         # (e.g. 'Ex', 'rho') and integer index in the array
         f2i = self.field_to_index
 
@@ -757,7 +757,7 @@ if cuda_installed:
             Array of floats of shape (10, 2*Nm-1, Nr)
 
         Er, Et, etc...: cupy.empty
-            Array of complexs of shape (Nz, Nr), for the azimuthal mode m
+            Array of complexes of shape (Nz, Nr), for the azimuthal mode m
 
         m: int
             Index of the azimuthal mode involved

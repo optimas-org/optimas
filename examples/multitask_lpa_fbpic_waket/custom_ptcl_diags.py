@@ -265,7 +265,7 @@ class BackTransformedParticleDiagnostic(ParticleDiagnostic):
         species_name: String
             A String that acts as the key for the buffered_slices dictionary
 
-        snapshot: a LabSnaphot object
+        snapshot: a LabSnapshot object
         """
         # Open the file without parallel I/O in this implementation
         f = self.open_file(snapshot.filename)
@@ -465,7 +465,7 @@ class LabSnapshot:
             Inverse of the Lorentz factor of the boost, and inverse
             of the corresponding beta
         """
-        # Some shorcuts for further calculation's purposes
+        # Some shortcuts for further calculation's purposes
         t_lab = self.t_lab
         t_boost_prev = t_boost - self.dt
 
@@ -585,7 +585,7 @@ class ParticleCatcher:
         -------
         slice_data_dict : dictionary of 1D float and integer arrays
             A dictionary that contains the particle data of
-            the simulation (with normalized weigths), including optional
+            the simulation (with normalized weights), including optional
             integer arrays (e.g. "id", "charge")
         """
         # Get a dictionary containing the particle data
@@ -644,7 +644,7 @@ class ParticleCatcher:
         -------
         particle_data : A dictionary of 1D float and integer arrays
             A dictionary that contains the particle data of
-            the simulation (with normalized weigths), including optional
+            the simulation (with normalized weights), including optional
             integer arrays (e.g. "id", "charge")
         """
         # CPU
@@ -724,7 +724,7 @@ class ParticleCatcher:
         ----------
         particle_data : dictionary of 1D float and integer arrays
             A dictionary that contains the particle data of
-            the simulation (with normalized weigths), including optional
+            the simulation (with normalized weights), including optional
             integer arrays (e.g. "id", "charge")
 
         current_z_boost, previous_z_boost : float (m)
@@ -777,7 +777,7 @@ class ParticleCatcher:
         ----------
         slice_data_dict : dictionary of 1D float and integer arrays
             A dictionary that contains the particle data of
-            the simulation (with normalized weigths), including optional
+            the simulation (with normalized weights), including optional
             integer arrays (e.g. "id", "charge")
 
         current_z_boost : float (m)
@@ -790,7 +790,7 @@ class ParticleCatcher:
         ------
         slice_data_dict : dictionary of 1D float and integer arrays
             A dictionary that contains the particle data of
-            the simulation (with normalized weigths), including optional
+            the simulation (with normalized weights), including optional
             integer arrays (e.g. "id", "charge")
         """
         # Shortcuts for particle attributes
@@ -845,7 +845,7 @@ class ParticleCatcher:
         ----------
         slice_data_dict : dictionary of 1D float and integer arrays
             A dictionary that contains the particle data of
-            the simulation (with normalized weigths), including optional
+            the simulation (with normalized weights), including optional
             integer arrays (e.g. "id", "charge")
 
         species : A ParticleObject
@@ -856,7 +856,7 @@ class ParticleCatcher:
         -------
         slice_data_dict : dictionary of 1D float and integer arrays
             A dictionary that contains the particle data of
-            the simulation (with normalized weigths), including optional
+            the simulation (with normalized weights), including optional
             integer arrays (e.g. "id")
         """
         # Normalize momenta
@@ -883,14 +883,14 @@ class ParticleCatcher:
 
         slice_data_dict : dictionary of 1D float and integer arrays
             A dictionary that contains the particle data of
-            the simulation (with normalized weigths), including optional
+            the simulation (with normalized weights), including optional
             integer arrays (e.g. "id", "charge")
 
         Returns
         -------
         slice_data_dict : dictionary of 1D float and integer arrays
             A dictionary that contains the particle data of
-            the simulation (with normalized weigths), including optional
+            the simulation (with normalized weights), including optional
             integer arrays (e.g. "id", "charge")
         """
         # Initialize an array filled with True
