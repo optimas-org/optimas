@@ -44,7 +44,7 @@ ev = TemplateEvaluator(
     analysis_func=analyze_simulation,
     executable='/path/to/build/bin/hipace',
     n_gpus=2,  # Use 2 GPUs per simulation.
-    # Uncomment if HiPACE is installed in a different enviroment than optimas.
+    # Uncomment if HiPACE is installed in a different environment than optimas.
     # env_script='/path/to/profile.hipace',
     # Uncomment if `env_script` loads a different MPI to that used by optimas.
     # env_mpi='openmpi'
