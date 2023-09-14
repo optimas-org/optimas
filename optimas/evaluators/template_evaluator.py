@@ -38,11 +38,11 @@ class TemplateEvaluator(Evaluator):
     env_script : str, optional
         The full path of a shell script to set up the environment for the
         launched simulation. This is useful when the simulation needs to run
-        in a different enviroment than optimas. The script should start with a
+        in a different environment than optimas. The script should start with a
         shebang.
     env_mpi : str, optional
         If the `env_script` loads an MPI different than the one in the optimas
-        enviroment, indicate it here. Possible values are "mpich", "openmpi",
+        environment, indicate it here. Possible values are "mpich", "openmpi",
         "aprun", "srun", "jsrun", "msmpi".
     """
     def __init__(
