@@ -42,7 +42,7 @@ class TemplateEvaluator(Evaluator):
         shebang.
     env_mpi : str, optional
         If the `env_script` loads an MPI different than the one in the optimas
-        enviroment, idicate it here. Possible values are "mpich", "openmpi",
+        enviroment, indicate it here. Possible values are "mpich", "openmpi",
         "aprun", "srun", "jsrun", "msmpi".
     """
     def __init__(
