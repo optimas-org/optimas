@@ -3,30 +3,6 @@ Installation on a local computer
 
 The recommended approach is to install optimas in a ``conda`` environment.
 
-Install basic dependencies
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code::
-
-    conda install numpy pandas
-
-Install PyTorch
-~~~~~~~~~~~~~~~
-
-If your computer does not feature a CUDA-capable GPU, install PyTorch for CPU:
-
-.. code::
-
-    conda install pytorch cpuonly -c pytorch
-
-
-If you have a CUDA-capable GPU and want to take make it available to optimas,
-install PyTorch with:
-
-.. code::
-
-    conda install pytorch pytorch-cuda=11.7 -c pytorch -c nvidia
-
 Install ``mpi4py``
 ~~~~~~~~~~~~~~~~~~
 If your system has already an MPI implementation installed, install ``mpi4py``

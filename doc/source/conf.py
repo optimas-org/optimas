@@ -80,7 +80,7 @@ html_theme_options = {
         },
         {
             "name": "Slack",
-            "url": "https://optimas.slack.com/",
+            "url": "https://optimas-group.slack.com/",
             "icon": "fa-brands fa-slack",
         },
     ],
