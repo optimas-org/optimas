@@ -68,13 +68,13 @@ def run_simulation():
     w = np.abs(q / ct.e)
     bunch = ParticleBunch(w, x, y, z, ux, uy, uz, name="bunch")
 
-    # Distance between right bounday and laser centroid.
+    # Distance between right boundary and laser centroid.
     dz_lb = 4.0 * ct.c * tau_laser
 
     # Maximum radial extension of the plasma.
     p_rmax = 2.5 * w0_laser
 
-    # Box lenght.
+    # Box length.
     l_box = dz_lb + 90e-6
 
     # Number of diagnostics

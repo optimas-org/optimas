@@ -1,6 +1,6 @@
 """
 This example optimizes the focusing strength of an active plasma lens using
-Wake-T and FBPIC simulations by emplying a multitask generator.
+Wake-T and FBPIC simulations by employing a multitask generator.
 
 The simulations are performed using the template defined in the
 `template_simulation_script.py` file, which executes Wake-T or FBPIC
