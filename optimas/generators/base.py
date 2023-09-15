@@ -115,6 +115,10 @@ class Generator():
     @property
     def dedicated_resources(self):
         return self._dedicated_resources
+    
+    @property
+    def n_trials(self):
+        return len(self._trials)
 
     def ask(
         self,
