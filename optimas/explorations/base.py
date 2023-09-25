@@ -83,10 +83,29 @@ class Exploration():
         self._initialize_evaluator()
         self._set_default_libe_specs()
 
-    def run(self) -> None:
-        """Run the exploration."""
+    def run(
+        self,
+        n_evals: Optional[int] = None
+    ) -> None:
+        """Run the exploration.
+        
+        Parameters
+        ----------
+        n_evals : int, optional
+            Number of evaluations to run. If not given, the exploration will
+            run until the number of evaluations reaches `max_evals`.
+        """
         # Set exit criteria to maximum number of evaluations.
-        exit_criteria = {'sim_max': self.max_evals}
+        remaining_evals = self.max_evals - self._n_evals
+        if remaining_evals < 1:
+            raise ValueError(
+                'The maximum number or evaluations has been reached.'
+            )
+        if n_evals is None:
+            sim_max = remaining_evals
+        else:
+            sim_max = min(n_evals, remaining_evals)
+        exit_criteria = {'sim_max': sim_max}
 
         # Get initial number of generator trials.
         n_trials_initial = self.generator.n_trials
@@ -100,6 +119,9 @@ class Exploration():
             persis_info['gen_use_gpus'] = True
         else:
             self.libE_specs['zero_resource_workers'] = [1]
+
+        if self._n_evals > 0:
+            self.libE_specs['reuse_output_dir'] = True
 
         # Get gen_specs and sim_specs.
         run_params = self.evaluator.get_run_params()
