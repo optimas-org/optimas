@@ -236,6 +236,9 @@ class Exploration():
         libE_specs['use_workflow_dir'] = True
         libE_specs['workflow_dir_path'] = self.exploration_dir_path
 
+        # Ensure evaluations of last batch are sent back to the generator.
+        libE_specs["final_gen_send"] = True
+
         # get specs from generator and evaluator
         gen_libE_specs = self.generator.get_libe_specs()
         ev_libE_specs = self.evaluator.get_libe_specs()
