@@ -125,7 +125,8 @@ class Exploration():
 
         # Get gen_specs and sim_specs.
         run_params = self.evaluator.get_run_params()
-        gen_specs = self.generator.get_gen_specs(self.sim_workers, run_params)
+        gen_specs = self.generator.get_gen_specs(self.sim_workers, run_params,
+                                                 sim_max)
         sim_specs = self.evaluator.get_sim_specs(
             self.generator.varying_parameters,
             self.generator.objectives,

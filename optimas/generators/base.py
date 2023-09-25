@@ -248,7 +248,8 @@ class Generator():
     def get_gen_specs(
         self,
         sim_workers: int,
-        run_params: dict
+        run_params: Dict,
+        max_evals: int
     ) -> Dict:
         """Get the libEnsemble gen_specs.
 
@@ -256,6 +257,11 @@ class Generator():
         ----------
         sim_workers : int
             Total number of parallel simulation workers.
+        run_params : dict
+            Dictionary containing the number of processes and gpus
+            required.
+        max_evals : int
+            Maximum number of evaluations to generate.
         """
         self._prepare_to_send()
         gen_specs = {
@@ -285,7 +291,9 @@ class Generator():
                 # GPU in which to run generator.
                 'gpu_id': self._gpu_id,
                 # num of procs and gpus required
-                'run_params': run_params
+                'run_params': run_params,
+                # Maximum number of evaluations to generate.
+                'max_evals': max_evals
             }
         }
         return gen_specs
