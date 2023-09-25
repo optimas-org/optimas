@@ -9,9 +9,6 @@ from libensemble.libE import libE
 from libensemble.tools import save_libE_output, add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
-from libensemble.resources.resources import Resources
-from libensemble.executors.executor import Executor
-from libensemble.logger import LogConfig
 
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
@@ -88,7 +85,7 @@ class Exploration():
         n_evals: Optional[int] = None
     ) -> None:
         """Run the exploration.
-        
+
         Parameters
         ----------
         n_evals : int, optional

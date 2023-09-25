@@ -38,7 +38,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
 
     ps = PersistentSupport(libE_info, EVAL_GEN_TAG)
 
-    # Maximum number of total evaluations to generate.    
+    # Maximum number of total evaluations to generate.
     max_evals = gen_specs['user']['max_evals']
 
     # Number of points to generate initially.
