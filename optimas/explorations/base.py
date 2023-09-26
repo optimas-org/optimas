@@ -250,7 +250,7 @@ class Exploration():
         old_libe_history_files = glob.glob(
             os.path.join(
                 os.path.abspath(self.exploration_dir_path),
-                'libE_history_'.format("*")
+                'libE_history_{}'.format("*")
             )
         )
         old_files = old_exploration_history_files + old_libe_history_files
