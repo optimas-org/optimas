@@ -24,7 +24,7 @@ def test_env_script():
     var1 = VaryingParameter('x0', -50., 5.)
     var2 = VaryingParameter('x1', -5., 15.)
     obj = Objective('f', minimize=False)
-    test_var = Parameter('test_var', dtype=str)
+    test_var = Parameter('test_var', dtype='U10')
 
     # Define variables and objectives.
     gen = RandomSamplingGenerator(
