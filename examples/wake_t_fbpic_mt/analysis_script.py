@@ -6,7 +6,7 @@ import numpy as np
 
 
 def analyze_simulation(simulation_directory, output_params):
-    a_x_abs = np.loadtxt('a_x_abs.txt')
-    output_params['f'] = a_x_abs
+    a_x_abs = np.loadtxt("a_x_abs.txt")
+    output_params["f"] = a_x_abs
 
     return output_params

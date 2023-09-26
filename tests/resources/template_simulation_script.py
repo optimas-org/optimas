@@ -5,7 +5,7 @@ parameters and stores the result in `result.txt`.
 import numpy as np
 
 # 2D function with multiple minima
-result =  -( {{x0}} + 10*np.cos({{x0}}) )*( {{x1}} + 5*np.cos({{x1}}) )
+result = -({{x0}} + 10 * np.cos({{x0}})) * ({{x1}} + 5 * np.cos({{x1}}))
 
-with open('result.txt', 'w') as f:
-    f.write("%f" %result)
+with open("result.txt", "w") as f:
+    f.write("%f" % result)

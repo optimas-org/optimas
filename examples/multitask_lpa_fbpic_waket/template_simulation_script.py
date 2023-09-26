@@ -80,14 +80,36 @@ def run_simulation():
     # Number of diagnostics
     n_out = 3
 
-    if task == 'fbpic':
+    if task == "fbpic":
         run_fbpic(
-            a0, w0_laser, tau_laser, lambda0, bunch, n_p_plateau, l_plateau,
-            rel_delta_n_over_w2, p_rmax, dz_lb, l_box, n_out)
-    elif task == 'wake-t':
+            a0,
+            w0_laser,
+            tau_laser,
+            lambda0,
+            bunch,
+            n_p_plateau,
+            l_plateau,
+            rel_delta_n_over_w2,
+            p_rmax,
+            dz_lb,
+            l_box,
+            n_out,
+        )
+    elif task == "wake-t":
         run_wake_t(
-            a0, w0_laser, tau_laser, lambda0, bunch, n_p_plateau, l_plateau,
-            rel_delta_n_over_w2, p_rmax, dz_lb, l_box, n_out-1)
+            a0,
+            w0_laser,
+            tau_laser,
+            lambda0,
+            bunch,
+            n_p_plateau,
+            l_plateau,
+            rel_delta_n_over_w2,
+            p_rmax,
+            dz_lb,
+            l_box,
+            n_out - 1,
+        )
 
 
 def determine_laser_a0(ene, tau_fwhm, w0, lambda0):
@@ -112,8 +134,8 @@ def density_profile(z):
 
 
 def run_wake_t(
-        a0, w0, tau_fwhm, lambda0, bunch, n_p, l_plasma, pc, p_rmax, dz_lb,
-        l_box, n_out):
+    a0, w0, tau_fwhm, lambda0, bunch, n_p, l_plasma, pc, p_rmax, dz_lb, l_box, n_out
+):
     # Create laser.
     laser = GaussianPulse(
         xi_c=0.0, l_0=lambda0, w_0=w0, a_0=a0, tau=tau_fwhm, z_foc=0.0
@@ -150,9 +172,8 @@ def run_wake_t(
 
 
 def run_fbpic(
-        a0, w0, tau_fwhm, lambda0, bunch, n_p, l_plasma, pc, p_rmax, dz_lb,
-        l_box, n_out):
-
+    a0, w0, tau_fwhm, lambda0, bunch, n_p, l_plasma, pc, p_rmax, dz_lb, l_box, n_out
+):
     from fbpic.main import Simulation
     from fbpic.lpa_utils.boosted_frame import BoostConverter
     from fbpic.lpa_utils.bunch import add_particle_bunch_from_arrays
@@ -224,8 +245,7 @@ def run_fbpic(
     (v_window_boosted,) = boost.velocity([v_window])
 
     # Interaction time in boosted frame
-    T_interact = boost.interaction_time(
-        L_lab_interact, (zmax - zmin), v_window)
+    T_interact = boost.interaction_time(L_lab_interact, (zmax - zmin), v_window)
 
     # Period of writing the cached backtransformed lab frame diagnostics to
     # disk (in number of iterations)
@@ -240,8 +260,15 @@ def run_fbpic(
 
     # External bunch
     if bunch is not None:
-        x, y, z, px, py, pz, w = (bunch.x, bunch.y, bunch.xi, bunch.px,
-                                  bunch.py, bunch.pz, bunch.w)
+        x, y, z, px, py, pz, w = (
+            bunch.x,
+            bunch.y,
+            bunch.xi,
+            bunch.px,
+            bunch.py,
+            bunch.pz,
+            bunch.w,
+        )
         z += z0
 
     # Initialize the simulation object
