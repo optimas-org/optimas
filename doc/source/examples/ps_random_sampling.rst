@@ -25,7 +25,7 @@ analysis function. See see :ref:`optimas-with-simulations` for more details.
 
 The :class:`~optimas.generators.RandomSamplingGenerator` draws samples from
 a ``'normal'`` distribution that, for each parameter, is centered at
-:math:`c = l_b - u_b` with standard deviation :math:`\\sigma = u_b - c`, 
+:math:`c = l_b - u_b` with standard deviation :math:`\\sigma = u_b - c`,
 where :math:`l_b` and :math:`u_b` are, respectively, the lower and upper
 bounds of the parameter. Other distributions are also available. In this case,
 where :math:`l_b=0` and :math:`u_b=15`, the drawn samples result in a
@@ -52,12 +52,12 @@ distribution such as:
            break
    x0 = np.zeros(len(all_trials))
    x1 = np.zeros(len(all_trials))
-   
+
    for i, trial in enumerate(all_trials):
        trial_params = trial.parameters_as_dict()
        x0[i] = trial_params['x0']
        x1[i] = trial_params['x1']
-       
+
    fig, ax = plt.subplots()
    ax.scatter(x0, x1, s=3, label='generated evaluations')
    ax.set(

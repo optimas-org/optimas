@@ -20,6 +20,9 @@ would look something like
 
     from optimas.evaluators import TemplateEvaluator
 
+    def analyze_simulation(simulation_directory, output_params):
+        pass
+
     ev = TemplateEvaluator(
         sim_template='template_simulation_script.py',
         analysis_func=analyze_simulation
@@ -36,7 +39,7 @@ is, using the double-bracket notation ``{{var_name}}``, where ``var_name`` is
 the name of the :class:`~optimas.core.VaryingParameter`.
 
 As a basic example, a template for a Python script that takes in two
-:class:`~optimas.core.VaryingParameter`\s called ``'x'`` and ``'y'``, 
+:class:`~optimas.core.VaryingParameter`\s called ``'x'`` and ``'y'``,
 computes ``x + y``, and stores the result in a text file would look like:
 
 .. code-block:: python
@@ -103,7 +106,7 @@ Assigning computational resources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Optimas executes the simulations using MPI with the amount of resources
-(number of MPI processes and GPUs) specified by the 
+(number of MPI processes and GPUs) specified by the
 ``n_procs`` and ``n_gpus`` attributes of the
 :class:`~optimas.evaluators.TemplateEvaluator`. By default:
 

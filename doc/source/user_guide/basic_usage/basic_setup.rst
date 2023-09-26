@@ -28,8 +28,8 @@ parameters named ``x0`` and ``x1`` that can vary in the ranges [0, 15] and
 
     from optimas.core import VaryingParameter
 
-    var_1 = VaryingParameter('x0', 0., 15.)
-    var_2 = VaryingParameter('x1', -5., 5.)
+    var_1 = VaryingParameter("x0", 0.0, 15.0)
+    var_2 = VaryingParameter("x1", -5.0, 5.0)
 
 
 Objectives and other analyzed parameters
@@ -50,9 +50,9 @@ also be calculated for each evaluation.
 
     from optimas.core import Objective, Parameter
 
-    obj = Objective('f', minimize=True)
-    diag_1 = Parameter('diag_1')
-    diag_2 = Parameter('diag_2')
+    obj = Objective("f", minimize=True)
+    diag_1 = Parameter("diag_1")
+    diag_2 = Parameter("diag_2")
 
 
 Generator
@@ -77,7 +77,7 @@ Bayesian optimization loop is started (see
         varying_parameters=[var_1, var_2],
         objectives=[obj],
         analyzed_parameters=[diag_1, diag_2],
-        n_init=4
+        n_init=4,
     )
 
 
@@ -117,7 +117,7 @@ changed by specifying the ``n_procs`` and ``n_gpus`` attributes.
     from optimas.evaluators import TemplateEvaluator
 
     ev = TemplateEvaluator(
-        sim_template='template_simulation_script.py',
+        sim_template="template_simulation_script.py",
         analysis_func=analyze_simulation,
         # n_procs=2,
         # n_gpus=2
@@ -139,19 +139,14 @@ parallel at any time.
 
     from optimas.explorations import Exploration
 
-    exp = Exploration(
-        generator=gen,
-        evaluator=ev,
-        max_evals=100,
-        sim_workers=4
-    )
+    exp = Exploration(generator=gen, evaluator=ev, max_evals=100, sim_workers=4)
 
 The exploration is started by executing ``exp.run()`` inside a
 ``if __name__ == '__main__':`` block:
 
 .. code-block:: python
 
-    if __name__ == '__main__':
+    if __name__ == "__main__":
         exp.run()
 
 This is needed in order to safely execute the exploration in systems using the
