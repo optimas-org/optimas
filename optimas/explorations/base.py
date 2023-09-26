@@ -1,17 +1,22 @@
 """Contains the definition of the base Exploration class."""
 
 import os
+import glob
 from typing import Optional, Union
 
 import numpy as np
 
 from libensemble.libE import libE
-from libensemble.tools import save_libE_output, add_unique_random_streams
+from libensemble.tools import add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
 
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
+from optimas.utils.logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 class Exploration():
@@ -40,6 +45,14 @@ class Exploration():
         history file to disk. By default equals to ``sim_workers``.
     exploration_dir_path : str, optional.
         Path to the exploration directory. By default, ``'./exploration'``.
+    resume : bool, optional
+        Whether the exploration should resume from a previous run in the same
+        `exploration_dir_path`. If `True`, the exploration will continue from
+        the last evaluation of the previous run until the total number of
+        evaluations (including those of the previous run) reaches `max_evals`.
+        There is no need to provide the `history` path (it will be ignored).
+        If `False` (default value), the exploration will raise an error if
+        the `exploration_dir_path` already exists.
     libe_comms :  {'local', 'mpi'}, optional.
         The communication mode for libEnseble. Determines whether to use
         Python ``multiprocessing`` (local mode) or MPI for the communication
@@ -60,6 +73,7 @@ class Exploration():
         history: Optional[str] = None,
         history_save_period: Optional[int] = None,
         exploration_dir_path: Optional[str] = './exploration',
+        resume: Optional[bool] = False,
         libe_comms: Optional[str] = 'local'
     ) -> None:
         self.generator = generator
@@ -74,7 +88,9 @@ class Exploration():
         self.exploration_dir_path = exploration_dir_path
         self.libe_comms = libe_comms
         self._n_evals = 0
-        self._load_history(history)
+        self._resume = resume
+        self._history_file_name = 'exploration_history_after_evaluation_{}'
+        self._load_history(history, resume)
         self._create_alloc_specs()
         self._create_executor()
         self._initialize_evaluator()
@@ -154,17 +170,13 @@ class Exploration():
         # Determine if current rank is master.
         if self.libE_specs["comms"] == "local":
             is_master = True
-            nworkers = self.sim_workers + 1
         else:
             from mpi4py import MPI
             is_master = (MPI.COMM_WORLD.Get_rank() == 0)
-            nworkers = MPI.COMM_WORLD.Get_size() - 1
 
         # Save history.
         if is_master:
-            save_libE_output(
-                history, persis_info, __file__, nworkers,
-                dest_path=os.path.abspath(self.exploration_dir_path))
+            self._save_history()
 
     def _create_executor(self) -> None:
         """Create libEnsemble executor."""
@@ -176,9 +188,25 @@ class Exploration():
 
     def _load_history(
         self,
-        history: Union[str, np.ndarray, None]
+        history: Union[str, np.ndarray, None],
+        resume: Optional[bool] = False,
     ) -> None:
         """Load history file."""
+        # To resume an exploration, get history file from previous run.
+        if resume:
+            if history is not None:
+                logger.info(
+                    'The `history` argument is ignored when `resume=True`. '
+                    'The exploration will resume using the most recent '
+                    'history file.'
+                )
+            history = self._get_most_recent_history_file_path()
+            if history is None:
+                raise ValueError(
+                    'Previous history file not found. '
+                    'Cannot resume exploration.'
+                )
+        # Read file.
         if isinstance(history, str):
             if os.path.exists(history):
                 # Load array.
@@ -194,7 +222,42 @@ class Exploration():
         # Incorporate history into generator.
         if history is not None:
             self.generator.incorporate_history(history)
+        # When resuming an exploration, update evaluations counter.
+        if resume:
+            self._n_evals = history.size
         self.history = history
+
+    def _save_history(self):
+        """Save history array to file."""
+        filename = self._history_file_name.format(self._n_evals)
+        exploration_dir_path = os.path.abspath(self.exploration_dir_path)
+        file_path = os.path.join(exploration_dir_path, filename)
+        if not os.path.isfile(filename):
+            old_files = os.path.join(
+                exploration_dir_path, self._history_file_name.format("*"))
+            for old_file in glob.glob(old_files):
+                os.remove(old_file)
+            np.save(file_path, self.history)
+
+    def _get_most_recent_history_file_path(self):
+        """Get path of most recently saved history file."""
+        old_exploration_history_files = glob.glob(
+            os.path.join(
+                os.path.abspath(self.exploration_dir_path),
+                self._history_file_name.format("*")
+            )
+        )
+        old_libe_history_files = glob.glob(
+            os.path.join(
+                os.path.abspath(self.exploration_dir_path),
+                'libE_history_'.format("*")
+            )
+        )
+        old_files = old_exploration_history_files + old_libe_history_files
+        if old_files:
+            file_evals = [int(file.split('_')[-1][:-4]) for file in old_files]
+            i_max_evals = np.argmax(np.array(file_evals))
+            return old_files[i_max_evals]
 
     def _set_default_libe_specs(self) -> None:
         """Set default exploration libe_specs."""
