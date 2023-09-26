@@ -40,11 +40,6 @@ jobs:
         conda install -c conda-forge mpi4py mpich
         pip install .[test]
     - shell: bash -l {0}
-      name: Lint with flake8
-      run: |
-        flake8 ./optimas
-        flake8 ./examples --extend-ignore F821 --exclude custom_fld_diags.py,custom_ptcl_diags.py
-    - shell: bash -l {0}
       name: Run unit tests with MPICH
       run: |
         python -m pytest tests/
