@@ -9,13 +9,19 @@ import numpy as np
 from optimas.utils.logger import get_logger
 from optimas.utils.other import update_object
 from optimas.gen_functions import persistent_generator
-from optimas.core import (Objective, Trial, Evaluation, VaryingParameter,
-                          Parameter, TrialParameter)
+from optimas.core import (
+    Objective,
+    Trial,
+    Evaluation,
+    VaryingParameter,
+    Parameter,
+    TrialParameter,
+)
 
 logger = get_logger(__name__)
 
 
-class Generator():
+class Generator:
     """Base class for all generators.
 
     Parameters
@@ -53,6 +59,7 @@ class Generator():
         parameters to the trials. If so, they can be given here as a list.
         By default, ``None``.
     """
+
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
@@ -64,8 +71,8 @@ class Generator():
         dedicated_resources: Optional[bool] = False,
         save_model: Optional[bool] = False,
         model_save_period: Optional[int] = 5,
-        model_history_dir: Optional[str] = 'model_history',
-        custom_trial_parameters: Optional[TrialParameter] = None
+        model_history_dir: Optional[str] = "model_history",
+        custom_trial_parameters: Optional[TrialParameter] = None,
     ) -> None:
         if objectives is None:
             objectives = [Objective()]
@@ -116,10 +123,7 @@ class Generator():
     def dedicated_resources(self):
         return self._dedicated_resources
 
-    def ask(
-        self,
-        n_trials: int
-    ) -> List[Trial]:
+    def ask(self, n_trials: int) -> List[Trial]:
         """Ask the generator to suggest the next ``n_trials`` to evaluate.
 
         Parameters
@@ -141,7 +145,7 @@ class Generator():
                     objectives=self._objectives,
                     analyzed_parameters=self._analyzed_parameters,
                     index=len(self._trials) + i,
-                    custom_parameters=self._custom_trial_parameters
+                    custom_parameters=self._custom_trial_parameters,
                 )
             )
         # Ask the generator to fill them.
@@ -150,16 +154,16 @@ class Generator():
         trials = [trial for trial in trials if len(trial.parameter_values) > 0]
         for trial in trials:
             logger.info(
-                'Generated trial {} with parameters {}'.format(
-                    trial.index, trial.parameters_as_dict()))
+                "Generated trial {} with parameters {}".format(
+                    trial.index, trial.parameters_as_dict()
+                )
+            )
         # Store trials.
         self._trials.extend(trials)
         return trials
 
     def tell(
-        self,
-        trials: List[Trial],
-        allow_saving_model: Optional[bool] = True
+        self, trials: List[Trial], allow_saving_model: Optional[bool] = True
     ) -> None:
         """Give trials back to generator once they have been evaluated.
 
@@ -177,19 +181,18 @@ class Generator():
                 self._trials.append(trial)
         self._tell(trials)
         for trial in trials:
-            log_msg = 'Completed trial {} with objective(s) {}'.format(
-                trial.index, trial.objectives_as_dict())
+            log_msg = "Completed trial {} with objective(s) {}".format(
+                trial.index, trial.objectives_as_dict()
+            )
             if trial.analyzed_parameters:
-                log_msg += ' and analyzed parameter(s) {}'.format(
-                    trial.analyzed_parameters_as_dict())
+                log_msg += " and analyzed parameter(s) {}".format(
+                    trial.analyzed_parameters_as_dict()
+                )
             logger.info(log_msg)
         if allow_saving_model and self._save_model:
             self.save_model_to_file()
 
-    def incorporate_history(
-        self,
-        history: np.ndarray
-    ) -> None:
+    def incorporate_history(self, history: np.ndarray) -> None:
         """Incorporate past history into the generator.
 
         Parameters
@@ -198,23 +201,22 @@ class Generator():
             The libEnsemble history array.
         """
         # Keep only evaluations where the simulation finished successfully.
-        history = history[history['sim_ended']]
+        history = history[history["sim_ended"]]
         n_sims = len(history)
         trials = []
         for i in range(n_sims):
             trial = Trial(
                 varying_parameters=self.varying_parameters,
                 parameter_values=[
-                    history[var.name][i] for var in self.varying_parameters],
+                    history[var.name][i] for var in self.varying_parameters
+                ],
                 objectives=self._objectives,
                 analyzed_parameters=self._analyzed_parameters,
                 evaluations=[
-                    Evaluation(
-                        parameter=par,
-                        value=history[par.name][i]
-                    ) for par in self._objectives + self._analyzed_parameters
+                    Evaluation(parameter=par, value=history[par.name][i])
+                    for par in self._objectives + self._analyzed_parameters
                 ],
-                custom_parameters=self._custom_trial_parameters
+                custom_parameters=self._custom_trial_parameters,
             )
             for par in self._custom_trial_parameters:
                 setattr(trial, par.name, history[par.save_name][i].item())
@@ -237,15 +239,12 @@ class Generator():
                 os.mkdir(self._model_history_dir)
             self._save_model_to_file()
             logger.info(
-                'Saved model to file after {} completed trials.'.format(
-                    n_completed_trials)
+                "Saved model to file after {} completed trials.".format(
+                    n_completed_trials
+                )
             )
 
-    def get_gen_specs(
-        self,
-        sim_workers: int,
-        run_params: dict
-    ) -> Dict:
+    def get_gen_specs(self, sim_workers: int, run_params: dict) -> Dict:
         """Get the libEnsemble gen_specs.
 
         Parameters
@@ -256,33 +255,32 @@ class Generator():
         self._prepare_to_send()
         gen_specs = {
             # Generator function.
-            'gen_f': self._gen_function,
+            "gen_f": self._gen_function,
             # Generator input. This is a RNG, no need for inputs.
-            'in': ['sim_id'],
-            'persis_in': (
-                ['sim_id', 'trial_index'] +
-                [obj.name for obj in self._objectives] +
-                [par.name for par in self._analyzed_parameters]
+            "in": ["sim_id"],
+            "persis_in": (
+                ["sim_id", "trial_index"]
+                + [obj.name for obj in self._objectives]
+                + [par.name for par in self._analyzed_parameters]
             ),
-            'out': (
-                [(var.name, var.dtype) for var in self._varying_parameters] +
-                [('num_procs', int), ('num_gpus', int)] +
-                [('trial_index', int)] +
-                [(par.save_name, par.dtype)
-                 for par in self._custom_trial_parameters]
+            "out": (
+                [(var.name, var.dtype) for var in self._varying_parameters]
+                + [("num_procs", int), ("num_gpus", int)]
+                + [("trial_index", int)]
+                + [(par.save_name, par.dtype) for par in self._custom_trial_parameters]
             ),
-            'user': {
+            "user": {
                 # Store the generator itself in gen_specs.
-                'generator': self,
+                "generator": self,
                 # Total max number of sims running concurrently.
-                'gen_batch_size': sim_workers,
+                "gen_batch_size": sim_workers,
                 # Allow generator to run on GPU.
-                'use_cuda': self._use_cuda,
+                "use_cuda": self._use_cuda,
                 # GPU in which to run generator.
-                'gpu_id': self._gpu_id,
+                "gpu_id": self._gpu_id,
                 # num of procs and gpus required
-                'run_params': run_params
-            }
+                "run_params": run_params,
+            },
         }
         return gen_specs
 
@@ -307,10 +305,7 @@ class Generator():
         """
         pass
 
-    def _update(
-        self,
-        new_generator: Generator
-    ) -> None:
+    def _update(self, new_generator: Generator) -> None:
         """Update generator with the attributes of a newer one.
 
         This method is only intended to be used internally by an
@@ -325,10 +320,7 @@ class Generator():
         """
         update_object(self, new_generator)
 
-    def _ask(
-        self,
-        trials: List[Trial]
-    ) -> List[Trial]:
+    def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Ask method to be implemented by the Generator subclasses.
 
         Parameters
@@ -340,10 +332,7 @@ class Generator():
         """
         pass
 
-    def _tell(
-        self,
-        trials: List[Trial]
-    ) -> None:
+    def _tell(self, trials: List[Trial]) -> None:
         """Tell method to be implemented by the Generator subclasses.
 
         Parameters

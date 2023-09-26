@@ -17,7 +17,7 @@ from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 
 
-class Exploration():
+class Exploration:
     """Base class in charge of launching an exploration (i.e., an optimization
     or parameter scan).
 
@@ -53,6 +53,7 @@ class Exploration():
         ``sim_workers`` parameter is ignored. By default, ``'local'`` mode
         is used.
     """
+
     def __init__(
         self,
         generator: Generator,
@@ -62,8 +63,8 @@ class Exploration():
         run_async: Optional[bool] = True,
         history: Optional[str] = None,
         history_save_period: Optional[int] = None,
-        exploration_dir_path: Optional[str] = './exploration',
-        libe_comms: Optional[str] = 'local'
+        exploration_dir_path: Optional[str] = "./exploration",
+        libe_comms: Optional[str] = "local",
     ) -> None:
         self.generator = generator
         self.evaluator = evaluator
@@ -85,17 +86,17 @@ class Exploration():
     def run(self) -> None:
         """Run the exploration."""
         # Set exit criteria to maximum number of evaluations.
-        exit_criteria = {'sim_max': self.max_evals}
+        exit_criteria = {"sim_max": self.max_evals}
 
         # Create persis_info.
         persis_info = add_unique_random_streams({}, self.sim_workers + 2)
 
         # If specified, allocate dedicated resources for the generator.
         if self.generator.dedicated_resources and self.generator.use_cuda:
-            persis_info['gen_resources'] = 1
-            persis_info['gen_use_gpus'] = True
+            persis_info["gen_resources"] = 1
+            persis_info["gen_use_gpus"] = True
         else:
-            self.libE_specs['zero_resource_workers'] = [1]
+            self.libE_specs["zero_resource_workers"] = [1]
 
         # Get gen_specs and sim_specs.
         run_params = self.evaluator.get_run_params()
@@ -103,7 +104,7 @@ class Exploration():
         sim_specs = self.evaluator.get_sim_specs(
             self.generator.varying_parameters,
             self.generator.objectives,
-            self.generator.analyzed_parameters
+            self.generator.analyzed_parameters,
         )
 
         # Launch exploration with libEnsemble.
@@ -114,14 +115,14 @@ class Exploration():
             persis_info,
             self.alloc_specs,
             self.libE_specs,
-            H0=self.history
+            H0=self.history,
         )
 
         # Update history.
         self.history = history
 
         # Update generator with the one received from libE.
-        self.generator._update(persis_info[1]['generator'])
+        self.generator._update(persis_info[1]["generator"])
 
         # Determine if current rank is master.
         if self.libE_specs["comms"] == "local":
@@ -129,14 +130,19 @@ class Exploration():
             nworkers = self.sim_workers + 1
         else:
             from mpi4py import MPI
-            is_master = (MPI.COMM_WORLD.Get_rank() == 0)
+
+            is_master = MPI.COMM_WORLD.Get_rank() == 0
             nworkers = MPI.COMM_WORLD.Get_size() - 1
 
         # Save history.
         if is_master:
             save_libE_output(
-                history, persis_info, __file__, nworkers,
-                dest_path=os.path.abspath(self.exploration_dir_path))
+                history,
+                persis_info,
+                __file__,
+                nworkers,
+                dest_path=os.path.abspath(self.exploration_dir_path),
+            )
 
         # Reset state of libEnsemble.
         self._reset_libensemble()
@@ -149,23 +155,19 @@ class Exploration():
         """Initialize exploration evaluator."""
         self.evaluator.initialize()
 
-    def _load_history(
-        self,
-        history: Union[str, np.ndarray, None]
-    ) -> None:
+    def _load_history(self, history: Union[str, np.ndarray, None]) -> None:
         """Load history file."""
         if isinstance(history, str):
             if os.path.exists(history):
                 # Load array.
                 history = np.load(history)
                 # Only include runs that completed
-                history = history[history['sim_ended']]
+                history = history[history["sim_ended"]]
             else:
-                raise ValueError(
-                    'History file {} does not exist.'.format(history))
-        assert history is None or isinstance(history, np.ndarray), (
-            'Type {} not valid for `history`'.format(type(history))
-        )
+                raise ValueError("History file {} does not exist.".format(history))
+        assert history is None or isinstance(
+            history, np.ndarray
+        ), "Type {} not valid for `history`".format(type(history))
         # Incorporate history into generator.
         if history is not None:
             self.generator.incorporate_history(history)
@@ -176,34 +178,36 @@ class Exploration():
         libE_specs = {}
         # Save H to file every N simulation evaluations
         # default value, if not defined
-        libE_specs['save_every_k_sims'] = self.history_save_period
+        libE_specs["save_every_k_sims"] = self.history_save_period
         # Force central mode
-        libE_specs['dedicated_mode'] = False
+        libE_specs["dedicated_mode"] = False
         # Set communications and corresponding number of workers.
         libE_specs["comms"] = self.libe_comms
-        if self.libe_comms == 'local':
+        if self.libe_comms == "local":
             libE_specs["nworkers"] = self.sim_workers + 1
-        elif self.libe_comms == 'mpi':
+        elif self.libe_comms == "mpi":
             # Warn user if openmpi is being used.
             # When running with MPI communications, openmpi cannot be used as
             # it does not support nesting MPI.
             # MPI is only imported here to avoid issues with openmpi when
             # running with local communications.
             from mpi4py import MPI
-            if 'openmpi' in MPI.Get_library_version().lower():
+
+            if "openmpi" in MPI.Get_library_version().lower():
                 raise RuntimeError(
-                    'Running with mpi communications is not supported with '
-                    'openMPI. Please use MPICH (linux and macOS) or MSMPI '
-                    '(Windows) instead.')
+                    "Running with mpi communications is not supported with "
+                    "openMPI. Please use MPICH (linux and macOS) or MSMPI "
+                    "(Windows) instead."
+                )
         else:
             raise ValueError(
                 "Communication mode '{}'".format(self.libe_comms)
                 + " not recognized. Possible values are 'local' or 'mpi'."
             )
         # Set exploration directory path.
-        libE_specs['ensemble_dir_path'] = 'evaluations'
-        libE_specs['use_workflow_dir'] = True
-        libE_specs['workflow_dir_path'] = self.exploration_dir_path
+        libE_specs["ensemble_dir_path"] = "evaluations"
+        libE_specs["use_workflow_dir"] = True
+        libE_specs["workflow_dir_path"] = self.exploration_dir_path
 
         # get specs from generator and evaluator
         gen_libE_specs = self.generator.get_libe_specs()
@@ -213,11 +217,9 @@ class Exploration():
     def _create_alloc_specs(self) -> None:
         """Create exploration alloc_specs."""
         self.alloc_specs = {
-            'alloc_f': only_persistent_gens,
-            'out': [('given_back', bool)],
-            'user': {
-                'async_return': self.run_async
-            }
+            "alloc_f": only_persistent_gens,
+            "out": [("given_back", bool)],
+            "user": {"async_return": self.run_async},
         }
 
     def _reset_libensemble(self) -> None:

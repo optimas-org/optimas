@@ -4,5 +4,12 @@ from .task import Task
 from .trial import Trial
 
 
-__all__ = ['Evaluation', 'Parameter', 'VaryingParameter', 'TrialParameter',
-           'Objective', 'Task', 'Trial']
+__all__ = [
+    "Evaluation",
+    "Parameter",
+    "VaryingParameter",
+    "TrialParameter",
+    "Objective",
+    "Task",
+    "Trial",
+]

@@ -1,10 +1,7 @@
 from typing import Any
 
 
-def update_object(
-    object_old: Any,
-    object_new: Any
-) -> None:
+def update_object(object_old: Any, object_new: Any) -> None:
     """Update the attributes of an object with those from a newer one.
 
     This method is intended to be used with objects of the same type and that

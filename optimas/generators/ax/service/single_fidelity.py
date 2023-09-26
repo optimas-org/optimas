@@ -4,8 +4,7 @@ from typing import List, Optional
 
 import torch
 from ax.service.ax_client import AxClient
-from ax.modelbridge.generation_strategy import (
-    GenerationStep, GenerationStrategy)
+from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrategy
 from ax.modelbridge.registry import Models
 from ax.service.utils.instantiation import ObjectiveProperties
 
@@ -48,6 +47,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         Name of the directory in which the model will be saved. By default,
         ``'model_history'``.
     """
+
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
@@ -59,7 +59,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         dedicated_resources: Optional[bool] = False,
         save_model: Optional[bool] = True,
         model_save_period: Optional[int] = 5,
-        model_history_dir: Optional[str] = 'model_history',
+        model_history_dir: Optional[str] = "model_history",
     ) -> None:
         super().__init__(
             varying_parameters=varying_parameters,
@@ -71,7 +71,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             dedicated_resources=dedicated_resources,
             save_model=save_model,
             model_save_period=model_save_period,
-            model_history_dir=model_history_dir
+            model_history_dir=model_history_dir,
         )
 
     def _create_ax_client(self):
@@ -81,11 +81,11 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         for var in self._varying_parameters:
             parameters.append(
                 {
-                    'name': var.name,
-                    'type': 'range',
-                    'bounds': [var.lower_bound, var.upper_bound],
+                    "name": var.name,
+                    "type": "range",
+                    "bounds": [var.lower_bound, var.upper_bound],
                     # Suppresses warning when the type is not given explicitly
-                    'value_type': var.dtype.__name__
+                    "value_type": var.dtype.__name__,
                 }
             )
 
@@ -95,12 +95,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         # If there is no past history,
         # adds Sobol initialization with `n_init` random trials:
         # if self.history is None:
-        steps.append(
-            GenerationStep(
-                model=Models.SOBOL,
-                num_trials=self._n_init
-            )
-        )
+        steps.append(GenerationStep(model=Models.SOBOL, num_trials=self._n_init))
 
         # continue indefinitely with GPEI.
         steps.append(
@@ -108,9 +103,9 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
                 model=Models.GPEI,
                 num_trials=-1,
                 model_kwargs={
-                    'torch_dtype': torch.double,
-                    'torch_device': torch.device(self.torch_device)
-                }
+                    "torch_dtype": torch.double,
+                    "torch_device": torch.device(self.torch_device),
+                },
             )
         )
 
@@ -118,14 +113,10 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
 
         ax_objectives = {}
         for obj in self.objectives:
-            ax_objectives[obj.name] = ObjectiveProperties(
-                minimize=obj.minimize)
+            ax_objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
 
         # Create client and experiment.
         ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
-        ax_client.create_experiment(
-            parameters=parameters,
-            objectives=ax_objectives
-        )
+        ax_client.create_experiment(parameters=parameters, objectives=ax_objectives)
 
         return ax_client

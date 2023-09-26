@@ -8,7 +8,7 @@ from .parameter import VaryingParameter, Objective, Parameter, TrialParameter
 from .evaluation import Evaluation
 
 
-class Trial():
+class Trial:
     """Defines a trial to be evaluated.
 
     Parameters
@@ -30,6 +30,7 @@ class Trial():
         Additional parameters needed to identify or carry out the trial, and
         which will be included in the optimization history.
     """
+
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
@@ -38,19 +39,18 @@ class Trial():
         parameter_values: Optional[List[float]] = None,
         evaluations: Optional[List[Evaluation]] = None,
         index: Optional[int] = None,
-        custom_parameters: Optional[List[TrialParameter]] = None
+        custom_parameters: Optional[List[TrialParameter]] = None,
     ) -> None:
         # Process inputs.
         self._varying_parameters = varying_parameters
         self._objectives = objectives
         self._analyzed_parameters = (
-            [] if analyzed_parameters is None else analyzed_parameters)
-        self._parameter_values = (
-            [] if parameter_values is None else parameter_values)
+            [] if analyzed_parameters is None else analyzed_parameters
+        )
+        self._parameter_values = [] if parameter_values is None else parameter_values
         evaluations = [] if evaluations is None else evaluations
         self._index = index
-        self._custom_parameters = (
-            [] if custom_parameters is None else custom_parameters)
+        self._custom_parameters = [] if custom_parameters is None else custom_parameters
 
         # Add custom parameters as trial attributes.
         for param in self._custom_parameters:
@@ -101,10 +101,7 @@ class Trial():
     def custom_parameters(self) -> List[TrialParameter]:
         return self._custom_parameters
 
-    def complete_evaluation(
-        self,
-        evaluation: Evaluation
-    ) -> None:
+    def complete_evaluation(self, evaluation: Evaluation) -> None:
         """Complete the evaluation of an objective or analyzed parameter.
 
         Parameters

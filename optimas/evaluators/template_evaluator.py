@@ -36,6 +36,7 @@ class TemplateEvaluator(Evaluator):
         The number of GPUs that will be made available for each evaluation. By
         default, 0.
     """
+
     def __init__(
         self,
         sim_template: str,
@@ -43,28 +44,23 @@ class TemplateEvaluator(Evaluator):
         executable: Optional[str] = None,
         sim_files: Optional[List[str]] = None,
         n_procs: Optional[int] = None,
-        n_gpus: Optional[int] = None
+        n_gpus: Optional[int] = None,
     ) -> None:
         super().__init__(
-            sim_function=run_template_simulation,
-            n_procs=n_procs,
-            n_gpus=n_gpus
+            sim_function=run_template_simulation, n_procs=n_procs, n_gpus=n_gpus
         )
         self.sim_template = sim_template
         self.analysis_func = analysis_func
         self.executable = executable
         self.sim_files = [] if sim_files is None else sim_files
-        self._app_name = 'sim'
+        self._app_name = "sim"
 
     @property
     def app_name(self) -> str:
         return self._app_name
 
     @app_name.setter
-    def app_name(
-        self,
-        name: str
-    ) -> None:
+    def app_name(self, name: str) -> None:
         self._app_name = name
 
     def get_sim_specs(
@@ -77,12 +73,13 @@ class TemplateEvaluator(Evaluator):
         by ``libEnsemble``
         """
         # Get base sim_specs.
-        sim_specs = super().get_sim_specs(varying_parameters, objectives,
-                                          analyzed_parameters)
+        sim_specs = super().get_sim_specs(
+            varying_parameters, objectives, analyzed_parameters
+        )
         # Add parameters specific to the template evaluator.
-        sim_specs['user']['analysis_func'] = self.analysis_func
-        sim_specs['user']['sim_template'] = os.path.basename(self.sim_template)
-        sim_specs['user']['app_name'] = self._app_name
+        sim_specs["user"]["analysis_func"] = self.analysis_func
+        sim_specs["user"]["sim_template"] = os.path.basename(self.sim_template)
+        sim_specs["user"]["app_name"] = self._app_name
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
@@ -95,10 +92,10 @@ class TemplateEvaluator(Evaluator):
         # when using a workflow dir.
         sim_files = [self.sim_template] + self.sim_files
         sim_files = [os.path.abspath(file) for file in sim_files]
-        libE_specs['sim_dir_copy_files'] = sim_files
+        libE_specs["sim_dir_copy_files"] = sim_files
         # Force libEnsemble to create a directory for each simulation
         # default value, if not defined
-        libE_specs['sim_dirs_make'] = True
+        libE_specs["sim_dirs_make"] = True
         return libE_specs
 
     def _initialize(self) -> None:
@@ -107,23 +104,24 @@ class TemplateEvaluator(Evaluator):
     def _register_app(self) -> None:
         """Register the executable as an app in the libEnsemble executor."""
         # Determine executable path.
-        if self.sim_template.endswith('.py'):
+        if self.sim_template.endswith(".py"):
             sim_script = os.path.basename(self.sim_template)
             # Strip 'template_' from name
-            sim_script = sim_script[len('template_'):]
+            sim_script = sim_script[len("template_") :]
             executable_path = sim_script
         else:
             # By default, if the template is not a `.py` file, we run
             # it with an executable.
-            assert self.executable is not None, (
-                'An executable must be provided for non-Python simulations')
-            assert os.path.exists(self.executable), (
-                'Executable {} does not exist.'.format(self.executable))
-            executable_path = './' + self.executable
+            assert (
+                self.executable is not None
+            ), "An executable must be provided for non-Python simulations"
+            assert os.path.exists(
+                self.executable
+            ), "Executable {} does not exist.".format(self.executable)
+            executable_path = "./" + self.executable
             self.sim_files.append(self.executable)
 
         # Register app.
         Executor.executor.register_app(
-            full_path=executable_path,
-            app_name=self._app_name
+            full_path=executable_path, app_name=self._app_name
         )

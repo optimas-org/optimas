@@ -17,11 +17,8 @@ class Parameter(NamedBase):
     dtype : np.dtype
         The data type of the parameter.
     """
-    def __init__(
-        self,
-        name: str,
-        dtype: Optional[np.dtype] = float
-    ):
+
+    def __init__(self, name: str, dtype: Optional[np.dtype] = float):
         super().__init__(name)
         self._dtype = dtype
 
@@ -50,6 +47,7 @@ class VaryingParameter(Parameter):
         Default value of the parameter when it is not being varied. Only needed
         for some generators.
     """
+
     def __init__(
         self,
         name: str,
@@ -58,7 +56,7 @@ class VaryingParameter(Parameter):
         is_fidelity: Optional[bool] = False,
         fidelity_target_value: Optional[float] = None,
         default_value: Optional[float] = None,
-        dtype: Optional[np.dtype] = float
+        dtype: Optional[np.dtype] = float,
     ) -> None:
         super().__init__(name, dtype)
         self._lower_bound = lower_bound
@@ -101,11 +99,12 @@ class TrialParameter(Parameter):
     dtype : np.dtype
         The data type of the parameter.
     """
+
     def __init__(
         self,
         name: str,
         save_name: Optional[str] = None,
-        dtype: Optional[np.dtype] = float
+        dtype: Optional[np.dtype] = float,
     ) -> None:
         super().__init__(name, dtype=dtype)
         self._save_name = name if save_name is None else save_name
@@ -126,10 +125,9 @@ class Objective(Parameter):
         Indicates whether the objective should be minimized or,
         otherwise, maximized. By default, ``True``.
     """
+
     def __init__(
-        self,
-        name: Optional[str] = 'f',
-        minimize: Optional[bool] = True
+        self, name: Optional[str] = "f", minimize: Optional[bool] = True
     ) -> None:
         super().__init__(name)
         self._minimize = minimize

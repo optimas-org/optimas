@@ -42,6 +42,7 @@ class AxGenerator(Generator):
         parameters to the trials. If so, they can be given here as a list.
         By default, ``None``.
     """
+
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
@@ -52,8 +53,8 @@ class AxGenerator(Generator):
         dedicated_resources: Optional[bool] = False,
         save_model: Optional[bool] = False,
         model_save_period: Optional[int] = 5,
-        model_history_dir: Optional[str] = 'model_history',
-        custom_trial_parameters: Optional[TrialParameter] = None
+        model_history_dir: Optional[str] = "model_history",
+        custom_trial_parameters: Optional[TrialParameter] = None,
     ) -> None:
         super().__init__(
             varying_parameters=varying_parameters,
@@ -65,7 +66,7 @@ class AxGenerator(Generator):
             save_model=save_model,
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,
-            custom_trial_parameters=custom_trial_parameters
+            custom_trial_parameters=custom_trial_parameters,
         )
         self._determine_torch_device()
 
@@ -73,6 +74,6 @@ class AxGenerator(Generator):
         """Determine whether to run the generator on GPU (CUDA) or CPU."""
         # Use CUDA if available.
         if self.use_cuda and torch.cuda.is_available():
-            self.torch_device = 'cuda'
+            self.torch_device = "cuda"
         else:
-            self.torch_device = 'cpu'
+            self.torch_device = "cpu"

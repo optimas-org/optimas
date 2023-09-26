@@ -27,53 +27,57 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         input_values[name] = value
 
     # Get user specs.
-    if 'task' in H.dtype.names:
-        task_name = H['task'][0]
-        user_specs = sim_specs['user'][task_name]
+    if "task" in H.dtype.names:
+        task_name = H["task"][0]
+        user_specs = sim_specs["user"][task_name]
     else:
-        user_specs = sim_specs['user']
-    sim_template = user_specs['sim_template']
-    analysis_func = user_specs['analysis_func']
-    app_name = user_specs['app_name']
+        user_specs = sim_specs["user"]
+    sim_template = user_specs["sim_template"]
+    analysis_func = user_specs["analysis_func"]
+    app_name = user_specs["app_name"]
 
     # Create simulation input file.
-    sim_script = sim_template[len('template_'):]  # Strip 'template_' from name
-    with open(sim_template, 'r') as f:
+    sim_script = sim_template[len("template_") :]  # Strip 'template_' from name
+    with open(sim_template, "r") as f:
         template = jinja2.Template(f.read())
-    with open(sim_script, 'w') as f:
+    with open(sim_script, "w") as f:
         f.write(template.render(input_values))
     os.remove(sim_template)
 
     # If the template is a python file, no need to provide it as argument
     # (it has already been registered by libEnsemble as such).
-    if sim_script.endswith('.py'):
+    if sim_script.endswith(".py"):
         sim_script = None
 
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
 
-    task = exctr.submit(app_name=app_name,
-                        app_args=sim_script,
-                        stdout='out.txt',
-                        stderr='err.txt',
-                        )
+    task = exctr.submit(
+        app_name=app_name,
+        app_args=sim_script,
+        stdout="out.txt",
+        stderr="err.txt",
+    )
 
     # Wait for simulation to complete
     task.wait()
 
     # Set calc_status with optional prints.
     if task.finished:
-        if task.state == 'FINISHED':
+        if task.state == "FINISHED":
             calc_status = WORKER_DONE
-        elif task.state == 'FAILED':
+        elif task.state == "FAILED":
             calc_status = TASK_FAILED
-        if task.state not in ['FINISHED', 'FAILED', 'USER_KILLED']:
-            print("Warning: Task {} in unknown state {}. Error code {}"
-                  .format(task.name, task.state, task.errcode))
+        if task.state not in ["FINISHED", "FAILED", "USER_KILLED"]:
+            print(
+                "Warning: Task {} in unknown state {}. Error code {}".format(
+                    task.name, task.state, task.errcode
+                )
+            )
 
     # Prepare the array that is returned to libE
     # Automatically include the input parameters
-    libE_output = np.zeros(1, dtype=sim_specs['out'])
+    libE_output = np.zeros(1, dtype=sim_specs["out"])
     for name in H.dtype.names:
         libE_output[name] = H[name][0]
 
@@ -103,16 +107,16 @@ def run_function(H, persis_info, sim_specs, libE_info):
         input_values[name] = value
 
     # Get user specs.
-    if 'task' in H.dtype.names:
-        task_name = H['task'][0]
-        user_specs = sim_specs['user'][task_name]
+    if "task" in H.dtype.names:
+        task_name = H["task"][0]
+        user_specs = sim_specs["user"][task_name]
     else:
-        user_specs = sim_specs['user']
-    evaluation_func = user_specs['evaluation_func']
+        user_specs = sim_specs["user"]
+    evaluation_func = user_specs["evaluation_func"]
 
     # Prepare the array that is returned to libE
     # Automatically include the input parameters
-    libE_output = np.zeros(1, dtype=sim_specs['out'])
+    libE_output = np.zeros(1, dtype=sim_specs["out"])
     for name in H.dtype.names:
         libE_output[name] = H[name][0]
 

@@ -7,7 +7,12 @@ from .line_sampling import LineSamplingGenerator
 from .random_sampling import RandomSamplingGenerator
 
 
-__all__ = ['AxSingleFidelityGenerator', 'AxMultiFidelityGenerator',
-           'AxMultitaskGenerator', 'AxClientGenerator',
-           'GridSamplingGenerator', 'LineSamplingGenerator',
-           'RandomSamplingGenerator']
+__all__ = [
+    "AxSingleFidelityGenerator",
+    "AxMultiFidelityGenerator",
+    "AxMultitaskGenerator",
+    "AxClientGenerator",
+    "GridSamplingGenerator",
+    "LineSamplingGenerator",
+    "RandomSamplingGenerator",
+]

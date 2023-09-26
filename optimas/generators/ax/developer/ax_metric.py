@@ -13,12 +13,14 @@ class AxMetric(Metric):
     def fetch_trial_data(self, trial: BatchTrial):
         records = []
         for arm_name, arm in trial.arms_by_name.items():
-            mean, sem = trial.run_metadata[arm_name]['f']
-            records.append({
-                "arm_name": arm_name,
-                "metric_name": self.name,
-                "trial_index": trial.index,
-                "mean": mean,
-                "sem": sem,
-            })
+            mean, sem = trial.run_metadata[arm_name]["f"]
+            records.append(
+                {
+                    "arm_name": arm_name,
+                    "metric_name": self.name,
+                    "trial_index": trial.index,
+                    "mean": mean,
+                    "sem": sem,
+                }
+            )
         return Ok(value=Data(df=pd.DataFrame.from_records(records)))

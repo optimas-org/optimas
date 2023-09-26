@@ -24,17 +24,14 @@ class FunctionEvaluator(Evaluator):
         The number of GPUs that will be made available for each evaluation. By
         default, 0.
     """
+
     def __init__(
         self,
         function: Callable,
         n_procs: Optional[int] = None,
-        n_gpus: Optional[int] = None
+        n_gpus: Optional[int] = None,
     ) -> None:
-        super().__init__(
-            sim_function=run_function,
-            n_procs=n_procs,
-            n_gpus=n_gpus
-        )
+        super().__init__(sim_function=run_function, n_procs=n_procs, n_gpus=n_gpus)
         self.function = function
 
     def get_sim_specs(
@@ -47,8 +44,9 @@ class FunctionEvaluator(Evaluator):
         by ``libEnsemble``
         """
         # Get base sim_specs.
-        sim_specs = super().get_sim_specs(varying_parameters, objectives,
-                                          analyzed_parameters)
+        sim_specs = super().get_sim_specs(
+            varying_parameters, objectives, analyzed_parameters
+        )
         # Add evaluation function to sim_specs.
-        sim_specs['user']['evaluation_func'] = self.function
+        sim_specs["user"]["evaluation_func"] = self.function
         return sim_specs
