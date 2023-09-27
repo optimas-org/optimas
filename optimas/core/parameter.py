@@ -1,14 +1,21 @@
 """Contains the definition of the various optimization parameters."""
 
 from typing import Optional, Any
+import json
 
-from pydantic import validator
+from pydantic import BaseModel, Extra, validator
 import numpy as np
 
-from .base import NamedBase
+
+def json_dumps_dtype(v, *, default):
+    """Add support for dumping numpy dtype to json."""
+    for key, value in v.items():
+        if key == 'dtype':
+            v[key] = np.dtype(value).descr
+    return json.dumps(v)
 
 
-class Parameter(NamedBase):
+class Parameter(BaseModel):
     """Base class for all optimization parameters.
 
     Parameters
@@ -19,6 +26,7 @@ class Parameter(NamedBase):
         The data type of the parameter. Any object that can be converted to a
         numpy dtype.
     """
+    name: str
     dtype: Optional[Any]
 
     def __init__(
@@ -37,6 +45,10 @@ class Parameter(NamedBase):
             raise ValueError(f"Unable to coerce '{v}' into a NumPy dtype.")
         else:
             return v
+        
+    class Config:
+        extra = Extra.ignore
+        json_dumps = json_dumps_dtype
 
 
 class VaryingParameter(Parameter):
