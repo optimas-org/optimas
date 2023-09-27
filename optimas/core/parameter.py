@@ -1,14 +1,10 @@
 """Contains the definition of the various optimization parameters."""
 
-from typing import Optional
-
-import numpy as np
-from pydantic.dataclasses import dataclass
+from typing import Optional, Any
 
 from .base import NamedBase
 
 
-@dataclass
 class Parameter(NamedBase):
     """Base class for all optimization parameters.
 
@@ -16,13 +12,21 @@ class Parameter(NamedBase):
     ----------
     name : str
         Name of the parameter.
-    dtype : np.dtype
-        The data type of the parameter.
+    dtype : data-type
+        The data type of the parameter. Any object that can be converted to a
+        numpy dtype.
     """
-    dtype: Optional[np.dtype] = float
+    dtype: Optional[Any] = float
+
+    def __init__(
+        self,
+        name: str,
+        dtype: Optional[Any] = float,
+        **kwargs
+    ) -> None:
+        super().__init__(name=name, dtype=dtype, **kwargs)
 
 
-@dataclass
 class VaryingParameter(Parameter):
     """Defines an input parameter to be varied during optimization.
 
@@ -48,8 +52,27 @@ class VaryingParameter(Parameter):
     fidelity_target_value: Optional[float] = None
     default_value: Optional[float] = None
 
+    def __init__(
+        self,
+        name: str,
+        lower_bound: float,
+        upper_bound: float,
+        is_fidelity: Optional[bool] = False,
+        fidelity_target_value: Optional[float] = None,
+        default_value: Optional[float] = None,
+        dtype: Optional[Any] = float
+    ) -> None:
+        super().__init__(
+            name=name,
+            dtype=dtype,
+            lower_bound=lower_bound,
+            upper_bound=upper_bound,
+            is_fidelity=is_fidelity,
+            fidelity_target_value=fidelity_target_value,
+            default_value=default_value
+        )
 
-@dataclass
+
 class TrialParameter(Parameter):
     """Defines a parameter that can be attached to a trial.
 
@@ -65,8 +88,16 @@ class TrialParameter(Parameter):
     """
     save_name: Optional[str] = None
 
+    def __init__(
+        self,
+        name: str,
+        save_name: Optional[str] = None,
+        dtype: Optional[Any] = float
+    ) -> None:
+        super().__init__(name=name, save_name=save_name, dtype=dtype)
+        self.save_name = name if save_name is None else save_name
 
-@dataclass
+
 class Objective(Parameter):
     """Defines an optimization objective.
 
@@ -80,3 +111,10 @@ class Objective(Parameter):
     """
     name: Optional[str] = 'f',
     minimize: Optional[bool] = True
+
+    def __init__(
+        self,
+        name: Optional[str] = 'f',
+        minimize: Optional[bool] = True
+    ) -> None:
+        super().__init__(name=name, minimize=minimize)

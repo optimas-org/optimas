@@ -2,14 +2,11 @@
 This module defines a base class for all classes that have a name attribute.
 Examples of these are the different optimization parameters and tasks.
 """
-import json
 
-from pydantic.dataclasses import dataclass
-from pydantic.json import pydantic_encoder
+from pydantic import BaseModel
 
 
-@dataclass
-class NamedBase():
+class NamedBase(BaseModel):
     """Base class for all classes with a ``name`` attribute.
 
     Parameters
@@ -19,5 +16,9 @@ class NamedBase():
     """
     name: str
 
-    def json(self):
-        return json.dumps(self, indent=4, default=pydantic_encoder)
+    def __init__(
+            self,
+            name: str,
+            **kwargs
+    ) -> None:
+        super().__init__(name=name, **kwargs)
