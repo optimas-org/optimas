@@ -3,10 +3,12 @@
 from typing import Optional
 
 import numpy as np
+from pydantic.dataclasses import dataclass
 
 from .base import NamedBase
 
 
+@dataclass
 class Parameter(NamedBase):
     """Base class for all optimization parameters.
 
@@ -17,20 +19,10 @@ class Parameter(NamedBase):
     dtype : np.dtype
         The data type of the parameter.
     """
-    def __init__(
-        self,
-        name: str,
-        dtype: Optional[np.dtype] = float
-    ):
-        super().__init__(name)
-        self._dtype = dtype
-
-    @property
-    def dtype(self) -> np.dtype:
-        """Get parameter data type."""
-        return self._dtype
+    dtype: Optional[np.dtype] = float
 
 
+@dataclass
 class VaryingParameter(Parameter):
     """Defines an input parameter to be varied during optimization.
 
@@ -50,44 +42,14 @@ class VaryingParameter(Parameter):
         Default value of the parameter when it is not being varied. Only needed
         for some generators.
     """
-    def __init__(
-        self,
-        name: str,
-        lower_bound: float,
-        upper_bound: float,
-        is_fidelity: Optional[bool] = False,
-        fidelity_target_value: Optional[float] = None,
-        default_value: Optional[float] = None,
-        dtype: Optional[np.dtype] = float
-    ) -> None:
-        super().__init__(name, dtype)
-        self._lower_bound = lower_bound
-        self._upper_bound = upper_bound
-        self._is_fidelity = is_fidelity
-        self._fidelity_target_value = fidelity_target_value
-        self._default_value = default_value
-
-    @property
-    def lower_bound(self) -> float:
-        return self._lower_bound
-
-    @property
-    def upper_bound(self) -> float:
-        return self._upper_bound
-
-    @property
-    def is_fidelity(self) -> bool:
-        return self._is_fidelity
-
-    @property
-    def fidelity_target_value(self) -> float:
-        return self._fidelity_target_value
-
-    @property
-    def default_value(self) -> float:
-        return self._default_value
+    lower_bound: float
+    upper_bound: float
+    is_fidelity: Optional[bool] = False
+    fidelity_target_value: Optional[float] = None
+    default_value: Optional[float] = None
 
 
+@dataclass
 class TrialParameter(Parameter):
     """Defines a parameter that can be attached to a trial.
 
@@ -101,20 +63,10 @@ class TrialParameter(Parameter):
     dtype : np.dtype
         The data type of the parameter.
     """
-    def __init__(
-        self,
-        name: str,
-        save_name: Optional[str] = None,
-        dtype: Optional[np.dtype] = float
-    ) -> None:
-        super().__init__(name, dtype=dtype)
-        self._save_name = name if save_name is None else save_name
-
-    @property
-    def save_name(self) -> str:
-        return self._save_name
+    save_name: Optional[str] = None
 
 
+@dataclass
 class Objective(Parameter):
     """Defines an optimization objective.
 
@@ -126,14 +78,5 @@ class Objective(Parameter):
         Indicates whether the objective should be minimized or,
         otherwise, maximized. By default, ``True``.
     """
-    def __init__(
-        self,
-        name: Optional[str] = 'f',
-        minimize: Optional[bool] = True
-    ) -> None:
-        super().__init__(name)
-        self._minimize = minimize
-
-    @property
-    def minimize(self) -> bool:
-        return self._minimize
+    name: Optional[str] = 'f',
+    minimize: Optional[bool] = True
