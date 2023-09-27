@@ -26,7 +26,8 @@ would look something like
 
 
     ev = TemplateEvaluator(
-        sim_template="template_simulation_script.py", analysis_func=analyze_simulation
+        sim_template="template_simulation_script.py",
+        analysis_func=analyze_simulation,
     )
 
 
