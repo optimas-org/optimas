@@ -45,7 +45,7 @@ class Parameter(BaseModel):
             raise ValueError(f"Unable to coerce '{v}' into a NumPy dtype.")
         else:
             return v
-        
+
     class Config:
         extra = Extra.ignore
         json_dumps = json_dumps_dtype
