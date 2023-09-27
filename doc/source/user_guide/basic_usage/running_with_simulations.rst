@@ -158,6 +158,6 @@ path to the ``executable`` that will run your simulation.
 
    ev = TemplateEvaluator(
        sim_template='template_simulation_script.txt',
-       executable='/path/to/my_executable'
+       executable='/path/to/my_executable',
        analysis_func=analyze_simulation
    )
