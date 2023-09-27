@@ -2,8 +2,10 @@
 This module defines a base class for all classes that have a name attribute.
 Examples of these are the different optimization parameters and tasks.
 """
+import json
 
 from pydantic.dataclasses import dataclass
+from pydantic.json import pydantic_encoder
 
 
 @dataclass
@@ -17,3 +19,5 @@ class NamedBase():
     """
     name: str
 
+    def json(self):
+        return json.dumps(self, indent=4, default=pydantic_encoder)
