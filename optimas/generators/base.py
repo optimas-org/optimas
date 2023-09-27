@@ -267,7 +267,10 @@ class Generator:
                 [(var.name, var.dtype) for var in self._varying_parameters]
                 + [("num_procs", int), ("num_gpus", int)]
                 + [("trial_index", int)]
-                + [(par.save_name, par.dtype) for par in self._custom_trial_parameters]
+                + [
+                    (par.save_name, par.dtype)
+                    for par in self._custom_trial_parameters
+                ]
             ),
             "user": {
                 # Store the generator itself in gen_specs.

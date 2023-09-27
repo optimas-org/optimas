@@ -21,7 +21,9 @@ def test_template_evaluator():
     obj = Objective("f", minimize=False)
 
     # Define variables and objectives.
-    gen = RandomSamplingGenerator(varying_parameters=[var1, var2], objectives=[obj])
+    gen = RandomSamplingGenerator(
+        varying_parameters=[var1, var2], objectives=[obj]
+    )
 
     # Create template evaluator.
     ev = TemplateEvaluator(

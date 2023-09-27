@@ -106,7 +106,9 @@ class AxClientGenerator(AxServiceGenerator):
         else:
             ax_objectives = [ax_objective]
         for ax_obj in ax_objectives:
-            obj = Objective(name=ax_obj.metric_names[0], minimize=ax_obj.minimize)
+            obj = Objective(
+                name=ax_obj.metric_names[0], minimize=ax_obj.minimize
+            )
             objectives.append(obj)
         return objectives
 

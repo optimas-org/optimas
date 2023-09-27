@@ -22,7 +22,9 @@ def test_function_evaluator():
     obj = Objective("f", minimize=False)
 
     # Create generator.
-    gen = RandomSamplingGenerator(varying_parameters=[var1, var2], objectives=[obj])
+    gen = RandomSamplingGenerator(
+        varying_parameters=[var1, var2], objectives=[obj]
+    )
 
     # Create function evaluator.
     ev = FunctionEvaluator(function=eval_func)

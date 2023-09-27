@@ -4,7 +4,10 @@ from typing import List, Optional
 
 import torch
 from ax.service.ax_client import AxClient
-from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrategy
+from ax.modelbridge.generation_strategy import (
+    GenerationStep,
+    GenerationStrategy,
+)
 from ax.modelbridge.registry import Models
 from ax.service.utils.instantiation import ObjectiveProperties
 
@@ -95,7 +98,9 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         # If there is no past history,
         # adds Sobol initialization with `n_init` random trials:
         # if self.history is None:
-        steps.append(GenerationStep(model=Models.SOBOL, num_trials=self._n_init))
+        steps.append(
+            GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
+        )
 
         # continue indefinitely with GPEI.
         steps.append(
@@ -117,6 +122,8 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
 
         # Create client and experiment.
         ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
-        ax_client.create_experiment(parameters=parameters, objectives=ax_objectives)
+        ax_client.create_experiment(
+            parameters=parameters, objectives=ax_objectives
+        )
 
         return ax_client

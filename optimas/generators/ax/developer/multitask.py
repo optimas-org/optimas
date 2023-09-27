@@ -169,7 +169,8 @@ class AxMultitaskGenerator(AxGenerator):
             if next_trial is not None:
                 arm, trial_type, trial_index = next_trial
                 trial.parameter_values = [
-                    arm.parameters.get(var.name) for var in self._varying_parameters
+                    arm.parameters.get(var.name)
+                    for var in self._varying_parameters
                 ]
                 trial.trial_type = trial_type
                 trial.arm_name = arm.name
@@ -207,7 +208,9 @@ class AxMultitaskGenerator(AxGenerator):
             arms = []
             for trial in trials_i:
                 params = {}
-                for var, val in zip(trial.varying_parameters, trial.parameter_values):
+                for var, val in zip(
+                    trial.varying_parameters, trial.parameter_values
+                ):
                     params[var.name] = val
                 arms.append(Arm(parameters=params, name=trial.arm_name))
             # Create new batch trial.
@@ -345,7 +348,9 @@ class AxMultitaskGenerator(AxGenerator):
                     # Try to generate the new points.
                     gr = m.gen(
                         n=n_gen,
-                        optimization_config=(self._experiment.optimization_config),
+                        optimization_config=(
+                            self._experiment.optimization_config
+                        ),
                         fixed_features=ObservationFeatures(
                             parameters={}, trial_index=self.hifi_trials[-1]
                         ),
@@ -427,7 +432,9 @@ class AxMultitaskGenerator(AxGenerator):
         """Save experiment to json file."""
         file_path = os.path.join(
             self._model_history_dir,
-            "ax_experiment_at_eval_{}.json".format(self._n_completed_trials_last_saved),
+            "ax_experiment_at_eval_{}.json".format(
+                self._n_completed_trials_last_saved
+            ),
         )
         save_experiment(
             experiment=self._experiment,

@@ -220,7 +220,11 @@ if __name__ == "__main__":
 
     # Add a laser to the fields of the simulation
     add_laser_pulse(
-        sim, laser_profile, gamma_boost=gamma_boost, method="antenna", z0_antenna=0
+        sim,
+        laser_profile,
+        gamma_boost=gamma_boost,
+        method="antenna",
+        z0_antenna=0,
     )
 
     # Convert parameter to boosted frame

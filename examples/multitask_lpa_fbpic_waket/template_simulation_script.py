@@ -134,7 +134,18 @@ def density_profile(z):
 
 
 def run_wake_t(
-    a0, w0, tau_fwhm, lambda0, bunch, n_p, l_plasma, pc, p_rmax, dz_lb, l_box, n_out
+    a0,
+    w0,
+    tau_fwhm,
+    lambda0,
+    bunch,
+    n_p,
+    l_plasma,
+    pc,
+    p_rmax,
+    dz_lb,
+    l_box,
+    n_out,
 ):
     # Create laser.
     laser = GaussianPulse(
@@ -172,7 +183,18 @@ def run_wake_t(
 
 
 def run_fbpic(
-    a0, w0, tau_fwhm, lambda0, bunch, n_p, l_plasma, pc, p_rmax, dz_lb, l_box, n_out
+    a0,
+    w0,
+    tau_fwhm,
+    lambda0,
+    bunch,
+    n_p,
+    l_plasma,
+    pc,
+    p_rmax,
+    dz_lb,
+    l_box,
+    n_out,
 ):
     from fbpic.main import Simulation
     from fbpic.lpa_utils.boosted_frame import BoostConverter

@@ -4,7 +4,10 @@ from typing import List, Optional
 
 import torch
 from ax.service.ax_client import AxClient
-from ax.modelbridge.generation_strategy import GenerationStep, GenerationStrategy
+from ax.modelbridge.generation_strategy import (
+    GenerationStep,
+    GenerationStrategy,
+)
 from ax.modelbridge.registry import Models
 from ax.service.utils.instantiation import ObjectiveProperties
 
@@ -101,7 +104,9 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         # If there is no past history,
         # adds Sobol initialization with `batch_size` random trials:
         # if self.history is None:
-        steps.append(GenerationStep(model=Models.SOBOL, num_trials=self._n_init))
+        steps.append(
+            GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
+        )
 
         # continue indefinitely with GPKG.
         steps.append(

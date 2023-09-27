@@ -23,7 +23,9 @@ class MultitaskEvaluator(Evaluator):
         List with the evaluators of each task.
     """
 
-    def __init__(self, tasks: List[Task], task_evaluators: List[Evaluator]) -> None:
+    def __init__(
+        self, tasks: List[Task], task_evaluators: List[Evaluator]
+    ) -> None:
         self._check_tasks(tasks)
         self._check_evaluators(task_evaluators)
         super().__init__(sim_function=task_evaluators[0].sim_function)

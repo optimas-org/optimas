@@ -87,7 +87,12 @@ class PostProcOptimization(object):
         plt.scatter(self.df.sim_ended_time, self.df.f, c=fidelity)
 
     def get_trace(
-        self, fidelity_parameter=None, min_fidelity=None, t_array=None, plot=False, **kw
+        self,
+        fidelity_parameter=None,
+        min_fidelity=None,
+        t_array=None,
+        plot=False,
+        **kw,
     ):
         """
         Plot the minimum so far, as a function of time during the optimization

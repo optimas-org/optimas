@@ -96,7 +96,9 @@ class AxServiceGenerator(AxGenerator):
                 )
             except AttributeError:
                 params = {}
-                for var, value in zip(trial.varying_parameters, trial.parameter_values):
+                for var, value in zip(
+                    trial.varying_parameters, trial.parameter_values
+                ):
                     params[var.name] = value
                 _, trial_id = self._ax_client.attach_trial(params)
                 self._ax_client.complete_trial(trial_id, objective_eval)
@@ -109,7 +111,9 @@ class AxServiceGenerator(AxGenerator):
         """Save Ax client to json file."""
         file_path = os.path.join(
             self._model_history_dir,
-            "ax_client_at_eval_{}.json".format(self._n_completed_trials_last_saved),
+            "ax_client_at_eval_{}.json".format(
+                self._n_completed_trials_last_saved
+            ),
         )
         self._ax_client.save_to_json_file(file_path)
 

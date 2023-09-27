@@ -3,7 +3,10 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import visualpic as vp
-from aptools.plotting.quick_diagnostics import phase_space_overview, slice_analysis
+from aptools.plotting.quick_diagnostics import (
+    phase_space_overview,
+    slice_analysis,
+)
 
 
 def analyze_simulation(simulation_directory, output_params):

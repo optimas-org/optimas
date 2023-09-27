@@ -66,7 +66,9 @@ def test_ax_single_fidelity():
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
 
-    gen = AxSingleFidelityGenerator(varying_parameters=[var1, var2], objectives=[obj])
+    gen = AxSingleFidelityGenerator(
+        varying_parameters=[var1, var2], objectives=[obj]
+    )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
         generator=gen,
@@ -224,7 +226,9 @@ def test_ax_single_fidelity_with_history():
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
 
-    gen = AxSingleFidelityGenerator(varying_parameters=[var1, var2], objectives=[obj])
+    gen = AxSingleFidelityGenerator(
+        varying_parameters=[var1, var2], objectives=[obj]
+    )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
         generator=gen,

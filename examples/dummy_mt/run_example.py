@@ -60,10 +60,12 @@ gen = AxMultitaskGenerator(
 # template, but in principle they can have different template, executor,
 # analysis function, resources, etc.
 ev_lofi = TemplateEvaluator(
-    sim_template="template_simulation_script.py", analysis_func=analyze_simulation
+    sim_template="template_simulation_script.py",
+    analysis_func=analyze_simulation,
 )
 ev_hifi = TemplateEvaluator(
-    sim_template="template_simulation_script.py", analysis_func=analyze_simulation
+    sim_template="template_simulation_script.py",
+    analysis_func=analyze_simulation,
 )
 
 

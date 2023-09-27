@@ -37,7 +37,10 @@ def test_uniform_sampling():
 
     # Create generator and run exploration.
     gen = RandomSamplingGenerator(
-        varying_parameters=vars, objectives=[obj], distribution="uniform", seed=1
+        varying_parameters=vars,
+        objectives=[obj],
+        distribution="uniform",
+        seed=1,
     )
     ev = FunctionEvaluator(function=eval_func)
     exploration = Exploration(

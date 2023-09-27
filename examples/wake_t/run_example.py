@@ -23,7 +23,9 @@ obj = Objective("f", minimize=True)
 
 
 # Create generator.
-gen = AxSingleFidelityGenerator(varying_parameters=[var_1], objectives=[obj], n_init=12)
+gen = AxSingleFidelityGenerator(
+    varying_parameters=[var_1], objectives=[obj], n_init=12
+)
 
 
 # Create evaluator.

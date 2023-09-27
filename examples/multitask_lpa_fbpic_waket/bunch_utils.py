@@ -2,7 +2,9 @@ import numpy as np
 from scipy.constants import c
 
 
-def gaussian_bunch(q_tot, n_part, gamma0, s_g, s_z, emit_x, s_x, zf=0.0, tf=0, x_c=0.0):
+def gaussian_bunch(
+    q_tot, n_part, gamma0, s_g, s_z, emit_x, s_x, zf=0.0, tf=0, x_c=0.0
+):
     n_part = int(n_part)
 
     np.random.seed(42)
@@ -56,7 +58,11 @@ def flattop_bunch(
 
     # Concatenate both profiles
     z = np.concatenate(
-        (z_gaus[np.where(z_gaus <= 0)], z_plat, z_gaus[np.where(z_gaus > 0)] + length)
+        (
+            z_gaus[np.where(z_gaus <= 0)],
+            z_plat,
+            z_gaus[np.where(z_gaus > 0)] + length,
+        )
     )
 
     z = z - length / 2.0 + zf  # shift to final position

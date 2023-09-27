@@ -164,7 +164,9 @@ class Exploration:
                 # Only include runs that completed
                 history = history[history["sim_ended"]]
             else:
-                raise ValueError("History file {} does not exist.".format(history))
+                raise ValueError(
+                    "History file {} does not exist.".format(history)
+                )
         assert history is None or isinstance(
             history, np.ndarray
         ), "Type {} not valid for `history`".format(type(history))

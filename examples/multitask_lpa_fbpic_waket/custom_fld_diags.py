@@ -94,7 +94,9 @@ class BackTransformedFieldDiagnostic(FieldDiagnostic):
             write_dir = "lab_diags"
 
         # Initialize the normal attributes of a FieldDiagnostic
-        FieldDiagnostic.__init__(self, period, fldobject, comm, fieldtypes, write_dir)
+        FieldDiagnostic.__init__(
+            self, period, fldobject, comm, fieldtypes, write_dir
+        )
 
         # Register the boost quantities
         self.gamma_boost = gamma_boost
@@ -244,9 +246,11 @@ class BackTransformedFieldDiagnostic(FieldDiagnostic):
 
             # Gather the slices on the first proc
             if self.comm is not None and self.comm.size > 1:
-                global_field_array, global_iz_min, global_iz_max = self.gather_slices(
-                    field_array, iz_min, iz_max
-                )
+                (
+                    global_field_array,
+                    global_iz_min,
+                    global_iz_max,
+                ) = self.gather_slices(field_array, iz_min, iz_max)
             else:
                 global_field_array = field_array
                 global_iz_min = iz_min
@@ -335,7 +339,9 @@ class BackTransformedFieldDiagnostic(FieldDiagnostic):
                     s_min = iz_min_list[i_proc] - global_iz_min
                     s_max = iz_max_list[i_proc] - global_iz_min
                     # Copy the array to the proper position
-                    global_field_array[:, :, :, s_min:s_max] = field_array_list[i_proc]
+                    global_field_array[:, :, :, s_min:s_max] = field_array_list[
+                        i_proc
+                    ]
 
             # The first proc returns the result
             return (global_field_array, global_iz_min, global_iz_max)
@@ -383,7 +389,9 @@ class BackTransformedFieldDiagnostic(FieldDiagnostic):
                     quantity = "%s%s" % (fieldtype, coord)
                     path = "%s/%s" % (fieldtype, coord)
                     data = field_array[f2i[quantity]]
-                    self.write_field_slices(field_grp, data, path, iz_min, iz_max)
+                    self.write_field_slices(
+                        field_grp, data, path, iz_min, iz_max
+                    )
 
         # Close the file
         f.close()
@@ -732,12 +740,16 @@ class SliceHandler:
         output_array = np.empty(data_shape)
 
         # Get the mode 0 : only the real part is non-zero
-        output_array[0, :] = getattr(fld.interp[0], quantity)[iz_slice, :Nr].real
+        output_array[0, :] = getattr(fld.interp[0], quantity)[
+            iz_slice, :Nr
+        ].real
         # Get the higher modes
         # There is a factor 2 here so as to comply with the convention in
         # Lifschitz et al., which is also the convention adopted in FBPIC
         for m in range(1, fld.Nm):
-            higher_mode_slice = 2 * getattr(fld.interp[m], quantity)[iz_slice, :Nr]
+            higher_mode_slice = (
+                2 * getattr(fld.interp[m], quantity)[iz_slice, :Nr]
+            )
             output_array[2 * m - 1, :] = higher_mode_slice.real
             output_array[2 * m, :] = higher_mode_slice.imag
 
@@ -857,19 +869,39 @@ if cuda_installed:
             slice_arr[6, im, ir] = Sz * Jr[iz, ir].real + Szp * Jr[izp, ir].real
             slice_arr[7, im, ir] = Sz * Jt[iz, ir].real + Szp * Jt[izp, ir].real
             slice_arr[8, im, ir] = Sz * Jz[iz, ir].real + Szp * Jz[izp, ir].real
-            slice_arr[9, im, ir] = Sz * rho[iz, ir].real + Szp * rho[izp, ir].real
+            slice_arr[9, im, ir] = (
+                Sz * rho[iz, ir].real + Szp * rho[izp, ir].real
+            )
 
             if m > 0:
                 # Imaginary part
-                slice_arr[0, im + 1, ir] = Sz * Er[iz, ir].imag + Szp * Er[izp, ir].imag
-                slice_arr[1, im + 1, ir] = Sz * Et[iz, ir].imag + Szp * Et[izp, ir].imag
-                slice_arr[2, im + 1, ir] = Sz * Ez[iz, ir].imag + Szp * Ez[izp, ir].imag
-                slice_arr[3, im + 1, ir] = Sz * Br[iz, ir].imag + Szp * Br[izp, ir].imag
-                slice_arr[4, im + 1, ir] = Sz * Bt[iz, ir].imag + Szp * Bt[izp, ir].imag
-                slice_arr[5, im + 1, ir] = Sz * Bz[iz, ir].imag + Szp * Bz[izp, ir].imag
-                slice_arr[6, im + 1, ir] = Sz * Jr[iz, ir].imag + Szp * Jr[izp, ir].imag
-                slice_arr[7, im + 1, ir] = Sz * Jt[iz, ir].imag + Szp * Jt[izp, ir].imag
-                slice_arr[8, im + 1, ir] = Sz * Jz[iz, ir].imag + Szp * Jz[izp, ir].imag
+                slice_arr[0, im + 1, ir] = (
+                    Sz * Er[iz, ir].imag + Szp * Er[izp, ir].imag
+                )
+                slice_arr[1, im + 1, ir] = (
+                    Sz * Et[iz, ir].imag + Szp * Et[izp, ir].imag
+                )
+                slice_arr[2, im + 1, ir] = (
+                    Sz * Ez[iz, ir].imag + Szp * Ez[izp, ir].imag
+                )
+                slice_arr[3, im + 1, ir] = (
+                    Sz * Br[iz, ir].imag + Szp * Br[izp, ir].imag
+                )
+                slice_arr[4, im + 1, ir] = (
+                    Sz * Bt[iz, ir].imag + Szp * Bt[izp, ir].imag
+                )
+                slice_arr[5, im + 1, ir] = (
+                    Sz * Bz[iz, ir].imag + Szp * Bz[izp, ir].imag
+                )
+                slice_arr[6, im + 1, ir] = (
+                    Sz * Jr[iz, ir].imag + Szp * Jr[izp, ir].imag
+                )
+                slice_arr[7, im + 1, ir] = (
+                    Sz * Jt[iz, ir].imag + Szp * Jt[izp, ir].imag
+                )
+                slice_arr[8, im + 1, ir] = (
+                    Sz * Jz[iz, ir].imag + Szp * Jz[izp, ir].imag
+                )
                 slice_arr[9, im + 1, ir] = (
                     Sz * rho[iz, ir].imag + Szp * rho[izp, ir].imag
                 )

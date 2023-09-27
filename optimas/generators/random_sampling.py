@@ -43,7 +43,9 @@ class RandomSamplingGenerator(Generator):
         analyzed_parameters: Optional[List[Parameter]] = None,
     ) -> None:
         super().__init__(
-            varying_parameters, objectives, analyzed_parameters=analyzed_parameters
+            varying_parameters,
+            objectives,
+            analyzed_parameters=analyzed_parameters,
         )
         self._generate_sampling = {
             "uniform": self._generate_uniform_sampling,
@@ -80,8 +82,12 @@ class RandomSamplingGenerator(Generator):
     def _define_generator_parameters(self) -> None:
         """Define parameters used by the random generator."""
         self._n_vars = len(self._varying_parameters)
-        self._lb = np.array([var.lower_bound for var in self._varying_parameters])
-        self._ub = np.array([var.upper_bound for var in self._varying_parameters])
+        self._lb = np.array(
+            [var.lower_bound for var in self._varying_parameters]
+        )
+        self._ub = np.array(
+            [var.upper_bound for var in self._varying_parameters]
+        )
         self._center = (self._lb + self._ub) / 2
         self._width = self._ub - self._center
 
@@ -91,4 +97,6 @@ class RandomSamplingGenerator(Generator):
 
     def _generate_normal_sampling(self, n_trials: int) -> np.ndarray:
         """Generate trials using a normal distribution."""
-        return self._rng.normal(self._center, self._width, (n_trials, self._n_vars))
+        return self._rng.normal(
+            self._center, self._width, (n_trials, self._n_vars)
+        )

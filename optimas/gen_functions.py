@@ -57,7 +57,9 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             generated_trials = generator.ask(1)
             if generated_trials:
                 trial = generated_trials[0]
-                for var, val in zip(trial.varying_parameters, trial.parameter_values):
+                for var, val in zip(
+                    trial.varying_parameters, trial.parameter_values
+                ):
                     H_o[var.name][i] = val
                 run_params = gen_specs["user"]["run_params"]
                 if "task" in H_o.dtype.names:

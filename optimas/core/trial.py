@@ -47,10 +47,14 @@ class Trial:
         self._analyzed_parameters = (
             [] if analyzed_parameters is None else analyzed_parameters
         )
-        self._parameter_values = [] if parameter_values is None else parameter_values
+        self._parameter_values = (
+            [] if parameter_values is None else parameter_values
+        )
         evaluations = [] if evaluations is None else evaluations
         self._index = index
-        self._custom_parameters = [] if custom_parameters is None else custom_parameters
+        self._custom_parameters = (
+            [] if custom_parameters is None else custom_parameters
+        )
 
         # Add custom parameters as trial attributes.
         for param in self._custom_parameters:

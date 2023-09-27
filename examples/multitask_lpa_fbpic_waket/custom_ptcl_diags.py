@@ -134,7 +134,9 @@ class BackTransformedParticleDiagnostic(ParticleDiagnostic):
             )
             self.snapshots.append(snapshot)
             # Initialize a corresponding empty file to store particles
-            self.create_file_empty_slice(snapshot.filename, i, snapshot.t_lab, self.dt)
+            self.create_file_empty_slice(
+                snapshot.filename, i, snapshot.t_lab, self.dt
+            )
 
         # Create the ParticleCatcher object
         # (This object will extract the particles (slices) that crossed the
@@ -295,7 +297,10 @@ class BackTransformedParticleDiagnostic(ParticleDiagnostic):
         """
         # Open the file without parallel I/O in this implementation
         f = self.open_file(snapshot.filename)
-        particle_path = "/data/%d/particles/%s" % (snapshot.iteration, species_name)
+        particle_path = "/data/%d/particles/%s" % (
+            snapshot.iteration,
+            species_name,
+        )
         species_grp = f[particle_path]
 
         # Loop over the different quantities that should be written
@@ -370,7 +375,9 @@ class BackTransformedParticleDiagnostic(ParticleDiagnostic):
                 # Create and setup the h5py.Group species_grp
                 species_grp = f.require_group(species_path)
                 self.setup_openpmd_species_group(
-                    species_grp, species, self.constant_quantities_dict[species_name]
+                    species_grp,
+                    species,
+                    self.constant_quantities_dict[species_name],
                 )
 
                 # Loop over the different quantities that should be written
@@ -409,7 +416,8 @@ class BackTransformedParticleDiagnostic(ParticleDiagnostic):
 
                     else:
                         raise ValueError(
-                            "Invalid quantity for particle output: %s" % (quantity)
+                            "Invalid quantity for particle output: %s"
+                            % (quantity)
                         )
 
                 # Setup the hdf5 groups for "position" and "momentum"
@@ -433,7 +441,9 @@ class LabSnapshot:
     in the lab frame (i.e. one given *time* in the lab frame)
     """
 
-    def __init__(self, t_lab, zmin_lab, zmax_lab, dt, write_dir, i, species_dict):
+    def __init__(
+        self, t_lab, zmin_lab, zmax_lab, dt, write_dir, i, species_dict
+    ):
         """
         Initialize a LabSnapshot
 
@@ -549,7 +559,8 @@ class LabSnapshot:
         if self.buffered_slices[species] != []:
             for quantity in quantities_in_file:
                 buffered_arrays = [
-                    slice_dict[quantity] for slice_dict in self.buffered_slices[species]
+                    slice_dict[quantity]
+                    for slice_dict in self.buffered_slices[species]
                 ]
                 particle_data_dict[quantity] = np.concatenate(buffered_arrays)
         else:
@@ -589,7 +600,9 @@ class ParticleCatcher:
         self.fld = fldobject
         self.dt = self.fld.dt
 
-    def extract_slice(self, species, current_z_boost, previous_z_boost, t, select=None):
+    def extract_slice(
+        self, species, current_z_boost, previous_z_boost, t, select=None
+    ):
         """
         Extract a slice of the particles at z_boost and if select is present,
         extract only the particles that satisfy the given criteria
@@ -716,7 +729,12 @@ class ParticleCatcher:
             # (mirrors the index calculation in `get_cell_idx_per_particle`)
             iz_curr = int(math.ceil((current_z_boost - zmin - 0.5 * dz) / dz))
             iz_prev = (
-                int(math.ceil((previous_z_boost - zmin - 0.5 * dz + dt * c) / dz)) + 1
+                int(
+                    math.ceil(
+                        (previous_z_boost - zmin - 0.5 * dz + dt * c) / dz
+                    )
+                )
+                + 1
             )
             # - Get the prefix sum values that correspond to these indices
             #   (Take into account potential shift due to the moving window)
@@ -739,7 +757,9 @@ class ParticleCatcher:
             # Check if there are particles to extract
             if N_area > 0:
                 # Only copy a particle slice of size N_area from the GPU
-                particle_data = extract_slice_from_gpu(pref_sum_curr, N_area, species)
+                particle_data = extract_slice_from_gpu(
+                    pref_sum_curr, N_area, species
+                )
             else:
                 # Empty particle data
                 particle_data = {}
@@ -753,7 +773,9 @@ class ParticleCatcher:
 
         return particle_data
 
-    def get_particle_slice(self, particle_data, current_z_boost, previous_z_boost):
+    def get_particle_slice(
+        self, particle_data, current_z_boost, previous_z_boost
+    ):
         """
         Get the selection of particles that crossed the output
         plane during the last iteration.
@@ -792,8 +814,14 @@ class ParticleCatcher:
         #   crosses the zboost_prev in a backward motion
         selected_indices = np.compress(
             (
-                ((current_z >= current_z_boost) & (previous_z <= previous_z_boost))
-                | ((current_z <= current_z_boost) & (previous_z >= previous_z_boost))
+                (
+                    (current_z >= current_z_boost)
+                    & (previous_z <= previous_z_boost)
+                )
+                | (
+                    (current_z <= current_z_boost)
+                    & (previous_z >= previous_z_boost)
+                )
             ),
             particle_indices,
         )
@@ -801,11 +829,15 @@ class ParticleCatcher:
         # Create dictionary which contains only the selected particles
         slice_data = {}
         for quantity in pd.keys():
-            slice_data[quantity] = np.take(particle_data[quantity], selected_indices)
+            slice_data[quantity] = np.take(
+                particle_data[quantity], selected_indices
+            )
 
         return slice_data
 
-    def interpolate_particles_to_lab_frame(self, slice_data_dict, current_z_boost, t):
+    def interpolate_particles_to_lab_frame(
+        self, slice_data_dict, current_z_boost, t
+    ):
         """
         Transform the particle quantities from the boosted frame to the
         lab frame. These are classical Lorentz transformation equations.
@@ -859,7 +891,9 @@ class ParticleCatcher:
 
         # Back-transformation of momentum
         gamma = 1.0 / inv_gamma
-        uz_lab = self.gamma_boost * uz + gamma * (self.beta_boost * self.gamma_boost)
+        uz_lab = self.gamma_boost * uz + gamma * (
+            self.beta_boost * self.gamma_boost
+        )
 
         # Replace the arrays that have been modified, in `slice_data_dict`
         slice_data_dict["x"] = x
@@ -942,12 +976,14 @@ class ParticleCatcher:
             # Lower bound
             if select[quantity][0] is not None:
                 select_array = np.logical_and(
-                    select_array, slice_data_dict[quantity] > select[quantity][0]
+                    select_array,
+                    slice_data_dict[quantity] > select[quantity][0],
                 )
             # Upper bound
             if select[quantity][1] is not None:
                 select_array = np.logical_and(
-                    select_array, slice_data_dict[quantity] < select[quantity][1]
+                    select_array,
+                    slice_data_dict[quantity] < select[quantity][1],
                 )
         # At this point, `select_array` contains True
         # wherever a particle should be kept

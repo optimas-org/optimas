@@ -62,10 +62,12 @@ def test_line_sampling():
 
     # Check that the line scans along each direction are as expected.
     np.testing.assert_array_equal(
-        x0_gen[: n_steps[0]], np.linspace(lower_bounds[0], upper_bounds[0], n_steps[0])
+        x0_gen[: n_steps[0]],
+        np.linspace(lower_bounds[0], upper_bounds[0], n_steps[0]),
     )
     np.testing.assert_array_equal(
-        x1_gen[n_steps[0] :], np.linspace(lower_bounds[1], upper_bounds[1], n_steps[1])
+        x1_gen[n_steps[0] :],
+        np.linspace(lower_bounds[1], upper_bounds[1], n_steps[1]),
     )
 
 
@@ -98,7 +100,8 @@ def test_line_sampling_errors():
     with pytest.raises(
         AssertionError,
         match=re.escape(
-            "Length of `n_steps` (1) and" " `varying_parameters` (2) do not match."
+            "Length of `n_steps` (1) and"
+            " `varying_parameters` (2) do not match."
         ),
     ):
         gen = LineSamplingGenerator(

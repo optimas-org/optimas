@@ -109,7 +109,9 @@ def run_fbpic(bunch, g_lens):
     Nm = 2  # Number of modes used
 
     # The simulation timestep
-    dt = min(rmax / (2 * gamma_boost * Nr), (zmax - zmin) / Nz / ct.c)  # seconds
+    dt = min(
+        rmax / (2 * gamma_boost * Nr), (zmax - zmin) / Nz / ct.c
+    )  # seconds
 
     # The moving window (moves with the group velocity in a plasma)
     v_window = ct.c
@@ -283,7 +285,9 @@ def run_fbpic(bunch, g_lens):
 
     # Analyze last beam
     file_path = "lab_diags/hdf5/data00000031.h5"
-    x, y, z, px, py, pz, q = read_beam("openpmd", file_path, species_name="bunch")
+    x, y, z, px, py, pz, q = read_beam(
+        "openpmd", file_path, species_name="bunch"
+    )
     a_x, b_x, g_x = twiss_parameters(x, px, pz, w=q)
 
     # Save parameter to file for `analysis_script.py`.

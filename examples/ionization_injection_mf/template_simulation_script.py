@@ -73,7 +73,9 @@ gamma_boost = 5.0
 # Maximum simulation length
 Lmax = np.amax(dens_z + zmax - zmin)
 # The simulation timestep
-dt = min(rmax / (2 * gamma_boost * Nr), (zmax - zmin) / Nz / c)  # Timestep (seconds)
+dt = min(
+    rmax / (2 * gamma_boost * Nr), (zmax - zmin) / Nz / c
+)  # Timestep (seconds)
 
 n_order = -1
 
@@ -211,7 +213,11 @@ if __name__ == "__main__":
     atoms_N.make_ionizable("N", target_species=elec_from_N, level_start=5)
     # Add a laser to the fields of the simulation
     add_laser_pulse(
-        sim, laser_profile, gamma_boost=gamma_boost, method="antenna", z0_antenna=0
+        sim,
+        laser_profile,
+        gamma_boost=gamma_boost,
+        method="antenna",
+        z0_antenna=0,
     )
     # Convert parameter to boosted frame
     (v_window,) = boost.velocity([v_window])

@@ -31,7 +31,9 @@ class FunctionEvaluator(Evaluator):
         n_procs: Optional[int] = None,
         n_gpus: Optional[int] = None,
     ) -> None:
-        super().__init__(sim_function=run_function, n_procs=n_procs, n_gpus=n_gpus)
+        super().__init__(
+            sim_function=run_function, n_procs=n_procs, n_gpus=n_gpus
+        )
         self.function = function
 
     def get_sim_specs(
