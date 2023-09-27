@@ -1,6 +1,7 @@
 """Contains the definition of the base Exploration class."""
 
 import os
+import json
 from typing import Optional, Union
 
 import numpy as np
@@ -105,6 +106,9 @@ class Exploration():
             self.generator.objectives,
             self.generator.analyzed_parameters
         )
+
+        # Save generator parameters to json file.
+        self._save_generator_parameters()
 
         # Launch exploration with libEnsemble.
         history, persis_info, flag = libE(
@@ -219,6 +223,29 @@ class Exploration():
                 'async_return': self.run_async
             }
         }
+
+    def _save_generator_parameters(self):
+        params = {}
+        for i, param in enumerate(self.generator.varying_parameters):
+            params[f'varying_paramerer_{i}'] = {
+                'type': 'VaryingParameter',
+                'value': param.json()
+            }
+        for i, param in enumerate(self.generator.objectives):
+            params[f'objective_{i}'] = {
+                'type': 'Objective',
+                'value': param.json()
+            }
+        for i, param in enumerate(self.generator.analyzed_parameters):
+            params[f'analyzed_paramerer_{i}'] = {
+                'type': 'Parameter',
+                'value': param.json()
+            }
+        main_dir = os.path.abspath(self.exploration_dir_path)
+        os.makedirs(main_dir)
+        file_path = os.path.join(main_dir, 'generator_parameters.json')
+        with open(file_path, 'w') as file:
+            file.write(json.dumps(params))
 
     def _reset_libensemble(self) -> None:
         """Reset the state of libEnsemble.
