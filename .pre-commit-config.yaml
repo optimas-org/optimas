@@ -108,7 +108,7 @@ repos:
   rev: 1.16.0
   hooks:
   - id: blacken-docs
-    args: [--line-length 80]
+    args: [--line-length=80]
     additional_dependencies:
     - black==23.9.1  # keep in sync with black hook
   # TODO: black-jupyter
