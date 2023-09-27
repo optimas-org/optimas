@@ -2,6 +2,9 @@
 
 from typing import Optional, Any
 
+from pydantic import validator
+import numpy as np
+
 from .base import NamedBase
 
 
@@ -16,7 +19,7 @@ class Parameter(NamedBase):
         The data type of the parameter. Any object that can be converted to a
         numpy dtype.
     """
-    dtype: Optional[Any] = float
+    dtype: Optional[Any]
 
     def __init__(
         self,
@@ -25,6 +28,15 @@ class Parameter(NamedBase):
         **kwargs
     ) -> None:
         super().__init__(name=name, dtype=dtype, **kwargs)
+
+    @validator("dtype", pre=True)
+    def check_valid_out(cls, v):
+        try:
+            _ = np.dtype(v)
+        except TypeError:
+            raise ValueError(f"Unable to coerce '{v}' into a NumPy dtype.")
+        else:
+            return v
 
 
 class VaryingParameter(Parameter):
