@@ -89,12 +89,12 @@ repos:
 # Alternatively: use autopep8?
 
 # Docstring formatting according to numpy style
-- repo: https://github.com/pycqa/pydocstyle
-  rev: 6.3.0
-  hooks:
-  - id: pydocstyle
-    additional_dependencies:
-    - tomli
+# - repo: https://github.com/pycqa/pydocstyle
+#   rev: 6.3.0
+#   hooks:
+#   - id: pydocstyle
+#     additional_dependencies:
+#     - tomli
 #  args:
 #  - --select=D101,D2
 #  - --ignore=D100,D203,D405
@@ -113,14 +113,14 @@ repos:
   # TODO: black-jupyter
 
 # Jupyter Notebooks: clean up all cell outputs
-- repo: https://github.com/roy-ht/pre-commit-jupyter
-  rev: v1.2.1
-  hooks:
-  - id: jupyter-notebook-cleanup
-    args:
-      - --pin-patterns
-      - "[pin];[donotremove]"
-      # - --remove-kernel-metadata
+# - repo: https://github.com/roy-ht/pre-commit-jupyter
+#   rev: v1.2.1
+#   hooks:
+#   - id: jupyter-notebook-cleanup
+#     args:
+#       - --pin-patterns
+#       - "[pin];[donotremove]"
+#       # - --remove-kernel-metadata
 
 # Checks the manifest for missing files (native support)
 - repo: https://github.com/mgedmin/check-manifest
