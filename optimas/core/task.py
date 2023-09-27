@@ -15,20 +15,13 @@ class Task(NamedBase):
     n_opt : int
         Number of task evaluations to perform per optimization batch.
     """
+    n_init: int
+    n_opt: int
+
     def __init__(
         self,
         name: str,
         n_init: int,
         n_opt: int
     ) -> None:
-        super().__init__(name)
-        self._n_init = n_init
-        self._n_opt = n_opt
-
-    @property
-    def n_init(self) -> int:
-        return self._n_init
-
-    @property
-    def n_opt(self) -> int:
-        return self._n_opt
+        super().__init__(name, n_init=n_init, n_opt=n_opt)
