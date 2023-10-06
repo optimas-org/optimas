@@ -42,7 +42,7 @@ class Parameter(BaseModel):
         try:
             # For dtypes that were serialized with `json_dumps_dtype`.
             if isinstance(v, list):
-                v = [tuple(i) for i in v]
+                v = v[0][1]
             # Check that the given dtype can be converted to a numpy dtype.
             _ = np.dtype(v)
         except TypeError:
