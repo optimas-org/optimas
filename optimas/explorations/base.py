@@ -242,7 +242,8 @@ class Exploration():
                 'value': param.json()
             }
         main_dir = os.path.abspath(self.exploration_dir_path)
-        os.makedirs(main_dir)
+        if not os.path.isdir(main_dir):
+            os.makedirs(main_dir)
         file_path = os.path.join(main_dir, 'generator_parameters.json')
         with open(file_path, 'w') as file:
             file.write(json.dumps(params))
