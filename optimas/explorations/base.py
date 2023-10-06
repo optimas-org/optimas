@@ -227,7 +227,7 @@ class Exploration():
     def _save_generator_parameters(self):
         params = {}
         for i, param in enumerate(self.generator.varying_parameters):
-            params[f'varying_paramerer_{i}'] = {
+            params[f'varying_parameter_{i}'] = {
                 'type': 'VaryingParameter',
                 'value': param.json()
             }
@@ -237,7 +237,7 @@ class Exploration():
                 'value': param.json()
             }
         for i, param in enumerate(self.generator.analyzed_parameters):
-            params[f'analyzed_paramerer_{i}'] = {
+            params[f'analyzed_parameter_{i}'] = {
                 'type': 'Parameter',
                 'value': param.json()
             }
