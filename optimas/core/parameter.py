@@ -40,6 +40,10 @@ class Parameter(BaseModel):
     @validator("dtype", pre=True)
     def check_valid_out(cls, v):
         try:
+            # For dtypes that were serialized with `json_dumps_dtype`.
+            if isinstance(v, list):
+                v = [tuple(i) for i in v]
+            # Check that the given dtype can be converted to a numpy dtype.
             _ = np.dtype(v)
         except TypeError:
             raise ValueError(f"Unable to coerce '{v}' into a NumPy dtype.")
@@ -133,12 +137,12 @@ class Objective(Parameter):
         Indicates whether the objective should be minimized or,
         otherwise, maximized. By default, ``True``.
     """
-    name: Optional[str] = 'f',
     minimize: Optional[bool] = True
 
     def __init__(
         self,
         name: Optional[str] = 'f',
-        minimize: Optional[bool] = True
+        minimize: Optional[bool] = True,
+        dtype: Optional[Any] = float
     ) -> None:
-        super().__init__(name=name, minimize=minimize)
+        super().__init__(name=name, minimize=minimize, dtype=dtype)
