@@ -1,156 +1,267 @@
 """
 This file contains a class that helps post-process libE optimization
 """
+import os
+from warnings import warn
+import pathlib
+import json
+from typing import Optional, Dict, Tuple
+
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+
+from optimas.core import VaryingParameter, Objective, Parameter
 
 
-class PostProcOptimization(object):
+class ExplorationDiagnostics:
+    """Utilities for analyzing the output of an exploration.
 
-    def __init__(self, path):
-        """
-        Initialize a postprocessing object
+    Parameters
+    ----------
+    path : str
+        Path to the exploration directory or to an
+        individual `.npy` history file.
+    relative_start_time : bool, optional
+        Whether the time diagnostics should be relative to the start time
+        of the exploration. By default, True.
+    remove_unfinished_evaluations : bool, optional
+        Whether the data from unfinished evaluations (e.g., due to failed
+        evaluation) should be removed from the diagnostics. By default, True.
+    """
 
-        Parameter:
-        ----------
-        path: string
-            Path to the folder that contains the libE optimization,
-            or path to the individual `.npy` history file.
-        """
+    def __init__(
+        self,
+        path: str,
+        relative_start_time: Optional[bool] = True,
+        remove_unfinished_evaluations: Optional[bool] = True
+    ) -> None:
         # Find the `npy` file that contains the results
         if os.path.isdir(path):
-            output_files = [filename for filename in os.listdir(path)
-                            if filename.startswith('libE_history_for_run_')
-                            and filename.endswith('.npy')]
+            # Get history files sorted by creation date.
+            output_files = [
+                filename for filename in os.listdir(path)
+                if "_history_" in filename and filename.endswith('.npy')
+            ]
+            output_files.sort(
+                key=lambda f: os.path.getmtime(os.path.join(path, f))
+            )
             if len(output_files) == 0:
                 raise RuntimeError(
-                    'The specified path does not contain any `.npy` file.')
+                    'The specified path does not contain any history file.')
             elif len(output_files) > 1:
-                raise RuntimeError(
-                    'The specified path contains multiple `.npy` files.\n'
-                    'Please specify the path to an individual `.npy` file.')
-            else:
-                output_file = output_files[0]
+                warn(
+                    'The specified path contains multiple history files. '
+                    'The most recent one will be used.')
+            output_file = output_files[-1]
+            params_file = os.path.join(path, 'generator_parameters.json')
         elif path.endswith('.npy'):
             output_file = path
+            params_file = os.path.join(
+                pathlib.Path(path).parent, 'generator_parameters.json'
+            )
         else:
             raise RuntimeError(
                 'The path should either point to a folder or a `.npy` file.')
 
         # Load the file as a pandas DataFrame
-        x = np.load(os.path.join(path, output_file))
-        d = {label: x[label].flatten() for label in x.dtype.names
-             if label not in ['x', 'x_on_cube']}
-        self.df = pd.DataFrame(d)
+        history = np.load(os.path.join(path, output_file))
+        d = {label: history[label].flatten() for label in history.dtype.names}
+        self._df = pd.DataFrame(d)
 
         # Only keep the simulations that finished properly
-        self.df = self.df[self.df.sim_ended]
+        if remove_unfinished_evaluations:
+            self._df = self._df[self._df.sim_ended]
 
         # Make the time relative to the start of the simulation
-        self.df['sim_started_time'] -= self.df['gen_ended_time'].min()
-        self.df['sim_ended_time'] -= self.df['gen_ended_time'].min()
-        self.df['gen_ended_time'] -= self.df['gen_ended_time'].min()
+        if relative_start_time:
+            start_time = self._df['gen_started_time'].min()
+            self._df['sim_started_time'] -= start_time
+            self._df['sim_ended_time'] -= start_time
+            self._df['gen_started_time'] -= start_time
+            self._df['gen_ended_time'] -= start_time
+            self._df['gen_informed_time'] -= start_time
 
-    def get_df(self):
+        # Read varying parameters, objectives, etc.
+        self._read_generator_parameters(params_file)
+
+        # Rearrange history dataframe.
+        self._rearrange_dataframe_columns()
+
+    def _read_generator_parameters(self, params_file: str) -> None:
+        """Read generator parameters from json file."""
+        self._varying_parameters = {}
+        self._analyzed_parameters = {}
+        self._objectives = {}
+
+        with open(params_file) as f:
+            d = json.load(f)
+        for _, param in d.items():
+            if param['type'] == 'VaryingParameter':
+                p = VaryingParameter.parse_raw(param['value'])
+                self._varying_parameters[p.name] = p
+            elif param['type'] == 'Objective':
+                p = Objective.parse_raw(param['value'])
+                self._objectives[p.name] = p
+            elif param['type'] == 'Parameter':
+                p = Parameter.parse_raw(param['value'])
+                self._analyzed_parameters[p.name] = p
+
+    def _rearrange_dataframe_columns(self) -> None:
+        """Rearrange dataframe columns.
+
+        This is needed to have a consistent and more convenient output
+        when printing or viewing the dataframe because the order of the
+        numpy history file is different from run to run.
         """
-        Return a pandas DataFrame containing the data from the simulation
-        """
-        return self.df
+        ordered_columns = ['trial_index']
+        ordered_columns += self.varying_parameters.keys()
+        ordered_columns += self.objectives.keys()
+        ordered_columns += self.analyzed_parameters.keys()
+        ordered_columns += [
+            'sim_id', 'sim_worker', 'sim_started_time', 'sim_ended_time',
+            'sim_started', 'sim_ended',
+            'gen_worker', 'gen_started_time', 'gen_ended_time',
+            'gen_informed_time', 'gen_informed',
+            'cancel_requested', 'kill_sent', 'given_back',
+            'num_procs', 'num_gpus']
+        ordered_columns += [c for c in self._df if c not in ordered_columns]
+        self._df = self._df[ordered_columns]
 
-    def plot_optimization(self, fidelity_parameter=None, **kwargs):
-        """
-        Plot the values that where reached during the optimization
+    @property
+    def df(self) -> pd.DataFrame:
+        """Return a pandas DataFrame with the exploration history."""
+        return self._df
 
-        Parameters:
-        -----------
-        fidelity_parameter: string or None
-            Name of the fidelity parameter
-            If given, the different fidelity will
-            be plotted in different colors
+    @property
+    def varying_parameters(self) -> Dict[str, VaryingParameter]:
+        """Get the varying parameters of the exploration."""
+        return self._varying_parameters
 
-        kwargs: optional arguments to pass to `plt.scatter`
+    @property
+    def analyzed_parameters(self) -> Dict[str, Parameter]:
+        """Get the analyzed parameters of the exploration."""
+        return self._analyzed_parameters
+
+    @property
+    def objectives(self) -> Dict[str, Objective]:
+        """Get the objectives of the exploration."""
+        return self._objectives
+
+    def plot_objective(
+        self,
+        objective: Optional[str] = None,
+        fidelity_parameter: Optional[str] = None,
+        show_trace: Optional[bool] = False
+    ) -> None:
+        """Plot the values that where reached during the optimization.
+
+        Parameters
+        ----------
+        objective : str, optional
+            Name of the objective to plot. If `None`, the first objective of
+            the exploration is shown.
+        fidelity_parameter: str, optional
+            Name of the fidelity parameter. If given, the different fidelity
+            will be plotted in different colors.
+        show_trace : bool, optional
+            Whether to show the cumulative maximum or minimum of the objective.
         """
         if fidelity_parameter is not None:
-            fidelity = self.df[fidelity_parameter]
+            fidelity = self._df[fidelity_parameter]
         else:
             fidelity = None
-        plt.scatter(self.df.sim_ended_time, self.df.f, c=fidelity)
+        if objective is None:
+            objective = list(self._objectives.keys())[0]
+        _, ax = plt.subplots()
+        ax.scatter(self._df.sim_ended_time, self._df[objective], c=fidelity)
+        ax.set_ylabel(objective)
+        ax.set_xlabel('Time (s)')
 
-    def get_trace(self, fidelity_parameter=None,
-                  min_fidelity=None, t_array=None,
-                  plot=False, **kw):
-        """
-        Plot the minimum so far, as a function of time during the optimization
+        if show_trace:
+            t_trace, obj_trace = self.get_objective_trace(
+                objective, fidelity_parameter)
+            ax.plot(t_trace, obj_trace)
 
-        Parameters:
-        -----------
-        fidelity_parameter: string
+    def get_objective_trace(
+        self,
+        objective: Optional[str] = None,
+        fidelity_parameter: Optional[str] = None,
+        min_fidelity: Optional[float] = None,
+        t_array: Optional[npt.NDArray] = None
+    ) -> Tuple[npt.NDArray, npt.NDArray]:
+        """Get the cumulative maximum or minimum of the objective.
+
+        Parameters
+        ----------
+        objective : str, optional
+            Name of the objective to plot. If `None`, the first objective of
+            the exploration is shown.
+        fidelity_parameter: str, optional
             Name of the fidelity parameter. If `fidelity_parameter`
             and `min_fidelity` are set, only the runs with fidelity
             above `min_fidelity` are considered.
-
-        fidelity_min: float
+        fidelity_min: float, optional
             Minimum fidelity above which points are considered
+        t_array: 1D numpy array, optional
+            Array with time values. If provided, the trace is interpolated
+            to the times in the array.
 
-        t_array: 1D numpy array
-            If provided, th
-
-        plot: bool
-            Whether to plot the trace
-
-        kw: extra arguments to the plt.plot function
-
-        Returns:
-        --------
-        time, max
+        Returns
+        -------
+        time : 1D numpy array
+        objective_trace : 1D numpy array
         """
+        if objective is None:
+            objective = self._objectives[0].name
         if fidelity_parameter is not None:
             assert min_fidelity is not None
-            df = self.df[self.df[fidelity_parameter] >= min_fidelity]
+            df = self._df[self._df[fidelity_parameter] >= min_fidelity]
         else:
-            df = self.df.copy()
+            df = self._df.copy()
 
         df = df.sort_values('sim_ended_time')
-        t = np.concatenate((np.zeros(1), df.sim_ended_time.values))
-        cummin = np.concatenate((np.zeros(1), df.f.cummin().values))
+        t = df.sim_ended_time.values
+        if self.objectives[objective].minimize:
+            obj_trace = df[objective].cummin().values
+        else:
+            obj_trace = df[objective].cummax().values
 
         if t_array is not None:
             # Interpolate the trace curve on t_array
             N_interp = len(t_array)
             N_ref = len(t)
-            cummin_array = np.zeros_like(t_array)
+            obj_trace_array = np.zeros_like(t_array)
             i_ref = 0
             for i_interp in range(N_interp):
                 while i_ref < N_ref-1 and t[i_ref+1] < t_array[i_interp]:
                     i_ref += 1
-                cummin_array[i_interp] = cummin[i_ref]
+                obj_trace_array[i_interp] = obj_trace[i_ref]
         else:
             t_array = t
-            cummin_array = cummin
+            obj_trace_array = obj_trace
 
-        if plot:
-            plt.plot(t_array, cummin_array, **kw)
+        return t_array, obj_trace_array
 
-        return t_array, cummin_array
+    def plot_worker_timeline(
+        self,
+        fidelity_parameter: Optional[str] = None
+    ) -> None:
+        """Plot the timeline of worker utilization.
 
-    def plot_worker_timeline(self, fidelity_parameter=None):
-        """
-        Plot the timeline of worker utilization
-
-        Parameter:
+        Parameters
         ----------
-            fidelity_parameter: string or None
-                Name of the fidelity parameter
-                If given, the different fidelity will
-                be plotted in different colors
+        fidelity_parameter: string or None
+            Name of the fidelity parameter. If given, the different fidelity
+            will be plotted in different colors.
         """
-        df = self.get_df()
+        df = self._df
         if fidelity_parameter is not None:
             min_fidelity = df[fidelity_parameter].min()
             max_fidelity = df[fidelity_parameter].max()
 
+        _, ax = plt.subplots()
         for i in range(len(df)):
             start = df['sim_started_time'].iloc[i]
             duration = df['sim_ended_time'].iloc[i] - start
@@ -159,10 +270,10 @@ class PostProcOptimization(object):
                 color = plt.cm.viridis(
                     (fidelity-min_fidelity)/(max_fidelity-min_fidelity))
             else:
-                color = 'b'
-            plt.barh([str(df['sim_worker'].iloc[i])],
-                     [duration], left=[start],
-                     color=color, edgecolor='k', linewidth=1)
+                color = 'tab:blue'
+            ax.barh([str(df['sim_worker'].iloc[i])],
+                    [duration], left=[start],
+                    color=color, edgecolor='k', linewidth=1)
 
-        plt.ylabel('Worker')
-        plt.xlabel('Time ')
+        ax.set_ylabel('Worker')
+        ax.set_xlabel('Time (s)')
