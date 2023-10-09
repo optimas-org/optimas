@@ -5,7 +5,7 @@ import os
 from warnings import warn
 import pathlib
 import json
-from typing import Optional, Dict, Tuple
+from typing import Optional, List, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -116,9 +116,9 @@ class ExplorationDiagnostics:
         numpy history file is different from run to run.
         """
         ordered_columns = ['trial_index']
-        ordered_columns += self.varying_parameters.keys()
-        ordered_columns += self.objectives.keys()
-        ordered_columns += self.analyzed_parameters.keys()
+        ordered_columns += self._varying_parameters.keys()
+        ordered_columns += self._objectives.keys()
+        ordered_columns += self._analyzed_parameters.keys()
         ordered_columns += [
             'sim_id', 'sim_worker', 'sim_started_time', 'sim_ended_time',
             'sim_started', 'sim_ended',
@@ -135,19 +135,19 @@ class ExplorationDiagnostics:
         return self._df
 
     @property
-    def varying_parameters(self) -> Dict[str, VaryingParameter]:
+    def varying_parameters(self) -> List[VaryingParameter]:
         """Get the varying parameters of the exploration."""
-        return self._varying_parameters
+        return list(self._varying_parameters.values())
 
     @property
-    def analyzed_parameters(self) -> Dict[str, Parameter]:
+    def analyzed_parameters(self) -> List[Parameter]:
         """Get the analyzed parameters of the exploration."""
-        return self._analyzed_parameters
+        return list(self._analyzed_parameters.values())
 
     @property
-    def objectives(self) -> Dict[str, Objective]:
+    def objectives(self) -> List[Objective]:
         """Get the objectives of the exploration."""
-        return self._objectives
+        return list(self._objectives.values())
 
     def plot_objective(
         self,
@@ -214,7 +214,9 @@ class ExplorationDiagnostics:
         objective_trace : 1D numpy array
         """
         if objective is None:
-            objective = self._objectives[0].name
+            objective = self.objectives[0]
+        elif isinstance(objective, str):
+            objective = self._objectives[objective]
         if fidelity_parameter is not None:
             assert min_fidelity is not None
             df = self._df[self._df[fidelity_parameter] >= min_fidelity]
@@ -223,10 +225,10 @@ class ExplorationDiagnostics:
 
         df = df.sort_values('sim_ended_time')
         t = df.sim_ended_time.values
-        if self.objectives[objective].minimize:
-            obj_trace = df[objective].cummin().values
+        if objective.minimize:
+            obj_trace = df[objective.name].cummin().values
         else:
-            obj_trace = df[objective].cummax().values
+            obj_trace = df[objective.name].cummax().values
 
         if t_array is not None:
             # Interpolate the trace curve on t_array
