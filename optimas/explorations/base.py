@@ -316,6 +316,7 @@ class Exploration():
         }
 
     def _save_generator_parameters(self):
+        """Save generator parameters to a JSON file."""
         params = {}
         for i, param in enumerate(self.generator.varying_parameters):
             params[f'varying_parameter_{i}'] = {
