@@ -1,4 +1,9 @@
-"""Contains the definition of the various optimization parameters."""
+"""Contains the definition of the various optimization parameters.
+
+All parameters are Pydantic BaseModels, but include the __init__ definition
+to allow for positional arguments (otherwise the BaseModels only take
+keyword arguments). This is needed for backward compatibility.
+"""
 
 from typing import Optional, Any
 import json
