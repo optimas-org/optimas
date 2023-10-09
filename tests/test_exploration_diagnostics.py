@@ -18,10 +18,10 @@ def eval_func(input_params, output_params):
     output_params['f1'] = result
 
 
-def test_evaluation_diagnostics():
+def test_exploration_diagnostics():
     """Test the `EvaluationDiagnostics` class."""
 
-    exploration_dir_path = './tests_output/test_evaluation_diagnostics'
+    exploration_dir_path = './tests_output/test_exploration_diagnostics'
 
     # Define variables and objectives.
     var1 = VaryingParameter('x0', -50., 5.)
@@ -97,4 +97,4 @@ def test_evaluation_diagnostics():
 
 
 if __name__ == '__main__':
-    test_evaluation_diagnostics()
+    test_exploration_diagnostics()
