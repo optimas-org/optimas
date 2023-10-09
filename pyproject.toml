@@ -34,6 +34,7 @@ dynamic = ['version']
 test = [
     'flake8',
     'pytest',
+    'matplotlib',
 ]
 
 [project.urls]
