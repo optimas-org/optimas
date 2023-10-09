@@ -19,7 +19,7 @@ def eval_func(input_params, output_params):
 
 
 def test_exploration_diagnostics():
-    """Test the `EvaluationDiagnostics` class."""
+    """Test the `ExplorationDiagnostics` class."""
 
     exploration_dir_path = './tests_output/test_exploration_diagnostics'
 
