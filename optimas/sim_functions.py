@@ -1,5 +1,3 @@
-import os
-
 import jinja2
 import numpy as np
 
@@ -27,40 +25,72 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
             value = "'{}'".format(value)
         input_values[name] = value
 
+    # Prepare the array that is returned to libE
+    # Automatically include the input parameters
+    libE_output = np.zeros(1, dtype=sim_specs['out'])
+    for name in H.dtype.names:
+        libE_output[name] = H[name][0]
+
     # Get user specs.
     if 'task' in H.dtype.names:
         task_name = H['task'][0]
         user_specs = sim_specs['user'][task_name]
     else:
         user_specs = sim_specs['user']
-    sim_template = user_specs['sim_template']
-    analysis_func = user_specs['analysis_func']
-    app_name = user_specs['app_name']
 
+    # Get list of simulation steps. If no steps are defined (that is, a
+    # ChainEvaluator is not being used), create a list with a single step.
+    if 'steps' in user_specs:
+        simulation_step_specs = user_specs['steps']
+    else:
+        simulation_step_specs = [user_specs]
+
+    # Launch and analyze each simulation step.
+    for step_specs in simulation_step_specs:
+        calc_status = execute_and_analyze_simulation(
+            app_name=step_specs['app_name'],
+            sim_template=step_specs['sim_template'],
+            input_values=input_values,
+            analysis_func=step_specs['analysis_func'],
+            libE_output=libE_output,
+            num_procs=step_specs['num_procs'],
+            num_gpus=step_specs['num_gpus'],
+            env_script=step_specs['env_script'],
+            mpi_runner_type=step_specs['env_mpi']
+        )
+        # If a step has failed, do not continue with next steps.
+        if calc_status != WORKER_DONE:
+            break
+
+    return libE_output, persis_info, calc_status
+
+
+def execute_and_analyze_simulation(app_name, sim_template, input_values,
+                                   analysis_func, libE_output, num_procs,
+                                   num_gpus, env_script,
+                                   mpi_runner_type):
+    """Run simulation, handle outcome and analyze results."""
     # Create simulation input file.
-    sim_script = sim_template[len('template_'):]  # Strip 'template_' from name
     with open(sim_template, 'r') as f:
         template = jinja2.Template(f.read())
-    with open(sim_script, 'w') as f:
+    with open(sim_template, 'w') as f:
         f.write(template.render(input_values))
-    os.remove(sim_template)
 
     # If the template is a python file, no need to provide it as argument
     # (it has already been registered by libEnsemble as such).
-    if sim_script.endswith('.py'):
-        sim_script = None
-
-    # Passed to command line in addition to the executable.
-    exctr = Executor.executor  # Get Executor
+    if sim_template.endswith('.py'):
+        sim_template = None
 
     # Launch simulation.
-    task = exctr.submit(
+    task = Executor.executor.submit(
         app_name=app_name,
-        app_args=sim_script,
+        app_args=sim_template,
         stdout='out.txt',
         stderr='err.txt',
-        env_script=user_specs['env_script'],
-        mpi_runner_type=user_specs['env_mpi']
+        num_procs=num_procs,
+        num_gpus=num_gpus,
+        env_script=env_script,
+        mpi_runner_type=mpi_runner_type
     )
 
     # Wait for simulation to complete
@@ -76,19 +106,14 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
             print("Warning: Task {} in unknown state {}. Error code {}"
                   .format(task.name, task.state, task.errcode))
 
-    # Prepare the array that is returned to libE
-    # Automatically include the input parameters
-    libE_output = np.zeros(1, dtype=sim_specs['out'])
-    for name in H.dtype.names:
-        libE_output[name] = H[name][0]
-
     # Data analysis from the last simulation
     if calc_status == WORKER_DONE:
-        # Extract the objective function for the current simulation,
-        # as well as a few diagnostics
-        analysis_func(task.workdir, libE_output)
+        if analysis_func is not None:
+            # Extract the objective function for the current simulation,
+            # as well as a few diagnostics
+            analysis_func(task.workdir, libE_output)
 
-    return libE_output, persis_info, calc_status
+    return calc_status
 
 
 def run_function(H, persis_info, sim_specs, libE_info):
