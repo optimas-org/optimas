@@ -1,4 +1,3 @@
-
 """Defines utilities for generating particle bunches."""
 import numpy as np
 from scipy.constants import c
