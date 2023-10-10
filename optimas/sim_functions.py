@@ -38,42 +38,38 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
     else:
         user_specs = sim_specs['user']
 
-    # Launch and analyze the simulation(s).
+    # Get list of simulation steps. If no steps are defined (that is, a
+    # ChainEvaluator is not being used), create a list with a single step.
     if 'steps' in user_specs:
-        for step in user_specs['steps']:
-            step_specs = user_specs[step]
-            calc_status = execute_and_analyze_simulation(
-                app_name=step_specs['app_name'],
-                sim_template=step_specs['sim_template'],
-                input_values=input_values,
-                analysis_func=step_specs['analysis_func'],
-                libE_output=libE_output,
-                num_procs=step_specs['num_procs'],
-                num_gpus=step_specs['num_gpus'],
-                env_script=step_specs['env_script'],
-                mpi_runner_type=step_specs['env_mpi']
-            )
-            # If a step has failed, do not continue with next steps.
-            if calc_status != WORKER_DONE:
-                break
+        simulation_step_specs = user_specs['steps']
     else:
+        simulation_step_specs = [user_specs]
+
+    # Launch and analyze each simulation step.
+    for step_specs in simulation_step_specs:
         calc_status = execute_and_analyze_simulation(
-            app_name=user_specs['app_name'],
-            sim_template=user_specs['sim_template'],
+            app_name=step_specs['app_name'],
+            sim_template=step_specs['sim_template'],
             input_values=input_values,
-            analysis_func=user_specs['analysis_func'],
+            analysis_func=step_specs['analysis_func'],
             libE_output=libE_output,
-            env_script=user_specs['env_script'],
-            mpi_runner_type=user_specs['env_mpi']
+            num_procs=step_specs['num_procs'],
+            num_gpus=step_specs['num_gpus'],
+            env_script=step_specs['env_script'],
+            mpi_runner_type=step_specs['env_mpi']
         )
+        # If a step has failed, do not continue with next steps.
+        if calc_status != WORKER_DONE:
+            break
 
     return libE_output, persis_info, calc_status
 
 
 def execute_and_analyze_simulation(app_name, sim_template, input_values,
-                                   analysis_func, libE_output, num_procs=None,
-                                   num_gpus=None, env_script=None,
-                                   mpi_runner_type=None):
+                                   analysis_func, libE_output, num_procs,
+                                   num_gpus, env_script,
+                                   mpi_runner_type):
+    """Run simulation, handle outcome and analyze results."""
     # Create simulation input file.
     with open(sim_template, 'r') as f:
         template = jinja2.Template(f.read())
@@ -85,11 +81,8 @@ def execute_and_analyze_simulation(app_name, sim_template, input_values,
     if sim_template.endswith('.py'):
         sim_template = None
 
-    # Passed to command line in addition to the executable.
-    exctr = Executor.executor  # Get Executor
-
     # Launch simulation.
-    task = exctr.submit(
+    task = Executor.executor.submit(
         app_name=app_name,
         app_args=sim_template,
         stdout='out.txt',

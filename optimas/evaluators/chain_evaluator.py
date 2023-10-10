@@ -54,9 +54,8 @@ class ChainEvaluator(Evaluator):
         sim_specs['user']['steps'] = []
         # Get the user specs from each step.
         for evaluator in self.evaluators:
-            sim_specs['user']['steps'].append(evaluator.app_name)
-            sim_specs['user'][evaluator.app_name] = evaluator.get_sim_specs(
-                varying_parameters, objectives, analyzed_parameters)['user']
+            sim_specs['user']['steps'].append(evaluator.get_sim_specs(
+                varying_parameters, objectives, analyzed_parameters)['user'])
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
