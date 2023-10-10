@@ -83,13 +83,17 @@ def execute_and_analyze_simulation(app_name, sim_template, input_values,
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
 
-    task = exctr.submit(app_name=app_name,
-                        app_args=sim_template,
-                        stdout='out.txt',
-                        stderr='err.txt',
-                        num_procs=num_procs,
-                        num_gpus=num_gpus
-                        )
+    # Launch simulation.
+    task = exctr.submit(
+        app_name=app_name,
+        app_args=sim_template,
+        stdout='out.txt',
+        stderr='err.txt',
+        num_procs=num_procs,
+        num_gpus=num_gpus,
+        env_script=user_specs['env_script'],
+        mpi_runner_type=user_specs['env_mpi']
+    )
 
     # Wait for simulation to complete
     task.wait()
