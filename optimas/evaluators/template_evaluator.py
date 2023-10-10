@@ -35,6 +35,15 @@ class TemplateEvaluator(Evaluator):
     n_gpus : int, optional
         The number of GPUs that will be made available for each evaluation. By
         default, 0.
+    env_script : str, optional
+        The full path of a shell script to set up the environment for the
+        launched simulation. This is useful when the simulation needs to run
+        in a different environment than optimas. The script should start with a
+        shebang.
+    env_mpi : str, optional
+        If the `env_script` loads an MPI different than the one in the optimas
+        environment, indicate it here. Possible values are "mpich", "openmpi",
+        "aprun", "srun", "jsrun", "msmpi".
     """
     def __init__(
         self,
@@ -43,7 +52,9 @@ class TemplateEvaluator(Evaluator):
         executable: Optional[str] = None,
         sim_files: Optional[List[str]] = None,
         n_procs: Optional[int] = None,
-        n_gpus: Optional[int] = None
+        n_gpus: Optional[int] = None,
+        env_script: Optional[str] = None,
+        env_mpi: Optional[str] = None,
     ) -> None:
         super().__init__(
             sim_function=run_template_simulation,
@@ -53,6 +64,8 @@ class TemplateEvaluator(Evaluator):
         self.sim_template = sim_template
         self.analysis_func = analysis_func
         self.executable = executable
+        self.env_script = env_script
+        self.env_mpi = env_mpi
         self.sim_files = [] if sim_files is None else sim_files
         self._app_name = 'sim'
 
@@ -83,6 +96,8 @@ class TemplateEvaluator(Evaluator):
         sim_specs['user']['analysis_func'] = self.analysis_func
         sim_specs['user']['sim_template'] = os.path.basename(self.sim_template)
         sim_specs['user']['app_name'] = self._app_name
+        sim_specs['user']['env_script'] = self.env_script
+        sim_specs['user']['env_mpi'] = self.env_mpi
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
@@ -119,8 +134,7 @@ class TemplateEvaluator(Evaluator):
                 'An executable must be provided for non-Python simulations')
             assert os.path.exists(self.executable), (
                 'Executable {} does not exist.'.format(self.executable))
-            executable_path = './' + self.executable
-            self.sim_files.append(self.executable)
+            executable_path = os.path.abspath(self.executable)
 
         # Register app.
         Executor.executor.register_app(

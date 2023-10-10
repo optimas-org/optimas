@@ -1,4 +1,5 @@
 import os
+
 import jinja2
 import numpy as np
 
@@ -52,11 +53,15 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
     # Passed to command line in addition to the executable.
     exctr = Executor.executor  # Get Executor
 
-    task = exctr.submit(app_name=app_name,
-                        app_args=sim_script,
-                        stdout='out.txt',
-                        stderr='err.txt',
-                        )
+    # Launch simulation.
+    task = exctr.submit(
+        app_name=app_name,
+        app_args=sim_script,
+        stdout='out.txt',
+        stderr='err.txt',
+        env_script=user_specs['env_script'],
+        mpi_runner_type=user_specs['env_mpi']
+    )
 
     # Wait for simulation to complete
     task.wait()
