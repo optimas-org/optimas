@@ -1,3 +1,4 @@
+"""Contains the definition of the generator functions given to libEnsemble."""
 import os
 
 import numpy as np
@@ -14,11 +15,19 @@ from optimas.core import Evaluation
 
 
 def persistent_generator(H, persis_info, gen_specs, libE_info):
-    """
-    Create a Gaussian Process model, update it as new simulation results
-    are available, and generate inputs for the next simulations.
-    This is a persistent `genf` i.e. this function is called by a dedicated
+    """Generate and launch evaluations with the optimas generators.
+
+    This function gets the generator object and uses it to generate new
+    evaluations via the `ask` method. Once finished, the result of the
+    evaluations is communicated back to the generator via the `tell` method.
+
+    This is a persistent generator function, i.e., it is called by a dedicated
     worker and does not return until the end of the whole libEnsemble run.
+
+    Since this function runs in a separate process (different from that of
+    the libEnsemble manager), the generator is a copy of the one created by the
+    user. Thus, in order to be able update the one given by the user with the
+    new evaluations, the copy is returned in the `persis_info`.
     """
     # If CUDA is available, run BO loop on the GPU.
     if gen_specs["user"]["use_cuda"]:

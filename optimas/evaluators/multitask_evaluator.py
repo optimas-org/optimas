@@ -21,6 +21,7 @@ class MultitaskEvaluator(Evaluator):
         List of the tasks used in the optimization.
     task_evaluators : list of Evaluator
         List with the evaluators of each task.
+
     """
 
     def __init__(
@@ -38,9 +39,7 @@ class MultitaskEvaluator(Evaluator):
         objectives: List[Objective],
         analyzed_parameters: List[Parameter],
     ) -> Dict:
-        """Get a dictionary with the ``sim_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `sim_specs` for `libEnsemble`."""
         # Get base sim_specs.
         sim_specs = super().get_sim_specs(
             varying_parameters, objectives, analyzed_parameters
@@ -64,9 +63,7 @@ class MultitaskEvaluator(Evaluator):
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
-        """Get a dictionary with the ``libE_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `libE_specs` for `libEnsemble`."""
         # Get libe_specs of each task evaluator.
         libE_specs_1 = self.task_evaluators[0].get_libe_specs()
         libE_specs_2 = self.task_evaluators[1].get_libe_specs()

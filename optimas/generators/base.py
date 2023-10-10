@@ -58,6 +58,7 @@ class Generator:
         For some generators, it might be necessary to attach additional
         parameters to the trials. If so, they can be given here as a list.
         By default, ``None``.
+
     """
 
     def __init__(
@@ -96,35 +97,43 @@ class Generator:
         self._trials = []
 
     @property
-    def varying_parameters(self):
+    def varying_parameters(self) -> List[VaryingParameter]:
+        """Get the list of varying parameters."""
         return self._varying_parameters
 
     @property
-    def objectives(self):
+    def objectives(self) -> List[Objective]:
+        """Get the list of objectives."""
         return self._objectives
 
     @property
-    def constraints(self):
+    def constraints(self) -> Optional[List[Parameter]]:
+        """Get the list of constraints."""
         return self._constraints
 
     @property
-    def analyzed_parameters(self):
+    def analyzed_parameters(self) -> List[Parameter]:
+        """Get the list of analyzed parameters."""
         return self._analyzed_parameters
 
     @property
-    def use_cuda(self):
+    def use_cuda(self) -> bool:
+        """Get whether the generator can use CUDA."""
         return self._use_cuda
 
     @property
-    def gpu_id(self):
+    def gpu_id(self) -> int:
+        """Get the ID of the GPU used by the generator."""
         return self._gpu_id
 
     @property
-    def dedicated_resources(self):
+    def dedicated_resources(self) -> bool:
+        """Get whether the generator has dedicated resources allocated."""
         return self._dedicated_resources
 
     @property
-    def n_trials(self):
+    def n_trials(self) -> int:
+        """Get the number of generated trials."""
         return len(self._trials)
 
     def ask(self, n_trials: int) -> List[Trial]:
@@ -139,6 +148,7 @@ class Generator:
         -------
         list of Trial
             A list with all the generated trials.
+
         """
         trials = []
         # Initialize as many trials as requested.
@@ -178,6 +188,7 @@ class Generator:
         allow_saving_model : bool, optional
             Whether to allow the generator to save the model to file after
             incorporating the evaluated trials. By default ``True``.
+
         """
         for trial in trials:
             if trial not in self._trials:
@@ -203,6 +214,7 @@ class Generator:
         ----------
         history : np.ndarray
             The libEnsemble history array.
+
         """
         # Keep only evaluations where the simulation finished successfully.
         history = history[history["sim_ended"]]
@@ -228,7 +240,7 @@ class Generator:
         self.tell(trials, allow_saving_model=False)
 
     def save_model_to_file(self) -> None:
-        """Save model to file"""
+        """Save model to file."""
         # Get total number of completed trials.
         n_completed_trials = 0
         for trial in self._trials:
@@ -262,6 +274,7 @@ class Generator:
             required.
         max_evals : int
             Maximum number of evaluations to generate.
+
         """
         self._prepare_to_send()
         gen_specs = {
@@ -333,6 +346,7 @@ class Generator:
         ----------
         new_generator : Generator
             The newer version of the generator returned in ``persis_info``.
+
         """
         update_object(self, new_generator)
 
@@ -345,6 +359,7 @@ class Generator:
             A list with as many trials as requested to the generator. The
             trials do not yet contain the values of the varying parameters.
             These values should instead be supplied in this method.
+
         """
         pass
 
@@ -357,6 +372,7 @@ class Generator:
             A list with all evaluated trials. All evaluations included in the
             trials should be incorporated to the generator model in this
             method.
+
         """
         pass
 

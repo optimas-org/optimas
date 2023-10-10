@@ -1,3 +1,5 @@
+
+"""Definition of other utilities used internally by optimas."""
 from typing import Any
 
 
@@ -13,6 +15,7 @@ def update_object(object_old: Any, object_new: Any) -> None:
         The object to be updated.
     object_new : Any
         The object from which to get the updated attributes.
+
     """
     assert isinstance(object_new, type(object_old)), "Object types don't match"
     for key, value in vars(object_new).items():

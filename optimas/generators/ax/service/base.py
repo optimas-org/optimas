@@ -45,6 +45,7 @@ class AxServiceGenerator(AxGenerator):
     model_history_dir : str, optional
         Name of the directory in which the model will be saved. By default,
         ``'model_history'``.
+
     """
 
     def __init__(
@@ -104,7 +105,7 @@ class AxServiceGenerator(AxGenerator):
                 self._ax_client.complete_trial(trial_id, objective_eval)
 
     def _create_ax_client(self) -> AxClient:
-        """Create Ax client (must be implemented by subclasses)"""
+        """Create Ax client (must be implemented by subclasses)."""
         raise NotImplementedError
 
     def _save_model_to_file(self) -> None:
@@ -140,6 +141,7 @@ class AxServiceGenerator(AxGenerator):
         ----------
         new_generator : Generator
             The newer version of the generator returned in ``persis_info``.
+
         """
         original_ax_client = self._ax_client
         super()._update(new_generator)

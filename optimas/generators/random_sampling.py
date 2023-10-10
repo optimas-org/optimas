@@ -9,7 +9,7 @@ from .base import Generator
 
 
 class RandomSamplingGenerator(Generator):
-    """Generator for sampling an n-dimensional space with random distributions.
+    r"""Sample an n-dimensional space with random distributions.
 
     This generator uses a random distribution to generate a sample of
     configurations where to evaluate the given objectives.
@@ -26,12 +26,13 @@ class RandomSamplingGenerator(Generator):
         :math:`u_b` bounds of each parameter. The ``'normal'`` option draws
         samples from a normal distribution that, for each parameter, is
         centered at :math:`c = l_b - u_b` with standard deviation
-        :math:`\\sigma = u_b - c`. By default, ``'uniform'``.
+        :math:`\sigma = u_b - c`. By default, ``'uniform'``.
     seed : int, optional
         Seed to initialize the random generator.
     analyzed_parameters : list of Parameter, optional
         List of parameters to analyze at each trial, but which are not
         optimization objectives. By default ``None``.
+
     """
 
     def __init__(

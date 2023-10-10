@@ -1,6 +1,4 @@
-"""
-This file contains a class that helps post-process libE optimization
-"""
+"""Contains the definition of the PostProcOptimization class."""
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -8,15 +6,17 @@ import os
 
 
 class PostProcOptimization(object):
-    def __init__(self, path):
-        """
-        Initialize a postprocessing object
+    """Class with utilities for analyzing an optimization."""
 
-        Parameter:
+    def __init__(self, path):
+        """Initialize a postprocessing object.
+
+        Parameters
         ----------
         path: string
             Path to the folder that contains the libE optimization,
             or path to the individual `.npy` history file.
+
         """
         # Find the `npy` file that contains the results
         if os.path.isdir(path):
@@ -62,23 +62,21 @@ class PostProcOptimization(object):
         self.df["gen_ended_time"] -= self.df["gen_ended_time"].min()
 
     def get_df(self):
-        """
-        Return a pandas DataFrame containing the data from the simulation
-        """
+        """Return a pandas DataFrame with the data from the exploration."""
         return self.df
 
     def plot_optimization(self, fidelity_parameter=None, **kwargs):
-        """
-        Plot the values that where reached during the optimization
+        """Plot the values that where reached during the optimization.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         fidelity_parameter: string or None
             Name of the fidelity parameter
             If given, the different fidelity will
             be plotted in different colors
 
         kwargs: optional arguments to pass to `plt.scatter`
+
         """
         if fidelity_parameter is not None:
             fidelity = self.df[fidelity_parameter]
@@ -94,11 +92,10 @@ class PostProcOptimization(object):
         plot=False,
         **kw,
     ):
-        """
-        Plot the minimum so far, as a function of time during the optimization
+        """Plot the minimum so far, as a function of time during optimization.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         fidelity_parameter: string
             Name of the fidelity parameter. If `fidelity_parameter`
             and `min_fidelity` are set, only the runs with fidelity
@@ -115,9 +112,10 @@ class PostProcOptimization(object):
 
         kw: extra arguments to the plt.plot function
 
-        Returns:
-        --------
+        Returns
+        -------
         time, max
+
         """
         if fidelity_parameter is not None:
             assert min_fidelity is not None
@@ -149,15 +147,15 @@ class PostProcOptimization(object):
         return t_array, cummin_array
 
     def plot_worker_timeline(self, fidelity_parameter=None):
-        """
-        Plot the timeline of worker utilization
+        """Plot the timeline of worker utilization.
 
-        Parameter:
+        Parameters
         ----------
             fidelity_parameter: string or None
                 Name of the fidelity parameter
                 If given, the different fidelity will
                 be plotted in different colors
+
         """
         df = self.get_df()
         if fidelity_parameter is not None:

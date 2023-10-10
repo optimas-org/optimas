@@ -16,8 +16,7 @@ from .base import AxServiceGenerator
 
 
 class AxMultiFidelityGenerator(AxServiceGenerator):
-    """Generator for performing multifidelity Bayesian optimization using the
-    Ax service API.
+    """Multifidelity Bayesian optimization using the Ax service API.
 
     Parameters
     ----------
@@ -53,6 +52,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     model_history_dir : str, optional
         Name of the directory in which the model will be saved. By default,
         ``'model_history'``.
+
     """
 
     def __init__(

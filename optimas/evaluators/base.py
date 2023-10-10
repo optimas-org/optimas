@@ -21,6 +21,7 @@ class Evaluator:
     n_gpus : int, optional
         The number of GPUs that will be made available for each evaluation. By
         default, 0.
+
     """
 
     def __init__(
@@ -51,9 +52,7 @@ class Evaluator:
         objectives: List[Objective],
         analyzed_parameters: List[Parameter],
     ) -> Dict:
-        """Get a dictionary with the ``sim_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `sim_specs` for `libEnsemble`."""
         # Only generate sim_specs if evaluator has been initialized.
         if not self._initialized:
             raise RuntimeError(
@@ -82,9 +81,7 @@ class Evaluator:
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
-        """Get a dictionary with the ``libE_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `libE_specs` for `libEnsemble`."""
         libE_specs = {}
         return libE_specs
 
@@ -100,7 +97,5 @@ class Evaluator:
             self._initialized = True
 
     def _initialize(self) -> None:
-        """Method that executes the code required to initialize the evaluator.
-        Has to be implemented by the subclasses.
-        """
+        """Initialize the evaluator (to be implemented by subclasses)."""
         pass

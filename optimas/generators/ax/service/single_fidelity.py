@@ -16,8 +16,7 @@ from .base import AxServiceGenerator
 
 
 class AxSingleFidelityGenerator(AxServiceGenerator):
-    """Generator for performing single-fidelity Bayesian optimization using the
-    Ax service API.
+    """Single-fidelity Bayesian optimization using the Ax service API.
 
     Parameters
     ----------
@@ -49,6 +48,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
     model_history_dir : str, optional
         Name of the directory in which the model will be saved. By default,
         ``'model_history'``.
+
     """
 
     def __init__(

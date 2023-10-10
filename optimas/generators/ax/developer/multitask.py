@@ -47,8 +47,7 @@ HIFI_RETURNED = "hifi_returned"
 
 
 class AxMultitaskGenerator(AxGenerator):
-    """Generator for performing multitask Bayesian optimization using the
-    Ax developer API.
+    """Multitask Bayesian optimization using the Ax developer API.
 
     Two tasks need to be provided: one for low-fidelity evaluations and
     another for high-fidelity evaluations. The objective will be optimized
@@ -84,6 +83,7 @@ class AxMultitaskGenerator(AxGenerator):
     model_history_dir : str, optional
         Name of the directory in which the model will be saved. By default,
         ``'model_history'``.
+
     """
 
     def __init__(
@@ -457,12 +457,11 @@ class AxMultitaskGenerator(AxGenerator):
 def max_utility_from_GP(
     n: int, m: TorchModelBridge, gr: GeneratorRun, hifi_task: str
 ) -> GeneratorRun:
-    """
+    """Select the max utility points according to the MTGP predictions.
+
     High fidelity batches are constructed by selecting the maximum utility
     points from the low fidelity batch, after updating the model with the low
     fidelity results.
-    This function selects the max utility points according to the MTGP
-    predictions.
     """
     obsf = []
     for arm in gr.arms:

@@ -1,3 +1,4 @@
+"""Contains the definition of the simulation functions given to libEnsemble."""
 import jinja2
 import numpy as np
 
@@ -10,9 +11,11 @@ logger = get_logger(__name__)
 
 
 def run_template_simulation(H, persis_info, sim_specs, libE_info):
-    """
-    This function runs a simulation and returns quantity 'f' as well as
-    other physical quantities measured in the run for convenience. Status check
+    """Run a simulation defined with a `TemplateEvaluator` or `ChainEvaluator`.
+
+    This function creates the simulation script from the template, launches
+    the simulation and analyzes the results to obtain the value of the
+    objectives and other analyzed parameters. Status check
     is done periodically on the simulation, provided by LibEnsemble.
     """
     # By default, indicate that task failed
@@ -127,11 +130,7 @@ def execute_and_analyze_simulation(
 
 
 def run_function(H, persis_info, sim_specs, libE_info):
-    """
-    This function runs a simulation and returns quantity 'f' as well as
-    other physical quantities measured in the run for convenience. Status check
-    is done periodically on the simulation, provided by LibEnsemble.
-    """
+    """Run an evaluation defined with a `FunctionEvaluator`."""
     # By default, indicate that task failed
     calc_status = TASK_FAILED
 

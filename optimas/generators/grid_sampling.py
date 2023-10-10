@@ -9,13 +9,13 @@ from .base import Generator
 
 
 class GridSamplingGenerator(Generator):
-    """Generator for sampling an n-dimensional space with a uniform grid.
+    r"""Sample an n-dimensional space with a uniform grid.
 
     This generator samples the given objectives in a uniform grid of ``n``
     dimensions, where ``n`` is the number of ``varying_parameters``. Along each
     direction :math:`i` (i.e., along each varying parameter), the space is
-    divided in :math:`n_\\mathrm{steps,i}` evenly spaced steps, resulting in a
-    total number of evaluations :math:`\\prod_i n_\\mathrm{steps,i}`.
+    divided in :math:`n_\mathrm{steps,i}` evenly spaced steps, resulting in a
+    total number of evaluations :math:`\prod_i n_\mathrm{steps,i}`.
 
     Parameters
     ----------
@@ -28,6 +28,7 @@ class GridSamplingGenerator(Generator):
     analyzed_parameters : list of Parameter, optional
         List of parameters to analyze at each trial, but which are not
         optimization objectives. By default ``None``.
+
     """
 
     def __init__(

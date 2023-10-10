@@ -67,22 +67,27 @@ class VaryingParameter(Parameter):
 
     @property
     def lower_bound(self) -> float:
+        """Get the lower bound of the varying parameter."""
         return self._lower_bound
 
     @property
     def upper_bound(self) -> float:
+        """Get the upper bound of the varying parameter."""
         return self._upper_bound
 
     @property
     def is_fidelity(self) -> bool:
+        """Get whether the varying parameter is a fidelity."""
         return self._is_fidelity
 
     @property
     def fidelity_target_value(self) -> float:
+        """Get the target value of the fidelity."""
         return self._fidelity_target_value
 
     @property
     def default_value(self) -> float:
+        """Get the default value of the varying parameter."""
         return self._default_value
 
 
@@ -111,6 +116,7 @@ class TrialParameter(Parameter):
 
     @property
     def save_name(self) -> str:
+        """Get name under which to save the trial parameter to history."""
         return self._save_name
 
 
@@ -134,4 +140,5 @@ class Objective(Parameter):
 
     @property
     def minimize(self) -> bool:
+        """Get whether the objective should be minimized."""
         return self._minimize

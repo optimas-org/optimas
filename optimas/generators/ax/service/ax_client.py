@@ -53,6 +53,7 @@ class AxClientGenerator(AxServiceGenerator):
     will work as expected. This is only an issue on ``optimas``, which fails to
     properly recognize them because optimization constraints have not yet been
     implemented.
+
     """
 
     def __init__(
@@ -127,7 +128,7 @@ class AxClientGenerator(AxServiceGenerator):
             objectives.append(Objective(name=constraint.metric.name))
 
     def _create_ax_client(self) -> AxClient:
-        """Overrides the base function to simply return the given"""
+        """Override the base function to simply return the given."""
         return self._ax_client
 
     def _use_cuda(self, ax_client: AxClient):

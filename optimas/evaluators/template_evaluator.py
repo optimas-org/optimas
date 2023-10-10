@@ -11,8 +11,7 @@ from .base import Evaluator
 
 
 class TemplateEvaluator(Evaluator):
-    """Evaluator class to use when the evaluations are carried out by
-    executing a templated script.
+    """Evaluator class for executing a template script.
 
     Parameters
     ----------
@@ -47,6 +46,7 @@ class TemplateEvaluator(Evaluator):
         If the `env_script` loads an MPI different than the one in the optimas
         environment, indicate it here. Possible values are "mpich", "openmpi",
         "aprun", "srun", "jsrun", "msmpi".
+
     """
 
     def __init__(
@@ -73,6 +73,7 @@ class TemplateEvaluator(Evaluator):
 
     @property
     def app_name(self) -> str:
+        """Name of the libEnsemble app that executes the evaluation."""
         return self._app_name
 
     @app_name.setter
@@ -85,9 +86,7 @@ class TemplateEvaluator(Evaluator):
         objectives: List[Objective],
         analyzed_parameters: List[Parameter],
     ) -> Dict:
-        """Get a dictionary with the ``sim_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `sim_specs` for `libEnsemble`."""
         # Get base sim_specs.
         sim_specs = super().get_sim_specs(
             varying_parameters, objectives, analyzed_parameters
@@ -103,9 +102,7 @@ class TemplateEvaluator(Evaluator):
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
-        """Get a dictionary with the ``libE_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `libE_specs` for `libEnsemble`."""
         libE_specs = super().get_libe_specs()
         # Add sim_template and sim_files to the list of files to be copied.
         # Use the absolute path to the files to get around a libEnsemble bug

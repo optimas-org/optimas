@@ -9,14 +9,14 @@ from .base import Generator
 
 
 class LineSamplingGenerator(Generator):
-    """Generator for sampling an n-dimensional space one parameter at a time.
+    r"""Sample an n-dimensional space one parameter at a time.
 
     This generator samples the given objectives along ``n`` dimensions, where
     ``n`` is the number of ``varying_parameters``, by varying only one
     parameter at a time. Along each direction :math:`i` (i.e., along each
-    varying parameter), the space is divided in :math:`n_\\mathrm{steps,i}`
+    varying parameter), the space is divided in :math:`n_\mathrm{steps,i}`
     evenly spaced steps, resulting in a total number of evaluations
-    :math:`\\sum_i n_\\mathrm{steps,i}`.
+    :math:`\sum_i n_\mathrm{steps,i}`.
 
     Since only one parameter is varied at a time, a default value that will be
     used when a parameter is not being varied needs to be provided for all
@@ -33,6 +33,7 @@ class LineSamplingGenerator(Generator):
     analyzed_parameters : list of Parameter, optional
         List of parameters to analyze at each trial, but which are not
         optimization objectives. By default ``None``.
+
     """
 
     def __init__(

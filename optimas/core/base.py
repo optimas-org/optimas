@@ -1,7 +1,4 @@
-"""
-This module defines a base class for all classes that have a name attribute.
-Examples of these are the different optimization parameters and tasks.
-"""
+"""Defines a base class for all parameters that have a name."""
 
 
 class NamedBase:

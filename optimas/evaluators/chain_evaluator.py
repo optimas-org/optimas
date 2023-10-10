@@ -1,3 +1,5 @@
+"""Contains the definition of the ChainEvaluator class."""
+
 import copy
 from typing import List, Dict
 
@@ -9,7 +11,7 @@ from .template_evaluator import TemplateEvaluator
 
 
 class ChainEvaluator(Evaluator):
-    """Allows the evaluation of a chain of `TemplateEvaluators`.
+    """Evaluator that executes a chain of `TemplateEvaluators`.
 
     This is useful when each evaluation consists of several steps, where each
     step is a simulation with a different simulation code. Each step
@@ -28,6 +30,7 @@ class ChainEvaluator(Evaluator):
     evaluators : list of TemplateEvaluators
         A list of TemplateEvaluators given in the order in which they should
         be executed.
+
     """
 
     def __init__(self, evaluators: List[TemplateEvaluator]) -> None:
@@ -43,9 +46,7 @@ class ChainEvaluator(Evaluator):
         objectives: List[Objective],
         analyzed_parameters: List[Parameter],
     ) -> Dict:
-        """Get a dictionary with the ``sim_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `sim_specs` for `libEnsemble`."""
         # Get base sim_specs.
         sim_specs = super().get_sim_specs(
             varying_parameters, objectives, analyzed_parameters
@@ -61,9 +62,7 @@ class ChainEvaluator(Evaluator):
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
-        """Get a dictionary with the ``libE_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `libE_specs` for `libEnsemble`."""
         # Get libe_specs of each task evaluator.
         libE_specs_0 = copy.deepcopy(self.evaluators[0].get_libe_specs())
         # Combine the files to copy from all evaluators.

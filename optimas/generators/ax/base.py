@@ -41,6 +41,7 @@ class AxGenerator(Generator):
         For some generators, it might be necessary to attach additional
         parameters to the trials. If so, they can be given here as a list.
         By default, ``None``.
+
     """
 
     def __init__(

@@ -20,8 +20,10 @@ logger = get_logger(__name__)
 
 
 class Exploration:
-    """Base class in charge of launching an exploration (i.e., an optimization
-    or parameter scan).
+    """Class for launching an exploration.
+
+    Depending on the generator, the exploration can be an optimization, a
+    parameter scan, etc.
 
     Parameters
     ----------
@@ -62,6 +64,7 @@ class Exploration:
         manager and ``N-1`` simulation workers. In this case, the
         ``sim_workers`` parameter is ignored. By default, ``'local'`` mode
         is used.
+
     """
 
     def __init__(
@@ -105,6 +108,7 @@ class Exploration:
         n_evals : int, optional
             Number of evaluations to run. If not given, the exploration will
             run until the number of evaluations reaches `max_evals`.
+
         """
         # Set exit criteria to maximum number of evaluations.
         remaining_evals = self.max_evals - self._n_evals

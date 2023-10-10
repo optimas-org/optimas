@@ -8,8 +8,7 @@ from .base import Evaluator
 
 
 class FunctionEvaluator(Evaluator):
-    """Evaluator class to use when the evaluations are carried out by calling
-    a function.
+    """Evaluator class for executing an arbitrary function.
 
     Parameters
     ----------
@@ -23,6 +22,7 @@ class FunctionEvaluator(Evaluator):
     n_gpus : int, optional
         The number of GPUs that will be made available for each evaluation. By
         default, 0.
+
     """
 
     def __init__(
@@ -42,9 +42,7 @@ class FunctionEvaluator(Evaluator):
         objectives: List[Objective],
         analyzed_parameters: List[Parameter],
     ) -> Dict:
-        """Get a dictionary with the ``sim_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `sim_specs` for `libEnsemble`."""
         # Get base sim_specs.
         sim_specs = super().get_sim_specs(
             varying_parameters, objectives, analyzed_parameters
