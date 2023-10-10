@@ -1,6 +1,7 @@
-"""
-Dummy simulation template used for testing. It takes x0 and x1 as input
-parameters and stores the result in `result.txt`.
+"""Dummy simulation template used for testing.
+
+The template takes two parameters x0 and x1 as input
+and stores the result in `result.txt`.
 """
 import os
 import numpy as np

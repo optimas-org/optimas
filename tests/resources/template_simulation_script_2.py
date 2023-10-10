@@ -1,6 +1,7 @@
-"""
-Dummy simulation template used for testing. It takes the result from a
-previous evaluation and uses it to perform another evaluation.
+"""Dummy simulation template used for testing a ChainedEvaluator.
+
+The template takes the result from a previous evaluation and uses
+it to perform a followup evaluation.
 """
 
 with open("result.txt", "r") as f:
