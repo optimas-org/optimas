@@ -1,4 +1,5 @@
-"""
+"""Example template script for multitask optimization with Wake-T and FBPIC.
+
 This example optimizes the focusing gradient of a plasma lens using
 a discrete fidelity space. One fidelity runs a cheap Wake-T
 simulation while the other runs a full FBPIC simulation.
@@ -23,7 +24,8 @@ from aptools.data_analysis.beam_diagnostics import twiss_parameters
 from aptools.data_handling.reading import read_beam
 
 
-def run_simulation(g_lens, model):
+def run_simulation(g_lens, model):    
+    """Run a simulation of an active plasma lens with Wake-T or FBPIC."""
     # Generate particle bunch.
     g_x = 600
     b_x = 1
@@ -56,6 +58,7 @@ def run_simulation(g_lens, model):
 
 
 def run_wake_t(bunch, g_lens):
+    """Run a Wake-T simulation of an active plasma lens."""
     # Define plasma lens.
     p_lens = ActivePlasmaLens(3e-2, g_lens, n_out=2)
 
@@ -70,6 +73,7 @@ def run_wake_t(bunch, g_lens):
 
 
 def run_fbpic(bunch, g_lens):
+    """Run an FBPIC simulation of an active plasma lens."""
     # ----------
     # Parameters
     # ----------
@@ -154,8 +158,7 @@ def run_fbpic(bunch, g_lens):
 
     # Define the density function
     def dens_func(z, r):
-        """
-        User-defined function: density profile of the plasma
+        """User-defined function: density profile of the plasma.
 
         It should return the relative density with respect to n_plasma,
         at the position x, y, z (i.e. return a number between 0 and 1)
@@ -164,10 +167,12 @@ def run_fbpic(bunch, g_lens):
         ----------
         z, r: 1darrays of floats
             Arrays with one element per macroparticle
+
         Returns
         -------
         n : 1d array of floats
             Array of relative density, with one element per macroparticles
+
         """
         # Allocate relative density
         n = np.ones_like(z)

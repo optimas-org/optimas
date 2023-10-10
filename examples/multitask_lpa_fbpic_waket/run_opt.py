@@ -1,3 +1,4 @@
+"""Multitask optimization of an LPA with Wake-T and FBPIC."""
 from multiprocessing import set_start_method
 
 from optimas.core import VaryingParameter, Objective, Parameter, Task

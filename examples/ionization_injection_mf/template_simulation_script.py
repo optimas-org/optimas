@@ -1,6 +1,7 @@
-# -------
-# Imports
-# -------
+"""Script for simulating an LPA with ionization injection with FBPIC.
+
+The resolution of the simulation is variable and controlled by the optimizer.
+"""
 import numpy as np
 from scipy.constants import c, e, m_e, m_p
 
@@ -21,6 +22,7 @@ def LUXlaser(
     focus_factor=1,
     tempolar_factor=1,
 ):
+    """Get the laser peak intensity, a0, spot size and length."""
     energy_gauss_joule = (
         energy_measured_joule * T_beamline * focus_factor * tempolar_factor
     )
@@ -105,16 +107,19 @@ z0 = -3 * ctau  # Laser centroid
 
 
 def dens_func_H(z, r):
+    """Hydrogen density function."""
     z_lab = z * gamma_boost
     return 2 * np.interp(z_lab, dens_z, dens_h2)
 
 
 def dens_func_N(z, r):
+    """Nitrogen density function."""
     z_lab = z * gamma_boost
     return 2 * np.interp(z_lab, dens_z, dens_n2)
 
 
 def dens_func_e(z, r):
+    """Electron density function."""
     return dens_func_H(z, r) + 5 * dens_func_N(z, r)
 
 

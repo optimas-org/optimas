@@ -1,4 +1,4 @@
-"""Basic example of parallel random sampling with simulations"""
+"""Basic example of parallel random sampling with simulations."""
 
 from optimas.core import VaryingParameter, Objective
 from optimas.generators import RandomSamplingGenerator
@@ -27,6 +27,7 @@ def analyze_simulation(simulation_directory, output_params):
     -------
     dict
         The `output_params` dictionary with the results from the analysis.
+
     """
     # Read back result from file
     with open("result.txt") as f:

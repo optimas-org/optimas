@@ -1,3 +1,4 @@
+"""Defines the analysis function that runs after the simulation."""
 import os
 
 import numpy as np
@@ -10,6 +11,7 @@ from aptools.plotting.quick_diagnostics import (
 
 
 def analyze_simulation(simulation_directory, output_params):
+    """Analyze the output of the simulation."""
     # Load data.
     diags_dir = os.path.join(simulation_directory, "diags/hdf5")
     dc = vp.DataContainer("openpmd", diags_dir)
@@ -81,14 +83,15 @@ def analyze_simulation(simulation_directory, output_params):
 
 
 def weighted_mad(x, w):
+    """Calculate weighted median absolute deviation."""
     med = weighted_median(x, w)
     mad = weighted_median(np.abs(x - med), w)
     return med, mad
 
 
 def weighted_median(data, weights):
-    """
-    Compute the weighted quantile of a 1D numpy array.
+    """Compute the weighted quantile of a 1D numpy array.
+
     Parameters
     ----------
     data : ndarray
@@ -97,10 +100,12 @@ def weighted_median(data, weights):
         Array with the weights of the same size of `data`.
     quantile : float
         Quantile to compute. It must have a value between 0 and 1.
+
     Returns
     -------
     quantile_1D : float
         The output value.
+
     """
     quantile = 0.5
     # Check the data

@@ -1,7 +1,4 @@
-"""
-Contains the function that analyzes the simulation results,
-after the simulation was run.
-"""
+"""Defines the analysis function that runs after the simulation."""
 import os
 from openpmd_viewer.addons import LpaDiagnostics
 import numpy as np
@@ -9,8 +6,8 @@ from scipy.constants import e
 
 
 def weighted_median(data, weights):
-    """
-    Compute the weighted quantile of a 1D numpy array.
+    """Compute the weighted quantile of a 1D numpy array.
+
     Parameters
     ----------
     data : ndarray
@@ -19,10 +16,12 @@ def weighted_median(data, weights):
         Array with the weights of the same size of `data`.
     quantile : float
         Quantile to compute. It must have a value between 0 and 1.
+
     Returns
     -------
     quantile_1D : float
         The output value.
+
     """
     quantile = 0.5
     # Check the data
@@ -54,12 +53,14 @@ def weighted_median(data, weights):
 
 
 def weighted_mad(x, w):
+    """Calculate weighted median absolute deviation."""
     med = weighted_median(x, w)
     mad = weighted_median(np.abs(x - med), w)
     return med, mad
 
 
 def analyze_simulation(simulation_directory, output_params):
+    """Analyze the output of the simulation."""
     # Define/calculate the objective function 'f' as well as the diagnostic
     # quantities listed in `analyzed_quantities` above.
     d = LpaDiagnostics(os.path.join(simulation_directory, "diags/hdf5"))

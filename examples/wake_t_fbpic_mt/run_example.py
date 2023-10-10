@@ -1,4 +1,5 @@
-"""
+"""Example multitask optimization with Wake-T and FBPIC.
+
 This example optimizes the focusing strength of an active plasma lens using
 Wake-T and FBPIC simulations by employing a multitask generator.
 

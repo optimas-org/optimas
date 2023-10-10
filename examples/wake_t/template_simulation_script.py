@@ -1,3 +1,4 @@
+"""Template simulation script for optimizing an APL with Wake-T."""
 import numpy as np
 from wake_t.utilities.bunch_generation import get_gaussian_bunch_from_twiss
 from wake_t.beamline_elements import ActivePlasmaLens
@@ -5,6 +6,7 @@ from aptools.data_analysis.beam_diagnostics import twiss_parameters
 
 
 def run_simulation(g_lens):
+    """Run a Wake-T simulation of an active plasma lens."""
     # Generate particle bunch.
     g_x = 600
     b_x = 1

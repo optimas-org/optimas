@@ -1,7 +1,4 @@
-"""
-Contains the function that analyzes the simulation results,
-after the simulation was run.
-"""
+"""Defines the analysis function that runs after the simulation."""
 import os
 
 import numpy as np
@@ -9,6 +6,7 @@ from openpmd_viewer.addons import LpaDiagnostics
 
 
 def get_emittance(ts, t):
+    """Calculate the beam emittance at the given time step."""
     w, x, ux = ts.get_particle(["w", "x", "ux"], t=t)
     x2 = np.average(x**2, weights=w)
     u2 = np.average(ux**2, weights=w)
@@ -17,9 +15,10 @@ def get_emittance(ts, t):
 
 
 def analyze_simulation(simulation_directory, output_params):
-    """
-    Define/calculate the objective function 'f' as well as the diagnostic
-    quantities listed as `analyzed_parameters` in the generator.
+    """Analyze the output of the WarpX simulation.
+
+    The function calculates the objective function 'f' as well as the
+    diagnostic quantities listed as `analyzed_parameters` in the generator.
     """
     ts = LpaDiagnostics(os.path.join(simulation_directory, "diag"))
     t0 = 4.0e-11  # Time (boosted-frame) at which we calculate beam properties.

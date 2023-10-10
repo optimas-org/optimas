@@ -1,4 +1,5 @@
-"""
+"""Example multifidelity Bayesian optimization of an LPA with FBPIC.
+
 This example optimizes an LPA based on ionization injection using FBPIC
 simulations with varying fidelity (resolution).
 

@@ -1,3 +1,9 @@
+"""Script for simulating an LPA with external injection with Wake-T and FBPIC.
+
+The simulation code is determined from the `task` parameter. The beam
+current, position and length are parameters exposed to the optimizer to
+try to achieve optimal beam loading.
+"""
 import numpy as np
 import scipy.constants as ct
 from wake_t import GaussianPulse, PlasmaStage, ParticleBunch
@@ -24,6 +30,7 @@ i2_beam = beam_i_2 * 1e3
 
 
 def run_simulation():
+    """Run a simulation of the LPA with Wake-T or FBPIC."""
     # Base laser parameters.
     E_laser = 10  # J
     tau_laser = 25e-15  # s (fwhm)
@@ -113,6 +120,7 @@ def run_simulation():
 
 
 def determine_laser_a0(ene, tau_fwhm, w0, lambda0):
+    """Determine the laser a0 from the energy, size and wavelength."""
     tau = tau_fwhm / np.sqrt(2.0 * np.log(2))
     k0 = 2.0 * np.pi / lambda0  # Laser wavenumber
     PA = ct.epsilon_0 * ct.c**5 * ct.m_e**2 / ct.e**2  # Power constant
@@ -123,6 +131,7 @@ def determine_laser_a0(ene, tau_fwhm, w0, lambda0):
 
 
 def density_profile(z):
+    """Define the longitudinal density profile of the plasma."""
     # Allocate relative density
     n = np.ones_like(z)
     # Make zero before plateau
@@ -147,6 +156,7 @@ def run_wake_t(
     l_box,
     n_out,
 ):
+    """Run a Wake-T simulation of the LPA."""
     # Create laser.
     laser = GaussianPulse(
         xi_c=0.0, l_0=lambda0, w_0=w0, a_0=a0, tau=tau_fwhm, z_foc=0.0
@@ -196,6 +206,7 @@ def run_fbpic(
     l_box,
     n_out,
 ):
+    """Run an FBPIC simulation of the LPA."""
     from fbpic.main import Simulation
     from fbpic.lpa_utils.boosted_frame import BoostConverter
     from fbpic.lpa_utils.bunch import add_particle_bunch_from_arrays
@@ -426,6 +437,7 @@ def run_fbpic(
 
 
 def calculate_waket_timestep(beam, n_p):
+    """Calculate the timestep of the bunch pusher in Wake-T."""
     mean_gamma = np.sqrt(np.average(beam.pz) ** 2 + 1)
     # calculate maximum focusing along stage.
     w_p = np.sqrt(n_p * ct.e**2 / (ct.m_e * ct.epsilon_0))

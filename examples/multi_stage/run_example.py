@@ -1,5 +1,4 @@
-"""
-This example optimizes an multistage setup using Warp-X.
+"""Example Bayesian optimization of a multistage LPA with Warp-X.
 
 The Warp-X simulations are performed using the template defined in the
 `template_simulation_script` file.

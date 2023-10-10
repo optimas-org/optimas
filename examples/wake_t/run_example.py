@@ -1,4 +1,5 @@
-"""
+"""Example Bayesian optimization with Wake-T.
+
 This example optimizes the focusing strength of an active plasma lens using
 Wake-T simulations.
 

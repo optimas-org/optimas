@@ -1,4 +1,4 @@
-"""Basic example of parallel multitask Bayesian optimization with Ax"""
+"""Basic example of parallel multitask Bayesian optimization with Ax."""
 
 from optimas.core import VaryingParameter, Objective, Task
 from optimas.generators import AxMultitaskGenerator
@@ -27,6 +27,7 @@ def analyze_simulation(simulation_directory, output_params):
     -------
     dict
         The `output_params` dictionary with the results from the analysis.
+
     """
     # Read back result from file
     with open("result.txt") as f:

@@ -1,6 +1,7 @@
-"""
-Simple template script that evaluates an analytical expression and stores
-the results in a `result.txt` file.
+"""Simple template script used for demonstration.
+
+The script evaluates an analytical expression and stores the results in a
+`result.txt` file that is later read by the analysis function.
 """
 import numpy as np
 import time

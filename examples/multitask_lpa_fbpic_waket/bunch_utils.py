@@ -1,3 +1,5 @@
+
+"""Defines utilities for generating particle bunches."""
 import numpy as np
 from scipy.constants import c
 
@@ -5,6 +7,7 @@ from scipy.constants import c
 def gaussian_bunch(
     q_tot, n_part, gamma0, s_g, s_z, emit_x, s_x, zf=0.0, tf=0, x_c=0.0
 ):
+    """Create a Gaussian particle bunch."""
     n_part = int(n_part)
 
     np.random.seed(42)
@@ -46,6 +49,7 @@ def flattop_bunch(
     x_c=0.0,
     y_c=0,
 ):
+    """Create a flat-top particle bunch."""
     n_part = int(n_part)
 
     norma = length + np.sqrt(2 * np.pi) * s_z
@@ -108,6 +112,7 @@ def trapezoidal_bunch(
     x_c=0.0,
     y_c=0.0,
 ):
+    """Create a trapezoidal particle bunch."""
     n_part = int(n_part)
 
     q_plat = (min(i0, i1) / c) * length

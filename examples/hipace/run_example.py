@@ -1,5 +1,4 @@
-"""
-This example optimizes a PWFA stage using HiPACE++.
+"""Example Bayesian optimization a PWFA with HiPACE++.
 
 The HiPACE++ simulations are performed using the template defined in the
 `template_simulation_script` file.
