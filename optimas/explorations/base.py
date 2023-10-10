@@ -73,9 +73,9 @@ class Exploration:
         run_async: Optional[bool] = True,
         history: Optional[str] = None,
         history_save_period: Optional[int] = None,
-        exploration_dir_path: Optional[str] = './exploration',
+        exploration_dir_path: Optional[str] = "./exploration",
         resume: Optional[bool] = False,
-        libe_comms: Optional[str] = 'local'
+        libe_comms: Optional[str] = "local",
     ) -> None:
         self.generator = generator
         self.evaluator = evaluator
@@ -90,17 +90,14 @@ class Exploration:
         self.libe_comms = libe_comms
         self._n_evals = 0
         self._resume = resume
-        self._history_file_name = 'exploration_history_after_evaluation_{}'
+        self._history_file_name = "exploration_history_after_evaluation_{}"
         self._load_history(history, resume)
         self._create_alloc_specs()
         self._create_executor()
         self._initialize_evaluator()
         self._set_default_libe_specs()
 
-    def run(
-        self,
-        n_evals: Optional[int] = None
-    ) -> None:
+    def run(self, n_evals: Optional[int] = None) -> None:
         """Run the exploration.
 
         Parameters
@@ -113,13 +110,13 @@ class Exploration:
         remaining_evals = self.max_evals - self._n_evals
         if remaining_evals < 1:
             raise ValueError(
-                'The maximum number or evaluations has been reached.'
+                "The maximum number or evaluations has been reached."
             )
         if n_evals is None:
             sim_max = remaining_evals
         else:
             sim_max = min(n_evals, remaining_evals)
-        exit_criteria = {'sim_max': sim_max}
+        exit_criteria = {"sim_max": sim_max}
 
         # Get initial number of generator trials.
         n_trials_initial = self.generator.n_trials
@@ -135,12 +132,13 @@ class Exploration:
             self.libE_specs["zero_resource_workers"] = [1]
 
         if self._n_evals > 0:
-            self.libE_specs['reuse_output_dir'] = True
+            self.libE_specs["reuse_output_dir"] = True
 
         # Get gen_specs and sim_specs.
         run_params = self.evaluator.get_run_params()
-        gen_specs = self.generator.get_gen_specs(self.sim_workers, run_params,
-                                                 sim_max)
+        gen_specs = self.generator.get_gen_specs(
+            self.sim_workers, run_params, sim_max
+        )
         sim_specs = self.evaluator.get_sim_specs(
             self.generator.varying_parameters,
             self.generator.objectives,
@@ -173,7 +171,8 @@ class Exploration:
             is_master = True
         else:
             from mpi4py import MPI
-            is_master = (MPI.COMM_WORLD.Get_rank() == 0)
+
+            is_master = MPI.COMM_WORLD.Get_rank() == 0
 
         # Save history.
         if is_master:
@@ -197,15 +196,15 @@ class Exploration:
         if resume:
             if history is not None:
                 logger.info(
-                    'The `history` argument is ignored when `resume=True`. '
-                    'The exploration will resume using the most recent '
-                    'history file.'
+                    "The `history` argument is ignored when `resume=True`. "
+                    "The exploration will resume using the most recent "
+                    "history file."
                 )
             history = self._get_most_recent_history_file_path()
             if history is None:
                 raise ValueError(
-                    'Previous history file not found. '
-                    'Cannot resume exploration.'
+                    "Previous history file not found. "
+                    "Cannot resume exploration."
                 )
         # Read file.
         if isinstance(history, str):
@@ -236,7 +235,8 @@ class Exploration:
         file_path = os.path.join(exploration_dir_path, filename)
         if not os.path.isfile(filename):
             old_files = os.path.join(
-                exploration_dir_path, self._history_file_name.format("*"))
+                exploration_dir_path, self._history_file_name.format("*")
+            )
             for old_file in glob.glob(old_files):
                 os.remove(old_file)
             np.save(file_path, self.history)
@@ -246,18 +246,18 @@ class Exploration:
         old_exploration_history_files = glob.glob(
             os.path.join(
                 os.path.abspath(self.exploration_dir_path),
-                self._history_file_name.format("*")
+                self._history_file_name.format("*"),
             )
         )
         old_libe_history_files = glob.glob(
             os.path.join(
                 os.path.abspath(self.exploration_dir_path),
-                'libE_history_{}'.format("*")
+                "libE_history_{}".format("*"),
             )
         )
         old_files = old_exploration_history_files + old_libe_history_files
         if old_files:
-            file_evals = [int(file.split('_')[-1][:-4]) for file in old_files]
+            file_evals = [int(file.split("_")[-1][:-4]) for file in old_files]
             i_max_evals = np.argmax(np.array(file_evals))
             return old_files[i_max_evals]
 

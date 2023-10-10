@@ -43,10 +43,10 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
     ps = PersistentSupport(libE_info, EVAL_GEN_TAG)
 
     # Maximum number of total evaluations to generate.
-    max_evals = gen_specs['user']['max_evals']
+    max_evals = gen_specs["user"]["max_evals"]
 
     # Number of points to generate initially.
-    number_of_gen_points = min(gen_specs['user']['gen_batch_size'], max_evals)
+    number_of_gen_points = min(gen_specs["user"]["gen_batch_size"], max_evals)
 
     n_gens = 0
     n_failed_gens = 0
@@ -76,9 +76,9 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                 H_o["num_procs"][i] = run_params["num_procs"]
                 H_o["num_gpus"][i] = run_params["num_gpus"]
 
-        n_gens += np.sum(H_o['num_procs'] != 0)
-        n_failed_gens = np.sum(H_o['num_procs'] == 0)
-        H_o = H_o[H_o['num_procs'] > 0]
+        n_gens += np.sum(H_o["num_procs"] != 0)
+        n_failed_gens = np.sum(H_o["num_procs"] == 0)
+        H_o = H_o[H_o["num_procs"] > 0]
 
         # Send data and get results from finished simulation
         # Blocking call: waits for simulation results to be sent by the manager

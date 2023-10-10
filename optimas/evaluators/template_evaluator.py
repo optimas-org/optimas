@@ -93,13 +93,13 @@ class TemplateEvaluator(Evaluator):
             varying_parameters, objectives, analyzed_parameters
         )
         # Add parameters specific to the template evaluator.
-        sim_specs['user']['analysis_func'] = self.analysis_func
-        sim_specs['user']['sim_template'] = os.path.basename(self.sim_template)
-        sim_specs['user']['app_name'] = self._app_name
-        sim_specs['user']['num_procs'] = self._n_procs
-        sim_specs['user']['num_gpus'] = self._n_gpus
-        sim_specs['user']['env_script'] = self.env_script
-        sim_specs['user']['env_mpi'] = self.env_mpi
+        sim_specs["user"]["analysis_func"] = self.analysis_func
+        sim_specs["user"]["sim_template"] = os.path.basename(self.sim_template)
+        sim_specs["user"]["app_name"] = self._app_name
+        sim_specs["user"]["num_procs"] = self._n_procs
+        sim_specs["user"]["num_gpus"] = self._n_gpus
+        sim_specs["user"]["env_script"] = self.env_script
+        sim_specs["user"]["env_mpi"] = self.env_mpi
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
@@ -124,15 +124,17 @@ class TemplateEvaluator(Evaluator):
     def _register_app(self) -> None:
         """Register the executable as an app in the libEnsemble executor."""
         # Determine executable path.
-        if self.sim_template.endswith('.py'):
+        if self.sim_template.endswith(".py"):
             executable_path = os.path.basename(self.sim_template)
         else:
             # By default, if the template is not a `.py` file, we run
             # it with an executable.
-            assert self.executable is not None, (
-                'An executable must be provided for non-Python simulations')
-            assert os.path.exists(self.executable), (
-                'Executable {} does not exist.'.format(self.executable))
+            assert (
+                self.executable is not None
+            ), "An executable must be provided for non-Python simulations"
+            assert os.path.exists(
+                self.executable
+            ), "Executable {} does not exist.".format(self.executable)
             executable_path = os.path.abspath(self.executable)
 
         # Register app.

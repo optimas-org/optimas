@@ -127,10 +127,7 @@ class Generator:
     def n_trials(self):
         return len(self._trials)
 
-    def ask(
-        self,
-        n_trials: int
-    ) -> List[Trial]:
+    def ask(self, n_trials: int) -> List[Trial]:
         """Ask the generator to suggest the next ``n_trials`` to evaluate.
 
         Parameters
@@ -252,10 +249,7 @@ class Generator:
             )
 
     def get_gen_specs(
-        self,
-        sim_workers: int,
-        run_params: Dict,
-        max_evals: int
+        self, sim_workers: int, run_params: Dict, max_evals: int
     ) -> Dict:
         """Get the libEnsemble gen_specs.
 
@@ -299,10 +293,10 @@ class Generator:
                 # GPU in which to run generator.
                 "gpu_id": self._gpu_id,
                 # num of procs and gpus required
-                'run_params': run_params,
+                "run_params": run_params,
                 # Maximum number of evaluations to generate.
-                'max_evals': max_evals
-            }
+                "max_evals": max_evals,
+            },
         }
         return gen_specs
 

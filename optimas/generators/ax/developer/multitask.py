@@ -133,10 +133,7 @@ class AxMultitaskGenerator(AxGenerator):
         self._experiment = self._create_experiment()
 
     def get_gen_specs(
-        self,
-        sim_workers: int,
-        run_params: Dict,
-        sim_max: int
+        self, sim_workers: int, run_params: Dict, sim_max: int
     ) -> Dict:
         """Get the libEnsemble gen_specs."""
         # Get base specs.
