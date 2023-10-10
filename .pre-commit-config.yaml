@@ -95,7 +95,12 @@ repos:
   - id: pydocstyle
     additional_dependencies:
     - tomli
-    exclude: examples/multitask_lpa_fbpic_waket/custom_*
+    exclude: |
+            (?x)^(
+                examples/multitask_lpa_fbpic_waket/custom_*|
+                setup.py|
+                doc/source/conf.py
+            )$
 
 # Python Formatting
 - repo: https://github.com/psf/black
