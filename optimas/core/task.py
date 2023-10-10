@@ -21,10 +21,5 @@ class Task(BaseModel):
     n_init: int
     n_opt: int
 
-    def __init__(
-        self,
-        name: str,
-        n_init: int,
-        n_opt: int
-    ) -> None:
+    def __init__(self, name: str, n_init: int, n_opt: int) -> None:
         super().__init__(name=name, n_init=n_init, n_opt=n_opt)

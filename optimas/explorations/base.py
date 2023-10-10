@@ -325,23 +325,23 @@ class Exploration:
         """Save generator parameters to a JSON file."""
         params = {}
         for i, param in enumerate(self.generator.varying_parameters):
-            params[f'varying_parameter_{i}'] = {
-                'type': 'VaryingParameter',
-                'value': param.json()
+            params[f"varying_parameter_{i}"] = {
+                "type": "VaryingParameter",
+                "value": param.json(),
             }
         for i, param in enumerate(self.generator.objectives):
-            params[f'objective_{i}'] = {
-                'type': 'Objective',
-                'value': param.json()
+            params[f"objective_{i}"] = {
+                "type": "Objective",
+                "value": param.json(),
             }
         for i, param in enumerate(self.generator.analyzed_parameters):
-            params[f'analyzed_parameter_{i}'] = {
-                'type': 'Parameter',
-                'value': param.json()
+            params[f"analyzed_parameter_{i}"] = {
+                "type": "Parameter",
+                "value": param.json(),
             }
         main_dir = os.path.abspath(self.exploration_dir_path)
         if not os.path.isdir(main_dir):
             os.makedirs(main_dir)
-        file_path = os.path.join(main_dir, 'generator_parameters.json')
-        with open(file_path, 'w') as file:
+        file_path = os.path.join(main_dir, "generator_parameters.json")
+        with open(file_path, "w") as file:
             file.write(json.dumps(params))

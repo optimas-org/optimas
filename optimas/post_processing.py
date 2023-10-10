@@ -34,31 +34,34 @@ class ExplorationDiagnostics:
         self,
         path: str,
         relative_start_time: Optional[bool] = True,
-        remove_unfinished_evaluations: Optional[bool] = True
+        remove_unfinished_evaluations: Optional[bool] = True,
     ) -> None:
         # Find the `npy` file that contains the results
         if os.path.isdir(path):
             # Get history files sorted by creation date.
             output_files = [
-                filename for filename in os.listdir(path)
-                if "_history_" in filename and filename.endswith('.npy')
+                filename
+                for filename in os.listdir(path)
+                if "_history_" in filename and filename.endswith(".npy")
             ]
             output_files.sort(
                 key=lambda f: os.path.getmtime(os.path.join(path, f))
             )
             if len(output_files) == 0:
                 raise RuntimeError(
-                    'The specified path does not contain any history file.')
+                    "The specified path does not contain any history file."
+                )
             elif len(output_files) > 1:
                 warn(
-                    'The specified path contains multiple history files. '
-                    'The most recent one will be used.')
+                    "The specified path contains multiple history files. "
+                    "The most recent one will be used."
+                )
             output_file = output_files[-1]
-            params_file = os.path.join(path, 'generator_parameters.json')
-        elif path.endswith('.npy'):
+            params_file = os.path.join(path, "generator_parameters.json")
+        elif path.endswith(".npy"):
             output_file = path
             params_file = os.path.join(
-                pathlib.Path(path).parent, 'generator_parameters.json'
+                pathlib.Path(path).parent, "generator_parameters.json"
             )
         else:
             raise RuntimeError(
@@ -76,12 +79,12 @@ class ExplorationDiagnostics:
 
         # Make the time relative to the start of the simulation
         if relative_start_time:
-            start_time = self._df['gen_started_time'].min()
-            self._df['sim_started_time'] -= start_time
-            self._df['sim_ended_time'] -= start_time
-            self._df['gen_started_time'] -= start_time
-            self._df['gen_ended_time'] -= start_time
-            self._df['gen_informed_time'] -= start_time
+            start_time = self._df["gen_started_time"].min()
+            self._df["sim_started_time"] -= start_time
+            self._df["sim_ended_time"] -= start_time
+            self._df["gen_started_time"] -= start_time
+            self._df["gen_ended_time"] -= start_time
+            self._df["gen_informed_time"] -= start_time
 
         # Read varying parameters, objectives, etc.
         self._read_generator_parameters(params_file)
@@ -98,14 +101,14 @@ class ExplorationDiagnostics:
         with open(params_file) as f:
             d = json.load(f)
         for _, param in d.items():
-            if param['type'] == 'VaryingParameter':
-                p = VaryingParameter.parse_raw(param['value'])
+            if param["type"] == "VaryingParameter":
+                p = VaryingParameter.parse_raw(param["value"])
                 self._varying_parameters[p.name] = p
-            elif param['type'] == 'Objective':
-                p = Objective.parse_raw(param['value'])
+            elif param["type"] == "Objective":
+                p = Objective.parse_raw(param["value"])
                 self._objectives[p.name] = p
-            elif param['type'] == 'Parameter':
-                p = Parameter.parse_raw(param['value'])
+            elif param["type"] == "Parameter":
+                p = Parameter.parse_raw(param["value"])
                 self._analyzed_parameters[p.name] = p
 
     def _rearrange_dataframe_columns(self) -> None:
@@ -115,17 +118,28 @@ class ExplorationDiagnostics:
         when printing or viewing the dataframe because the order of the
         numpy history file is different from run to run.
         """
-        ordered_columns = ['trial_index']
+        ordered_columns = ["trial_index"]
         ordered_columns += self._varying_parameters.keys()
         ordered_columns += self._objectives.keys()
         ordered_columns += self._analyzed_parameters.keys()
         ordered_columns += [
-            'sim_id', 'sim_worker', 'sim_started_time', 'sim_ended_time',
-            'sim_started', 'sim_ended',
-            'gen_worker', 'gen_started_time', 'gen_ended_time',
-            'gen_informed_time', 'gen_informed',
-            'cancel_requested', 'kill_sent', 'given_back',
-            'num_procs', 'num_gpus']
+            "sim_id",
+            "sim_worker",
+            "sim_started_time",
+            "sim_ended_time",
+            "sim_started",
+            "sim_ended",
+            "gen_worker",
+            "gen_started_time",
+            "gen_ended_time",
+            "gen_informed_time",
+            "gen_informed",
+            "cancel_requested",
+            "kill_sent",
+            "given_back",
+            "num_procs",
+            "num_gpus",
+        ]
         ordered_columns += [c for c in self._df if c not in ordered_columns]
         self._df = self._df[ordered_columns]
 
@@ -153,7 +167,7 @@ class ExplorationDiagnostics:
         self,
         objective: Optional[str] = None,
         fidelity_parameter: Optional[str] = None,
-        show_trace: Optional[bool] = False
+        show_trace: Optional[bool] = False,
     ) -> None:
         """Plot the values that where reached during the optimization.
 
@@ -178,11 +192,12 @@ class ExplorationDiagnostics:
         _, ax = plt.subplots()
         ax.scatter(self._df.sim_ended_time, self._df[objective], c=fidelity)
         ax.set_ylabel(objective)
-        ax.set_xlabel('Time (s)')
+        ax.set_xlabel("Time (s)")
 
         if show_trace:
             t_trace, obj_trace = self.get_objective_trace(
-                objective, fidelity_parameter)
+                objective, fidelity_parameter
+            )
             ax.plot(t_trace, obj_trace)
 
     def get_objective_trace(
@@ -190,7 +205,7 @@ class ExplorationDiagnostics:
         objective: Optional[str] = None,
         fidelity_parameter: Optional[str] = None,
         min_fidelity: Optional[float] = None,
-        t_array: Optional[npt.NDArray] = None
+        t_array: Optional[npt.NDArray] = None,
     ) -> Tuple[npt.NDArray, npt.NDArray]:
         """Get the cumulative maximum or minimum of the objective.
 
@@ -224,7 +239,7 @@ class ExplorationDiagnostics:
         else:
             df = self._df.copy()
 
-        df = df.sort_values('sim_ended_time')
+        df = df.sort_values("sim_ended_time")
         t = df.sim_ended_time.values
         if objective.minimize:
             obj_trace = df[objective.name].cummin().values
@@ -248,8 +263,7 @@ class ExplorationDiagnostics:
         return t_array, obj_trace_array
 
     def plot_worker_timeline(
-        self,
-        fidelity_parameter: Optional[str] = None
+        self, fidelity_parameter: Optional[str] = None
     ) -> None:
         """Plot the timeline of worker utilization.
 
@@ -274,10 +288,15 @@ class ExplorationDiagnostics:
                     (fidelity - min_fidelity) / (max_fidelity - min_fidelity)
                 )
             else:
-                color = 'tab:blue'
-            ax.barh([str(df['sim_worker'].iloc[i])],
-                    [duration], left=[start],
-                    color=color, edgecolor='k', linewidth=1)
+                color = "tab:blue"
+            ax.barh(
+                [str(df["sim_worker"].iloc[i])],
+                [duration],
+                left=[start],
+                color=color,
+                edgecolor="k",
+                linewidth=1,
+            )
 
-        ax.set_ylabel('Worker')
-        ax.set_xlabel('Time (s)')
+        ax.set_ylabel("Worker")
+        ax.set_xlabel("Time (s)")

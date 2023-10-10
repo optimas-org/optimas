@@ -12,26 +12,25 @@ from optimas.post_processing import ExplorationDiagnostics
 
 def eval_func(input_params, output_params):
     """Evaluation function used for testing"""
-    x0 = input_params['x0']
-    x1 = input_params['x1']
+    x0 = input_params["x0"]
+    x1 = input_params["x1"]
     result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
-    output_params['f1'] = result
+    output_params["f1"] = result
 
 
 def test_exploration_diagnostics():
     """Test the `ExplorationDiagnostics` class."""
 
-    exploration_dir_path = './tests_output/test_exploration_diagnostics'
+    exploration_dir_path = "./tests_output/test_exploration_diagnostics"
 
     # Define variables and objectives.
-    var1 = VaryingParameter('x0', -50., 5.)
-    var2 = VaryingParameter('x1', -5., 15.)
-    obj = Objective('f1', minimize=False)
+    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f1", minimize=False)
 
     # Create generator.
     gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj]
+        varying_parameters=[var1, var2], objectives=[obj]
     )
 
     # Create function evaluator.
@@ -43,7 +42,7 @@ def test_exploration_diagnostics():
         evaluator=ev,
         max_evals=10,
         sim_workers=2,
-        exploration_dir_path=exploration_dir_path
+        exploration_dir_path=exploration_dir_path,
     )
 
     # Run exploration.
@@ -53,12 +52,11 @@ def test_exploration_diagnostics():
     diags = ExplorationDiagnostics(
         exploration_dir_path,
         relative_start_time=False,
-        remove_unfinished_evaluations=False
+        remove_unfinished_evaluations=False,
     )
     for name in exploration.history.dtype.names:
         np.testing.assert_array_equal(
-            diags.df[name].array.to_numpy(),
-            exploration.history[name]
+            diags.df[name].array.to_numpy(), exploration.history[name]
         )
 
     for p_in, p_out in zip(gen.varying_parameters, diags.varying_parameters):
@@ -69,14 +67,14 @@ def test_exploration_diagnostics():
         assert p_in.json() == p_out.json()
 
     diags.plot_objective(show_trace=True)
-    plt.savefig(os.path.join(exploration_dir_path, 'optimization.png'))
+    plt.savefig(os.path.join(exploration_dir_path, "optimization.png"))
 
     diags.plot_worker_timeline()
-    plt.savefig(os.path.join(exploration_dir_path, 'timeline.png'))
+    plt.savefig(os.path.join(exploration_dir_path, "timeline.png"))
 
     # Check that all 3 possible objective inputs give the same result.
     _, trace1 = diags.get_objective_trace()
-    _, trace2 = diags.get_objective_trace('f1')
+    _, trace2 = diags.get_objective_trace("f1")
     _, trace3 = diags.get_objective_trace(obj)
     np.testing.assert_array_equal(trace1, trace2)
     np.testing.assert_array_equal(trace1, trace3)
@@ -93,8 +91,8 @@ def test_exploration_diagnostics():
     ax.axhline(vps[1].upper_bound)
     ax.set_ylabel(vps[1].name)
     ax.scatter(df[vps[0].name], df[vps[1].name], c=df[f1.name])
-    fig.savefig(os.path.join(exploration_dir_path, 'search_space.png'))
+    fig.savefig(os.path.join(exploration_dir_path, "search_space.png"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_exploration_diagnostics()

@@ -15,7 +15,7 @@ import numpy as np
 def json_dumps_dtype(v, *, default):
     """Add support for dumping numpy dtype to json."""
     for key, value in v.items():
-        if key == 'dtype':
+        if key == "dtype":
             v[key] = np.dtype(value).descr
     return json.dumps(v)
 
@@ -36,10 +36,7 @@ class Parameter(BaseModel):
     dtype: Optional[Any]
 
     def __init__(
-        self,
-        name: str,
-        dtype: Optional[Any] = float,
-        **kwargs
+        self, name: str, dtype: Optional[Any] = float, **kwargs
     ) -> None:
         super().__init__(name=name, dtype=dtype, **kwargs)
 
@@ -96,7 +93,7 @@ class VaryingParameter(Parameter):
         is_fidelity: Optional[bool] = False,
         fidelity_target_value: Optional[float] = None,
         default_value: Optional[float] = None,
-        dtype: Optional[Any] = float
+        dtype: Optional[Any] = float,
     ) -> None:
         super().__init__(
             name=name,
@@ -105,7 +102,7 @@ class VaryingParameter(Parameter):
             upper_bound=upper_bound,
             is_fidelity=is_fidelity,
             fidelity_target_value=fidelity_target_value,
-            default_value=default_value
+            default_value=default_value,
         )
 
 
@@ -129,7 +126,7 @@ class TrialParameter(Parameter):
         self,
         name: str,
         save_name: Optional[str] = None,
-        dtype: Optional[Any] = float
+        dtype: Optional[Any] = float,
     ) -> None:
         super().__init__(name=name, save_name=save_name, dtype=dtype)
         self.save_name = name if save_name is None else save_name
@@ -151,8 +148,8 @@ class Objective(Parameter):
 
     def __init__(
         self,
-        name: Optional[str] = 'f',
+        name: Optional[str] = "f",
         minimize: Optional[bool] = True,
-        dtype: Optional[Any] = float
+        dtype: Optional[Any] = float,
     ) -> None:
         super().__init__(name=name, minimize=minimize, dtype=dtype)
