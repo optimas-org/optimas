@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
 from optimas.evaluators import TemplateEvaluator, ChainEvaluator
@@ -66,6 +68,10 @@ def test_chain_evaluator():
 
     # Run exploration.
     exploration.run()
+    
+    # Check that all simulations returned data.
+    assert np.all(exploration.history['f'] != 0.)
+    assert np.all(exploration.history['result_1'] != 0.)
 
 
 def test_chain_evaluator_only_final_analysis():
@@ -111,6 +117,9 @@ def test_chain_evaluator_only_final_analysis():
 
     # Run exploration.
     exploration.run()
+    
+    # Check that all simulations returned data.
+    assert np.all(exploration.history['f'] != 0.)
 
 
 if __name__ == '__main__':
