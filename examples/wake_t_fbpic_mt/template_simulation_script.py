@@ -24,7 +24,7 @@ from aptools.data_analysis.beam_diagnostics import twiss_parameters
 from aptools.data_handling.reading import read_beam
 
 
-def run_simulation(g_lens, model):    
+def run_simulation(g_lens, model):
     """Run a simulation of an active plasma lens with Wake-T or FBPIC."""
     # Generate particle bunch.
     g_x = 600
