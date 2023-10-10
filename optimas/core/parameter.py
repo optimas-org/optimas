@@ -17,11 +17,8 @@ class Parameter(NamedBase):
     dtype : np.dtype
         The data type of the parameter.
     """
-    def __init__(
-        self,
-        name: str,
-        dtype: Optional[np.dtype] = float
-    ):
+
+    def __init__(self, name: str, dtype: Optional[np.dtype] = float):
         super().__init__(name)
         self._dtype = dtype
 
@@ -50,6 +47,7 @@ class VaryingParameter(Parameter):
         Default value of the parameter when it is not being varied. Only needed
         for some generators.
     """
+
     def __init__(
         self,
         name: str,
@@ -58,7 +56,7 @@ class VaryingParameter(Parameter):
         is_fidelity: Optional[bool] = False,
         fidelity_target_value: Optional[float] = None,
         default_value: Optional[float] = None,
-        dtype: Optional[np.dtype] = float
+        dtype: Optional[np.dtype] = float,
     ) -> None:
         super().__init__(name, dtype)
         self._lower_bound = lower_bound
@@ -69,22 +67,27 @@ class VaryingParameter(Parameter):
 
     @property
     def lower_bound(self) -> float:
+        """Get the lower bound of the varying parameter."""
         return self._lower_bound
 
     @property
     def upper_bound(self) -> float:
+        """Get the upper bound of the varying parameter."""
         return self._upper_bound
 
     @property
     def is_fidelity(self) -> bool:
+        """Get whether the varying parameter is a fidelity."""
         return self._is_fidelity
 
     @property
     def fidelity_target_value(self) -> float:
+        """Get the target value of the fidelity."""
         return self._fidelity_target_value
 
     @property
     def default_value(self) -> float:
+        """Get the default value of the varying parameter."""
         return self._default_value
 
 
@@ -101,17 +104,19 @@ class TrialParameter(Parameter):
     dtype : np.dtype
         The data type of the parameter.
     """
+
     def __init__(
         self,
         name: str,
         save_name: Optional[str] = None,
-        dtype: Optional[np.dtype] = float
+        dtype: Optional[np.dtype] = float,
     ) -> None:
         super().__init__(name, dtype=dtype)
         self._save_name = name if save_name is None else save_name
 
     @property
     def save_name(self) -> str:
+        """Get name under which to save the trial parameter to history."""
         return self._save_name
 
 
@@ -126,14 +131,14 @@ class Objective(Parameter):
         Indicates whether the objective should be minimized or,
         otherwise, maximized. By default, ``True``.
     """
+
     def __init__(
-        self,
-        name: Optional[str] = 'f',
-        minimize: Optional[bool] = True
+        self, name: Optional[str] = "f", minimize: Optional[bool] = True
     ) -> None:
         super().__init__(name)
         self._minimize = minimize
 
     @property
     def minimize(self) -> bool:
+        """Get whether the objective should be minimized."""
         return self._minimize

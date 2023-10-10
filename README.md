@@ -12,7 +12,7 @@
   </a>
 
   <h3 align="center">
-    Optimization at scale, powered by 
+    Optimization at scale, powered by
     <a href="https://libensemble.readthedocs.io/"><strong>libEnsemble</strong></a>
   </h3>
 

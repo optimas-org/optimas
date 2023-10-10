@@ -5,7 +5,7 @@ Installation
 ~~~~~~~~~~~~
 
 Execute the following commands in order to create a dedicated Python
-environment, in which to install `optimas`.
+environment, in which to install *optimas*.
 
 ::
 

@@ -9,7 +9,7 @@ optimas documentation
 ``optimas`` is an `open-source <https://github.com/optimas-org/optimas>`_
 Python library that enables highly scalable
 parallel optimization, from a typical laptop to exascale HPC systems. It is
-built on top of 
+built on top of
 `libEnsemble <https://libensemble.readthedocs.io/>`_.
 
 .. grid:: 1 1 3 3
@@ -20,7 +20,7 @@ built on top of
 
         :octicon:`book;3em`
 
-        Instructions for getting the code up and running and basic information 
+        Instructions for getting the code up and running and basic information
         about optimas.
 
         +++
@@ -35,7 +35,7 @@ built on top of
 
     .. grid-item-card:: Examples
         :text-align: center
-        
+
         :octicon:`light-bulb;3em`
 
         Quick examples showcasing how to use the code.
@@ -51,7 +51,7 @@ built on top of
 
     .. grid-item-card:: API reference
         :text-align: center
-        
+
         :octicon:`code;3em`
 
         Detailed documentation of the optimas API.
@@ -100,7 +100,7 @@ Contributing institutions
     :height: 30px
     :target: https://www.anl.gov/
     :class: only-light
-        
+
 .. |pic3b| image:: https://www.alcf.anl.gov/sites/default/files/styles/large/public/2020-01/Argonne_wireframe_white_vector.png?itok=mXUvxazY
     :height: 30px
     :target: https://www.anl.gov/
@@ -114,6 +114,3 @@ Contributing institutions
    user_guide/index
    examples/index
    api/index
-
-
-

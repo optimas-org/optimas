@@ -45,7 +45,9 @@ class AxServiceGenerator(AxGenerator):
     model_history_dir : str, optional
         Name of the directory in which the model will be saved. By default,
         ``'model_history'``.
+
     """
+
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
@@ -57,7 +59,7 @@ class AxServiceGenerator(AxGenerator):
         dedicated_resources: Optional[bool] = False,
         save_model: Optional[bool] = True,
         model_save_period: Optional[int] = 5,
-        model_history_dir: Optional[str] = 'model_history',
+        model_history_dir: Optional[str] = "model_history",
     ) -> None:
         super().__init__(
             varying_parameters=varying_parameters,
@@ -68,27 +70,22 @@ class AxServiceGenerator(AxGenerator):
             dedicated_resources=dedicated_resources,
             save_model=save_model,
             model_save_period=model_save_period,
-            model_history_dir=model_history_dir
+            model_history_dir=model_history_dir,
         )
         self._n_init = n_init
         self._ax_client = self._create_ax_client()
 
-    def _ask(
-        self,
-        trials: List[Trial]
-    ) -> List[Trial]:
+    def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
             parameters, trial_id = self._ax_client.get_next_trial()
             trial.parameter_values = [
-                parameters.get(var.name) for var in self._varying_parameters]
+                parameters.get(var.name) for var in self._varying_parameters
+            ]
             trial.ax_trial_id = trial_id
         return trials
 
-    def _tell(
-        self,
-        trials: List[Trial]
-    ) -> None:
+    def _tell(self, trials: List[Trial]) -> None:
         """Incorporate evaluated trials into Ax client."""
         for trial in trials:
             objective_eval = {}
@@ -96,27 +93,28 @@ class AxServiceGenerator(AxGenerator):
                 objective_eval[ev.parameter.name] = (ev.value, ev.sem)
             try:
                 self._ax_client.complete_trial(
-                            trial_index=trial.ax_trial_id,
-                            raw_data=objective_eval
+                    trial_index=trial.ax_trial_id, raw_data=objective_eval
                 )
             except AttributeError:
                 params = {}
-                for var, value in zip(trial.varying_parameters,
-                                      trial.parameter_values):
+                for var, value in zip(
+                    trial.varying_parameters, trial.parameter_values
+                ):
                     params[var.name] = value
                 _, trial_id = self._ax_client.attach_trial(params)
                 self._ax_client.complete_trial(trial_id, objective_eval)
 
     def _create_ax_client(self) -> AxClient:
-        """Create Ax client (must be implemented by subclasses)"""
+        """Create Ax client (must be implemented by subclasses)."""
         raise NotImplementedError
 
     def _save_model_to_file(self) -> None:
         """Save Ax client to json file."""
         file_path = os.path.join(
             self._model_history_dir,
-            'ax_client_at_eval_{}.json'.format(
-                self._n_completed_trials_last_saved)
+            "ax_client_at_eval_{}.json".format(
+                self._n_completed_trials_last_saved
+            ),
         )
         self._ax_client.save_to_json_file(file_path)
 
@@ -133,10 +131,7 @@ class AxServiceGenerator(AxGenerator):
             del generation_strategy._model
             generation_strategy._model = None
 
-    def _update(
-        self,
-        new_generator: Generator
-    ) -> None:
+    def _update(self, new_generator: Generator) -> None:
         """Update generator with the attributes of a newer one.
 
         This method is overrides the base one to make sure that the original
@@ -146,6 +141,7 @@ class AxServiceGenerator(AxGenerator):
         ----------
         new_generator : Generator
             The newer version of the generator returned in ``persis_info``.
+
         """
         original_ax_client = self._ax_client
         super()._update(new_generator)

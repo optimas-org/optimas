@@ -5,7 +5,9 @@ from typing import List, Optional
 import torch
 from ax.service.ax_client import AxClient
 from ax.modelbridge.generation_strategy import (
-    GenerationStep, GenerationStrategy)
+    GenerationStep,
+    GenerationStrategy,
+)
 from ax.modelbridge.registry import Models
 from ax.service.utils.instantiation import ObjectiveProperties
 
@@ -14,8 +16,7 @@ from .base import AxServiceGenerator
 
 
 class AxMultiFidelityGenerator(AxServiceGenerator):
-    """Generator for performing multifidelity Bayesian optimization using the
-    Ax service API.
+    """Multifidelity Bayesian optimization using the Ax service API.
 
     Parameters
     ----------
@@ -51,20 +52,22 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     model_history_dir : str, optional
         Name of the directory in which the model will be saved. By default,
         ``'model_history'``.
+
     """
+
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
         objectives: List[Objective],
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
-        fidel_cost_intercept: Optional[float] = 1.,
+        fidel_cost_intercept: Optional[float] = 1.0,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
         save_model: Optional[bool] = True,
         model_save_period: Optional[int] = 5,
-        model_history_dir: Optional[str] = 'model_history',
+        model_history_dir: Optional[str] = "model_history",
     ) -> None:
         self.fidel_cost_intercept = fidel_cost_intercept
         super().__init__(
@@ -77,7 +80,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             dedicated_resources=dedicated_resources,
             save_model=save_model,
             model_save_period=model_save_period,
-            model_history_dir=model_history_dir
+            model_history_dir=model_history_dir,
         )
 
     def _create_ax_client(self) -> None:
@@ -87,11 +90,11 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         for var in self._varying_parameters:
             parameters.append(
                 {
-                    'name': var.name,
-                    'type': 'range',
-                    'bounds': [var.lower_bound, var.upper_bound],
-                    'is_fidelity': var.is_fidelity,
-                    'target_value': var.fidelity_target_value
+                    "name": var.name,
+                    "type": "range",
+                    "bounds": [var.lower_bound, var.upper_bound],
+                    "is_fidelity": var.is_fidelity,
+                    "target_value": var.fidelity_target_value,
                 }
             )
 
@@ -102,24 +105,21 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         # adds Sobol initialization with `batch_size` random trials:
         # if self.history is None:
         steps.append(
-            GenerationStep(
-                model=Models.SOBOL,
-                num_trials=self._n_init
-            )
+            GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
         )
 
         # continue indefinitely with GPKG.
         steps.append(
-                GenerationStep(
-                    model=Models.GPKG,
-                    num_trials=-1,
-                    model_kwargs={
-                        'cost_intercept': self.fidel_cost_intercept,
-                        'torch_dtype': torch.double,
-                        'torch_device': torch.device(self.torch_device)
-                    }
-                )
+            GenerationStep(
+                model=Models.GPKG,
+                num_trials=-1,
+                model_kwargs={
+                    "cost_intercept": self.fidel_cost_intercept,
+                    "torch_dtype": torch.double,
+                    "torch_device": torch.device(self.torch_device),
+                },
             )
+        )
 
         gs = GenerationStrategy(steps)
 
@@ -129,9 +129,6 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
 
         # Create client and experiment.
         ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
-        ax_client.create_experiment(
-            parameters=parameters,
-            objectives=ax_objs
-        )
+        ax_client.create_experiment(parameters=parameters, objectives=ax_objs)
 
         return ax_client

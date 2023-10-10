@@ -10,7 +10,7 @@ Description
 This example illustrates how to run a generic Bayesian optimization with
 simulations. This typically requires:
 
-- An `optimas` script for defining and running the optimization.
+- An *optimas* script for defining and running the optimization.
 - A template simulation script.
 - A function to analyze the simulation output.
 

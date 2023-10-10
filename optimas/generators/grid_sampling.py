@@ -9,13 +9,13 @@ from .base import Generator
 
 
 class GridSamplingGenerator(Generator):
-    """Generator for sampling an n-dimensional space with a uniform grid.
+    r"""Sample an n-dimensional space with a uniform grid.
 
     This generator samples the given objectives in a uniform grid of ``n``
     dimensions, where ``n`` is the number of ``varying_parameters``. Along each
     direction :math:`i` (i.e., along each varying parameter), the space is
-    divided in :math:`n_\\mathrm{steps,i}` evenly spaced steps, resulting in a
-    total number of evaluations :math:`\\prod_i n_\\mathrm{steps,i}`.
+    divided in :math:`n_\mathrm{steps,i}` evenly spaced steps, resulting in a
+    total number of evaluations :math:`\prod_i n_\mathrm{steps,i}`.
 
     Parameters
     ----------
@@ -28,7 +28,9 @@ class GridSamplingGenerator(Generator):
     analyzed_parameters : list of Parameter, optional
         List of parameters to analyze at each trial, but which are not
         optimization objectives. By default ``None``.
+
     """
+
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
@@ -39,7 +41,7 @@ class GridSamplingGenerator(Generator):
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
-            analyzed_parameters=analyzed_parameters
+            analyzed_parameters=analyzed_parameters,
         )
         self._n_steps = n_steps if n_steps is np.ndarray else np.array(n_steps)
         self._create_configurations()
@@ -50,8 +52,9 @@ class GridSamplingGenerator(Generator):
         var_linspaces = []
         for var, n_steps_var in zip(self._varying_parameters, self._n_steps):
             var_linspaces.append(
-                np.linspace(var.lower_bound, var.upper_bound, n_steps_var))
-        var_mgrids = np.meshgrid(*var_linspaces, indexing='ij')
+                np.linspace(var.lower_bound, var.upper_bound, n_steps_var)
+            )
+        var_mgrids = np.meshgrid(*var_linspaces, indexing="ij")
         var_mgrids_flat = [np.ravel(var_mgrid) for var_mgrid in var_mgrids]
 
         # Calculate total amount of trials and create all configurations.
@@ -64,14 +67,12 @@ class GridSamplingGenerator(Generator):
             all_configs.append(config)
         self._all_configs = all_configs
 
-    def _ask(
-        self,
-        trials: List[Trial]
-    ) -> List[Trial]:
+    def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
             if self._all_configs:
                 config = self._all_configs.pop(0)
                 trial.parameter_values = [
-                    config[var.name] for var in trial.varying_parameters]
+                    config[var.name] for var in trial.varying_parameters
+                ]
         return trials

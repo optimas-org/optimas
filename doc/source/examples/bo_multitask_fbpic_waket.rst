@@ -30,9 +30,9 @@ Scripts
 Files included:
 
 - :download:`run_opt.py <../../../examples/multitask_lpa_fbpic_waket/run_opt.py>`:
-  defines and launches the optimization with `optimas`.
+  defines and launches the optimization with *optimas*.
 - :download:`template_simulation_script.py <../../../examples/multitask_lpa_fbpic_waket/template_simulation_script.py>`:
-  template used by `optimas` to generate the FBPIC and Wake-T simulation
+  template used by *optimas* to generate the FBPIC and Wake-T simulation
   scripts.
 - :download:`analysis_script.py <../../../examples/multitask_lpa_fbpic_waket/analysis_script.py>`:
   defines how the simulation data is analyzed to yield the value of the

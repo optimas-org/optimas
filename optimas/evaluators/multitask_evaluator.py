@@ -21,17 +21,15 @@ class MultitaskEvaluator(Evaluator):
         List of the tasks used in the optimization.
     task_evaluators : list of Evaluator
         List with the evaluators of each task.
+
     """
+
     def __init__(
-        self,
-        tasks: List[Task],
-        task_evaluators: List[Evaluator]
+        self, tasks: List[Task], task_evaluators: List[Evaluator]
     ) -> None:
         self._check_tasks(tasks)
         self._check_evaluators(task_evaluators)
-        super().__init__(
-            sim_function=task_evaluators[0].sim_function
-        )
+        super().__init__(sim_function=task_evaluators[0].sim_function)
         self.tasks = tasks
         self.task_evaluators = task_evaluators
 
@@ -41,40 +39,41 @@ class MultitaskEvaluator(Evaluator):
         objectives: List[Objective],
         analyzed_parameters: List[Parameter],
     ) -> Dict:
-        """Get a dictionary with the ``sim_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `sim_specs` for `libEnsemble`."""
         # Get base sim_specs.
         sim_specs = super().get_sim_specs(
-            varying_parameters, objectives, analyzed_parameters)
+            varying_parameters, objectives, analyzed_parameters
+        )
         # Get sim_specs of each task evaluator.
         sim_specs_1 = self.task_evaluators[0].get_sim_specs(
-            varying_parameters, objectives, analyzed_parameters)
+            varying_parameters, objectives, analyzed_parameters
+        )
         sim_specs_2 = self.task_evaluators[1].get_sim_specs(
-            varying_parameters, objectives, analyzed_parameters)
+            varying_parameters, objectives, analyzed_parameters
+        )
         # Store user sim_specs of each task separately.
-        sim_specs['user'] = {
-            self.tasks[0].name: sim_specs_1['user'],
-            self.tasks[1].name: sim_specs_2['user'],
+        sim_specs["user"] = {
+            self.tasks[0].name: sim_specs_1["user"],
+            self.tasks[1].name: sim_specs_2["user"],
         }
         # Add task name to sim_specs in and out.
         task_len = max([len(self.tasks[0].name), len(self.tasks[1].name)])
-        sim_specs['in'].append('task')
-        sim_specs['out'].append(('task', str, task_len))
+        sim_specs["in"].append("task")
+        sim_specs["out"].append(("task", str, task_len))
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
-        """Get a dictionary with the ``libE_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `libE_specs` for `libEnsemble`."""
         # Get libe_specs of each task evaluator.
         libE_specs_1 = self.task_evaluators[0].get_libe_specs()
         libE_specs_2 = self.task_evaluators[1].get_libe_specs()
         # Include relevant specs from the second evaluator into the first one.
-        if 'sim_dir_copy_files' in libE_specs_1:
-            libE_specs_1['sim_dir_copy_files'] = list(
-                set(libE_specs_1['sim_dir_copy_files'] +
-                    libE_specs_2['sim_dir_copy_files'])
+        if "sim_dir_copy_files" in libE_specs_1:
+            libE_specs_1["sim_dir_copy_files"] = list(
+                set(
+                    libE_specs_1["sim_dir_copy_files"]
+                    + libE_specs_2["sim_dir_copy_files"]
+                )
             )
         # Use only the combined specs.
         return libE_specs_1
