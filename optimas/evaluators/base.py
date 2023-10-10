@@ -21,12 +21,14 @@ class Evaluator:
     n_gpus : int, optional
         The number of GPUs that will be made available for each evaluation. By
         default, 0.
+
     """
+
     def __init__(
         self,
         sim_function: Callable,
         n_procs: Optional[int] = None,
-        n_gpus: Optional[int] = None
+        n_gpus: Optional[int] = None,
     ) -> None:
         self.sim_function = sim_function
         # If no resources are specified, use 1 CPU an 0 GPUs.
@@ -50,48 +52,42 @@ class Evaluator:
         objectives: List[Objective],
         analyzed_parameters: List[Parameter],
     ) -> Dict:
-        """Get a dictionary with the ``sim_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `sim_specs` for `libEnsemble`."""
         # Only generate sim_specs if evaluator has been initialized.
         if not self._initialized:
             raise RuntimeError(
-                'Evaluator must be initialized before generating sim_specs')
+                "Evaluator must be initialized before generating sim_specs"
+            )
 
         # Create sim_specs.
         sim_specs = {
             # Function whose output is being minimized.
-            'sim_f': self.sim_function,
+            "sim_f": self.sim_function,
             # Name of input for sim_f, that LibEnsemble is allowed to modify.
             # May be a 1D array.
-            'in': [var.name for var in varying_parameters],
-            'out': (
+            "in": [var.name for var in varying_parameters],
+            "out": (
                 [(obj.name, float) for obj in objectives]
                 # f is the single float output that LibEnsemble minimizes.
                 + [(par.name, par.dtype) for par in analyzed_parameters]
                 # input parameters
                 + [(var.name, float) for var in varying_parameters]
             ),
-            'user': {
-                'n_procs': self._n_procs,
-                'n_gpus': self._n_gpus,
-            }
+            "user": {
+                "n_procs": self._n_procs,
+                "n_gpus": self._n_gpus,
+            },
         }
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
-        """Get a dictionary with the ``libE_specs`` as expected
-        by ``libEnsemble``
-        """
+        """Get the `libE_specs` for `libEnsemble`."""
         libE_specs = {}
         return libE_specs
 
     def get_run_params(self) -> Dict:
         """Return run parameters for this evaluator."""
-        run_params = {
-            'num_procs': self._n_procs,
-            'num_gpus': self._n_gpus
-        }
+        run_params = {"num_procs": self._n_procs, "num_gpus": self._n_gpus}
         return run_params
 
     def initialize(self) -> None:
@@ -101,7 +97,5 @@ class Evaluator:
             self._initialized = True
 
     def _initialize(self) -> None:
-        """Method that executes the code required to initialize the evaluator.
-        Has to be implemented by the subclasses.
-        """
+        """Initialize the evaluator (to be implemented by subclasses)."""
         pass

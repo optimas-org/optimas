@@ -1,7 +1,4 @@
-"""
-Contains the function that analyzes the simulation results,
-after the simulation was run.
-"""
+"""Defines the analysis function that runs after the simulation."""
 import os
 from openpmd_viewer.addons import LpaDiagnostics
 import numpy as np
@@ -31,35 +28,35 @@ def analyze_simulation(simulation_directory, output_params):
         The `output_params` dictionary with the results from the analysis.
     """
     # Open simulation diagnostics.
-    d = LpaDiagnostics(os.path.join(simulation_directory, 'diags/hdf5'))
+    d = LpaDiagnostics(os.path.join(simulation_directory, "diags/hdf5"))
 
     # Get beam particles with `u_z >= 10` and transverse offset no larger than
     # 15 µm in `x` and `y`.
     uz, w = d.get_particle(
-        ['uz', 'w'],
+        ["uz", "w"],
         iteration=1,
-        select={'uz': [10, None], 'x': [-15e-6, 15e-6], 'y': [-15e-6, 15e-6]}
+        select={"uz": [10, None], "x": [-15e-6, 15e-6], "y": [-15e-6, 15e-6]},
     )
 
     # Convert charge to pC.
-    q = w.sum()*e*1e12
+    q = w.sum() * e * 1e12
 
     # Analyze distribution and fill in the output data.
     if len(w) < 2:  # Need at least 2 particles to calculate energy spread
-        output_params['f'] = 0
+        output_params["f"] = 0
     else:
-        med, mad = weighted_mad(uz/2, w)
-        output_params['f'] = np.sqrt(q)*med/mad/100
-        output_params['charge'] = q
-        output_params['energy_med'] = med
-        output_params['energy_mad'] = mad
+        med, mad = weighted_mad(uz / 2, w)
+        output_params["f"] = np.sqrt(q) * med / mad / 100
+        output_params["charge"] = q
+        output_params["energy_med"] = med
+        output_params["energy_mad"] = mad
 
     return output_params
 
 
 def weighted_median(data, weights):
-    """
-    Compute the weighted quantile of a 1D numpy array.
+    """Compute the weighted quantile of a 1D numpy array.
+
     Parameters
     ----------
     data : ndarray
@@ -68,12 +65,14 @@ def weighted_median(data, weights):
         Array with the weights of the same size of `data`.
     quantile : float
         Quantile to compute. It must have a value between 0 and 1.
+
     Returns
     -------
     quantile_1D : float
         The output value.
+
     """
-    quantile = .5
+    quantile = 0.5
     # Check the data
     if not isinstance(data, np.matrix):
         data = np.asarray(data)
@@ -87,7 +86,7 @@ def weighted_median(data, weights):
         raise TypeError("weights must be a one dimensional array")
     if data.shape != weights.shape:
         raise TypeError("the length of data and weights must be the same")
-    if ((quantile > 1.) or (quantile < 0.)):
+    if (quantile > 1.0) or (quantile < 0.0):
         raise ValueError("quantile must have a value between 0. and 1.")
     # Sort the data
     ind_sorted = np.argsort(data)
@@ -97,12 +96,13 @@ def weighted_median(data, weights):
     Sn = np.cumsum(sorted_weights)
     # TODO: Check that the weights do not sum zero
     # assert Sn != 0, "The sum of the weights must not be zero"
-    Pn = (Sn-0.5*sorted_weights)/Sn[-1]
+    Pn = (Sn - 0.5 * sorted_weights) / Sn[-1]
     # Get the value of the weighted median
     return np.interp(quantile, Pn, sorted_data)
 
 
 def weighted_mad(x, w):
+    """Calculate weighted median absolute deviation."""
     med = weighted_median(x, w)
-    mad = weighted_median(np.abs(x-med), w)
+    mad = weighted_median(np.abs(x - med), w)
     return med, mad

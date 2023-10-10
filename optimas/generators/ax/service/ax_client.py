@@ -53,7 +53,9 @@ class AxClientGenerator(AxServiceGenerator):
     will work as expected. This is only an issue on ``optimas``, which fails to
     properly recognize them because optimization constraints have not yet been
     implemented.
+
     """
+
     def __init__(
         self,
         ax_client: AxClient,
@@ -62,7 +64,7 @@ class AxClientGenerator(AxServiceGenerator):
         dedicated_resources: Optional[bool] = False,
         save_model: Optional[bool] = True,
         model_save_period: Optional[int] = 5,
-        model_history_dir: Optional[str] = 'model_history',
+        model_history_dir: Optional[str] = "model_history",
     ):
         varying_parameters = self._get_varying_parameters(ax_client)
         objectives = self._get_objectives(ax_client)
@@ -78,13 +80,10 @@ class AxClientGenerator(AxServiceGenerator):
             dedicated_resources=dedicated_resources,
             save_model=save_model,
             model_save_period=model_save_period,
-            model_history_dir=model_history_dir
+            model_history_dir=model_history_dir,
         )
 
-    def _get_varying_parameters(
-        self,
-        ax_client: AxClient
-    ):
+    def _get_varying_parameters(self, ax_client: AxClient):
         """Obtain the list of varying parameters from the AxClient."""
         varying_parameters = []
         for _, p in ax_client.experiment.search_space.parameters.items():
@@ -94,15 +93,12 @@ class AxClientGenerator(AxServiceGenerator):
                 upper_bound=p.upper,
                 is_fidelity=p.is_fidelity,
                 fidelity_target_value=p.target_value,
-                dtype=p.python_type
+                dtype=p.python_type,
             )
             varying_parameters.append(vp)
         return varying_parameters
 
-    def _get_objectives(
-        self,
-        ax_client: AxClient
-    ):
+    def _get_objectives(self, ax_client: AxClient):
         """Obtain the list of objectives from the AxClient."""
         objectives = []
         ax_objective = ax_client.experiment.optimization_config.objective
@@ -112,16 +108,13 @@ class AxClientGenerator(AxServiceGenerator):
             ax_objectives = [ax_objective]
         for ax_obj in ax_objectives:
             obj = Objective(
-                name=ax_obj.metric_names[0],
-                minimize=ax_obj.minimize
+                name=ax_obj.metric_names[0], minimize=ax_obj.minimize
             )
             objectives.append(obj)
         return objectives
 
     def _add_constraints_to_objectives(
-        self,
-        objectives: List[Objective],
-        ax_client: AxClient
+        self, objectives: List[Objective], ax_client: AxClient
     ):
         """Add outcome constraints in the AxClient to the list of objectives.
 
@@ -132,18 +125,13 @@ class AxClientGenerator(AxServiceGenerator):
         """
         ax_config = ax_client.experiment.optimization_config
         for constraint in ax_config.outcome_constraints:
-            objectives.append(
-                Objective(name=constraint.metric.name)
-            )
+            objectives.append(Objective(name=constraint.metric.name))
 
     def _create_ax_client(self) -> AxClient:
-        """Overrides the base function to simply return the given"""
+        """Override the base function to simply return the given."""
         return self._ax_client
 
-    def _use_cuda(
-        self,
-        ax_client: AxClient
-    ):
+    def _use_cuda(self, ax_client: AxClient):
         """Determine whether the AxClient uses CUDA."""
         for step in ax_client.generation_strategy._steps:
             if "torch_device" in step.model_kwargs:

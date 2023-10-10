@@ -53,12 +53,12 @@ where :math:`x_0` and :math:`x_1` have a default values of :math:`5` and
            break
    x0 = np.zeros(len(all_trials))
    x1 = np.zeros(len(all_trials))
-   
+
    for i, trial in enumerate(all_trials):
        trial_params = trial.parameters_as_dict()
        x0[i] = trial_params['x0']
        x1[i] = trial_params['x1']
-       
+
    fig, ax = plt.subplots()
    ax.scatter(x0, x1, s=3, label='generated evaluations')
    ax.set(

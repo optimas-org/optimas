@@ -20,9 +20,14 @@ would look something like
 
     from optimas.evaluators import TemplateEvaluator
 
+
+    def analyze_simulation(simulation_directory, output_params):
+        pass
+
+
     ev = TemplateEvaluator(
-        sim_template='template_simulation_script.py',
-        analysis_func=analyze_simulation
+        sim_template="template_simulation_script.py",
+        analysis_func=analyze_simulation,
     )
 
 
@@ -36,7 +41,7 @@ is, using the double-bracket notation ``{{var_name}}``, where ``var_name`` is
 the name of the :class:`~optimas.core.VaryingParameter`.
 
 As a basic example, a template for a Python script that takes in two
-:class:`~optimas.core.VaryingParameter`\s called ``'x'`` and ``'y'``, 
+:class:`~optimas.core.VaryingParameter`\s called ``'x'`` and ``'y'``,
 computes ``x + y``, and stores the result in a text file would look like:
 
 .. code-block:: python
@@ -44,7 +49,7 @@ computes ``x + y``, and stores the result in a text file would look like:
 
    result = {{x}} + {{y}}
 
-   with open('result.txt', 'w') as f:
+   with open("result.txt", "w") as f:
        f.write("%f" % result)
 
 
@@ -92,10 +97,10 @@ would look like:
           The `output_params` dictionary with the results from the analysis.
        """
        # Read back result from file
-       with open('result.txt') as f:
-          result = float(f.read())
+       with open("result.txt") as f:
+           result = float(f.read())
        # Fill in output parameters.
-       output_params['f'] = result
+       output_params["f"] = result
        return output_params
 
 
@@ -103,7 +108,7 @@ Assigning computational resources
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Optimas executes the simulations using MPI with the amount of resources
-(number of MPI processes and GPUs) specified by the 
+(number of MPI processes and GPUs) specified by the
 ``n_procs`` and ``n_gpus`` attributes of the
 :class:`~optimas.evaluators.TemplateEvaluator`. By default:
 
@@ -118,9 +123,9 @@ would be done with
    :emphasize-lines: 4
 
    ev = TemplateEvaluator(
-       sim_template='template_simulation_script.py',
+       sim_template="template_simulation_script.py",
        analysis_func=analyze_simulation,
-       n_gpus=2
+       n_gpus=2,
    )
 
 
@@ -138,9 +143,9 @@ simulation script.
    :emphasize-lines: 4
 
    ev = TemplateEvaluator(
-       sim_template='template_simulation_script.py',
+       sim_template="template_simulation_script.py",
        analysis_func=analyze_simulation,
-       sim_files=['/path/to/file_1', '/path/to/file_2']
+       sim_files=["/path/to/file_1", "/path/to/file_2"],
    )
 
 
@@ -154,7 +159,7 @@ path to the ``executable`` that will run your simulation.
    :emphasize-lines: 3
 
    ev = TemplateEvaluator(
-       sim_template='template_simulation_script.txt',
-       executable='/path/to/my_executable'
-       analysis_func=analyze_simulation
+       sim_template="template_simulation_script.txt",
+       executable="/path/to/my_executable",
+       analysis_func=analyze_simulation,
    )

@@ -1,6 +1,4 @@
-"""
-This file contains a class that helps post-process libE optimization
-"""
+"""Contains the definition of the ExplorationDiagnostics class."""
 import os
 from warnings import warn
 import pathlib
@@ -29,6 +27,7 @@ class ExplorationDiagnostics:
     remove_unfinished_evaluations : bool, optional
         Whether the data from unfinished evaluations (e.g., due to failed
         evaluation) should be removed from the diagnostics. By default, True.
+
     """
 
     def __init__(
@@ -63,7 +62,8 @@ class ExplorationDiagnostics:
             )
         else:
             raise RuntimeError(
-                'The path should either point to a folder or a `.npy` file.')
+                "The path should either point to a folder or a `.npy` file."
+            )
 
         # Load the file as a pandas DataFrame
         history = np.load(os.path.join(path, output_file))
@@ -167,6 +167,7 @@ class ExplorationDiagnostics:
             will be plotted in different colors.
         show_trace : bool, optional
             Whether to show the cumulative maximum or minimum of the objective.
+
         """
         if fidelity_parameter is not None:
             fidelity = self._df[fidelity_parameter]
@@ -237,7 +238,7 @@ class ExplorationDiagnostics:
             obj_trace_array = np.zeros_like(t_array)
             i_ref = 0
             for i_interp in range(N_interp):
-                while i_ref < N_ref-1 and t[i_ref+1] < t_array[i_interp]:
+                while i_ref < N_ref - 1 and t[i_ref + 1] < t_array[i_interp]:
                     i_ref += 1
                 obj_trace_array[i_interp] = obj_trace[i_ref]
         else:
@@ -253,6 +254,7 @@ class ExplorationDiagnostics:
         """Plot the timeline of worker utilization.
 
         Parameters
+        Parameters
         ----------
         fidelity_parameter: string or None
             Name of the fidelity parameter. If given, the different fidelity
@@ -265,12 +267,13 @@ class ExplorationDiagnostics:
 
         _, ax = plt.subplots()
         for i in range(len(df)):
-            start = df['sim_started_time'].iloc[i]
-            duration = df['sim_ended_time'].iloc[i] - start
+            start = df["sim_started_time"].iloc[i]
+            duration = df["sim_ended_time"].iloc[i] - start
             if fidelity_parameter is not None:
                 fidelity = df[fidelity_parameter].iloc[i]
                 color = plt.cm.viridis(
-                    (fidelity-min_fidelity)/(max_fidelity-min_fidelity))
+                    (fidelity - min_fidelity) / (max_fidelity - min_fidelity)
+                )
             else:
                 color = 'tab:blue'
             ax.barh([str(df['sim_worker'].iloc[i])],
