@@ -49,7 +49,9 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
                 analysis_func=step_specs['analysis_func'],
                 libE_output=libE_output,
                 num_procs=step_specs['num_procs'],
-                num_gpus=step_specs['num_gpus']
+                num_gpus=step_specs['num_gpus'],
+                env_script=step_specs['env_script'],
+                mpi_runner_type=step_specs['env_mpi']
             )
             # If a step has failed, do not continue with next steps.
             if calc_status != WORKER_DONE:
@@ -60,7 +62,9 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
             sim_template=user_specs['sim_template'],
             input_values=input_values,
             analysis_func=user_specs['analysis_func'],
-            libE_output=libE_output
+            libE_output=libE_output,
+            env_script=user_specs['env_script'],
+            mpi_runner_type=user_specs['env_mpi']
         )
 
     return libE_output, persis_info, calc_status
@@ -68,7 +72,8 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
 
 def execute_and_analyze_simulation(app_name, sim_template, input_values,
                                    analysis_func, libE_output, num_procs=None,
-                                   num_gpus=None):
+                                   num_gpus=None, env_script=None,
+                                   mpi_runner_type=None):
     # Create simulation input file.
     with open(sim_template, 'r') as f:
         template = jinja2.Template(f.read())
@@ -91,8 +96,8 @@ def execute_and_analyze_simulation(app_name, sim_template, input_values,
         stderr='err.txt',
         num_procs=num_procs,
         num_gpus=num_gpus,
-        env_script=user_specs['env_script'],
-        mpi_runner_type=user_specs['env_mpi']
+        env_script=env_script,
+        mpi_runner_type=mpi_runner_type
     )
 
     # Wait for simulation to complete
