@@ -254,7 +254,6 @@ class ExplorationDiagnostics:
         """Plot the timeline of worker utilization.
 
         Parameters
-        Parameters
         ----------
         fidelity_parameter: string or None
             Name of the fidelity parameter. If given, the different fidelity

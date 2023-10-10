@@ -16,6 +16,7 @@ class Task(BaseModel):
         Number of task evaluations to perform per optimization batch.
 
     """
+
     name: str
     n_init: int
     n_opt: int

@@ -31,6 +31,7 @@ class Parameter(BaseModel):
         The data type of the parameter. Any object that can be converted to a
         numpy dtype.
     """
+
     name: str
     dtype: Optional[Any]
 
@@ -43,7 +44,8 @@ class Parameter(BaseModel):
         super().__init__(name=name, dtype=dtype, **kwargs)
 
     @validator("dtype", pre=True)
-    def check_valid_out(cls, v):
+    def check_valid_dtype(cls, v):
+        """Check that the given dtype can be converted to a numpy dtype."""
         try:
             # For dtypes that were serialized with `json_dumps_dtype`.
             if isinstance(v, list):
@@ -79,6 +81,7 @@ class VaryingParameter(Parameter):
         Default value of the parameter when it is not being varied. Only needed
         for some generators.
     """
+
     lower_bound: float
     upper_bound: float
     is_fidelity: Optional[bool] = False
@@ -119,6 +122,7 @@ class TrialParameter(Parameter):
     dtype : np.dtype
         The data type of the parameter.
     """
+
     save_name: Optional[str] = None
 
     def __init__(
@@ -142,6 +146,7 @@ class Objective(Parameter):
         Indicates whether the objective should be minimized or,
         otherwise, maximized. By default, ``True``.
     """
+
     minimize: Optional[bool] = True
 
     def __init__(
