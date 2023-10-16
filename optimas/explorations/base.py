@@ -150,8 +150,8 @@ class Exploration:
             self.generator.analyzed_parameters,
         )
 
-        # Save generator parameters to json file.
-        self._save_generator_parameters()
+        # Save exploration parameters to json file.
+        self._save_exploration_parameters()
 
         # Launch exploration with libEnsemble.
         history, persis_info, flag = libE(
