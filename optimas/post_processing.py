@@ -57,11 +57,11 @@ class ExplorationDiagnostics:
                     "The most recent one will be used."
                 )
             output_file = output_files[-1]
-            params_file = os.path.join(path, "generator_parameters.json")
+            params_file = os.path.join(path, "exploration_parameters.json")
         elif path.endswith(".npy"):
             output_file = path
             params_file = os.path.join(
-                pathlib.Path(path).parent, "generator_parameters.json"
+                pathlib.Path(path).parent, "exploration_parameters.json"
             )
         else:
             raise RuntimeError(
@@ -87,13 +87,13 @@ class ExplorationDiagnostics:
             self._df["gen_informed_time"] -= start_time
 
         # Read varying parameters, objectives, etc.
-        self._read_generator_parameters(params_file)
+        self._read_exploration_parameters(params_file)
 
         # Rearrange history dataframe.
         self._rearrange_dataframe_columns()
 
-    def _read_generator_parameters(self, params_file: str) -> None:
-        """Read generator parameters from json file."""
+    def _read_exploration_parameters(self, params_file: str) -> None:
+        """Read exploration parameters from json file."""
         self._varying_parameters = {}
         self._analyzed_parameters = {}
         self._objectives = {}

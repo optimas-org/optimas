@@ -321,8 +321,8 @@ class Exploration:
             "user": {"async_return": self.run_async},
         }
 
-    def _save_generator_parameters(self):
-        """Save generator parameters to a JSON file."""
+    def _save_exploration_parameters(self):
+        """Save exploration parameters to a JSON file."""
         params = {}
         for i, param in enumerate(self.generator.varying_parameters):
             params[f"varying_parameter_{i}"] = {
@@ -342,6 +342,6 @@ class Exploration:
         main_dir = os.path.abspath(self.exploration_dir_path)
         if not os.path.isdir(main_dir):
             os.makedirs(main_dir)
-        file_path = os.path.join(main_dir, "generator_parameters.json")
+        file_path = os.path.join(main_dir, "exploration_parameters.json")
         with open(file_path, "w") as file:
             file.write(json.dumps(params))
