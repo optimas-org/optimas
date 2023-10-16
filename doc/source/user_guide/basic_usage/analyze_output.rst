@@ -27,6 +27,12 @@ In every run, the following log files are generated:
   This is the main file that can be used to analyze the outcome of an optimas
   run. The periodicity with which this file is updated can be set with the
   ``history_save_period`` of the :class:`~optimas.explorations.Exploration`.
+- ``exploration_history_after_sim_<last_simulation_number>.npy``:
+  same as before, but saved only after completing the exploration.
+- ``exploration_parameters.json``: JSON file containing a serialized
+  version of the :class:`~optimas.core.VaryingParameter`\s,
+  :class:`~optimas.core.Objective`\s and other
+  :class:`~optimas.core.Parameter`\s of the exploration.
 
 In addition, if the run is aborted for any reason, two additional files
 will be created:
@@ -80,18 +86,20 @@ corresponds an optimas run using an
    └── exploration
        ├── ensemble.log
        ├── libE_stats.txt
+       ├── exploration_history_after_sim_99.txt
+       ├── exploration_parameters.json
        ├── evaluations
-       │   ├── sim0_worker2
+       │   ├── sim0000
        │   │   ├── simulation_script.py
        │   │   └── result.txt
-       │   ├── sim1_worker3
+       │   ├── sim0001
        │   │   ├── simulation_script.py
        │   │   └── result.txt
-       │   ├── sim2_worker4
+       │   ├── sim0002
        │   │   ├── simulation_script.py
        │   │   └── result.txt
        │  ...
-       │   └── sim99_worker3
+       │   └── sim0099
        │       ├── simulation_script.py
        │       └── result.txt
        └── model_history
