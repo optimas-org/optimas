@@ -18,6 +18,15 @@ from .base import AxServiceGenerator
 class AxSingleFidelityGenerator(AxServiceGenerator):
     """Single-fidelity Bayesian optimization using the Ax service API.
 
+    Depending on whether a single or multiple objectives are given, the
+    acquisition function will be qNEI (Noisy Expected Improvement) or qNEHVI
+    (Noisy Expected Hypervolume Improvement).
+
+    By default, the hyperparameters of the GP are optimized by maximizing the
+    maximal likelihood of the data. A fully Bayesian approach using SAAS
+    priors is also available, which has been shown to perform well for
+    high-dimensional optimization [1]_ [2]_.
+
     Parameters
     ----------
     varying_parameters : list of VaryingParameter
@@ -32,7 +41,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         Sobol sampling. By default, ``4``.
     fully_bayesian : bool, optional
         Whether to optimize the hyperparameters of the GP with a fully
-        Bayesian approach (using SAAS priors [1]_ [2]_) instead of maximizing
+        Bayesian approach (using SAAS priors) instead of maximizing
         marginal likelihood. The fully Bayesian treatment is more expensive
         (i.e., it takes longer to generate new trials) but can lead to
         improved BO performance (i.e., requiring less evaluations). This
