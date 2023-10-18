@@ -32,7 +32,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         Sobol sampling. By default, ``4``.
     fully_bayesian : bool, optional
         Whether to optimize the hyperparameters of the GP with a fully
-        Bayesian approach (using SAAS priors) instead of maximizing
+        Bayesian approach (using SAAS priors [1]_ [2]_) instead of maximizing
         marginal likelihood. The fully Bayesian treatment is more expensive
         (i.e., it takes longer to generate new trials) but can lead to
         improved BO performance (i.e., requiring less evaluations). This
@@ -56,6 +56,13 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
     model_history_dir : str, optional
         Name of the directory in which the model will be saved. By default,
         ``'model_history'``.
+
+    References
+    ----------
+    .. [1] D. Eriksson, M. Jankowiak. High-Dimensional Bayesian Optimization
+       with Sparse Axis-Aligned Subspaces. Proceedings of the Thirty-Seventh
+       Conference on Uncertainty in Artificial Intelligence, 2021.
+    .. [2] https://ax.dev/tutorials/saasbo.html
 
     """
 
