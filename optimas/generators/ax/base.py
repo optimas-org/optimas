@@ -13,9 +13,9 @@ from optimas.generators.base import Generator
 # `verbose_logging=False` in the `AxClient` should already avoid most of the
 # logs, but this does not work when using 'spawn' multiprocessing.
 for name in [
-    'ax.service.ax_client',
-    'ax.service.utils.instantiation',
-    'ax.modelbridge.torch'
+    "ax.service.ax_client",
+    "ax.service.utils.instantiation",
+    "ax.modelbridge.torch",
 ]:
     get_logger(name, level=logging.ERROR)
 
