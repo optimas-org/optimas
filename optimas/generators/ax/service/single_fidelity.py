@@ -102,10 +102,16 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
         )
 
-        # continue indefinitely with GPEI.
+        # continue indefinitely with BO.
+        if len(self.objectives) > 1:
+            # Use a model with qNEHVI acquisition function.
+            MODEL_CLASS = Models.MOO
+        else:
+            # Use a model with qNEI acquisition function.
+            MODEL_CLASS = Models.GPEI
         steps.append(
             GenerationStep(
-                model=Models.GPEI,
+                model=MODEL_CLASS,
                 num_trials=-1,
                 model_kwargs={
                     "torch_dtype": torch.double,
