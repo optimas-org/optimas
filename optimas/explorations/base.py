@@ -36,9 +36,10 @@ class Exploration:
     sim_workers : int
         Number of parallel workers performing simulations.
     run_async : bool, optional
-        Whether the evaluators should be performed asynchronously (i.e.,
+        Whether the evaluations should be performed asynchronously (i.e.,
         without waiting for all workers to finish before staring a new
-        evaluation). By default, True.
+        evaluation). This is useful when the completion time of the
+        evaluations is not uniform. By default, False.
     history : str, optional
         Path to a history file of a past exploration from which to restart
         the new one. By default, None.
@@ -73,7 +74,7 @@ class Exploration:
         evaluator: Evaluator,
         max_evals: int,
         sim_workers: int,
-        run_async: Optional[bool] = True,
+        run_async: Optional[bool] = False,
         history: Optional[str] = None,
         history_save_period: Optional[int] = None,
         exploration_dir_path: Optional[str] = "./exploration",
