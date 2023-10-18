@@ -119,7 +119,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             )
 
         # Select BO model.
-        model_kwargs={
+        model_kwargs = {
             "torch_dtype": torch.double,
             "torch_device": torch.device(self.torch_device),
         }
@@ -131,8 +131,8 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
                 # Use a SAAS model with qNEI acquisition function.
                 MODEL_CLASS = Models.FULLYBAYESIAN
             # Disable additional logs from fully Bayesian model.
-            model_kwargs['disable_progbar'] = True
-            model_kwargs['verbose'] = False
+            model_kwargs["disable_progbar"] = True
+            model_kwargs["verbose"] = False
         else:
             if len(self.objectives) > 1:
                 # Use a model with qNEHVI acquisition function.

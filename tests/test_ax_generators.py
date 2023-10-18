@@ -152,8 +152,7 @@ def test_ax_single_fidelity_fb():
     obj = Objective("f", minimize=False)
 
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj],
-        fully_bayesian=True
+        varying_parameters=[var1, var2], objectives=[obj], fully_bayesian=True
     )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
@@ -191,8 +190,9 @@ def test_ax_single_fidelity_moo_fb():
     obj2 = Objective("f2", minimize=False)
 
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj, obj2],
-        fully_bayesian=True
+        varying_parameters=[var1, var2],
+        objectives=[obj, obj2],
+        fully_bayesian=True,
     )
     ev = FunctionEvaluator(function=eval_func_sf_moo)
     exploration = Exploration(
