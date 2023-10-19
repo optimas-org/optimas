@@ -7,6 +7,7 @@ from typing import Optional, Union
 import numpy as np
 
 from libensemble.libE import libE
+from libensemble.history import History
 from libensemble.tools import add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
@@ -94,11 +95,17 @@ class Exploration:
         self._n_evals = 0
         self._resume = resume
         self._history_file_name = "exploration_history_after_evaluation_{}"
-        self._load_history(history, resume)
         self._create_alloc_specs()
         self._create_executor()
         self._initialize_evaluator()
         self._set_default_libe_specs()
+        self._libe_history = self._create_libe_history()
+        self._load_history(history, resume)
+
+    @property
+    def history(self):
+        """Get the exploration history."""
+        return self._libe_history.H
 
     def run(self, n_evals: Optional[int] = None) -> None:
         """Run the exploration.
@@ -161,7 +168,7 @@ class Exploration:
         )
 
         # Update history.
-        self.history = history
+        self._libe_history.H = history
 
         # Update generator with the one received from libE.
         self.generator._update(persis_info[1]["generator"])
@@ -181,6 +188,51 @@ class Exploration:
         # Save history.
         if is_master:
             self._save_history()
+
+    def suggest_trials(self):
+        pass
+
+    def evaluate_trials(self):
+        pass
+
+    def attach_evaluations(
+        self,
+        evaluations: np.ndarray,
+        ignore_extra_fields: Optional[bool] = False
+    ):
+        if len(evaluations) == 0:
+            return
+
+        # Increase length of history and get a view of the added rows.
+        self._libe_history.grow_H(len(evaluations))
+        history_new = self._libe_history.H[-len(evaluations):]
+
+        if isinstance(evaluations, np.ndarray):
+            fields = evaluations.dtype.names
+
+        # Check if the given evaluations are missing required fields.
+        all_params = (
+            self.generator.varying_parameters +
+            self.generator.objectives +
+            self.generator.analyzed_parameters
+        )
+        missing_fields = [p.name for p in all_params if p.name not in fields]
+        if missing_fields:
+            raise ValueError(f"Missing {missing_fields}.")
+
+        # Check if the given evaluations have more fields than required.
+        history_fields = history_new.dtype.names
+        extra_fields = [f for f in fields if f not in history_fields]
+        if extra_fields and not ignore_extra_fields:
+            raise ValueError(f"Extra fields {missing_fields} present.")
+
+        # Fill in new rows.
+        for field in fields:
+            if field in history_new.dtype.names:
+                history_new[field] = evaluations[field]
+
+        # Incorporate new history into generator.
+        self.generator.incorporate_history(history_new)
 
     def _create_executor(self) -> None:
         """Create libEnsemble executor."""
@@ -224,13 +276,12 @@ class Exploration:
         assert history is None or isinstance(
             history, np.ndarray
         ), "Type {} not valid for `history`".format(type(history))
-        # Incorporate history into generator.
+        # Incorporate history into exploration.
         if history is not None:
-            self.generator.incorporate_history(history)
-        # When resuming an exploration, update evaluations counter.
-        if resume:
-            self._n_evals = history.size
-        self.history = history
+            self.attach_evaluations(history)
+            # When resuming an exploration, update evaluations counter.
+            if resume:
+                self._n_evals = history.size
 
     def _save_history(self):
         """Save history array to file."""
@@ -244,6 +295,26 @@ class Exploration:
             for old_file in glob.glob(old_files):
                 os.remove(old_file)
             np.save(file_path, self.history)
+
+    def _create_libe_history(self) -> History:
+        """Initialize an empty libEnsemble history."""
+        run_params = self.evaluator.get_run_params()
+        gen_specs = self.generator.get_gen_specs(
+            self.sim_workers, run_params, None
+        )
+        sim_specs = self.evaluator.get_sim_specs(
+            self.generator.varying_parameters,
+            self.generator.objectives,
+            self.generator.analyzed_parameters,
+        )
+        libe_history = History(
+            self.alloc_specs,
+            sim_specs,
+            gen_specs,
+            exit_criteria={'sim_max': 0},
+            H0=[]
+        )
+        return libe_history
 
     def _get_most_recent_history_file_path(self):
         """Get path of most recently saved history file."""
