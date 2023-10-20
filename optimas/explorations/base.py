@@ -2,9 +2,10 @@
 
 import os
 import glob
-from typing import Optional, Union
+from typing import Optional, Union, Dict, List
 
 import numpy as np
+import pandas as pd
 
 from libensemble.libE import libE
 from libensemble.history import History
@@ -15,6 +16,7 @@ from libensemble.executors.mpi_executor import MPIExecutor
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.utils.logger import get_logger
+from optimas.utils.other import convert_to_dataframe
 
 
 logger = get_logger(__name__)
@@ -189,11 +191,20 @@ class Exploration:
         if is_master:
             self._save_history()
 
-    def suggest_trials(self):
-        pass
+    def attach_trials(
+        self,
+        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
+    ) -> None:
+        trial_data = convert_to_dataframe(trial_data)
+        self.generator.attach_trials(trial_data)
 
-    def evaluate_trials(self):
-        pass
+    def evaluate_trials(
+        self,
+        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
+    ) -> None:
+        trial_data = convert_to_dataframe(trial_data)
+        self.attach_trials(trial_data)
+        self.run(n_evals=len(trial_data))
 
     def attach_evaluations(
         self,
