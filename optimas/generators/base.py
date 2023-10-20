@@ -95,8 +95,9 @@ class Generator:
             [] if custom_trial_parameters is None else custom_trial_parameters
         )
         self._gen_function = persistent_generator
-        self._trials = []
-        self._queued_trials = []
+        self._given_trials = []  # Trials given for evaluation.
+        self._queued_trials = []  # Trials queued to be given for evaluation.
+        self._trial_count = 0
 
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
@@ -134,9 +135,23 @@ class Generator:
         return self._dedicated_resources
 
     @property
-    def n_trials(self) -> int:
-        """Get the number of generated trials."""
-        return len(self._trials)
+    def n_queued_trials(self) -> int:
+        """Get the number of trials queued for evaluation."""
+        return len(self._queued_trials)
+
+    @property
+    def n_given_trials(self) -> int:
+        """Get the number of trials given for evaluation."""
+        return len(self._given_trials)
+
+    @property
+    def n_completed_trials(self) -> int:
+        """Get the number of completed (evaluated) trials."""
+        n_completed = 0
+        for trial in self._given_trials:
+            if trial.completed():
+                n_completed += 1
+        return n_completed
 
     def ask(self, n_trials: int) -> List[Trial]:
         """Ask the generator to suggest the next ``n_trials`` to evaluate.
@@ -153,39 +168,38 @@ class Generator:
 
         """
         # Generate as many trials as needed and add them to the queue.
-        if n_trials > len(self._queued_trials):
-            n_gen = n_trials - len(self._queued_trials)
+        if n_trials > self.n_queued_trials:
+            n_gen = n_trials - self.n_queued_trials
             gen_trials = []
-            for i in range(n_gen):
+            for _ in range(n_gen):
                 gen_trials.append(
                     Trial(
                         varying_parameters=self._varying_parameters,
                         objectives=self._objectives,
                         analyzed_parameters=self._analyzed_parameters,
-                        index=len(self._trials) + len(self._queued_trials) + i,
                         custom_parameters=self._custom_trial_parameters,
                     )
                 )
             # Ask the generator to fill them.
             gen_trials = self._ask(gen_trials)
             # Keep only trials that have been given data.
-            gen_trials = [t for t in gen_trials if len(t.parameter_values) > 0]
             for trial in gen_trials:
-                logger.info(
-                    "Generated trial {} with parameters {}".format(
-                        trial.index, trial.parameters_as_dict()
+                if len(trial.parameter_values) > 0:
+                    self._add_trial_to_queue(trial)
+                    logger.info(
+                        "Generated trial {} with parameters {}".format(
+                            trial.index, trial.parameters_as_dict()
+                        )
                     )
-                )
-            self._queued_trials += gen_trials
 
         # Get trials from the queue.
         # The loop below properly handles the case in which the generator
         # was not able to generate as many trials as requested.
         trials = []
         for _ in range(n_trials):
-            if self._queued_trials:
-                trials.append(self._queued_trials.pop(0))
-        self._trials.extend(trials)
+            trial = self._get_next_trial()
+            if trial is not None:
+                trials.append(trial)
         return trials
 
     def tell(
@@ -203,9 +217,8 @@ class Generator:
 
         """
         for trial in trials:
-            if trial not in self._trials:
-                trial.index = len(self._trials) + len(self._queued_trials)
-                self._trials.append(trial)
+            if trial not in self._given_trials:
+                self._add_external_evaluated_trial(trial)
         self._tell(trials)
         for trial in trials:
             log_msg = "Completed trial {} with objective(s) {}".format(
@@ -253,13 +266,63 @@ class Generator:
             trial_data, include_evaluations=False)
         # Attach trials to the top of the queue.
         for i, trial in enumerate(trials):
-            trial.index = len(self._trials) + len(self._queued_trials)
-            self._queued_trials.insert(i, trial)
+            self._add_trial_to_queue(trial, queue_index=i)
             logger.info(
                 "Attached trial {} with parameters {}".format(
                     trial.index, trial.parameters_as_dict()
                 )
             )
+
+    def get_trial(self, trial_index) -> Union[Trial, None]:
+        """Get trial by index.
+        
+        Parameters
+        ----------
+        trial_index : int
+            Index of the trial to retrieve.
+        """
+        for trial in self._given_trials + self._queued_trials:
+            if trial.index == trial_index:
+                return trial
+
+    def _add_trial_to_queue(
+        self,
+        trial: Trial,
+        queue_index: Optional[int] = None
+    ) -> None:
+        """Add trial to the queue.
+
+        By default, the trial will be appended to the end of the queue, unless
+        a `queue_index` is given. Trials at the top of the queue will be the
+        first ones to be given for evaluation when `ask` is called.
+
+        Parameters
+        ----------
+        trial : Trial
+            The trial to add to the queue.
+        queue_index : int, optional
+            Queue index in which to insert the trial. If not given, the trial
+            will be appended to the end of the queue.
+        """
+        trial.index = self._trial_count
+        if queue_index is None:
+            self._queued_trials.append(trial)
+        else:
+            self._queued_trials.insert(queue_index, trial)
+        self._trial_count += 1
+
+    def _get_next_trial(self) -> Union[None, Trial]:
+        """Get the next trial to evaluate."""
+        if self._queued_trials:
+            trial = self._queued_trials.pop(0)
+            self._given_trials.append(trial)
+            return trial
+
+    def _add_external_evaluated_trial(self, trial: Trial) -> None:
+        """Add an evaluated trial that was not generated by the generator."""
+        trial.index = self._trial_count
+        self._given_trials.append(trial)
+        self._trial_count += 1
 
     def _create_trials_from_external_data(
         self,
@@ -320,22 +383,17 @@ class Generator:
 
     def save_model_to_file(self) -> None:
         """Save model to file."""
-        # Get total number of completed trials.
-        n_completed_trials = 0
-        for trial in self._trials:
-            if trial.completed():
-                n_completed_trials += 1
         # Get number of completed trials since last model was saved.
-        n_new = n_completed_trials - self._n_completed_trials_last_saved
+        n_new = self.n_completed_trials - self._n_completed_trials_last_saved
         # Save model only if save period is reached.
         if n_new >= self._model_save_period:
-            self._n_completed_trials_last_saved = n_completed_trials
+            self._n_completed_trials_last_saved = self.n_completed_trials
             if not os.path.exists(self._model_history_dir):
                 os.mkdir(self._model_history_dir)
             self._save_model_to_file()
             logger.info(
                 "Saved model to file after {} completed trials.".format(
-                    n_completed_trials
+                    self.n_completed_trials
                 )
             )
 

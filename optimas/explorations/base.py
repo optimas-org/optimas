@@ -132,7 +132,7 @@ class Exploration:
         exit_criteria = {"sim_max": sim_max}
 
         # Get initial number of generator trials.
-        n_trials_initial = self.generator.n_trials
+        n_evals_initial = self.generator.n_completed_trials
 
         # Create persis_info.
         persis_info = add_unique_random_streams({}, self.sim_workers + 2)
@@ -176,8 +176,8 @@ class Exploration:
         self.generator._update(persis_info[1]["generator"])
 
         # Update number of evaluation in this exploration.
-        n_trials_final = self.generator.n_trials
-        self._n_evals += n_trials_final - n_trials_initial
+        n_trials_final = self.generator.n_completed_trials
+        self._n_evals += n_trials_final - n_evals_initial
 
         # Determine if current rank is master.
         if self.libE_specs["comms"] == "local":
