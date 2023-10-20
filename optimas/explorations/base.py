@@ -192,8 +192,7 @@ class Exploration:
             self._save_history()
 
     def attach_trials(
-        self,
-        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
+        self, trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
     ) -> None:
         """Attach trials for future evaluation.
 
@@ -212,7 +211,7 @@ class Exploration:
             The data containing the trial parameters.
 
         Examples
-        --------        
+        --------
         >>> import pandas as pd
         >>> from optimas.explorations import Exploration
         >>> from optimas.generators import RandomSamplingGenerator
@@ -263,8 +262,7 @@ class Exploration:
         self.generator.attach_trials(trial_data)
 
     def evaluate_trials(
-        self,
-        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
+        self, trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
     ) -> None:
         """Attach and evaluate trials.
 
@@ -289,7 +287,7 @@ class Exploration:
     def attach_evaluations(
         self,
         evaluation_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
-        ignore_extra_fields: Optional[bool] = False
+        ignore_extra_fields: Optional[bool] = False,
     ) -> None:
         """Attach evaluations from external source.
 
@@ -331,15 +329,16 @@ class Exploration:
 
         # Check if the given evaluations are missing required fields.
         all_params = (
-            self.generator.varying_parameters +
-            self.generator.objectives +
-            self.generator.analyzed_parameters
+            self.generator.varying_parameters
+            + self.generator.objectives
+            + self.generator.analyzed_parameters
         )
         missing_fields = [p.name for p in all_params if p.name not in fields]
         if missing_fields:
             raise ValueError(
                 "Could not attach evaluations from given data because the "
-                f"fields {missing_fields} are missing.")
+                f"fields {missing_fields} are missing."
+            )
 
         # Check if the given evaluations have more fields than required.
         history_fields = history_new.dtype.names
@@ -434,8 +433,8 @@ class Exploration:
             self.alloc_specs,
             sim_specs,
             gen_specs,
-            exit_criteria={'sim_max': 0},
-            H0=[]
+            exit_criteria={"sim_max": 0},
+            H0=[],
         )
         return libe_history
 

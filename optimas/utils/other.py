@@ -63,6 +63,4 @@ def convert_to_dataframe(
                 raise ValueError("Not all dictionaries contain the same keys.")
         return pd.DataFrame(data)
     else:
-        raise ValueError(
-            f"Cannot convert {type(data)} to a pandas dataframe."
-        )
+        raise ValueError(f"Cannot convert {type(data)} to a pandas dataframe.")

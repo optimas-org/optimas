@@ -244,15 +244,15 @@ class Generator:
         # Keep only evaluations where the simulation finished successfully.
         history = history[history["sim_ended"]]
         trials = self._create_trials_from_external_data(
-            history, ignore_extra_fields=True)
+            history, ignore_extra_fields=True
+        )
         self.tell(trials, allow_saving_model=False)
 
     def attach_trials(
-        self,
-        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
+        self, trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
     ) -> None:
         """Manually add a list of trials to the generator.
-        
+
         The given trials are placed at the top of the queue of trials that
         will be proposed by the generator (that is, they will be the first
         ones to be proposed the next time that `ask` is called).
@@ -263,7 +263,8 @@ class Generator:
             The data containing the trial parameters.
         """
         trials = self._create_trials_from_external_data(
-            trial_data, include_evaluations=False)
+            trial_data, include_evaluations=False
+        )
         # Attach trials to the top of the queue.
         for i, trial in enumerate(trials):
             self._add_trial_to_queue(trial, queue_index=i)
@@ -275,7 +276,7 @@ class Generator:
 
     def get_trial(self, trial_index) -> Union[Trial, None]:
         """Get trial by index.
-        
+
         Parameters
         ----------
         trial_index : int
@@ -286,9 +287,7 @@ class Generator:
                 return trial
 
     def _add_trial_to_queue(
-        self,
-        trial: Trial,
-        queue_index: Optional[int] = None
+        self, trial: Trial, queue_index: Optional[int] = None
     ) -> None:
         """Add trial to the queue.
 
@@ -328,7 +327,7 @@ class Generator:
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
         include_evaluations: Optional[bool] = True,
-        ignore_extra_fields: Optional[bool] = False
+        ignore_extra_fields: Optional[bool] = False,
     ) -> List[Trial]:
         """Create a list of Trials from the given data."""
         # Convert to dataframe.
@@ -338,8 +337,7 @@ class Generator:
         given_fields = trial_data.columns.values.tolist()
 
         # Check for missing fields in the data.
-        required_parameters = (self.varying_parameters
-                               + self.analyzed_parameters)
+        required_parameters = self.varying_parameters + self.analyzed_parameters
         if include_evaluations:
             required_parameters += self.objectives
         required_fields = [p.name for p in required_parameters]
@@ -350,8 +348,8 @@ class Generator:
                 "Could not create trials from given data because the "
                 f"fields {missing_fields} are missing."
             )
-        
-        # Check if the given data has more fields than required.        
+
+        # Check if the given data has more fields than required.
         extra_fields = [f for f in given_fields if f not in required_fields]
         if extra_fields and not ignore_extra_fields:
             raise ValueError(f"Extra fields {extra_fields} present.")
@@ -374,9 +372,8 @@ class Generator:
             if include_evaluations:
                 for par in self._objectives + self._analyzed_parameters:
                     ev = Evaluation(
-                        parameter=par,
-                        value=trial_data[par.name][i]
-                    )  
+                        parameter=par, value=trial_data[par.name][i]
+                    )
                     trial.complete_evaluation(ev)
             trials.append(trial)
         return trials
