@@ -337,13 +337,15 @@ class Exploration:
         )
         missing_fields = [p.name for p in all_params if p.name not in fields]
         if missing_fields:
-            raise ValueError(f"Missing {missing_fields}.")
+            raise ValueError(
+                "Could not attach evaluations from given data because the "
+                f"fields {missing_fields} are missing.")
 
         # Check if the given evaluations have more fields than required.
         history_fields = history_new.dtype.names
         extra_fields = [f for f in fields if f not in history_fields]
         if extra_fields and not ignore_extra_fields:
-            raise ValueError(f"Extra fields {missing_fields} present.")
+            raise ValueError(f"Extra fields {extra_fields} present.")
 
         # Fill in new rows.
         for field in fields:
