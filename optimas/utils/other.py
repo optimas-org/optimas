@@ -51,7 +51,16 @@ def convert_to_dataframe(
         return pd.DataFrame(d)
     elif isinstance(data, pd.DataFrame):
         return data
-    elif isinstance(data, dict) or isinstance(data, list):
+    elif isinstance(data, dict):
+        return pd.DataFrame(data)
+    elif isinstance(data, list):
+        fields = list(data[0].keys())
+        fields.sort()
+        for row in data:
+            row_fields = list(row.keys())
+            row_fields.sort()
+            if row_fields != fields:
+                raise ValueError("Not all dictionaries contain the same keys.")
         return pd.DataFrame(data)
     else:
         raise ValueError(
