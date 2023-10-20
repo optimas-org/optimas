@@ -34,16 +34,13 @@ def test_manual_exploration():
     obj = Objective("f", minimize=False)
 
     # Trials to attach and evaluate manually.
-    trials_to_attach = {
-        "x0": [-2.3, 1., 0.5],
-        "x1": [2.4, 1., 3.]
-    }
+    trials_to_attach = {"x0": [-2.3, 1.0, 0.5], "x1": [2.4, 1.0, 3.0]}
 
     # Dummy evaluation data to attach manually.
     evals_to_attach = {
-        "x0": [-2., 1.3, 0.5],
-        "x1": [2.7, 1., 3.5],
-        "f": [2., 4., 6.]
+        "x0": [-2.0, 1.3, 0.5],
+        "x1": [2.7, 1.0, 3.5],
+        "f": [2.0, 4.0, 6.0],
     }
     n_attached_trials = len(trials_to_attach["x0"])
     n_attached_evals = len(evals_to_attach["x0"])
@@ -67,7 +64,7 @@ def test_manual_exploration():
             max_evals=n_evals + n_attached_trials,
             sim_workers=2,
             exploration_dir_path=f"./tests_output/test_manual_exploration_{i}",
-            run_async=False
+            run_async=False,
         )
 
         # Attach evaluations
@@ -94,7 +91,10 @@ def test_manual_exploration():
         exploration.run()
 
         # Check that the final history has the expected size.
-        assert len(exploration.history) == n_evals + n_attached_trials + n_attached_evals
+        assert (
+            len(exploration.history)
+            == n_evals + n_attached_trials + n_attached_evals
+        )
 
         # Check that the trials attached after the intermediate step were
         # evaluates in the correct order.
@@ -108,7 +108,7 @@ def test_manual_exploration():
 
 def convert_dict(input_dict):
     """Convert dictionary to list, numpy array and pandas dataframe."""
-    output_list = [dict(zip(input_dict,t)) for t in zip(*input_dict.values())]
+    output_list = [dict(zip(input_dict, t)) for t in zip(*input_dict.values())]
 
     dtype = [(key, type(vals[0])) for key, vals in input_dict.items()]
     n_attached_trials = len(input_dict["x0"])
