@@ -16,7 +16,7 @@ for name in [
     "ax.service.ax_client",
     "ax.service.utils.instantiation",
     "ax.modelbridge.torch",
-    "ax.core.experiment"
+    "ax.core.experiment",
 ]:
     get_logger(name, level=logging.ERROR)
 
