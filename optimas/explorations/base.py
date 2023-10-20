@@ -195,6 +195,70 @@ class Exploration:
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
     ) -> None:
+        """Attach trials for future evaluation.
+
+        Use this method to manually suggest a set of trials to the exploration.
+        The given trials will be the first ones to be evaluated the next time
+        that `run` is called.
+
+        The given data should contain all necessary fields to create the trials
+        (i.e., the values of the `VaryingParameters`).
+        The method accepts this data as a list, dictionary, pandas DataFrame or
+        numpy structured array (see example below).
+
+        Parameters
+        ----------
+        trial_data : dict, list, NDArray or DataFrame
+            The data containing the trial parameters.
+
+        Examples
+        --------        
+        >>> import pandas as pd
+        >>> from optimas.explorations import Exploration
+        >>> from optimas.generators import RandomSamplingGenerator
+        >>> from optimas.evaluators import FunctionEvaluator
+        >>> from optimas.core import VaryingParameter, Objective
+        >>> params = [VaryingParameter(f"x{i}", -5, 5) for i in range(2)]
+        >>> objs = [Objective("f")]
+        >>> def eval_func(input_params, output_params):
+        ...     # Placeholder evaluator
+        ...     output_params["f"] = 1.
+        >>> ev = FunctionEvaluator(function=eval_func)
+        >>> gen = RandomSamplingGenerator(
+        ...     varying_parameters=params,
+        ...     objectives=objs
+        ... )
+        >>> exploration = Exploration(
+        ...     generator=gen,
+        ...     evaluator=ev,
+        ...     max_evals=100,
+        ...     sim_workers=2
+        ... )
+
+        **Attach trials as list**
+
+        >>> exploration.attach_trials(
+        ...     [
+        ...         {"x0": 1., "x1": 1.},
+        ...         {"x0": 4., "x1": 3.},
+        ...         {"x0": 1., "x1": 5.}
+        ...     ]
+        ... )
+
+        **Attach trials as dictionary**
+
+        >>> exploration.attach_trials(
+        ...     {
+        ...         "x0": [1., 4., 1.],
+        ...         "x1": [1., 3., 5.]
+        ...     },
+        ... )
+
+        **Attach trials as pandas dataframe**
+
+        >>> df = pd.DataFrame({"x0": [1., 4., 1.], "x1": [1., 3., 1.]})
+        >>> exploration.attach_trials(df)
+        """
         trial_data = convert_to_dataframe(trial_data)
         self.generator.attach_trials(trial_data)
 
@@ -202,24 +266,65 @@ class Exploration:
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
     ) -> None:
+        """Attach and evaluate trials.
+
+        Use this method to manually suggest a set of trials to the exploration
+        and evaluate them immediately.
+
+        The given data should contain all necessary fields to create the trials
+        (i.e., the values of the `VaryingParameters`).
+        The method accepts this data as a list, dictionary, pandas DataFrame or
+        numpy structured array (see example in
+        :meth:`.Exploration.attach_trials`).
+
+        Parameters
+        ----------
+        trial_data : dict, list, NDArray or DataFrame
+            The data containing the trial parameters.
+        """
         trial_data = convert_to_dataframe(trial_data)
         self.attach_trials(trial_data)
         self.run(n_evals=len(trial_data))
 
     def attach_evaluations(
         self,
-        evaluations: np.ndarray,
+        evaluation_data: np.ndarray,
         ignore_extra_fields: Optional[bool] = False
     ):
-        if len(evaluations) == 0:
+        """Attach evaluations from external source.
+
+        Use this method to manually attach a set of evaluations to the
+        exploration. These could be evaluations that were carried out in
+        a previous exploration or from any other source. The data from the
+        evaluations will be given to (and used by) the generator.
+
+        The given data should contain all necessary fields that define an
+        evaluation (i.e., the values of the `VaryingParameters`,
+        `AnalyzedParameters` and `Objectives`).
+        The method accepts this data as a list, dictionary, pandas DataFrame or
+        numpy structured array (see example in
+        :meth:`.Exploration.attach_trials`).
+
+        Parameters
+        ----------
+        trial_data : dict, list, NDArray or DataFrame
+            The data containing the trial parameters.
+        ignore_extra_fields : bool, optional
+            Whether to ignore extra fields in the given data. By default, if
+            if the data contains more fields than the `VaryingParameters`,
+            `AnalyzedParameters` and `Objectives` of the exploration, a
+            `ValueError` is raised, since this might indicate a problem in the
+            data. If set to `True`, the error will be ignored.
+        """
+        if len(evaluation_data) == 0:
             return
 
         # Increase length of history and get a view of the added rows.
-        self._libe_history.grow_H(len(evaluations))
-        history_new = self._libe_history.H[-len(evaluations):]
+        self._libe_history.grow_H(len(evaluation_data))
+        history_new = self._libe_history.H[-len(evaluation_data):]
 
-        if isinstance(evaluations, np.ndarray):
-            fields = evaluations.dtype.names
+        if isinstance(evaluation_data, np.ndarray):
+            fields = evaluation_data.dtype.names
 
         # Check if the given evaluations are missing required fields.
         all_params = (
@@ -240,7 +345,7 @@ class Exploration:
         # Fill in new rows.
         for field in fields:
             if field in history_new.dtype.names:
-                history_new[field] = evaluations[field]
+                history_new[field] = evaluation_data[field]
 
         # Incorporate new history into generator.
         self.generator.incorporate_history(history_new)
