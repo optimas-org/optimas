@@ -288,15 +288,17 @@ class Exploration:
 
     def attach_evaluations(
         self,
-        evaluation_data: np.ndarray,
+        evaluation_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
         ignore_extra_fields: Optional[bool] = False
-    ):
+    ) -> None:
         """Attach evaluations from external source.
 
         Use this method to manually attach a set of evaluations to the
         exploration. These could be evaluations that were carried out in
         a previous exploration or from any other source. The data from the
-        evaluations will be given to (and used by) the generator.
+        evaluations will be given to (and used by) the generator. The
+        attached evaluations are not counted when determining if `max_evals`
+        has been reached.
 
         The given data should contain all necessary fields that define an
         evaluation (i.e., the values of the `VaryingParameters`,
@@ -316,15 +318,16 @@ class Exploration:
             `ValueError` is raised, since this might indicate a problem in the
             data. If set to `True`, the error will be ignored.
         """
-        if len(evaluation_data) == 0:
+        evaluation_data = convert_to_dataframe(evaluation_data)
+        n_evals = len(evaluation_data)
+        if n_evals == 0:
             return
 
         # Increase length of history and get a view of the added rows.
-        self._libe_history.grow_H(len(evaluation_data))
-        history_new = self._libe_history.H[-len(evaluation_data):]
+        self._libe_history.grow_H(n_evals)
+        history_new = self._libe_history.H[-n_evals:]
 
-        if isinstance(evaluation_data, np.ndarray):
-            fields = evaluation_data.dtype.names
+        fields = evaluation_data.columns.values.tolist()
 
         # Check if the given evaluations are missing required fields.
         all_params = (
@@ -346,6 +349,8 @@ class Exploration:
         for field in fields:
             if field in history_new.dtype.names:
                 history_new[field] = evaluation_data[field]
+        history_new["sim_started"] = True
+        history_new["sim_ended"] = True
 
         # Incorporate new history into generator.
         self.generator.incorporate_history(history_new)
