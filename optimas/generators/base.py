@@ -339,11 +339,11 @@ class Generator:
 
         # Check for missing fields in the data.
         required_parameters = (self.varying_parameters
-                               + self.analyzed_parameters
-                               + self._custom_trial_parameters)
+                               + self.analyzed_parameters)
         if include_evaluations:
             required_parameters += self.objectives
         required_fields = [p.name for p in required_parameters]
+        required_fields += [p.save_name for p in self._custom_trial_parameters]
         missing_fields = [f for f in required_fields if f not in given_fields]
         if missing_fields:
             raise ValueError(
@@ -370,8 +370,8 @@ class Generator:
                 custom_parameters=self._custom_trial_parameters,
             )
             for par in self._custom_trial_parameters:
-                setattr(trial, par.name, trial_data[par.save_name][i].item())
-            if include_evaluations:   
+                setattr(trial, par.name, trial_data[par.save_name][i])
+            if include_evaluations:
                 for par in self._objectives + self._analyzed_parameters:
                     ev = Evaluation(
                         parameter=par,
