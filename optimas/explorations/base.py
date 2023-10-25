@@ -93,7 +93,7 @@ class Exploration:
         self.libe_comms = libe_comms
         self._n_evals = 0
         self._resume = resume
-        self._history_file_name = "exploration_history_after_evaluation_{}"
+        self._history_file_prefix = "exploration_history"
         self._load_history(history, resume)
         self._create_alloc_specs()
         self._create_executor()
@@ -222,23 +222,17 @@ class Exploration:
 
     def _get_most_recent_history_file_path(self):
         """Get path of most recently saved history file."""
-        old_exploration_history_files = glob.glob(
-            os.path.join(
-                os.path.abspath(self.exploration_dir_path),
-                self._history_file_name.format("*"),
-            )
+        # Sort files by date and get the most recent one.
+        # In principle there should be only one file, but just in case.
+        exp_path = os.path.abspath(self.exploration_dir_path)
+        history_files = glob.glob(
+            os.path.join(exp_path, self._history_file_prefix + "*")
         )
-        old_libe_history_files = glob.glob(
-            os.path.join(
-                os.path.abspath(self.exploration_dir_path),
-                "libE_history_{}".format("*"),
+        history_files.sort(
+                key=lambda f: os.path.getmtime(os.path.join(exp_path, f))
             )
-        )
-        old_files = old_exploration_history_files + old_libe_history_files
-        if old_files:
-            file_evals = [int(file.split("_")[-1][:-4]) for file in old_files]
-            i_max_evals = np.argmax(np.array(file_evals))
-            return old_files[i_max_evals]
+        if history_files:
+            return history_files[-1]
 
     def _set_default_libe_specs(self) -> None:
         """Set default exploration libe_specs."""
@@ -284,7 +278,7 @@ class Exploration:
         # when resuming an exploration.
         libE_specs["save_H_on_completion"] = True
         libE_specs["save_H_with_date"] = False
-        libE_specs["H_file_prefix"] = "exploration_history"
+        libE_specs["H_file_prefix"] = self._history_file_prefix
 
         # get specs from generator and evaluator
         gen_libE_specs = self.generator.get_libe_specs()
