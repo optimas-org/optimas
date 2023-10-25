@@ -11,7 +11,7 @@ class MultitaskEvaluator(Evaluator):
     """Evaluator to be used with multitask optimization.
 
     Each task has its own evaluator (either a ``FunctionEvaluator`` or a
-    ``TemplateEvaluator``). ``The MultitaskEvaluator`` groups all tasks and
+    ``TemplateEvaluator``). The ``MultitaskEvaluator`` groups all tasks and
     their corresponding evaluators and generates the combined ``libe_specs``
     and ``sim_specs``.
 
