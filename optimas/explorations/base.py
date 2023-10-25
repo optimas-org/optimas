@@ -304,6 +304,13 @@ class Exploration:
         # Ensure evaluations of last batch are sent back to the generator.
         libE_specs["final_gen_send"] = True
 
+        # Save history file on completion and without date information in the
+        # name, so that it can be overwritten in subsequent calls to `run` or
+        # when resuming an exploration.
+        libE_specs["save_H_on_completion"] = True
+        libE_specs["save_H_with_date"] = False
+        libE_specs["H_file_prefix"] = "exploration_history"
+
         # get specs from generator and evaluator
         gen_libE_specs = self.generator.get_libe_specs()
         ev_libE_specs = self.evaluator.get_libe_specs()
