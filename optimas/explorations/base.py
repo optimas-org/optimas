@@ -170,18 +170,6 @@ class Exploration:
         n_trials_final = self.generator.n_trials
         self._n_evals += n_trials_final - n_trials_initial
 
-        # Determine if current rank is master.
-        if self.libE_specs["comms"] == "local":
-            is_master = True
-        else:
-            from mpi4py import MPI
-
-            is_master = MPI.COMM_WORLD.Get_rank() == 0
-
-        # Save history.
-        if is_master:
-            self._save_history()
-
     def _create_executor(self) -> None:
         """Create libEnsemble executor."""
         self.executor = MPIExecutor()
@@ -231,19 +219,6 @@ class Exploration:
         if resume:
             self._n_evals = history.size
         self.history = history
-
-    def _save_history(self):
-        """Save history array to file."""
-        filename = self._history_file_name.format(self._n_evals)
-        exploration_dir_path = os.path.abspath(self.exploration_dir_path)
-        file_path = os.path.join(exploration_dir_path, filename)
-        if not os.path.isfile(filename):
-            old_files = os.path.join(
-                exploration_dir_path, self._history_file_name.format("*")
-            )
-            for old_file in glob.glob(old_files):
-                os.remove(old_file)
-            np.save(file_path, self.history)
 
     def _get_most_recent_history_file_path(self):
         """Get path of most recently saved history file."""
