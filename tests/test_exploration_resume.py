@@ -69,7 +69,7 @@ def test_exploration_in_steps_without_limit():
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
 
-    # Define variables and objectives.
+    # Define evaluator.
     gen = RandomSamplingGenerator(
         varying_parameters=[var1, var2], objectives=[obj]
     )
