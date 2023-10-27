@@ -31,14 +31,16 @@ class Exploration:
         The generator used to suggest new Trials.
     evaluator : Evaluator
         The evaluator that will execute the Trials.
-    max_evals : int
+    max_evals : int, optional
         Maximum number of trials that will be evaluated in the exploration.
-    sim_workers : int
-        Number of parallel workers performing simulations.
+        If not given, the exploration can run indefinitely.
+    sim_workers : int, optional
+        Number of parallel workers performing simulations. By default, 1.
     run_async : bool, optional
-        Whether the evaluators should be performed asynchronously (i.e.,
+        Whether the evaluations should be performed asynchronously (i.e.,
         without waiting for all workers to finish before staring a new
-        evaluation). By default, True.
+        evaluation). This is useful when the completion time of the
+        evaluations is not uniform. By default, False.
     history : str, optional
         Path to a history file of a past exploration from which to restart
         the new one. By default, None.
@@ -71,9 +73,9 @@ class Exploration:
         self,
         generator: Generator,
         evaluator: Evaluator,
-        max_evals: int,
-        sim_workers: int,
-        run_async: Optional[bool] = True,
+        max_evals: Optional[int] = np.inf,
+        sim_workers: Optional[int] = 1,
+        run_async: Optional[bool] = False,
         history: Optional[str] = None,
         history_save_period: Optional[int] = None,
         exploration_dir_path: Optional[str] = "./exploration",
@@ -120,7 +122,9 @@ class Exploration:
             sim_max = remaining_evals
         else:
             sim_max = min(n_evals, remaining_evals)
-        exit_criteria = {"sim_max": sim_max}
+        exit_criteria = {}
+        if np.isfinite(sim_max):
+            exit_criteria["sim_max"] = sim_max
 
         # Get initial number of generator trials.
         n_trials_initial = self.generator.n_trials
