@@ -8,7 +8,11 @@ import numpy as np
 
 from optimas.utils.logger import get_logger
 from optimas.utils.other import update_object
-from optimas.gen_functions import persistent_generator
+
+# from optimas.gen_functions import persistent_generator
+# from optimas.gen_functions import non_persistent_generator
+from optimas.gen_classes import Optgen
+
 from optimas.core import (
     Objective,
     Trial,
@@ -93,7 +97,10 @@ class Generator:
         self._custom_trial_parameters = (
             [] if custom_trial_parameters is None else custom_trial_parameters
         )
-        self._gen_function = persistent_generator
+        # self._gen_function = persistent_generator
+        # self._gen_function = non_persistent_generator
+        self._gen_function = Optgen  # class
+
         self._trials = []
 
     @property
@@ -281,8 +288,7 @@ class Generator:
             # Generator function.
             "gen_f": self._gen_function,
             # Generator input. This is a RNG, no need for inputs.
-            "in": ["sim_id"],
-            "persis_in": (
+            "in": (
                 ["sim_id", "trial_index"]
                 + [obj.name for obj in self._objectives]
                 + [par.name for par in self._analyzed_parameters]

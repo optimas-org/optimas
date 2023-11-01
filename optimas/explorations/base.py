@@ -8,7 +8,9 @@ import numpy as np
 
 from libensemble.libE import libE
 from libensemble.tools import add_unique_random_streams
-from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
+
+from libensemble.alloc_funcs.give_sim_work_first import give_sim_work_first
+
 from libensemble.executors.mpi_executor import MPIExecutor
 
 from optimas.generators.base import Generator
@@ -168,7 +170,7 @@ class Exploration:
         self.history = history
 
         # Update generator with the one received from libE.
-        self.generator._update(persis_info[1]["generator"])
+        # self.generator._update(persis_info[1]["generator"])
 
         # Update number of evaluation in this exploration.
         n_trials_final = self.generator.n_trials
@@ -304,6 +306,7 @@ class Exploration:
         libE_specs["ensemble_dir_path"] = "evaluations"
         libE_specs["use_workflow_dir"] = True
         libE_specs["workflow_dir_path"] = self.exploration_dir_path
+        libE_specs["gen_on_manager"] = True
 
         # Ensure evaluations of last batch are sent back to the generator.
         libE_specs["final_gen_send"] = True
@@ -316,7 +319,6 @@ class Exploration:
     def _create_alloc_specs(self) -> None:
         """Create exploration alloc_specs."""
         self.alloc_specs = {
-            "alloc_f": only_persistent_gens,
-            "out": [("given_back", bool)],
-            "user": {"async_return": self.run_async},
+            "alloc_f": give_sim_work_first,
+            "user": {"batch_mode": not self.run_async, "num_activate_gens": 1},
         }

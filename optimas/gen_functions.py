@@ -42,6 +42,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # GPU. This GPU will only be used for the generator and will not be
         # available for the simulation workers.
         else:
+            # SH This can use function without argument "CUDA_VISIBLE_DEVICES"
             resources.set_env_to_gpus("CUDA_VISIBLE_DEVICES")
 
     # Get generator, objectives, and parameters to analyze.
@@ -116,3 +117,99 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
     persis_info["generator"] = generator
 
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
+
+
+def non_persistent_generator(H, persis_info, gen_specs, libE_info):
+    """Generate and launch evaluations with the optimas generators.
+
+    This function gets the generator object and uses it to generate new
+    evaluations via the `ask` method. Once finished, the result of the
+    evaluations is communicated back to the generator via the `tell` method.
+
+    This function can be processed by the manager with
+    libE_specs["gen_on_manager"] = True
+    """
+
+    # SH note - not yet giving manager resources.
+
+    # If CUDA is available, run BO loop on the GPU.
+    if gen_specs["user"]["use_cuda"]:
+        resources = Resources.resources.worker_resources
+        # If there is no dedicated slot for the generator, use the GPU
+        # specified by the user. This GPU will be shared with the simulation
+        # workers.
+        if resources.slot_count is None:
+            gpu_id = str(gen_specs["user"]["gpu_id"])
+            os.environ["CUDA_VISIBLE_DEVICES"] = gpu_id
+        # If there is a dedicated slot for the generator, use the corresponding
+        # GPU. This GPU will only be used for the generator and will not be
+        # available for the simulation workers.
+        else:
+            # SH This can use function without argument "CUDA_VISIBLE_DEVICES"
+            resources.set_env_to_gpus("CUDA_VISIBLE_DEVICES")
+
+    # Get generator, objectives, and parameters to analyze.
+    generator = gen_specs["user"]["generator"]  # On manager update in-place
+    objectives = generator.objectives
+    analyzed_parameters = generator.analyzed_parameters
+
+    # Maximum number of total evaluations to generate.
+    max_evals = gen_specs["user"]["max_evals"]
+
+    n_gens = persis_info.get("n_gens", 0)
+    n_failed_gens = persis_info.get("n_failed_gens", 0)
+
+    if H is not None and H.size > 0:
+        # Check how many simulations have returned
+        n = len(H["sim_id"])
+        # Update the GP with latest simulation results
+        for i in range(n):
+            trial_index = int(H["trial_index"][i])
+            trial = generator._trials[trial_index]
+            for par in objectives + analyzed_parameters:
+                y = H[par.name][i]
+                ev = Evaluation(parameter=par, value=y)
+                trial.complete_evaluation(ev)
+            # Register trial with unknown SEM
+            generator.tell([trial])
+        # Set the number of points to generate to that number:
+        number_of_gen_points = min(n + n_failed_gens, max_evals - n_gens)
+        n_failed_gens = 0
+    else:
+        # Number of points to generate initially.
+        number_of_gen_points = min(
+            gen_specs["user"]["gen_batch_size"], max_evals
+        )
+
+    # Ask the optimizer to generate `batch_size` new points
+    H_o = np.zeros(number_of_gen_points, dtype=gen_specs["out"])
+    for i in range(number_of_gen_points):
+        generated_trials = generator.ask(1)
+        if generated_trials:
+            trial = generated_trials[0]
+            for var, val in zip(
+                trial.varying_parameters, trial.parameter_values
+            ):
+                H_o[var.name][i] = val
+            run_params = gen_specs["user"]["run_params"]
+            if "task" in H_o.dtype.names:
+                H_o["task"][i] = trial.trial_type
+                run_params = run_params[trial.trial_type]
+            if trial.custom_parameters is not None:
+                for par in trial.custom_parameters:
+                    H_o[par.save_name][i] = getattr(trial, par.name)
+            H_o["trial_index"][i] = trial.index
+            H_o["num_procs"][i] = run_params["num_procs"]
+            H_o["num_gpus"][i] = run_params["num_gpus"]
+
+    n_gens += np.sum(H_o["num_procs"] != 0)
+    n_failed_gens = np.sum(H_o["num_procs"] == 0)
+    H_o = H_o[H_o["num_procs"] > 0]
+
+    # Add updated generator to `persis_info`.
+    # generator._prepare_to_send()
+    # persis_info["generator"] = generator  # not required
+    persis_info["n_gens"] = n_gens
+    persis_info["n_failed_gens"] = n_failed_gens
+
+    return H_o, persis_info
