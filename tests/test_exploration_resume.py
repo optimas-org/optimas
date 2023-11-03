@@ -42,7 +42,7 @@ def test_exploration_in_steps():
         evaluator=ev,
         max_evals=30,
         sim_workers=2,
-        exploration_dir_path="./tests_output/test_template_evaluator",
+        exploration_dir_path="./tests_output/test_exploration_steps",
     )
 
     # Run exploration in several steps.
@@ -56,6 +56,51 @@ def test_exploration_in_steps():
     assert exploration._n_evals == len(exploration.history)
     assert exploration._n_evals == gen.n_completed_trials
     assert exploration._n_evals == exploration.max_evals
+    assert exploration.history["gen_informed"][-1]
+
+
+def test_exploration_in_steps_without_limit():
+    """
+    Test that an exploration runs correctly when doing so in several steps
+    without a limit on the maximum number of evaluations.
+    """
+    # Define variables and objectives.
+    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f", minimize=False)
+
+    # Define evaluator.
+    gen = RandomSamplingGenerator(
+        varying_parameters=[var1, var2], objectives=[obj]
+    )
+
+    # Create template evaluator.
+    ev = TemplateEvaluator(
+        sim_template=os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            "resources",
+            "template_simulation_script.py",
+        ),
+        analysis_func=analysis_func,
+    )
+
+    # Create exploration.
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        sim_workers=2,
+        exploration_dir_path="./tests_output/test_exploration_steps_no_limit",
+    )
+
+    # Run exploration in several steps.
+    steps = [3, 4, 10, 5]
+    for step in steps:
+        exploration.run(step)
+
+    # Check final state.
+    assert exploration._n_evals == len(exploration.history)
+    assert exploration._n_evals == gen.n_trials
+    assert exploration._n_evals == sum(steps)
     assert exploration.history["gen_informed"][-1]
 
 
@@ -87,7 +132,7 @@ def test_exploration_resume():
         evaluator=ev,
         max_evals=40,
         sim_workers=2,
-        exploration_dir_path="./tests_output/test_template_evaluator",
+        exploration_dir_path="./tests_output/test_exploration_steps",
         resume=True,
     )
 
@@ -103,4 +148,5 @@ def test_exploration_resume():
 
 if __name__ == "__main__":
     test_exploration_in_steps()
+    test_exploration_in_steps_without_limit()
     test_exploration_resume()
