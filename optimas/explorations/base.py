@@ -138,8 +138,6 @@ class Exploration:
         if self.generator.dedicated_resources and self.generator.use_cuda:
             persis_info["gen_resources"] = 1
             persis_info["gen_use_gpus"] = True
-        else:
-            self.libE_specs["zero_resource_workers"] = [1]
 
         if self._n_evals > 0:
             self.libE_specs["reuse_output_dir"] = True
