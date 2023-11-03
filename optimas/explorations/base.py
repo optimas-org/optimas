@@ -196,7 +196,9 @@ class Exploration:
             self._save_history()
 
     def attach_trials(
-        self, trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
+        self,
+        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
+        ignore_extra_fields: Optional[bool] = False
     ) -> None:
         """Attach trials for future evaluation.
 
@@ -213,6 +215,12 @@ class Exploration:
         ----------
         trial_data : dict, list, NDArray or DataFrame
             The data containing the trial parameters.
+        ignore_extra_fields : bool, optional
+            Whether to ignore extra fields in the given data. By default, if
+            if the data contains more fields than the `VaryingParameters`
+            of the exploration, a `ValueError` is raised, since this might
+            indicate a problem in the data. If set to `True`, the error will
+            be ignored.
 
         Examples
         --------
@@ -263,10 +271,12 @@ class Exploration:
         >>> exploration.attach_trials(df)
         """
         trial_data = convert_to_dataframe(trial_data)
-        self.generator.attach_trials(trial_data)
+        self.generator.attach_trials(trial_data, ignore_extra_fields=ignore_extra_fields)
 
     def evaluate_trials(
-        self, trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
+        self,
+        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
+        ignore_extra_fields: Optional[bool] = False
     ) -> None:
         """Attach and evaluate trials.
 
@@ -283,9 +293,15 @@ class Exploration:
         ----------
         trial_data : dict, list, NDArray or DataFrame
             The data containing the trial parameters.
+        ignore_extra_fields : bool, optional
+            Whether to ignore extra fields in the given data. By default, if
+            if the data contains more fields than the `VaryingParameters`
+            of the exploration, a `ValueError` is raised, since this might
+            indicate a problem in the data. If set to `True`, the error will
+            be ignored.
         """
         trial_data = convert_to_dataframe(trial_data)
-        self.attach_trials(trial_data)
+        self.attach_trials(trial_data, ignore_extra_fields=ignore_extra_fields)
         self.run(n_evals=len(trial_data))
 
     def attach_evaluations(
@@ -349,10 +365,9 @@ class Exploration:
         extra_fields = [f for f in fields if f not in history_fields]
         if extra_fields and not ignore_extra_fields:
             raise ValueError(
-                "The data contains fields that are not part of the "
-                f"exploration. These fields are {extra_fields}. "
-                "If you do not need them, ignore them by setting "
-                "`ignore_extra_fields=True`"
+                f"The given data contains the fields {extra_fields}, which "
+                "are unknown to the generator. If this is expected, ignore "
+                "them by setting `ignore_extra_fields=True`."
             )
 
         # Fill in new rows.

@@ -249,7 +249,9 @@ class Generator:
         self.tell(trials, allow_saving_model=False)
 
     def attach_trials(
-        self, trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
+        self,
+        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
+        ignore_extra_fields: Optional[bool] = False
     ) -> None:
         """Manually add a list of trials to the generator.
 
@@ -261,9 +263,13 @@ class Generator:
         ----------
         trial_data : dict, list, NDArray or DataFrame
             The data containing the trial parameters.
+        ignore_extra_fields : bool, optional
+            Whether to ignore extra fields in the given data.
         """
         trials = self._create_trials_from_external_data(
-            trial_data, include_evaluations=False
+            trial_data,
+            include_evaluations=False,
+            ignore_extra_fields=ignore_extra_fields
         )
         # Attach trials to the top of the queue.
         for i, trial in enumerate(trials):
@@ -346,13 +352,17 @@ class Generator:
         if missing_fields:
             raise ValueError(
                 "Could not create trials from given data because the "
-                f"fields {missing_fields} are missing."
+                f"required fields {missing_fields} are missing."
             )
 
         # Check if the given data has more fields than required.
         extra_fields = [f for f in given_fields if f not in required_fields]
         if extra_fields and not ignore_extra_fields:
-            raise ValueError(f"Extra fields {extra_fields} present.")
+            raise ValueError(
+                f"The given data contains the fields {extra_fields}, which "
+                "are unknown to the generator. If this is expected, ignore "
+                "them by setting `ignore_extra_fields=True`."
+            )
 
         # Create trials.
         n_sims = len(trial_data)
