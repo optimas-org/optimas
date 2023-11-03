@@ -15,7 +15,7 @@ Create a ``profile.optimas`` file in your home directory with the following cont
     source /etc/profile.d/modules.sh
     module purge
     module load intel.2020
-    module load maxwell cuda/11.3
+    module load maxwell cuda/11.8
     module load mpi/mpich-3.2-x86_64
     module load maxwell mamba
     . mamba-init
@@ -34,7 +34,7 @@ Create a new environment for optimas
 
 .. code::
 
-    mamba create -n optimas_env python=3.8
+    mamba create -n optimas_env python
 
 
 Activate the environment
@@ -69,8 +69,8 @@ Install FBPIC:
 
 .. code::
 
-    mamba install cudatoolkit=11.3
-    pip install cupy-cuda113
+    mamba install cudatoolkit=11.8
+    pip install cupy-cuda118
     pip install fbpic
 
 
