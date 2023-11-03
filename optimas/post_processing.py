@@ -71,20 +71,20 @@ class ExplorationDiagnostics:
         # Load the file as a pandas DataFrame
         history = np.load(os.path.join(path, output_file))
         d = {label: history[label].flatten() for label in history.dtype.names}
-        self._df = pd.DataFrame(d)
+        self._history = pd.DataFrame(d)
 
         # Only keep the simulations that finished properly
         if remove_unfinished_evaluations:
-            self._df = self._df[self._df.sim_ended]
+            self._history = self._history[self._history.sim_ended]
 
         # Make the time relative to the start of the simulation
         if relative_start_time:
-            start_time = self._df["gen_started_time"].min()
-            self._df["sim_started_time"] -= start_time
-            self._df["sim_ended_time"] -= start_time
-            self._df["gen_started_time"] -= start_time
-            self._df["gen_ended_time"] -= start_time
-            self._df["gen_informed_time"] -= start_time
+            start_time = self._history["gen_started_time"].min()
+            self._history["sim_started_time"] -= start_time
+            self._history["sim_ended_time"] -= start_time
+            self._history["gen_started_time"] -= start_time
+            self._history["gen_ended_time"] -= start_time
+            self._history["gen_informed_time"] -= start_time
 
         # Read varying parameters, objectives, etc.
         self._read_exploration_parameters(params_file)
@@ -140,13 +140,13 @@ class ExplorationDiagnostics:
             "num_procs",
             "num_gpus",
         ]
-        ordered_columns += [c for c in self._df if c not in ordered_columns]
-        self._df = self._df[ordered_columns]
+        ordered_columns += [c for c in self._history if c not in ordered_columns]
+        self._history = self._history[ordered_columns]
 
     @property
-    def df(self) -> pd.DataFrame:
+    def history(self) -> pd.DataFrame:
         """Return a pandas DataFrame with the exploration history."""
-        return self._df
+        return self._history
 
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
@@ -184,13 +184,13 @@ class ExplorationDiagnostics:
 
         """
         if fidelity_parameter is not None:
-            fidelity = self._df[fidelity_parameter]
+            fidelity = self._history[fidelity_parameter]
         else:
             fidelity = None
         if objective is None:
             objective = list(self._objectives.keys())[0]
         _, ax = plt.subplots()
-        ax.scatter(self._df.sim_ended_time, self._df[objective], c=fidelity)
+        ax.scatter(self._history.sim_ended_time, self._history[objective], c=fidelity)
         ax.set_ylabel(objective)
         ax.set_xlabel("Time (s)")
 
@@ -235,9 +235,9 @@ class ExplorationDiagnostics:
             objective = self._objectives[objective]
         if fidelity_parameter is not None:
             assert min_fidelity is not None
-            df = self._df[self._df[fidelity_parameter] >= min_fidelity]
+            df = self._history[self._history[fidelity_parameter] >= min_fidelity]
         else:
-            df = self._df.copy()
+            df = self._history.copy()
 
         df = df.sort_values("sim_ended_time")
         t = df.sim_ended_time.values
@@ -273,7 +273,7 @@ class ExplorationDiagnostics:
             Name of the fidelity parameter. If given, the different fidelity
             will be plotted in different colors.
         """
-        df = self._df
+        df = self._history
         if fidelity_parameter is not None:
             min_fidelity = df[fidelity_parameter].min()
             max_fidelity = df[fidelity_parameter].max()
