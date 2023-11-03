@@ -140,7 +140,9 @@ class ExplorationDiagnostics:
             "num_procs",
             "num_gpus",
         ]
-        ordered_columns += [c for c in self._history if c not in ordered_columns]
+        ordered_columns += [
+            c for c in self._history if c not in ordered_columns
+        ]
         self._history = self._history[ordered_columns]
 
     @property
@@ -190,7 +192,9 @@ class ExplorationDiagnostics:
         if objective is None:
             objective = list(self._objectives.keys())[0]
         _, ax = plt.subplots()
-        ax.scatter(self._history.sim_ended_time, self._history[objective], c=fidelity)
+        ax.scatter(
+            self._history.sim_ended_time, self._history[objective], c=fidelity
+        )
         ax.set_ylabel(objective)
         ax.set_xlabel("Time (s)")
 
@@ -235,7 +239,9 @@ class ExplorationDiagnostics:
             objective = self._objectives[objective]
         if fidelity_parameter is not None:
             assert min_fidelity is not None
-            df = self._history[self._history[fidelity_parameter] >= min_fidelity]
+            df = self._history[
+                self._history[fidelity_parameter] >= min_fidelity
+            ]
         else:
             df = self._history.copy()
 
