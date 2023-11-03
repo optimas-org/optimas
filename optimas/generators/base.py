@@ -251,7 +251,7 @@ class Generator:
     def attach_trials(
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
-        ignore_extra_fields: Optional[bool] = False
+        ignore_extra_fields: Optional[bool] = False,
     ) -> None:
         """Manually add a list of trials to the generator.
 
@@ -269,7 +269,7 @@ class Generator:
         trials = self._create_trials_from_external_data(
             trial_data,
             include_evaluations=False,
-            ignore_extra_fields=ignore_extra_fields
+            ignore_extra_fields=ignore_extra_fields,
         )
         # Attach trials to the top of the queue.
         for i, trial in enumerate(trials):
