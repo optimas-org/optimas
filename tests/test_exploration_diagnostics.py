@@ -56,7 +56,7 @@ def test_exploration_diagnostics():
     )
     for name in exploration.history.dtype.names:
         np.testing.assert_array_equal(
-            diags.df[name].array.to_numpy(), exploration.history[name]
+            diags.history[name].array.to_numpy(), exploration.history[name]
         )
 
     for p_in, p_out in zip(gen.varying_parameters, diags.varying_parameters):
@@ -82,7 +82,7 @@ def test_exploration_diagnostics():
     # Test making plot using the diagnostics API.
     fig, ax = plt.subplots()
     vps = diags.varying_parameters
-    df = diags.df
+    df = diags.history
     f1 = diags.objectives[0]
     ax.axvline(vps[0].lower_bound)
     ax.axvline(vps[0].upper_bound)
