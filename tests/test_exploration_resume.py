@@ -99,7 +99,7 @@ def test_exploration_in_steps_without_limit():
 
     # Check final state.
     assert exploration._n_evals == len(exploration.history)
-    assert exploration._n_evals == gen.n_trials
+    assert exploration._n_evals == gen.n_completed_trials
     assert exploration._n_evals == sum(steps)
     assert exploration.history["gen_informed"][-1]
 
