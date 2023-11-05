@@ -204,7 +204,7 @@ class Exploration:
     def attach_trials(
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
-        ignore_extra_fields: Optional[bool] = False
+        ignore_extra_fields: Optional[bool] = False,
     ) -> None:
         """Attach trials for future evaluation.
 
@@ -277,12 +277,14 @@ class Exploration:
         >>> exploration.attach_trials(df)
         """
         trial_data = convert_to_dataframe(trial_data)
-        self.generator.attach_trials(trial_data, ignore_extra_fields=ignore_extra_fields)
+        self.generator.attach_trials(
+            trial_data, ignore_extra_fields=ignore_extra_fields
+        )
 
     def evaluate_trials(
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
-        ignore_extra_fields: Optional[bool] = False
+        ignore_extra_fields: Optional[bool] = False,
     ) -> None:
         """Attach and evaluate trials.
 
