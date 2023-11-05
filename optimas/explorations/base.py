@@ -382,6 +382,11 @@ class Exploration:
                 history_new[field] = evaluation_data[field]
         history_new["sim_started"] = True
         history_new["sim_ended"] = True
+        history_new["trial_index"] = np.arange(
+            self.generator._trial_count,
+            self.generator._trial_count + n_evals,
+            dtype=int
+        )
 
         # Incorporate new history into generator.
         self.generator.incorporate_history(history_new)
