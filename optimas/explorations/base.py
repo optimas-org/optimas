@@ -107,9 +107,15 @@ class Exploration:
         self._load_history(history, resume)
 
     @property
-    def history(self):
+    def history(self) -> pd.DataFrame:
         """Get the exploration history."""
-        return self._libe_history.H
+        history = convert_to_dataframe(self._libe_history.H)
+        ordered_columns = ["trial_index"]
+        ordered_columns += [p.name for p in self.generator.varying_parameters]
+        ordered_columns += [p.name for p in self.generator.objectives]
+        ordered_columns += [p.name for p in self.generator.analyzed_parameters]
+        ordered_columns += sorted([n for n in history if n not in ordered_columns])
+        return history[ordered_columns]
 
     def run(self, n_evals: Optional[int] = None) -> None:
         """Run the exploration.
@@ -170,7 +176,7 @@ class Exploration:
             persis_info,
             self.alloc_specs,
             self.libE_specs,
-            H0=self.history,
+            H0=self._libe_history.H,
         )
 
         # Update history.
@@ -440,7 +446,7 @@ class Exploration:
             )
             for old_file in glob.glob(old_files):
                 os.remove(old_file)
-            np.save(file_path, self.history)
+            np.save(file_path, self._libe_history.H)
 
     def _create_libe_history(self) -> History:
         """Initialize an empty libEnsemble history."""
