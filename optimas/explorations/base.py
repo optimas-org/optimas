@@ -114,7 +114,9 @@ class Exploration:
         ordered_columns += [p.name for p in self.generator.varying_parameters]
         ordered_columns += [p.name for p in self.generator.objectives]
         ordered_columns += [p.name for p in self.generator.analyzed_parameters]
-        ordered_columns += sorted([n for n in history if n not in ordered_columns])
+        ordered_columns += sorted(
+            [n for n in history if n not in ordered_columns]
+        )
         return history[ordered_columns]
 
     def run(self, n_evals: Optional[int] = None) -> None:
@@ -387,7 +389,7 @@ class Exploration:
         history_new["trial_index"] = np.arange(
             self.generator._trial_count,
             self.generator._trial_count + n_evals,
-            dtype=int
+            dtype=int,
         )
 
         # Incorporate new history into generator.
