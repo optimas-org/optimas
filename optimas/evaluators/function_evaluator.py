@@ -14,26 +14,11 @@ class FunctionEvaluator(Evaluator):
     ----------
     function : callable
         The function to be evaluated.
-    n_procs : int, optional
-        The number of processes that will be used for each evaluation. By
-        default, ``n_procs=1`` if ``n_gpus`` is not given. Otherwise, the
-        default behavior is to match the number of processes to the number
-        of GPUs, i.e., ``n_procs=n_gpus``.
-    n_gpus : int, optional
-        The number of GPUs that will be made available for each evaluation. By
-        default, 0.
 
     """
 
-    def __init__(
-        self,
-        function: Callable,
-        n_procs: Optional[int] = None,
-        n_gpus: Optional[int] = None,
-    ) -> None:
-        super().__init__(
-            sim_function=run_function, n_procs=n_procs, n_gpus=n_gpus
-        )
+    def __init__(self, function: Callable) -> None:
+        super().__init__(sim_function=run_function)
         self.function = function
 
     def get_sim_specs(
