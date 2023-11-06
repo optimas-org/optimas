@@ -129,7 +129,6 @@ def non_persistent_generator(H, persis_info, gen_specs, libE_info):
     This function can be processed by the manager with
     libE_specs["gen_on_manager"] = True
     """
-
     # SH note - not yet giving manager resources.
 
     # If CUDA is available, run BO loop on the GPU.

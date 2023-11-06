@@ -1,5 +1,4 @@
-# SH whether to have a base class
-
+"""Contains the definition of the generator classes given to libEnsemble."""
 import os
 import numpy as np
 
@@ -7,7 +6,10 @@ from optimas.core import Evaluation
 from libensemble.resources.resources import Resources
 
 
+# SH whether to have a base class - could also support wrapper.
 class Optgen:
+    """A generator class for libEnsemble."""
+
     # SH TODO What args needed for init
     # def __init__(self, persis_info, gen_specs, libE_info):
     def __init__(self, gen_specs):
@@ -55,7 +57,6 @@ class Optgen:
 
         Pass the class as gen_f instead of a function
         """
-
         # SH note - not yet giving manager resources.
 
         if H is not None and H.size > 0:
@@ -115,5 +116,6 @@ class Optgen:
 
     # If finalize function exists, called at end
     def finalize(self, H, persis_info, gen_specs, libE_info):
+        """Receives any points generator has not seen and optionally updates history/persis_info."""
         print(f"Finalize received: {H=}")  # SH testing
         # return H_o, persis_info
