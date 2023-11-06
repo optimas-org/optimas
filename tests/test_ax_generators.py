@@ -21,6 +21,15 @@ def eval_func_sf(input_params, output_params):
     output_params["f"] = result
 
 
+def eval_func_sf_moo(input_params, output_params):
+    """Evaluation function for multi-objective single-fidelity test"""
+    x0 = input_params["x0"]
+    x1 = input_params["x1"]
+    result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
+    output_params["f"] = result
+    output_params["f2"] = result * 2
+
+
 def eval_func_mf(input_params, output_params):
     """Evaluation function for multifidelity test"""
     x0 = input_params["x0"]
@@ -93,6 +102,119 @@ def test_ax_single_fidelity():
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration.history)
+
+
+def test_ax_single_fidelity_moo():
+    """
+    Test that an exploration with a multi-objective single-fidelity generator
+    runs and that the generator and Ax client are updated after running.
+    """
+
+    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f", minimize=False)
+    obj2 = Objective("f2", minimize=False)
+
+    gen = AxSingleFidelityGenerator(
+        varying_parameters=[var1, var2], objectives=[obj, obj2]
+    )
+    ev = FunctionEvaluator(function=eval_func_sf_moo)
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        max_evals=10,
+        sim_workers=2,
+        exploration_dir_path="./tests_output/test_ax_single_fidelity_moo",
+    )
+
+    # Get reference to original AxClient.
+    ax_client = gen._ax_client
+
+    # Run exploration.
+    exploration.run()
+
+    # Check that the generator has been updated.
+    assert len(gen._trials) == exploration.history.shape[0]
+
+    # Check that the original ax client has been updated.
+    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
+    assert n_ax_trials == exploration.history.shape[0]
+
+
+def test_ax_single_fidelity_fb():
+    """
+    Test that an exploration with a fully Bayesian single-fidelity generator
+    runs and that the generator and Ax client are updated after running.
+    """
+
+    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f", minimize=False)
+
+    gen = AxSingleFidelityGenerator(
+        varying_parameters=[var1, var2], objectives=[obj], fully_bayesian=True
+    )
+    ev = FunctionEvaluator(function=eval_func_sf)
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        max_evals=10,
+        sim_workers=2,
+        exploration_dir_path="./tests_output/test_ax_single_fidelity_fb",
+    )
+
+    # Get reference to original AxClient.
+    ax_client = gen._ax_client
+
+    # Run exploration.
+    exploration.run()
+
+    # Check that the generator has been updated.
+    assert len(gen._trials) == exploration.history.shape[0]
+
+    # Check that the original ax client has been updated.
+    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
+    assert n_ax_trials == exploration.history.shape[0]
+
+
+def test_ax_single_fidelity_moo_fb():
+    """
+    Test that an exploration with a fully Bayesian multi-objective
+    single-fidelity generator runs and that the generator and Ax client
+    are updated after running.
+    """
+
+    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f", minimize=False)
+    obj2 = Objective("f2", minimize=False)
+
+    gen = AxSingleFidelityGenerator(
+        varying_parameters=[var1, var2],
+        objectives=[obj, obj2],
+        fully_bayesian=True,
+    )
+    ev = FunctionEvaluator(function=eval_func_sf_moo)
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        max_evals=10,
+        sim_workers=2,
+        exploration_dir_path="./tests_output/test_ax_single_fidelity_moo_fb",
+    )
+
+    # Get reference to original AxClient.
+    ax_client = gen._ax_client
+
+    # Run exploration.
+    exploration.run()
+
+    # Check that the generator has been updated.
+    assert len(gen._trials) == exploration.history.shape[0]
+
+    # Check that the original ax client has been updated.
+    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
+    assert n_ax_trials == exploration.history.shape[0]
 
 
 def test_ax_multi_fidelity():
@@ -307,6 +429,9 @@ def test_ax_multitask_with_history():
 
 if __name__ == "__main__":
     test_ax_single_fidelity()
+    test_ax_single_fidelity_moo()
+    test_ax_single_fidelity_fb()
+    test_ax_single_fidelity_moo_fb()
     test_ax_multi_fidelity()
     test_ax_multitask()
     test_ax_client()
