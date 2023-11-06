@@ -2,7 +2,7 @@
 
 import os
 import glob
-from typing import Optional, Union, Dict, List
+from typing import Optional, Union, Dict, List, Literal
 
 import numpy as np
 import pandas as pd
@@ -89,7 +89,7 @@ class Exploration:
         history_save_period: Optional[int] = None,
         exploration_dir_path: Optional[str] = "./exploration",
         resume: Optional[bool] = False,
-        libe_comms: Optional[str] = "local",
+        libe_comms: Optional[Literal["local", "local_threading", "mpi"]] = "local",
     ) -> None:
         if libe_comms == "local_threading" and not isinstance(evaluator, FunctionEvaluator):
             raise ValueError(
