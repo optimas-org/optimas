@@ -15,6 +15,7 @@ from libensemble.executors.mpi_executor import MPIExecutor
 
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
+from optimas.evaluators.function_evaluator import FunctionEvaluator
 from optimas.utils.logger import get_logger
 from optimas.utils.other import convert_to_dataframe
 
@@ -64,6 +65,10 @@ class Exploration:
         The communication mode for libEnseble. Determines whether to use
         Python ``multiprocessing`` (local), ``threading`` (local_threading)
         or MPI for the communication between the manager and workers.
+        The ``'local_threading'`` mode is only recommended when running in a
+        Jupyter notebook if the default 'local' mode has issues (this
+        can happen especially on Windows and Mac, which use multiprocessing
+        ``spawn``). ``'local_threading'`` only supports ``FunctionEvaluator``s.
         If running in ``'mpi'`` mode, the Optimas script should be launched
         with ``mpirun`` or equivalent, for example,
         ``mpirun -np N python myscript.py``. This will launch one
@@ -86,6 +91,11 @@ class Exploration:
         resume: Optional[bool] = False,
         libe_comms: Optional[str] = "local",
     ) -> None:
+        if libe_comms == "local_threading" and not isinstance(evaluator, FunctionEvaluator):
+            raise ValueError(
+                "'local_threading' mode is only supported when using a "
+                "`FunctionEvaluator`. Use 'local' mode instead."
+            )
         self.generator = generator
         self.evaluator = evaluator
         self.max_evals = max_evals
