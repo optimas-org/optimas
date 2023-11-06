@@ -3,7 +3,6 @@ from typing import List, Optional
 import logging
 
 import torch
-from ax.utils.common.logger import get_logger
 
 from optimas.core import Objective, TrialParameter, VaryingParameter, Parameter
 from optimas.generators.base import Generator
@@ -12,13 +11,9 @@ from optimas.generators.base import Generator
 # Disable Ax loggers to get cleaner output. In principle, setting
 # `verbose_logging=False` in the `AxClient` should already avoid most of the
 # logs, but this does not work when using 'spawn' multiprocessing.
-for name in [
-    "ax.service.ax_client",
-    "ax.service.utils.instantiation",
-    "ax.modelbridge.torch",
-    "ax.core.experiment"
-]:
-    get_logger(name, level=logging.ERROR)
+for logger in logging.root.manager.loggerDict:
+    if logger.startswith("ax.") or logger == "ax":
+        logging.getLogger(logger).setLevel(logging.ERROR)
 
 
 class AxGenerator(Generator):
