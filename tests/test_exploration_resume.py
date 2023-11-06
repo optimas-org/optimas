@@ -56,6 +56,7 @@ def test_exploration_in_steps():
     assert exploration._n_evals == len(exploration.history)
     assert exploration._n_evals == gen.n_trials
     assert exploration._n_evals == exploration.max_evals
+    print(f"{exploration.history['gen_informed']=}")
     assert exploration.history["gen_informed"][-1]
 
 
