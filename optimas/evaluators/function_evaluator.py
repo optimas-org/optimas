@@ -1,6 +1,6 @@
 """Contains the definition of the FunctionEvaluator class."""
 
-from typing import Callable, Optional, Dict, List
+from typing import Callable, Dict, List
 
 from optimas.sim_functions import run_function
 from optimas.core import VaryingParameter, Objective, Parameter
