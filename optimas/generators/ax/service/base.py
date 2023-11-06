@@ -5,6 +5,7 @@ from typing import List, Optional
 import os
 
 from ax.service.ax_client import AxClient
+from ax.modelbridge.registry import Models
 
 from optimas.utils.other import update_object
 from optimas.core import Objective, Trial, VaryingParameter, Parameter
@@ -103,6 +104,14 @@ class AxServiceGenerator(AxGenerator):
                     params[var.name] = value
                 _, trial_id = self._ax_client.attach_trial(params)
                 self._ax_client.complete_trial(trial_id, objective_eval)
+
+                # Since data was given externally, reduce number of
+                # initialization trials.
+                gs = self._ax_client.generation_strategy
+                if isinstance(gs.current_step.model, Models.SOBOL):
+                    ngen, _ = gs._num_trials_to_gen_and_complete_in_curr_step()
+                    if ngen > 0:
+                        gs.current_step.num_trials -= 1
 
     def _create_ax_client(self) -> AxClient:
         """Create Ax client (must be implemented by subclasses)."""
