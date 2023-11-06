@@ -113,6 +113,7 @@ class Optgen:
         # should not need to return persis_info - update in place
         return H_o, persis_info
 
-    # SH if this exists could be used like final_gen_send
+    # If finalize function exists, called at end
     def finalize(self, H, persis_info, gen_specs, libE_info):
-        pass
+        print(f"Finalize received: {H=}")  # SH testing
+        # return H_o, persis_info
