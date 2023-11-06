@@ -1,10 +1,19 @@
 """Contains the definition of the base Ax generator."""
 from typing import List, Optional
+import logging
 
 import torch
 
 from optimas.core import Objective, TrialParameter, VaryingParameter, Parameter
 from optimas.generators.base import Generator
+
+
+# Disable Ax loggers to get cleaner output. In principle, setting
+# `verbose_logging=False` in the `AxClient` should already avoid most of the
+# logs, but this does not work when using 'spawn' multiprocessing.
+for logger in logging.root.manager.loggerDict:
+    if logger.startswith("ax.") or logger == "ax":
+        logging.getLogger(logger).setLevel(logging.ERROR)
 
 
 class AxGenerator(Generator):
