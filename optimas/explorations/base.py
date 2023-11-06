@@ -280,7 +280,8 @@ class Exploration:
         """
         trial_data = convert_to_dataframe(trial_data)
         self.generator.attach_trials(
-            trial_data, ignore_unrecognized_parameters=ignore_unrecognized_parameters
+            trial_data,
+            ignore_unrecognized_parameters=ignore_unrecognized_parameters,
         )
 
     def evaluate_trials(
@@ -311,7 +312,10 @@ class Exploration:
             a problem in the data. If set to `True`, the error will be ignored.
         """
         trial_data = convert_to_dataframe(trial_data)
-        self.attach_trials(trial_data, ignore_unrecognized_parameters=ignore_unrecognized_parameters)
+        self.attach_trials(
+            trial_data,
+            ignore_unrecognized_parameters=ignore_unrecognized_parameters,
+        )
         self.run(n_evals=len(trial_data))
 
     def attach_evaluations(
