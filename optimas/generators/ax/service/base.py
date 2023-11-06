@@ -108,7 +108,7 @@ class AxServiceGenerator(AxGenerator):
                 # Since data was given externally, reduce number of
                 # initialization trials.
                 gs = self._ax_client.generation_strategy
-                if isinstance(gs.current_step.model, Models.SOBOL):
+                if gs.current_step.model == Models.SOBOL:
                     ngen, _ = gs._num_trials_to_gen_and_complete_in_curr_step()
                     if ngen > 0:
                         gs.current_step.num_trials -= 1
