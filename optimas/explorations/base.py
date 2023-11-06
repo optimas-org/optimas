@@ -125,7 +125,9 @@ class Exploration:
         ordered_columns += [p.name for p in self.generator.varying_parameters]
         ordered_columns += [p.name for p in self.generator.objectives]
         ordered_columns += [p.name for p in self.generator.analyzed_parameters]
-        ordered_columns += sorted([n for n in history if n not in ordered_columns])
+        ordered_columns += sorted(
+            [n for n in history if n not in ordered_columns]
+        )
         return history[ordered_columns]
 
     def run(self, n_evals: Optional[int] = None) -> None:
@@ -215,7 +217,7 @@ class Exploration:
     def attach_trials(
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
-        ignore_extra_fields: Optional[bool] = False,
+        ignore_unrecognized_parameters: Optional[bool] = False,
     ) -> None:
         """Attach trials for future evaluation.
 
@@ -232,12 +234,12 @@ class Exploration:
         ----------
         trial_data : dict, list, NDArray or DataFrame
             The data containing the trial parameters.
-        ignore_extra_fields : bool, optional
-            Whether to ignore extra fields in the given data. By default, if
-            if the data contains more fields than the `VaryingParameters`
-            of the exploration, a `ValueError` is raised, since this might
-            indicate a problem in the data. If set to `True`, the error will
-            be ignored.
+        ignore_unrecognized_parameters : bool, optional
+            Whether to ignore unrecognized parameters in the given data. By
+            default, if the data contains more fields than the
+            `VaryingParameters`, `AnalyzedParameters` and `Objectives` of the
+            exploration, a `ValueError` is raised, since this might indicate
+            a problem in the data. If set to `True`, the error will be ignored.
 
         Examples
         --------
@@ -289,13 +291,14 @@ class Exploration:
         """
         trial_data = convert_to_dataframe(trial_data)
         self.generator.attach_trials(
-            trial_data, ignore_extra_fields=ignore_extra_fields
+            trial_data,
+            ignore_unrecognized_parameters=ignore_unrecognized_parameters,
         )
 
     def evaluate_trials(
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
-        ignore_extra_fields: Optional[bool] = False,
+        ignore_unrecognized_parameters: Optional[bool] = False,
     ) -> None:
         """Attach and evaluate trials.
 
@@ -312,21 +315,24 @@ class Exploration:
         ----------
         trial_data : dict, list, NDArray or DataFrame
             The data containing the trial parameters.
-        ignore_extra_fields : bool, optional
-            Whether to ignore extra fields in the given data. By default, if
-            if the data contains more fields than the `VaryingParameters`
-            of the exploration, a `ValueError` is raised, since this might
-            indicate a problem in the data. If set to `True`, the error will
-            be ignored.
+        ignore_unrecognized_parameters : bool, optional
+            Whether to ignore unrecognized parameters in the given data. By
+            default, if the data contains more fields than the
+            `VaryingParameters`, `AnalyzedParameters` and `Objectives` of the
+            exploration, a `ValueError` is raised, since this might indicate
+            a problem in the data. If set to `True`, the error will be ignored.
         """
         trial_data = convert_to_dataframe(trial_data)
-        self.attach_trials(trial_data, ignore_extra_fields=ignore_extra_fields)
+        self.attach_trials(
+            trial_data,
+            ignore_unrecognized_parameters=ignore_unrecognized_parameters,
+        )
         self.run(n_evals=len(trial_data))
 
     def attach_evaluations(
         self,
         evaluation_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
-        ignore_extra_fields: Optional[bool] = False,
+        ignore_unrecognized_parameters: Optional[bool] = False,
     ) -> None:
         """Attach evaluations from external source.
 
@@ -348,12 +354,12 @@ class Exploration:
         ----------
         trial_data : dict, list, NDArray or DataFrame
             The data containing the trial parameters.
-        ignore_extra_fields : bool, optional
-            Whether to ignore extra fields in the given data. By default, if
-            if the data contains more fields than the `VaryingParameters`,
-            `AnalyzedParameters` and `Objectives` of the exploration, a
-            `ValueError` is raised, since this might indicate a problem in the
-            data. If set to `True`, the error will be ignored.
+        ignore_unrecognized_parameters : bool, optional
+            Whether to ignore unrecognized parameters in the given data. By
+            default, if the data contains more fields than the
+            `VaryingParameters`, `AnalyzedParameters` and `Objectives` of the
+            exploration, a `ValueError` is raised, since this might indicate
+            a problem in the data. If set to `True`, the error will be ignored.
         """
         evaluation_data = convert_to_dataframe(evaluation_data)
         n_evals = len(evaluation_data)
@@ -382,11 +388,11 @@ class Exploration:
         # Check if the given evaluations have more fields than required.
         history_fields = history_new.dtype.names
         extra_fields = [f for f in fields if f not in history_fields]
-        if extra_fields and not ignore_extra_fields:
+        if extra_fields and not ignore_unrecognized_parameters:
             raise ValueError(
                 f"The given data contains the fields {extra_fields}, which "
                 "are unknown to the generator. If this is expected, ignore "
-                "them by setting `ignore_extra_fields=True`."
+                "them by setting `ignore_unrecognized_parameters=True`."
             )
 
         # Fill in new rows.
@@ -398,7 +404,7 @@ class Exploration:
         history_new["trial_index"] = np.arange(
             self.generator._trial_count,
             self.generator._trial_count + n_evals,
-            dtype=int
+            dtype=int,
         )
 
         # Incorporate new history into generator.

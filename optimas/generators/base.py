@@ -244,14 +244,14 @@ class Generator:
         # Keep only evaluations where the simulation finished successfully.
         history = history[history["sim_ended"]]
         trials = self._create_trials_from_external_data(
-            history, ignore_extra_fields=True
+            history, ignore_unrecognized_parameters=True
         )
         self.tell(trials, allow_saving_model=False)
 
     def attach_trials(
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
-        ignore_extra_fields: Optional[bool] = False,
+        ignore_unrecognized_parameters: Optional[bool] = False,
     ) -> None:
         """Manually add a list of trials to the generator.
 
@@ -263,13 +263,13 @@ class Generator:
         ----------
         trial_data : dict, list, NDArray or DataFrame
             The data containing the trial parameters.
-        ignore_extra_fields : bool, optional
-            Whether to ignore extra fields in the given data.
+        ignore_unrecognized_parameters : bool, optional
+            Whether to ignore unrecognized parameters in the given data.
         """
         trials = self._create_trials_from_external_data(
             trial_data,
             include_evaluations=False,
-            ignore_extra_fields=ignore_extra_fields,
+            ignore_unrecognized_parameters=ignore_unrecognized_parameters,
         )
         # Attach trials to the top of the queue.
         for i, trial in enumerate(trials):
@@ -333,7 +333,7 @@ class Generator:
         self,
         trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
         include_evaluations: Optional[bool] = True,
-        ignore_extra_fields: Optional[bool] = False,
+        ignore_unrecognized_parameters: Optional[bool] = False,
     ) -> List[Trial]:
         """Create a list of Trials from the given data."""
         # Convert to dataframe.
@@ -357,11 +357,11 @@ class Generator:
 
         # Check if the given data has more fields than required.
         extra_fields = [f for f in given_fields if f not in required_fields]
-        if extra_fields and not ignore_extra_fields:
+        if extra_fields and not ignore_unrecognized_parameters:
             raise ValueError(
                 f"The given data contains the fields {extra_fields}, which "
                 "are unknown to the generator. If this is expected, ignore "
-                "them by setting `ignore_extra_fields=True`."
+                "them by setting `ignore_unrecognized_parameters=True`."
             )
 
         # Create trials.

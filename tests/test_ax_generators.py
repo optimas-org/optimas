@@ -92,7 +92,7 @@ def test_ax_single_fidelity():
     assert n_ax_trials == exploration.history.shape[0]
 
     # Save history for later restart test
-    np.save("./tests_output/ax_sf_history", exploration.history)
+    np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
 
 
 def test_ax_multi_fidelity():
@@ -121,7 +121,7 @@ def test_ax_multi_fidelity():
     exploration.run()
 
     # Save history for later restart test
-    np.save("./tests_output/ax_mf_history", exploration.history)
+    np.save("./tests_output/ax_mf_history", exploration._libe_history.H)
 
 
 def test_ax_multitask():
@@ -154,7 +154,7 @@ def test_ax_multitask():
     exploration.run()
 
     # Save history for later restart test
-    np.save("./tests_output/ax_mt_history", exploration.history)
+    np.save("./tests_output/ax_mt_history", exploration._libe_history.H)
 
 
 def test_ax_client():
