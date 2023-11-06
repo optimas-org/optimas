@@ -229,8 +229,8 @@ class Exploration:
             os.path.join(exp_path, self._history_file_prefix + "*")
         )
         history_files.sort(
-                key=lambda f: os.path.getmtime(os.path.join(exp_path, f))
-            )
+            key=lambda f: os.path.getmtime(os.path.join(exp_path, f))
+        )
         if history_files:
             return history_files[-1]
 
