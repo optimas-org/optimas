@@ -66,7 +66,7 @@ def test_analyzed_parameters():
     # Save history for later restart test
     np.save(
         "./tests_output/ax_sf_history_with_analyzed_parameters",
-        exploration.history,
+        exploration._libe_history.H,
     )
 
 
