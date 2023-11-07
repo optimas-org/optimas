@@ -134,7 +134,7 @@ def test_ax_single_fidelity_moo():
     exploration.run()
 
     # Check that the generator has been updated.
-    assert len(gen._trials) == exploration.history.shape[0]
+    assert gen.n_completed_trials == exploration.history.shape[0]
 
     # Check that the original ax client has been updated.
     n_ax_trials = ax_client.get_trials_data_frame().shape[0]
@@ -170,7 +170,7 @@ def test_ax_single_fidelity_fb():
     exploration.run()
 
     # Check that the generator has been updated.
-    assert len(gen._trials) == exploration.history.shape[0]
+    assert gen.n_completed_trials == exploration.history.shape[0]
 
     # Check that the original ax client has been updated.
     n_ax_trials = ax_client.get_trials_data_frame().shape[0]
@@ -210,7 +210,7 @@ def test_ax_single_fidelity_moo_fb():
     exploration.run()
 
     # Check that the generator has been updated.
-    assert len(gen._trials) == exploration.history.shape[0]
+    assert gen.n_completed_trials == exploration.history.shape[0]
 
     # Check that the original ax client has been updated.
     n_ax_trials = ax_client.get_trials_data_frame().shape[0]
