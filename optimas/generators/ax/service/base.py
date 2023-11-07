@@ -27,7 +27,12 @@ class AxServiceGenerator(AxGenerator):
         optimization objectives. By default ``None``.
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
-        Sobol sampling. By default, ``4``.
+        Sobol sampling. If external data is attached to the exploration, the
+        number of initialization evaluations will be reduced by the same
+        amount, unless `enforce_n_init=True`. By default, ``4``.
+    enforce_n_init : bool, optional
+        Whether to enforce the generation of `n_init` Sobol trials, even if
+        external data is supplied. By default, ``False``.
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
@@ -55,6 +60,7 @@ class AxServiceGenerator(AxGenerator):
         objectives: List[Objective],
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
+        enforce_n_init: Optional[bool] = False,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -74,6 +80,7 @@ class AxServiceGenerator(AxGenerator):
             model_history_dir=model_history_dir,
         )
         self._n_init = n_init
+        self._enforce_n_init = enforce_n_init
         self._ax_client = self._create_ax_client()
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
@@ -107,10 +114,10 @@ class AxServiceGenerator(AxGenerator):
 
                 # Since data was given externally, reduce number of
                 # initialization trials.
-                gs = self._ax_client.generation_strategy
-                if gs.current_step.model == Models.SOBOL:
+                if not self._enforce_n_init:
+                    gs = self._ax_client.generation_strategy
                     ngen, _ = gs._num_trials_to_gen_and_complete_in_curr_step()
-                    if ngen > 0:
+                    if gs.current_step.model == Models.SOBOL and ngen > 0:
                         gs.current_step.num_trials -= 1
 
     def _create_ax_client(self) -> AxClient:

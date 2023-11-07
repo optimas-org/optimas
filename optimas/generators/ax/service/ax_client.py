@@ -75,6 +75,7 @@ class AxClientGenerator(AxServiceGenerator):
             varying_parameters=varying_parameters,
             objectives=objectives,
             analyzed_parameters=analyzed_parameters,
+            enforce_n_init=True,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,
