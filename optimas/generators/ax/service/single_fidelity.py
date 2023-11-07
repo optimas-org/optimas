@@ -18,6 +18,15 @@ from .base import AxServiceGenerator
 class AxSingleFidelityGenerator(AxServiceGenerator):
     """Single-fidelity Bayesian optimization using the Ax service API.
 
+    Depending on whether a single or multiple objectives are given, the
+    acquisition function will be qNEI (Noisy Expected Improvement) or qNEHVI
+    (Noisy Expected Hypervolume Improvement).
+
+    By default, the hyperparameters of the GP are optimized by maximizing the
+    maximal likelihood of the data. A fully Bayesian approach using SAAS
+    priors is also available, which has been shown to perform well for
+    high-dimensional optimization [1]_ [2]_.
+
     Parameters
     ----------
     varying_parameters : list of VaryingParameter
@@ -30,6 +39,14 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. By default, ``4``.
+    fully_bayesian : bool, optional
+        Whether to optimize the hyperparameters of the GP with a fully
+        Bayesian approach (using SAAS priors) instead of maximizing
+        marginal likelihood. The fully Bayesian treatment is more expensive
+        (i.e., it takes longer to generate new trials) but can lead to
+        improved BO performance (i.e., requiring less evaluations). This
+        approach is specially well suited for high-dimensional optimization.
+        By default ``False``.
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
@@ -49,6 +66,13 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         Name of the directory in which the model will be saved. By default,
         ``'model_history'``.
 
+    References
+    ----------
+    .. [1] D. Eriksson, M. Jankowiak. High-Dimensional Bayesian Optimization
+       with Sparse Axis-Aligned Subspaces. Proceedings of the Thirty-Seventh
+       Conference on Uncertainty in Artificial Intelligence, 2021.
+    .. [2] https://ax.dev/tutorials/saasbo.html
+
     """
 
     def __init__(
@@ -57,6 +81,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         objectives: List[Objective],
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
+        fully_bayesian: Optional[bool] = False,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -64,6 +89,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
+        self._fully_bayesian = fully_bayesian
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
@@ -92,6 +118,29 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
                 }
             )
 
+        # Select BO model.
+        model_kwargs = {
+            "torch_dtype": torch.double,
+            "torch_device": torch.device(self.torch_device),
+        }
+        if self._fully_bayesian:
+            if len(self.objectives) > 1:
+                # Use a SAAS model with qNEHVI acquisition function.
+                MODEL_CLASS = Models.FULLYBAYESIANMOO
+            else:
+                # Use a SAAS model with qNEI acquisition function.
+                MODEL_CLASS = Models.FULLYBAYESIAN
+            # Disable additional logs from fully Bayesian model.
+            model_kwargs["disable_progbar"] = True
+            model_kwargs["verbose"] = False
+        else:
+            if len(self.objectives) > 1:
+                # Use a model with qNEHVI acquisition function.
+                MODEL_CLASS = Models.MOO
+            else:
+                # Use a model with qNEI acquisition function.
+                MODEL_CLASS = Models.GPEI
+
         # Make generation strategy:
         steps = []
 
@@ -102,15 +151,12 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
         )
 
-        # continue indefinitely with GPEI.
+        # continue indefinitely with BO.
         steps.append(
             GenerationStep(
-                model=Models.GPEI,
+                model=MODEL_CLASS,
                 num_trials=-1,
-                model_kwargs={
-                    "torch_dtype": torch.double,
-                    "torch_device": torch.device(self.torch_device),
-                },
+                model_kwargs=model_kwargs,
             )
         )
 
