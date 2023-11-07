@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 import os
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 import numpy as np
+import pandas as pd
 
 from optimas.utils.logger import get_logger
-from optimas.utils.other import update_object
+from optimas.utils.other import update_object, convert_to_dataframe
 from optimas.gen_functions import persistent_generator
 from optimas.core import (
     Objective,
@@ -73,7 +74,7 @@ class Generator:
         save_model: Optional[bool] = False,
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
-        custom_trial_parameters: Optional[TrialParameter] = None,
+        custom_trial_parameters: Optional[List[TrialParameter]] = None,
     ) -> None:
         if objectives is None:
             objectives = [Objective()]
@@ -94,7 +95,9 @@ class Generator:
             [] if custom_trial_parameters is None else custom_trial_parameters
         )
         self._gen_function = persistent_generator
-        self._trials = []
+        self._given_trials = []  # Trials given for evaluation.
+        self._queued_trials = []  # Trials queued to be given for evaluation.
+        self._trial_count = 0
 
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
@@ -132,9 +135,23 @@ class Generator:
         return self._dedicated_resources
 
     @property
-    def n_trials(self) -> int:
-        """Get the number of generated trials."""
-        return len(self._trials)
+    def n_queued_trials(self) -> int:
+        """Get the number of trials queued for evaluation."""
+        return len(self._queued_trials)
+
+    @property
+    def n_given_trials(self) -> int:
+        """Get the number of trials given for evaluation."""
+        return len(self._given_trials)
+
+    @property
+    def n_completed_trials(self) -> int:
+        """Get the number of completed (evaluated) trials."""
+        n_completed = 0
+        for trial in self._given_trials:
+            if trial.completed():
+                n_completed += 1
+        return n_completed
 
     def ask(self, n_trials: int) -> List[Trial]:
         """Ask the generator to suggest the next ``n_trials`` to evaluate.
@@ -150,30 +167,39 @@ class Generator:
             A list with all the generated trials.
 
         """
+        # Generate as many trials as needed and add them to the queue.
+        if n_trials > self.n_queued_trials:
+            n_gen = n_trials - self.n_queued_trials
+            gen_trials = []
+            for _ in range(n_gen):
+                gen_trials.append(
+                    Trial(
+                        varying_parameters=self._varying_parameters,
+                        objectives=self._objectives,
+                        analyzed_parameters=self._analyzed_parameters,
+                        custom_parameters=self._custom_trial_parameters,
+                    )
+                )
+            # Ask the generator to fill them.
+            gen_trials = self._ask(gen_trials)
+            # Keep only trials that have been given data.
+            for trial in gen_trials:
+                if len(trial.parameter_values) > 0:
+                    self._add_trial_to_queue(trial)
+                    logger.info(
+                        "Generated trial {} with parameters {}".format(
+                            trial.index, trial.parameters_as_dict()
+                        )
+                    )
+
+        # Get trials from the queue.
+        # The loop below properly handles the case in which the generator
+        # was not able to generate as many trials as requested.
         trials = []
-        # Initialize as many trials as requested.
-        for i in range(n_trials):
-            trials.append(
-                Trial(
-                    varying_parameters=self._varying_parameters,
-                    objectives=self._objectives,
-                    analyzed_parameters=self._analyzed_parameters,
-                    index=len(self._trials) + i,
-                    custom_parameters=self._custom_trial_parameters,
-                )
-            )
-        # Ask the generator to fill them.
-        trials = self._ask(trials)
-        # Keep only trials that have been given data.
-        trials = [trial for trial in trials if len(trial.parameter_values) > 0]
-        for trial in trials:
-            logger.info(
-                "Generated trial {} with parameters {}".format(
-                    trial.index, trial.parameters_as_dict()
-                )
-            )
-        # Store trials.
-        self._trials.extend(trials)
+        for _ in range(n_trials):
+            trial = self._get_next_trial()
+            if trial is not None:
+                trials.append(trial)
         return trials
 
     def tell(
@@ -191,9 +217,8 @@ class Generator:
 
         """
         for trial in trials:
-            if trial not in self._trials:
-                trial.index = len(self._trials)
-                self._trials.append(trial)
+            if trial not in self._given_trials:
+                self._add_external_evaluated_trial(trial)
         self._tell(trials)
         for trial in trials:
             log_msg = "Completed trial {} with objective(s) {}".format(
@@ -218,45 +243,164 @@ class Generator:
         """
         # Keep only evaluations where the simulation finished successfully.
         history = history[history["sim_ended"]]
-        n_sims = len(history)
+        trials = self._create_trials_from_external_data(
+            history, ignore_unrecognized_parameters=True
+        )
+        self.tell(trials, allow_saving_model=False)
+
+    def attach_trials(
+        self,
+        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
+        ignore_unrecognized_parameters: Optional[bool] = False,
+    ) -> None:
+        """Manually add a list of trials to the generator.
+
+        The given trials are placed at the top of the queue of trials that
+        will be proposed by the generator (that is, they will be the first
+        ones to be proposed the next time that `ask` is called).
+
+        Parameters
+        ----------
+        trial_data : dict, list, NDArray or DataFrame
+            The data containing the trial parameters.
+        ignore_unrecognized_parameters : bool, optional
+            Whether to ignore unrecognized parameters in the given data.
+        """
+        trials = self._create_trials_from_external_data(
+            trial_data,
+            include_evaluations=False,
+            ignore_unrecognized_parameters=ignore_unrecognized_parameters,
+        )
+        # Attach trials to the top of the queue.
+        for i, trial in enumerate(trials):
+            self._add_trial_to_queue(trial, queue_index=i)
+            logger.info(
+                "Attached trial {} with parameters {}".format(
+                    trial.index, trial.parameters_as_dict()
+                )
+            )
+
+    def get_trial(self, trial_index) -> Union[Trial, None]:
+        """Get trial by index.
+
+        Parameters
+        ----------
+        trial_index : int
+            Index of the trial to retrieve.
+        """
+        for trial in self._given_trials + self._queued_trials:
+            if trial.index == trial_index:
+                return trial
+
+    def _add_trial_to_queue(
+        self, trial: Trial, queue_index: Optional[int] = None
+    ) -> None:
+        """Add trial to the queue.
+
+        By default, the trial will be appended to the end of the queue, unless
+        a `queue_index` is given. Trials at the top of the queue will be the
+        first ones to be given for evaluation when `ask` is called.
+
+        Parameters
+        ----------
+        trial : Trial
+            The trial to add to the queue.
+        queue_index : int, optional
+            Queue index in which to insert the trial. If not given, the trial
+            will be appended to the end of the queue.
+        """
+        trial.index = self._trial_count
+        if queue_index is None:
+            self._queued_trials.append(trial)
+        else:
+            self._queued_trials.insert(queue_index, trial)
+        self._trial_count += 1
+
+    def _get_next_trial(self) -> Union[None, Trial]:
+        """Get the next trial to evaluate."""
+        if self._queued_trials:
+            trial = self._queued_trials.pop(0)
+            self._given_trials.append(trial)
+            return trial
+
+    def _add_external_evaluated_trial(self, trial: Trial) -> None:
+        """Add an evaluated trial that was not generated by the generator."""
+        trial.index = self._trial_count
+        self._given_trials.append(trial)
+        self._trial_count += 1
+
+    def _create_trials_from_external_data(
+        self,
+        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
+        include_evaluations: Optional[bool] = True,
+        ignore_unrecognized_parameters: Optional[bool] = False,
+    ) -> List[Trial]:
+        """Create a list of Trials from the given data."""
+        # Convert to dataframe.
+        trial_data = convert_to_dataframe(trial_data)
+
+        # Get fields in given data.
+        given_fields = trial_data.columns.values.tolist()
+
+        # Check for missing fields in the data.
+        required_parameters = self.varying_parameters + self.analyzed_parameters
+        if include_evaluations:
+            required_parameters += self.objectives
+        required_fields = [p.name for p in required_parameters]
+        required_fields += [p.save_name for p in self._custom_trial_parameters]
+        missing_fields = [f for f in required_fields if f not in given_fields]
+        if missing_fields:
+            raise ValueError(
+                "Could not create trials from given data because the "
+                f"required fields {missing_fields} are missing."
+            )
+
+        # Check if the given data has more fields than required.
+        extra_fields = [f for f in given_fields if f not in required_fields]
+        if extra_fields and not ignore_unrecognized_parameters:
+            raise ValueError(
+                f"The given data contains the fields {extra_fields}, which "
+                "are unknown to the generator. If this is expected, ignore "
+                "them by setting `ignore_unrecognized_parameters=True`."
+            )
+
+        # Create trials.
+        n_sims = len(trial_data)
         trials = []
         for i in range(n_sims):
             trial = Trial(
                 varying_parameters=self.varying_parameters,
                 parameter_values=[
-                    history[var.name][i] for var in self.varying_parameters
+                    trial_data[var.name][i] for var in self.varying_parameters
                 ],
                 objectives=self._objectives,
                 analyzed_parameters=self._analyzed_parameters,
-                evaluations=[
-                    Evaluation(parameter=par, value=history[par.name][i])
-                    for par in self._objectives + self._analyzed_parameters
-                ],
                 custom_parameters=self._custom_trial_parameters,
             )
             for par in self._custom_trial_parameters:
-                setattr(trial, par.name, history[par.save_name][i].item())
+                setattr(trial, par.name, trial_data[par.save_name][i])
+            if include_evaluations:
+                for par in self._objectives + self._analyzed_parameters:
+                    ev = Evaluation(
+                        parameter=par, value=trial_data[par.name][i]
+                    )
+                    trial.complete_evaluation(ev)
             trials.append(trial)
-        self.tell(trials, allow_saving_model=False)
+        return trials
 
     def save_model_to_file(self) -> None:
         """Save model to file."""
-        # Get total number of completed trials.
-        n_completed_trials = 0
-        for trial in self._trials:
-            if trial.completed():
-                n_completed_trials += 1
         # Get number of completed trials since last model was saved.
-        n_new = n_completed_trials - self._n_completed_trials_last_saved
+        n_new = self.n_completed_trials - self._n_completed_trials_last_saved
         # Save model only if save period is reached.
         if n_new >= self._model_save_period:
-            self._n_completed_trials_last_saved = n_completed_trials
+            self._n_completed_trials_last_saved = self.n_completed_trials
             if not os.path.exists(self._model_history_dir):
                 os.mkdir(self._model_history_dir)
             self._save_model_to_file()
             logger.info(
                 "Saved model to file after {} completed trials.".format(
-                    n_completed_trials
+                    self.n_completed_trials
                 )
             )
 
