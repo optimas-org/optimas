@@ -440,9 +440,8 @@ def test_ax_service_init():
 
     n_init = 4
     n_external = 6
-    
-    for i in range(n_external):
 
+    for i in range(n_external):
         gen = AxSingleFidelityGenerator(
             varying_parameters=[var1, var2], objectives=[obj], n_init=n_init
         )
@@ -477,10 +476,12 @@ def test_ax_service_init():
             assert df["generation_method"][k] == "Sobol"
         df["generation_method"][min(i, n_init)] == "GPEI"
 
-
     # Test single case with `enforce_n_init=True`
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj], n_init=n_init, enforce_n_init=True
+        varying_parameters=[var1, var2],
+        objectives=[obj],
+        n_init=n_init,
+        enforce_n_init=True,
     )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
