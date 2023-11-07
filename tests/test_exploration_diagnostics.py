@@ -54,9 +54,9 @@ def test_exploration_diagnostics():
         relative_start_time=False,
         remove_unfinished_evaluations=False,
     )
-    for name in exploration.history.dtype.names:
+    for name in exploration.history:
         np.testing.assert_array_equal(
-            diags.history[name].array.to_numpy(), exploration.history[name]
+            diags.history[name].to_numpy(), exploration.history[name].to_numpy()
         )
 
     for p_in, p_out in zip(gen.varying_parameters, diags.varying_parameters):
