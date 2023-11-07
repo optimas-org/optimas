@@ -94,14 +94,14 @@ def test_ax_single_fidelity():
     exploration.run()
 
     # Check that the generator has been updated.
-    assert len(gen._trials) == exploration.history.shape[0]
+    assert gen.n_completed_trials == exploration.history.shape[0]
 
     # Check that the original ax client has been updated.
     n_ax_trials = ax_client.get_trials_data_frame().shape[0]
     assert n_ax_trials == exploration.history.shape[0]
 
     # Save history for later restart test
-    np.save("./tests_output/ax_sf_history", exploration.history)
+    np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
 
 
 def test_ax_single_fidelity_moo():
@@ -243,7 +243,7 @@ def test_ax_multi_fidelity():
     exploration.run()
 
     # Save history for later restart test
-    np.save("./tests_output/ax_mf_history", exploration.history)
+    np.save("./tests_output/ax_mf_history", exploration._libe_history.H)
 
 
 def test_ax_multitask():
@@ -276,7 +276,7 @@ def test_ax_multitask():
     exploration.run()
 
     # Save history for later restart test
-    np.save("./tests_output/ax_mt_history", exploration.history)
+    np.save("./tests_output/ax_mt_history", exploration._libe_history.H)
 
 
 def test_ax_client():

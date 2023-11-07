@@ -2,11 +2,13 @@
 
 import os
 import glob
-from typing import Optional, Union
+from typing import Optional, Union, Dict, List
 
 import numpy as np
+import pandas as pd
 
 from libensemble.libE import libE
+from libensemble.history import History
 from libensemble.tools import add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
@@ -14,6 +16,7 @@ from libensemble.executors.mpi_executor import MPIExecutor
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.utils.logger import get_logger
+from optimas.utils.other import convert_to_dataframe
 
 
 logger = get_logger(__name__)
@@ -96,11 +99,25 @@ class Exploration:
         self._n_evals = 0
         self._resume = resume
         self._history_file_name = "exploration_history_after_evaluation_{}"
-        self._load_history(history, resume)
         self._create_alloc_specs()
         self._create_executor()
         self._initialize_evaluator()
         self._set_default_libe_specs()
+        self._libe_history = self._create_libe_history()
+        self._load_history(history, resume)
+
+    @property
+    def history(self) -> pd.DataFrame:
+        """Get the exploration history."""
+        history = convert_to_dataframe(self._libe_history.H)
+        ordered_columns = ["trial_index"]
+        ordered_columns += [p.name for p in self.generator.varying_parameters]
+        ordered_columns += [p.name for p in self.generator.objectives]
+        ordered_columns += [p.name for p in self.generator.analyzed_parameters]
+        ordered_columns += sorted(
+            [n for n in history if n not in ordered_columns]
+        )
+        return history[ordered_columns]
 
     def run(self, n_evals: Optional[int] = None) -> None:
         """Run the exploration.
@@ -127,7 +144,7 @@ class Exploration:
             exit_criteria["sim_max"] = sim_max
 
         # Get initial number of generator trials.
-        n_trials_initial = self.generator.n_trials
+        n_evals_initial = self.generator.n_completed_trials
 
         # Create persis_info.
         persis_info = add_unique_random_streams({}, self.sim_workers + 2)
@@ -161,18 +178,18 @@ class Exploration:
             persis_info,
             self.alloc_specs,
             self.libE_specs,
-            H0=self.history,
+            H0=self._libe_history.H,
         )
 
         # Update history.
-        self.history = history
+        self._libe_history.H = history
 
         # Update generator with the one received from libE.
         self.generator._update(persis_info[1]["generator"])
 
         # Update number of evaluation in this exploration.
-        n_trials_final = self.generator.n_trials
-        self._n_evals += n_trials_final - n_trials_initial
+        n_trials_final = self.generator.n_completed_trials
+        self._n_evals += n_trials_final - n_evals_initial
 
         # Determine if current rank is master.
         if self.libE_specs["comms"] == "local":
@@ -185,6 +202,202 @@ class Exploration:
         # Save history.
         if is_master:
             self._save_history()
+
+    def attach_trials(
+        self,
+        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
+        ignore_unrecognized_parameters: Optional[bool] = False,
+    ) -> None:
+        """Attach trials for future evaluation.
+
+        Use this method to manually suggest a set of trials to the exploration.
+        The given trials will be the first ones to be evaluated the next time
+        that `run` is called.
+
+        The given data should contain all necessary fields to create the trials
+        (i.e., the values of the `VaryingParameters`).
+        The method accepts this data as a list, dictionary, pandas DataFrame or
+        numpy structured array (see example below).
+
+        Parameters
+        ----------
+        trial_data : dict, list, NDArray or DataFrame
+            The data containing the trial parameters.
+        ignore_unrecognized_parameters : bool, optional
+            Whether to ignore unrecognized parameters in the given data. By
+            default, if the data contains more fields than the
+            `VaryingParameters`, `AnalyzedParameters` and `Objectives` of the
+            exploration, a `ValueError` is raised, since this might indicate
+            a problem in the data. If set to `True`, the error will be ignored.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from optimas.explorations import Exploration
+        >>> from optimas.generators import RandomSamplingGenerator
+        >>> from optimas.evaluators import FunctionEvaluator
+        >>> from optimas.core import VaryingParameter, Objective
+        >>> params = [VaryingParameter(f"x{i}", -5, 5) for i in range(2)]
+        >>> objs = [Objective("f")]
+        >>> def eval_func(input_params, output_params):
+        ...     # Placeholder evaluator
+        ...     output_params["f"] = 1.
+        >>> ev = FunctionEvaluator(function=eval_func)
+        >>> gen = RandomSamplingGenerator(
+        ...     varying_parameters=params,
+        ...     objectives=objs
+        ... )
+        >>> exploration = Exploration(
+        ...     generator=gen,
+        ...     evaluator=ev,
+        ...     max_evals=100,
+        ...     sim_workers=2
+        ... )
+
+        **Attach trials as list**
+
+        >>> exploration.attach_trials(
+        ...     [
+        ...         {"x0": 1., "x1": 1.},
+        ...         {"x0": 4., "x1": 3.},
+        ...         {"x0": 1., "x1": 5.}
+        ...     ]
+        ... )
+
+        **Attach trials as dictionary**
+
+        >>> exploration.attach_trials(
+        ...     {
+        ...         "x0": [1., 4., 1.],
+        ...         "x1": [1., 3., 5.]
+        ...     },
+        ... )
+
+        **Attach trials as pandas dataframe**
+
+        >>> df = pd.DataFrame({"x0": [1., 4., 1.], "x1": [1., 3., 1.]})
+        >>> exploration.attach_trials(df)
+        """
+        trial_data = convert_to_dataframe(trial_data)
+        self.generator.attach_trials(
+            trial_data,
+            ignore_unrecognized_parameters=ignore_unrecognized_parameters,
+        )
+
+    def evaluate_trials(
+        self,
+        trial_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
+        ignore_unrecognized_parameters: Optional[bool] = False,
+    ) -> None:
+        """Attach and evaluate trials.
+
+        Use this method to manually suggest a set of trials to the exploration
+        and evaluate them immediately.
+
+        The given data should contain all necessary fields to create the trials
+        (i.e., the values of the `VaryingParameters`).
+        The method accepts this data as a list, dictionary, pandas DataFrame or
+        numpy structured array (see example in
+        :meth:`.Exploration.attach_trials`).
+
+        Parameters
+        ----------
+        trial_data : dict, list, NDArray or DataFrame
+            The data containing the trial parameters.
+        ignore_unrecognized_parameters : bool, optional
+            Whether to ignore unrecognized parameters in the given data. By
+            default, if the data contains more fields than the
+            `VaryingParameters`, `AnalyzedParameters` and `Objectives` of the
+            exploration, a `ValueError` is raised, since this might indicate
+            a problem in the data. If set to `True`, the error will be ignored.
+        """
+        trial_data = convert_to_dataframe(trial_data)
+        self.attach_trials(
+            trial_data,
+            ignore_unrecognized_parameters=ignore_unrecognized_parameters,
+        )
+        self.run(n_evals=len(trial_data))
+
+    def attach_evaluations(
+        self,
+        evaluation_data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
+        ignore_unrecognized_parameters: Optional[bool] = False,
+    ) -> None:
+        """Attach evaluations from external source.
+
+        Use this method to manually attach a set of evaluations to the
+        exploration. These could be evaluations that were carried out in
+        a previous exploration or from any other source. The data from the
+        evaluations will be given to (and used by) the generator. The
+        attached evaluations are not counted when determining if `max_evals`
+        has been reached.
+
+        The given data should contain all necessary fields that define an
+        evaluation (i.e., the values of the `VaryingParameters`,
+        `AnalyzedParameters` and `Objectives`).
+        The method accepts this data as a list, dictionary, pandas DataFrame or
+        numpy structured array (see example in
+        :meth:`.Exploration.attach_trials`).
+
+        Parameters
+        ----------
+        trial_data : dict, list, NDArray or DataFrame
+            The data containing the trial parameters.
+        ignore_unrecognized_parameters : bool, optional
+            Whether to ignore unrecognized parameters in the given data. By
+            default, if the data contains more fields than the
+            `VaryingParameters`, `AnalyzedParameters` and `Objectives` of the
+            exploration, a `ValueError` is raised, since this might indicate
+            a problem in the data. If set to `True`, the error will be ignored.
+        """
+        evaluation_data = convert_to_dataframe(evaluation_data)
+        n_evals = len(evaluation_data)
+        if n_evals == 0:
+            return
+
+        # Increase length of history and get a view of the added rows.
+        self._libe_history.grow_H(n_evals)
+        history_new = self._libe_history.H[-n_evals:]
+
+        fields = evaluation_data.columns.values.tolist()
+
+        # Check if the given evaluations are missing required fields.
+        all_params = (
+            self.generator.varying_parameters
+            + self.generator.objectives
+            + self.generator.analyzed_parameters
+        )
+        missing_fields = [p.name for p in all_params if p.name not in fields]
+        if missing_fields:
+            raise ValueError(
+                "Could not attach evaluations from given data because the "
+                f"required fields {missing_fields} are missing."
+            )
+
+        # Check if the given evaluations have more fields than required.
+        history_fields = history_new.dtype.names
+        extra_fields = [f for f in fields if f not in history_fields]
+        if extra_fields and not ignore_unrecognized_parameters:
+            raise ValueError(
+                f"The given data contains the fields {extra_fields}, which "
+                "are unknown to the generator. If this is expected, ignore "
+                "them by setting `ignore_unrecognized_parameters=True`."
+            )
+
+        # Fill in new rows.
+        for field in fields:
+            if field in history_new.dtype.names:
+                history_new[field] = evaluation_data[field]
+        history_new["sim_started"] = True
+        history_new["sim_ended"] = True
+        history_new["trial_index"] = np.arange(
+            self.generator._trial_count,
+            self.generator._trial_count + n_evals,
+            dtype=int,
+        )
+
+        # Incorporate new history into generator.
+        self.generator.incorporate_history(history_new)
 
     def _create_executor(self) -> None:
         """Create libEnsemble executor."""
@@ -228,13 +441,12 @@ class Exploration:
         assert history is None or isinstance(
             history, np.ndarray
         ), "Type {} not valid for `history`".format(type(history))
-        # Incorporate history into generator.
+        # Incorporate history into exploration.
         if history is not None:
-            self.generator.incorporate_history(history)
-        # When resuming an exploration, update evaluations counter.
-        if resume:
-            self._n_evals = history.size
-        self.history = history
+            self.attach_evaluations(history)
+            # When resuming an exploration, update evaluations counter.
+            if resume:
+                self._n_evals = history.size
 
     def _save_history(self):
         """Save history array to file."""
@@ -247,7 +459,27 @@ class Exploration:
             )
             for old_file in glob.glob(old_files):
                 os.remove(old_file)
-            np.save(file_path, self.history)
+            np.save(file_path, self._libe_history.H)
+
+    def _create_libe_history(self) -> History:
+        """Initialize an empty libEnsemble history."""
+        run_params = self.evaluator.get_run_params()
+        gen_specs = self.generator.get_gen_specs(
+            self.sim_workers, run_params, None
+        )
+        sim_specs = self.evaluator.get_sim_specs(
+            self.generator.varying_parameters,
+            self.generator.objectives,
+            self.generator.analyzed_parameters,
+        )
+        libe_history = History(
+            self.alloc_specs,
+            sim_specs,
+            gen_specs,
+            exit_criteria={"sim_max": 0},
+            H0=[],
+        )
+        return libe_history
 
     def _get_most_recent_history_file_path(self):
         """Get path of most recently saved history file."""
