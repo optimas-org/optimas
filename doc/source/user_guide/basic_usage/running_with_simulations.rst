@@ -207,3 +207,50 @@ argument. For example:
 
 
 See :class:`~optimas.evaluators.TemplateEvaluator` for more details.
+
+
+Running a chain of simulations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :class:`~optimas.evaluators.ChainEvaluator` is designed for use cases
+where each evaluation involves several steps, each step being a simulation
+with a different simulation code.
+
+The steps are defined by a list of ``TemplateEvaluators`` ordered in the
+sequence in which they should be executed. Each step can request a different
+number of resources, and the ``ChainEvaluator`` gets allocated the maximum
+number of processes (``n_procs``) and GPUs (``n_gpus``) that every step might
+request.
+For instance, if one step requires ``n_procs=20`` and ``n_gpus=0``, and a
+second step requires ``n_procs=4`` and ``n_gpus=4``, each evaluation will
+get assigned ``n_procs=20`` and ``n_gpus=4``. Then each step will only
+make use of the subset of resources it needs.
+
+Here is a basic example of how to use ``ChainEvaluator``:
+
+.. code-block:: python
+
+    from optimas.evaluators import TemplateEvaluator, ChainEvaluator
+
+    # define your TemplateEvaluators
+    ev1 = TemplateEvaluator(
+        sim_template="template_simulation_script_1.py",
+        analysis_func=analyze_simulation_1,
+    )
+
+    ev2 = TemplateEvaluator(
+        sim_template="template_simulation_script_2.py",
+        analysis_func=analyze_simulation_2,
+    )
+
+    # use them in ChainEvaluator
+    chain_ev = ChainEvaluator([ev1, ev2])
+
+
+In this example, ``template_simulation_script_1.py`` and
+``template_simulation_script_2.py`` are your simulation scripts for the
+first and second steps, respectively. ``analyze_simulation_1`` and
+``analyze_simulation_2`` are functions that analyze the output of each
+simulation. There is no need to provide an analysis function for every step,
+but at least one should be defined.
+
