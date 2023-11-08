@@ -195,7 +195,7 @@ environment, make sure to specify the loaded version with the ``env_mpi``
 argument. For example:
 
 .. code-block:: python
-   :emphasize-lines: 4
+   :emphasize-lines: 5,6
 
    ev = TemplateEvaluator(
        sim_template="template_simulation_script.txt",
