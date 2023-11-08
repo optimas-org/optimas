@@ -202,7 +202,7 @@ argument. For example:
        executable="/path/to/my_executable",
        analysis_func=analyze_simulation,
        env_script="/path/to/my_env_script.sh",
-       env_mpi="openmpi"
+       env_mpi="openmpi",
    )
 
 
