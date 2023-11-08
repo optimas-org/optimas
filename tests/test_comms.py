@@ -24,7 +24,6 @@ def test_libe_comms():
     max_evals = 10
 
     for comm in ["local", "local_threading"]:
-
         # Create generator.
         gen = RandomSamplingGenerator(
             varying_parameters=[var1, var2], objectives=[obj]
@@ -40,7 +39,7 @@ def test_libe_comms():
             max_evals=max_evals,
             sim_workers=2,
             exploration_dir_path=f"./tests_output/test_comms_{comm}",
-            libe_comms=comm
+            libe_comms=comm,
         )
 
         # Run exploration.

@@ -89,9 +89,13 @@ class Exploration:
         history_save_period: Optional[int] = None,
         exploration_dir_path: Optional[str] = "./exploration",
         resume: Optional[bool] = False,
-        libe_comms: Optional[Literal["local", "local_threading", "mpi"]] = "local",
+        libe_comms: Optional[
+            Literal["local", "local_threading", "mpi"]
+        ] = "local",
     ) -> None:
-        if libe_comms == "local_threading" and not isinstance(evaluator, FunctionEvaluator):
+        if libe_comms == "local_threading" and not isinstance(
+            evaluator, FunctionEvaluator
+        ):
             raise ValueError(
                 "'local_threading' mode is only supported when using a "
                 "`FunctionEvaluator`. Use 'local' mode instead."
