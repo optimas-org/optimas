@@ -40,6 +40,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
     # 'sphinx.ext.intersphinx',
+    "sphinx_copybutton",
     "sphinx_design",
     # 'sphinx_gallery.gen_gallery',
     "numpydoc",
