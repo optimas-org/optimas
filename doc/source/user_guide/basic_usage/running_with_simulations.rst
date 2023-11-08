@@ -163,3 +163,47 @@ path to the ``executable`` that will run your simulation.
        executable="/path/to/my_executable",
        analysis_func=analyze_simulation,
    )
+
+
+Using a custom environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``env_script`` and ``env_mpi`` parameters allow you to customize the
+environment in which your simulation runs.
+
+``env_script`` takes the path to a shell script that sets up the
+environment by loading the necessary dependencies, setting environment
+variables, or performing other setup tasks required by your simulation.
+
+This script will look different depending on your system and use
+case, but it will typically be something like
+
+.. code-block:: bash
+
+    #!/bin/bash
+
+    # Set environment variables
+    export VAR1=value1
+    export VAR2=value2
+
+    # Load a module
+    module load module_name
+
+
+If the script loads a different MPI version than the one in the `optimas`
+environment, make sure to specify the loaded version with the `env_mpi`
+argument. For example:
+
+.. code-block:: python
+   :emphasize-lines: 4
+
+   ev = TemplateEvaluator(
+       sim_template="template_simulation_script.txt",
+       executable="/path/to/my_executable",
+       analysis_func=analyze_simulation,
+       env_script="/path/to/my_env_script.sh",
+       env_mpi="openmpi"
+   )
+
+
+See :class:`~optimas.evaluators.TemplateEvaluator` for more details.
