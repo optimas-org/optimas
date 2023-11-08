@@ -117,6 +117,7 @@ class AxServiceGenerator(AxGenerator):
                 if not self._enforce_n_init:
                     gs = self._ax_client.generation_strategy
                     ngen, _ = gs._num_trials_to_gen_and_complete_in_curr_step()
+                    # Reduce only if there are still Sobol trials to generate.
                     if gs.current_step.model == Models.SOBOL and ngen > 0:
                         gs.current_step.num_trials -= 1
 
