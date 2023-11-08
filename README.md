@@ -34,7 +34,7 @@ Optimas is a Python library designed for highly scalable optimization, from lapt
 ## Key Features
 
 - **Scalability**: Leveraging the power of [libEnsemble](https://github.com/Libensemble/libensemble), Optimas is designed to scale seamlessly from your laptop to high-performance computing clusters.
-- **User-Friendly**: Optimas simplifies the process of running large parameter scans and optimizations in parallel. Specify the number of parallel evaluations and the computing resources to allocate to each of them and Optimas will handle the rest.
+- **User-Friendly**: Optimas simplifies the process of running large parallel parameter scans and optimizations. Specify the number of parallel evaluations and the computing resources to allocate to each of them and Optimas will handle the rest.
 - **Advanced Optimization**: Optimas integrates algorithms from the [Ax](https://github.com/facebook/Ax) library, offering both single- and multi-objective Bayesian optimization. This includes advanced techniques such as multi-fidelity and multi-task algorithms.
 
 
