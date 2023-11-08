@@ -54,7 +54,7 @@ Make sure `mpi4py` is available in your environment before installing optimas. F
 
 
 ## Documentation
-For more information on how to use Optimas, check out the [documentation](https://optimas.readthedocs.io/). You'll find installation instructions, a user guide, examples and the API reference.
+For more information on how to use Optimas, check out the [documentation](https://optimas.readthedocs.io/). You'll find installation instructions, a user guide, [examples](https://optimas.readthedocs.io/en/latest/examples/index.html) and the API reference.
 
 
 ## Support
