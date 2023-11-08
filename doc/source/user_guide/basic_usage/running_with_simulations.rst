@@ -190,8 +190,8 @@ case, but it will typically be something like
     module load module_name
 
 
-If the script loads a different MPI version than the one in the `optimas`
-environment, make sure to specify the loaded version with the `env_mpi`
+If the script loads a different MPI version than the one in the ``optimas``
+environment, make sure to specify the loaded version with the ``env_mpi``
 argument. For example:
 
 .. code-block:: python
