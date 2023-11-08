@@ -451,7 +451,7 @@ def test_ax_service_init():
             evaluator=ev,
             max_evals=6,
             sim_workers=2,
-            exploration_dir_path="./tests_output/test_ax_single_fidelity",
+            exploration_dir_path=f"./tests_output/test_ax_service_init_{i}",
         )
 
         # Get reference to AxClient.
@@ -505,7 +505,7 @@ def test_ax_service_init():
     # Run exploration.
     exploration.run()
 
-    # Check that the number of SOBOL trials is `still n_init` after adding
+    # Check that the number of SOBOL trials is still `n_init` after adding
     # `n_external` Manual trials.
     df = ax_client.get_trials_data_frame()
     for j in range(n_external):
