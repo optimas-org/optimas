@@ -28,27 +28,41 @@
   </p>
 </div>
 
-Optimas is a Python library for scalable optimization on massively-parallel supercomputers. See the [documentation](https://optimas.readthedocs.io/) for installation instructions, tutorials, and more information.
+Optimas is a Python library designed for highly scalable optimization, from laptops to massively-parallel supercomputers.
+
+
+## Key Features
+
+- **Scalability**: Leveraging the power of [libEnsemble](https://github.com/Libensemble/libensemble), Optimas is designed to scale seamlessly from your laptop to high-performance computing clusters.
+- **User-Friendly**: Optimas simplifies the process of running large parameter scans and optimizations in parallel. Specify the number of parallel evaluations and the computing resources to allocate to each of them and Optimas will handle the rest.
+- **Advanced Optimization**: Optimas integrates algorithms from the [Ax](https://github.com/facebook/Ax) library, offering both single- and multi-objective Bayesian optimization. This includes advanced techniques such as multi-fidelity and multi-task algorithms.
+
 
 ## Installation
-From PyPI
+You can install Optimas from PyPI:
 ```sh
 pip install optimas
 ```
-From GitHub
+Or directly from GitHub:
 ```sh
 pip install git+https://github.com/optimas-org/optimas.git
 ```
-Make sure `mpi4py` is available in your environment prior to installing optimas (see [here](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html) for more details).
-
-Optimas is regularly used and tested in large distributed HPC systems.
-We have prepared installation instructions for
+Make sure `mpi4py` is available in your environment before installing optimas. Fore more details, check out the full [installation guide](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html). We have also prepared dedicated installation instructions for some HPC systems such as 
 [JUWELS (JSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_juwels.html),
 [Maxwell (DESY)](https://optimas.readthedocs.io/en/latest/user_guide/installation_maxwell.html) and
 [Perlmutter (NERSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_perlmutter.html).
 
+
+## Documentation
+For more information on how to use Optimas, check out the [documentation](https://optimas.readthedocs.io/). You'll find installation instructions, a user guide, examples and the API reference.
+
+
+## Support
+Need more help? Join our [Slack channel](https://optimas-group.slack.com/) or open a [new issue](https://github.com/optimas-org/optimas/issues/new/choose).
+
+
 ## Citing optimas
-If your usage of `optimas` leads to a scientific publication, please consider citing the original [paper](https://link.aps.org/doi/10.1103/PhysRevAccelBeams.26.084601):
+If your usage of Optimas leads to a scientific publication, please consider citing the original [paper](https://link.aps.org/doi/10.1103/PhysRevAccelBeams.26.084601):
 ```bibtex
 @article{PhysRevAccelBeams.26.084601,
     title     = {Bayesian optimization of laser-plasma accelerators assisted by reduced physical models},
