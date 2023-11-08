@@ -454,7 +454,7 @@ def test_ax_service_init():
             exploration_dir_path="./tests_output/test_ax_single_fidelity",
         )
 
-        # Get reference to original AxClient.
+        # Get reference to AxClient.
         ax_client = gen._ax_client
 
         for _ in range(i):
@@ -492,7 +492,7 @@ def test_ax_service_init():
         exploration_dir_path="./tests_output/test_ax_service_init_enforce",
     )
 
-    # Get reference to original AxClient.
+    # Get reference to AxClient.
     ax_client = gen._ax_client
 
     for _ in range(n_external):
@@ -505,8 +505,8 @@ def test_ax_service_init():
     # Run exploration.
     exploration.run()
 
-    # Check that the number of SOBOL trials is reduced and that they
-    # are replaced by Manual trials.
+    # Check that the number of SOBOL trials is `still n_init` after adding
+    # `n_external` Manual trials.
     df = ax_client.get_trials_data_frame()
     for j in range(n_external):
         assert df["generation_method"][j] == "Manual"
