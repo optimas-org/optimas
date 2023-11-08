@@ -47,7 +47,7 @@ Or directly from GitHub:
 ```sh
 pip install git+https://github.com/optimas-org/optimas.git
 ```
-Make sure `mpi4py` is available in your environment before installing optimas. Fore more details, check out the full [installation guide](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html). We have also prepared dedicated installation instructions for some HPC systems such as 
+Make sure `mpi4py` is available in your environment before installing optimas. Fore more details, check out the full [installation guide](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html). We have also prepared dedicated installation instructions for some HPC systems such as
 [JUWELS (JSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_juwels.html),
 [Maxwell (DESY)](https://optimas.readthedocs.io/en/latest/user_guide/installation_maxwell.html) and
 [Perlmutter (NERSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_perlmutter.html).
