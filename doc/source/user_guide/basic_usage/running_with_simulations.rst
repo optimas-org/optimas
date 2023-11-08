@@ -253,4 +253,3 @@ first and second steps, respectively. ``analyze_simulation_1`` and
 ``analyze_simulation_2`` are functions that analyze the output of each
 simulation. There is no need to provide an analysis function for every step,
 but at least one should be defined.
-
