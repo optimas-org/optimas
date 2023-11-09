@@ -2,7 +2,7 @@
 
 import os
 import glob
-from typing import Optional, Union, Dict, List
+from typing import Optional, Union, Dict, List, Literal
 
 import numpy as np
 import pandas as pd
@@ -15,6 +15,7 @@ from libensemble.executors.mpi_executor import MPIExecutor
 
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
+from optimas.evaluators.function_evaluator import FunctionEvaluator
 from optimas.utils.logger import get_logger
 from optimas.utils.other import convert_to_dataframe
 
@@ -60,12 +61,17 @@ class Exploration:
         There is no need to provide the `history` path (it will be ignored).
         If `False` (default value), the exploration will raise an error if
         the `exploration_dir_path` already exists.
-    libe_comms :  {'local', 'mpi'}, optional.
+    libe_comms :  {'local', 'local_threading', 'mpi'}, optional.
         The communication mode for libEnseble. Determines whether to use
-        Python ``multiprocessing`` (local mode) or MPI for the communication
-        between the manager and workers. If running in ``'mpi'`` mode, the
-        Optimas script should be launched with ``mpirun`` or equivalent, for
-        example, ``mpirun -np N python myscript.py``. This will launch one
+        Python ``multiprocessing`` (local), ``threading`` (local_threading)
+        or MPI for the communication between the manager and workers.
+        The ``'local_threading'`` mode is only recommended when running in a
+        Jupyter notebook if the default 'local' mode has issues (this
+        can happen especially on Windows and Mac, which use multiprocessing
+        ``spawn``). ``'local_threading'`` only supports ``FunctionEvaluator``s.
+        If running in ``'mpi'`` mode, the Optimas script should be launched
+        with ``mpirun`` or equivalent, for example,
+        ``mpirun -np N python myscript.py``. This will launch one
         manager and ``N-1`` simulation workers. In this case, the
         ``sim_workers`` parameter is ignored. By default, ``'local'`` mode
         is used.
@@ -83,8 +89,17 @@ class Exploration:
         history_save_period: Optional[int] = None,
         exploration_dir_path: Optional[str] = "./exploration",
         resume: Optional[bool] = False,
-        libe_comms: Optional[str] = "local",
+        libe_comms: Optional[
+            Literal["local", "local_threading", "mpi"]
+        ] = "local",
     ) -> None:
+        if libe_comms == "local_threading" and not isinstance(
+            evaluator, FunctionEvaluator
+        ):
+            raise ValueError(
+                "'local_threading' mode is only supported when using a "
+                "`FunctionEvaluator`. Use 'local' mode instead."
+            )
         self.generator = generator
         self.evaluator = evaluator
         self.max_evals = max_evals
@@ -480,7 +495,7 @@ class Exploration:
         libE_specs["dedicated_mode"] = False
         # Set communications and corresponding number of workers.
         libE_specs["comms"] = self.libe_comms
-        if self.libe_comms == "local":
+        if self.libe_comms in ["local", "local_threading"]:
             libE_specs["nworkers"] = self.sim_workers + 1
         elif self.libe_comms == "mpi":
             # Warn user if openmpi is being used.
@@ -499,7 +514,8 @@ class Exploration:
         else:
             raise ValueError(
                 "Communication mode '{}'".format(self.libe_comms)
-                + " not recognized. Possible values are 'local' or 'mpi'."
+                + " not recognized. Possible values are 'local', "
+                + "'local_threading' or 'mpi'."
             )
         # Set exploration directory path.
         libE_specs["ensemble_dir_path"] = "evaluations"
