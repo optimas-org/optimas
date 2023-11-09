@@ -98,7 +98,7 @@ class Exploration:
         self.libe_comms = libe_comms
         self._n_evals = 0
         self._resume = resume
-        self._history_file_name = "exploration_history_after_evaluation_{}"
+        self._history_file_prefix = "exploration_history"
         self._create_alloc_specs()
         self._create_executor()
         self._initialize_evaluator()
@@ -190,18 +190,6 @@ class Exploration:
         # Update number of evaluation in this exploration.
         n_trials_final = self.generator.n_completed_trials
         self._n_evals += n_trials_final - n_evals_initial
-
-        # Determine if current rank is master.
-        if self.libE_specs["comms"] == "local":
-            is_master = True
-        else:
-            from mpi4py import MPI
-
-            is_master = MPI.COMM_WORLD.Get_rank() == 0
-
-        # Save history.
-        if is_master:
-            self._save_history()
 
     def attach_trials(
         self,
@@ -448,19 +436,6 @@ class Exploration:
             if resume:
                 self._n_evals = history.size
 
-    def _save_history(self):
-        """Save history array to file."""
-        filename = self._history_file_name.format(self._n_evals)
-        exploration_dir_path = os.path.abspath(self.exploration_dir_path)
-        file_path = os.path.join(exploration_dir_path, filename)
-        if not os.path.isfile(filename):
-            old_files = os.path.join(
-                exploration_dir_path, self._history_file_name.format("*")
-            )
-            for old_file in glob.glob(old_files):
-                os.remove(old_file)
-            np.save(file_path, self._libe_history.H)
-
     def _create_libe_history(self) -> History:
         """Initialize an empty libEnsemble history."""
         run_params = self.evaluator.get_run_params()
@@ -483,23 +458,17 @@ class Exploration:
 
     def _get_most_recent_history_file_path(self):
         """Get path of most recently saved history file."""
-        old_exploration_history_files = glob.glob(
-            os.path.join(
-                os.path.abspath(self.exploration_dir_path),
-                self._history_file_name.format("*"),
-            )
+        # Sort files by date and get the most recent one.
+        # In principle there should be only one file, but just in case.
+        exp_path = os.path.abspath(self.exploration_dir_path)
+        history_files = glob.glob(
+            os.path.join(exp_path, self._history_file_prefix + "*")
         )
-        old_libe_history_files = glob.glob(
-            os.path.join(
-                os.path.abspath(self.exploration_dir_path),
-                "libE_history_{}".format("*"),
-            )
+        history_files.sort(
+            key=lambda f: os.path.getmtime(os.path.join(exp_path, f))
         )
-        old_files = old_exploration_history_files + old_libe_history_files
-        if old_files:
-            file_evals = [int(file.split("_")[-1][:-4]) for file in old_files]
-            i_max_evals = np.argmax(np.array(file_evals))
-            return old_files[i_max_evals]
+        if history_files:
+            return history_files[-1]
 
     def _set_default_libe_specs(self) -> None:
         """Set default exploration libe_specs."""
@@ -539,6 +508,13 @@ class Exploration:
 
         # Ensure evaluations of last batch are sent back to the generator.
         libE_specs["final_gen_send"] = True
+
+        # Save history file on completion and without date information in the
+        # name, so that it can be overwritten in subsequent calls to `run` or
+        # when resuming an exploration.
+        libE_specs["save_H_on_completion"] = True
+        libE_specs["save_H_with_date"] = False
+        libE_specs["H_file_prefix"] = self._history_file_prefix
 
         # get specs from generator and evaluator
         gen_libE_specs = self.generator.get_libe_specs()
