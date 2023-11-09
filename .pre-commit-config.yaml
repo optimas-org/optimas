@@ -113,7 +113,7 @@ repos:
   - id: blacken-docs
     args: [--line-length=80]
     additional_dependencies:
-    - black==23.9.1  # keep in sync with black hook
+    - black==23.10.1  # keep in sync with black hook
   # TODO: black-jupyter
 
 # Jupyter Notebooks: clean up all cell outputs

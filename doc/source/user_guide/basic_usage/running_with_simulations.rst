@@ -163,3 +163,93 @@ path to the ``executable`` that will run your simulation.
        executable="/path/to/my_executable",
        analysis_func=analyze_simulation,
    )
+
+
+Using a custom environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``env_script`` and ``env_mpi`` parameters allow you to customize the
+environment in which your simulation runs.
+
+``env_script`` takes the path to a shell script that sets up the
+environment by loading the necessary dependencies, setting environment
+variables, or performing other setup tasks required by your simulation.
+
+This script will look different depending on your system and use
+case, but it will typically be something like
+
+.. code-block:: bash
+
+    #!/bin/bash
+
+    # Set environment variables
+    export VAR1=value1
+    export VAR2=value2
+
+    # Load a module
+    module load module_name
+
+
+If the script loads a different MPI version than the one in the ``optimas``
+environment, make sure to specify the loaded version with the ``env_mpi``
+argument. For example:
+
+.. code-block:: python
+   :emphasize-lines: 5,6
+
+   ev = TemplateEvaluator(
+       sim_template="template_simulation_script.txt",
+       executable="/path/to/my_executable",
+       analysis_func=analyze_simulation,
+       env_script="/path/to/my_env_script.sh",
+       env_mpi="openmpi",
+   )
+
+
+See :class:`~optimas.evaluators.TemplateEvaluator` for more details.
+
+
+Running a chain of simulations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The :class:`~optimas.evaluators.ChainEvaluator` is designed for use cases
+where each evaluation involves several steps, each step being a simulation
+with a different simulation code.
+
+The steps are defined by a list of ``TemplateEvaluators`` ordered in the
+sequence in which they should be executed. Each step can request a different
+number of resources, and the ``ChainEvaluator`` gets allocated the maximum
+number of processes (``n_procs``) and GPUs (``n_gpus``) that every step might
+request.
+For instance, if one step requires ``n_procs=20`` and ``n_gpus=0``, and a
+second step requires ``n_procs=4`` and ``n_gpus=4``, each evaluation will
+get assigned ``n_procs=20`` and ``n_gpus=4``. Then each step will only
+make use of the subset of resources it needs.
+
+Here is a basic example of how to use ``ChainEvaluator``:
+
+.. code-block:: python
+
+    from optimas.evaluators import TemplateEvaluator, ChainEvaluator
+
+    # define your TemplateEvaluators
+    ev1 = TemplateEvaluator(
+        sim_template="template_simulation_script_1.py",
+        analysis_func=analyze_simulation_1,
+    )
+
+    ev2 = TemplateEvaluator(
+        sim_template="template_simulation_script_2.py",
+        analysis_func=analyze_simulation_2,
+    )
+
+    # use them in ChainEvaluator
+    chain_ev = ChainEvaluator([ev1, ev2])
+
+
+In this example, ``template_simulation_script_1.py`` and
+``template_simulation_script_2.py`` are your simulation scripts for the
+first and second steps, respectively. ``analyze_simulation_1`` and
+``analyze_simulation_2`` are functions that analyze the output of each
+simulation. There is no need to provide an analysis function for every step,
+but at least one should be defined.
