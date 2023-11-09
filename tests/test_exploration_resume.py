@@ -57,6 +57,7 @@ def test_exploration_in_steps():
     assert exploration._n_evals == gen.n_completed_trials
     assert exploration._n_evals == exploration.max_evals
     assert exploration.history["gen_informed"].to_numpy()[-1]
+    assert count_history_files(exploration.exploration_dir_path) == 1
 
 
 def test_exploration_in_steps_without_limit():
@@ -144,6 +145,19 @@ def test_exploration_resume():
     assert exploration._n_evals == gen.n_completed_trials
     assert exploration._n_evals == exploration.max_evals
     assert exploration.history["gen_informed"].to_numpy()[-1]
+    assert count_history_files(exploration.exploration_dir_path) == 1
+
+
+def count_history_files(exploration_dir):
+    """"Count the number of history files in a directory."""
+    files = os.listdir(exploration_dir)
+    count = 0
+    for file in files:
+        file = str(file)
+        if file.endswith(".npy") and "_history_" in file:
+            count += 1
+    return count
+
 
 
 if __name__ == "__main__":
