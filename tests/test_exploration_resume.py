@@ -149,7 +149,7 @@ def test_exploration_resume():
 
 
 def count_history_files(exploration_dir):
-    """"Count the number of history files in a directory."""
+    """ "Count the number of history files in a directory."""
     files = os.listdir(exploration_dir)
     count = 0
     for file in files:
@@ -157,7 +157,6 @@ def count_history_files(exploration_dir):
         if file.endswith(".npy") and "_history_" in file:
             count += 1
     return count
-
 
 
 if __name__ == "__main__":
