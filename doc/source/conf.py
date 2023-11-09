@@ -40,6 +40,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
     # 'sphinx.ext.intersphinx',
+    "sphinx_copybutton",
     "sphinx_design",
     # 'sphinx_gallery.gen_gallery',
     "numpydoc",
@@ -89,6 +90,7 @@ html_theme_options = {
     "pygment_dark_style": "monokai",
     "use_edit_page_button": True,
     "navigation_depth": 2,
+    "navigation_with_keys": False,
 }
 
 html_context = {
