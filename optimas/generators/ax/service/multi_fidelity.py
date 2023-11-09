@@ -29,7 +29,12 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         optimization objectives. By default ``None``.
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
-        Sobol sampling. By default, ``4``.
+        Sobol sampling. If external data is attached to the exploration, the
+        number of initialization evaluations will be reduced by the same
+        amount, unless `enforce_n_init=True`. By default, ``4``.
+    enforce_n_init : bool, optional
+        Whether to enforce the generation of `n_init` Sobol trials, even if
+        external data is supplied. By default, ``False``.
     fidel_cost_intercept : float, optional
         The cost intercept for the affine cost of the form
         `cost_intercept + n`, where `n` is the number of generated points.
@@ -61,6 +66,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         objectives: List[Objective],
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
+        enforce_n_init: Optional[bool] = False,
         fidel_cost_intercept: Optional[float] = 1.0,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
@@ -75,6 +81,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             objectives=objectives,
             analyzed_parameters=analyzed_parameters,
             n_init=n_init,
+            enforce_n_init=enforce_n_init,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,

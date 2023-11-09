@@ -427,6 +427,94 @@ def test_ax_multitask_with_history():
     exploration.run()
 
 
+def test_ax_service_init():
+    """
+    Test that an exploration with using an AxServiceGenerator correctly
+    reduces the number of `n_init` SOBOL evaluations if external trials
+    or evaluations are given.
+    """
+
+    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f", minimize=False)
+
+    n_init = 4
+    n_external = 6
+
+    for i in range(n_external):
+        gen = AxSingleFidelityGenerator(
+            varying_parameters=[var1, var2], objectives=[obj], n_init=n_init
+        )
+        ev = FunctionEvaluator(function=eval_func_sf)
+        exploration = Exploration(
+            generator=gen,
+            evaluator=ev,
+            max_evals=6,
+            sim_workers=2,
+            exploration_dir_path=f"./tests_output/test_ax_service_init_{i}",
+        )
+
+        # Get reference to AxClient.
+        ax_client = gen._ax_client
+
+        for _ in range(i):
+            exploration.evaluate_trials(
+                {
+                    "x0": [-2.0 + np.random.rand(1)[0]],
+                    "x1": [2.7 + np.random.rand(1)[0]],
+                }
+            )
+        # Run exploration.
+        exploration.run()
+
+        # Check that the number of SOBOL trials is reduced and that they
+        # are replaced by Manual trials.
+        df = ax_client.get_trials_data_frame()
+        for j in range(i):
+            assert df["generation_method"][j] == "Manual"
+        for k in range(i, n_init - 1):
+            assert df["generation_method"][k] == "Sobol"
+        df["generation_method"][min(i, n_init)] == "GPEI"
+
+    # Test single case with `enforce_n_init=True`
+    gen = AxSingleFidelityGenerator(
+        varying_parameters=[var1, var2],
+        objectives=[obj],
+        n_init=n_init,
+        enforce_n_init=True,
+    )
+    ev = FunctionEvaluator(function=eval_func_sf)
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        max_evals=15,
+        sim_workers=2,
+        exploration_dir_path="./tests_output/test_ax_service_init_enforce",
+    )
+
+    # Get reference to AxClient.
+    ax_client = gen._ax_client
+
+    for _ in range(n_external):
+        exploration.evaluate_trials(
+            {
+                "x0": [-2.0 + np.random.rand(1)[0]],
+                "x1": [2.7 + np.random.rand(1)[0]],
+            }
+        )
+    # Run exploration.
+    exploration.run()
+
+    # Check that the number of SOBOL trials is still `n_init` after adding
+    # `n_external` Manual trials.
+    df = ax_client.get_trials_data_frame()
+    for j in range(n_external):
+        assert df["generation_method"][j] == "Manual"
+    for k in range(n_external, n_external + n_init):
+        assert df["generation_method"][k] == "Sobol"
+    df["generation_method"][n_external + n_init] == "GPEI"
+
+
 if __name__ == "__main__":
     test_ax_single_fidelity()
     test_ax_single_fidelity_moo()
@@ -438,3 +526,4 @@ if __name__ == "__main__":
     test_ax_single_fidelity_with_history()
     test_ax_multi_fidelity_with_history()
     test_ax_multitask_with_history()
+    test_ax_service_init()
