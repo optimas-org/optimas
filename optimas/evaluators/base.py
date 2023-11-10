@@ -70,8 +70,6 @@ class Evaluator:
                 [(obj.name, float) for obj in objectives]
                 # f is the single float output that LibEnsemble minimizes.
                 + [(par.name, par.dtype) for par in analyzed_parameters]
-                # input parameters
-                + [(var.name, float) for var in varying_parameters]
             ),
             "user": {
                 "n_procs": self._n_procs,
