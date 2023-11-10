@@ -29,10 +29,9 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         input_values[name] = value
 
     # Prepare the array that is returned to libE
-    # Automatically include the input parameters
     libE_output = np.zeros(1, dtype=sim_specs["out"])
-    for name in H.dtype.names:
-        libE_output[name] = H[name][0]
+    for name in libE_output.dtype.names:
+        libE_output[name].fill(np.nan)
 
     # Get user specs.
     if "task" in H.dtype.names:
@@ -150,10 +149,9 @@ def run_function(H, persis_info, sim_specs, libE_info):
     evaluation_func = user_specs["evaluation_func"]
 
     # Prepare the array that is returned to libE
-    # Automatically include the input parameters
     libE_output = np.zeros(1, dtype=sim_specs["out"])
-    for name in H.dtype.names:
-        libE_output[name] = H[name][0]
+    for name in libE_output.dtype.names:
+        libE_output[name].fill(np.nan)
 
     evaluation_func(input_values, libE_output)
 
