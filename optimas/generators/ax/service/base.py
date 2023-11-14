@@ -1,9 +1,10 @@
 """Contains the definition of the base Ax generator using the service API."""
 
 from typing import List, Optional
-
 import os
 
+from packaging import version
+from ax.version import version as ax_version
 from ax.service.ax_client import AxClient
 from ax.modelbridge.registry import Models
 
@@ -116,7 +117,11 @@ class AxServiceGenerator(AxGenerator):
                 # initialization trials.
                 if not self._enforce_n_init:
                     gs = self._ax_client.generation_strategy
-                    ngen, _ = gs._num_trials_to_gen_and_complete_in_curr_step()
+                    if version.parse(ax_version) >= version.parse("0.3.5"):
+                        cs = gs.current_step
+                        ngen, _ = cs.num_trials_to_gen_and_complete()
+                    else:
+                        ngen, _ = gs._num_trials_to_gen_and_complete_in_curr_step()
                     # Reduce only if there are still Sobol trials to generate.
                     if gs.current_step.model == Models.SOBOL and ngen > 0:
                         gs.current_step.num_trials -= 1

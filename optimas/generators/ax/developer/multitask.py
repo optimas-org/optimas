@@ -6,7 +6,9 @@ from typing import List, Dict, Tuple, Optional, Union
 
 import numpy as np
 import torch
+from packaging import version
 
+from ax.version import version as ax_version
 from ax.core.arm import Arm
 from ax.core.batch_trial import BatchTrial
 from ax.core.multi_type_experiment import MultiTypeExperiment
@@ -346,6 +348,20 @@ class AxMultitaskGenerator(AxGenerator):
 
             generator_success = True
             while True:
+                if version.parse(ax_version) >= version.parse("0.3.5"):
+                    model_gen_options = {
+                        "optimizer_kwargs": {
+                            "options":{
+                                "init_batch_limit": self.init_batch_limit
+                            }
+                        }
+                    }
+                else:
+                    model_gen_options={
+                        "optimizer_kwargs": {
+                            "init_batch_limit": self.init_batch_limit
+                        }
+                    }
                 try:
                     # Try to generate the new points.
                     gr = m.gen(
@@ -356,11 +372,7 @@ class AxMultitaskGenerator(AxGenerator):
                         fixed_features=ObservationFeatures(
                             parameters={}, trial_index=self.hifi_trials[-1]
                         ),
-                        model_gen_options={
-                            "optimizer_kwargs": {
-                                "init_batch_limit": self.init_batch_limit
-                            }
-                        },
+                        model_gen_options=model_gen_options,
                     )
                     # When successful, break loop.
                     break
