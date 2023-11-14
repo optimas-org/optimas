@@ -351,13 +351,13 @@ class AxMultitaskGenerator(AxGenerator):
                 if version.parse(ax_version) >= version.parse("0.3.5"):
                     model_gen_options = {
                         "optimizer_kwargs": {
-                            "options":{
+                            "options": {
                                 "init_batch_limit": self.init_batch_limit
                             }
                         }
                     }
                 else:
-                    model_gen_options={
+                    model_gen_options = {
                         "optimizer_kwargs": {
                             "init_batch_limit": self.init_batch_limit
                         }
