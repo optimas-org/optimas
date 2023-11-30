@@ -40,10 +40,9 @@ class CustomAxClient(AxClient):
         force: bool = False,
         fixed_features: Optional[ObservationFeatures] = None,
     ) -> Tuple[TParameterization, int]:
-        """Modified method that supports `fixed_features` as argument.
+        """Generate trial with the next set of parameters to try.
 
-        Generate trial with the next set of parameters to try in the iteration
-        process.
+        This is a modified method that supports `fixed_features` as argument.
 
         Note: Service API currently supports only 1-arm trials.
 
