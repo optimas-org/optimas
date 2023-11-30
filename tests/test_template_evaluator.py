@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
@@ -16,6 +17,9 @@ def analysis_func(sim_dir, output_params):
     output_params["f"] = result
     output_params["p0"] = np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
     output_params["p1"] = np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
+    plt.figure()
+    plt.plot(output_params["p1"][0], output_params["p1"][1])
+    output_params["fig"] = plt.gcf()
 
 
 def test_template_evaluator():
@@ -26,12 +30,13 @@ def test_template_evaluator():
     # Test also more complex analyzed parameters.
     p0 = Parameter("p0", dtype=(float, (2, 4)))
     p1 = Parameter("p1", dtype="O")
+    p2 = Parameter("fig", dtype="O")
 
     # Define variables and objectives.
     gen = RandomSamplingGenerator(
         varying_parameters=[var1, var2],
         objectives=[obj],
-        analyzed_parameters=[p0, p1],
+        analyzed_parameters=[p0, p1, p2],
     )
 
     # Create template evaluator.
@@ -65,7 +70,10 @@ def test_template_evaluator():
         np.testing.assert_array_equal(
             np.array(p1_data), np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
         )
-
+    for i, fig in enumerate(exploration.history["fig"]):
+        fig.savefig(
+            os.path.join(exploration.exploration_dir_path, f"test_fig_{i}.png")
+        )
 
 if __name__ == "__main__":
     test_template_evaluator()
