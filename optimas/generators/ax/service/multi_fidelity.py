@@ -29,6 +29,11 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
+    fit_out_of_design : bool, optional
+        Whether to fit the surrogate model taking into account evaluations
+        outside of the range of the varying parameters. This can be useful
+        if the range of parameter has been reduced during the optimization.
+        By default, False.
     fidel_cost_intercept : float, optional
         The cost intercept for the affine cost of the form
         `cost_intercept + n`, where `n` is the number of generated points.
@@ -61,6 +66,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
+        fit_out_of_design: Optional[bool] = False,
         fidel_cost_intercept: Optional[float] = 1.0,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
@@ -76,6 +82,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             analyzed_parameters=analyzed_parameters,
             n_init=n_init,
             enforce_n_init=enforce_n_init,
+            fit_out_of_design=fit_out_of_design,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,

@@ -38,6 +38,11 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
+    fit_out_of_design : bool, optional
+        Whether to fit the surrogate model taking into account evaluations
+        outside of the range of the varying parameters. This can be useful
+        if the range of parameter has been reduced during the optimization.
+        By default, False.
     fully_bayesian : bool, optional
         Whether to optimize the hyperparameters of the GP with a fully
         Bayesian approach (using SAAS priors) instead of maximizing
@@ -81,6 +86,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
+        fit_out_of_design: Optional[bool] = False,
         fully_bayesian: Optional[bool] = False,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
@@ -96,6 +102,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             analyzed_parameters=analyzed_parameters,
             n_init=n_init,
             enforce_n_init=enforce_n_init,
+            fit_out_of_design=fit_out_of_design,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,

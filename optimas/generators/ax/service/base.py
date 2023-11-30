@@ -44,6 +44,11 @@ class AxServiceGenerator(AxGenerator):
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
+    fit_out_of_design : bool, optional
+        Whether to fit the surrogate model taking into account evaluations
+        outside of the range of the varying parameters. This can be useful
+        if the range of parameter has been reduced during the optimization.
+        By default, False.
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
@@ -72,6 +77,7 @@ class AxServiceGenerator(AxGenerator):
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
+        fit_out_of_design: Optional[bool] = False,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -94,6 +100,7 @@ class AxServiceGenerator(AxGenerator):
         )
         self._n_init = n_init
         self._enforce_n_init = enforce_n_init
+        self._fit_out_of_design = fit_out_of_design
         self._ax_client = self._create_ax_client()
         self._fixed_features = None
 
@@ -149,7 +156,7 @@ class AxServiceGenerator(AxGenerator):
         bo_model_kwargs = {
             "torch_dtype": torch.double,
             "torch_device": torch.device(self.torch_device),
-            "fit_out_of_design": True,  # Support updating search space.
+            "fit_out_of_design": self._fit_out_of_design,
         }
         ax_client = AxClient(
             generation_strategy=GenerationStrategy(

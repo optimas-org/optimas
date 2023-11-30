@@ -217,10 +217,10 @@ def test_ax_single_fidelity_moo_fb():
     assert n_ax_trials == exploration.history.shape[0]
 
 
-def test_ax_single_fidelity_fixed_params():
+def test_ax_single_fidelity_updated_params():
     """
     Test that an exploration with a single-fidelity generator runs
-    and that the generator and Ax client are updated after running.
+    as expected when the varing parameters are updated.
     """
 
     var1 = VaryingParameter("x0", -50.0, 5.0)
@@ -228,14 +228,16 @@ def test_ax_single_fidelity_fixed_params():
     obj = Objective("f", minimize=False)
 
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
+        varying_parameters=[var1, var2],
+        objectives=[obj],
+        fit_out_of_design=True,
     )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
         sim_workers=2,
-        exploration_dir_path="./tests_output/test_ax_single_fidelity_fp",
+        exploration_dir_path="./tests_output/test_ax_single_fidelity_up",
     )
 
     # Run exploration.
@@ -568,7 +570,7 @@ if __name__ == "__main__":
     test_ax_single_fidelity_moo()
     test_ax_single_fidelity_fb()
     test_ax_single_fidelity_moo_fb()
-    test_ax_single_fidelity_fixed_params()
+    test_ax_single_fidelity_updated_params()
     test_ax_multi_fidelity()
     test_ax_multitask()
     test_ax_client()
