@@ -1,8 +1,7 @@
 """Contains the definition of the single-fidelity Ax generator."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 
-import torch
 from ax.modelbridge.generation_strategy import GenerationStep
 from ax.modelbridge.registry import Models
 
@@ -105,14 +104,11 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             model_history_dir=model_history_dir,
         )
 
-    def _create_generation_steps(self) -> List[GenerationStep]:
+    def _create_generation_steps(
+        self, bo_model_kwargs: Dict
+    ) -> List[GenerationStep]:
         """Create generation steps for single-fidelity optimization."""
         # Select BO model.
-        model_kwargs = {
-            "torch_dtype": torch.double,
-            "torch_device": torch.device(self.torch_device),
-            "fit_out_of_design": True,  # Support updating search space.
-        }
         if self._fully_bayesian:
             if len(self.objectives) > 1:
                 # Use a SAAS model with qNEHVI acquisition function.
@@ -121,8 +117,8 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
                 # Use a SAAS model with qNEI acquisition function.
                 MODEL_CLASS = Models.FULLYBAYESIAN
             # Disable additional logs from fully Bayesian model.
-            model_kwargs["disable_progbar"] = True
-            model_kwargs["verbose"] = False
+            bo_model_kwargs["disable_progbar"] = True
+            bo_model_kwargs["verbose"] = False
         else:
             if len(self.objectives) > 1:
                 # Use a model with qNEHVI acquisition function.
@@ -131,22 +127,20 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
                 # Use a model with qNEI acquisition function.
                 MODEL_CLASS = Models.GPEI
 
-        # Make generation strategy:
+        # Make generation strategy.
         steps = []
 
-        # If there is no past history,
-        # adds Sobol initialization with `n_init` random trials:
-        # if self.history is None:
+        # Add Sobol initialization with `n_init` random trials.
         steps.append(
             GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
         )
 
-        # continue indefinitely with BO.
+        # Continue indefinitely with BO.
         steps.append(
             GenerationStep(
                 model=MODEL_CLASS,
                 num_trials=-1,
-                model_kwargs=model_kwargs,
+                model_kwargs=bo_model_kwargs,
             )
         )
 

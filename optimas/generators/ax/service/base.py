@@ -3,6 +3,7 @@
 from typing import List, Optional, Dict
 import os
 
+import torch
 from packaging import version
 from ax.version import version as ax_version
 from ax.core.observation import ObservationFeatures
@@ -145,9 +146,14 @@ class AxServiceGenerator(AxGenerator):
 
     def _create_ax_client(self) -> AxClient:
         """Create Ax client."""
+        bo_model_kwargs = {
+            "torch_dtype": torch.double,
+            "torch_device": torch.device(self.torch_device),
+            "fit_out_of_design": True,  # Support updating search space.
+        }
         ax_client = AxClient(
             generation_strategy=GenerationStrategy(
-                self._create_generation_steps()
+                self._create_generation_steps(bo_model_kwargs)
             ),
             verbose_logging=False,
         )
@@ -184,7 +190,9 @@ class AxServiceGenerator(AxGenerator):
             objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
         return objectives
 
-    def _create_generation_steps(self) -> List[GenerationStep]:
+    def _create_generation_steps(
+        self, bo_model_kwargs: Dict
+    ) -> List[GenerationStep]:
         """Create generation steps (must be implemented by subclasses)."""
         raise NotImplementedError
 

@@ -1,8 +1,7 @@
 """Contains the definition of the multi-fidelity Ax generator."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 
-import torch
 from ax.modelbridge.generation_strategy import GenerationStep
 from ax.modelbridge.registry import Models
 
@@ -85,29 +84,27 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             model_history_dir=model_history_dir,
         )
 
-    def _create_generation_steps(self) -> List[GenerationStep]:
+    def _create_generation_steps(
+        self, bo_model_kwargs: Dict
+    ) -> List[GenerationStep]:
         """Create generation steps for multifidelity optimization."""
-        # Make generation strategy:
+        # Add cost intercept to model kwargs.
+        bo_model_kwargs["cost_intercept"] = self.fidel_cost_intercept
+
+        # Make generation strategy.
         steps = []
 
-        # If there is no past history,
-        # adds Sobol initialization with `batch_size` random trials:
-        # if self.history is None:
+        # Add Sobol initialization with `n_init` random trials.
         steps.append(
             GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
         )
 
-        # continue indefinitely with GPKG.
+        # Continue indefinitely with GPKG.
         steps.append(
             GenerationStep(
                 model=Models.GPKG,
                 num_trials=-1,
-                model_kwargs={
-                    "cost_intercept": self.fidel_cost_intercept,
-                    "torch_dtype": torch.double,
-                    "torch_device": torch.device(self.torch_device),
-                    "fit_out_of_design": True,  # Support updating search space.
-                },
+                model_kwargs=bo_model_kwargs,
             )
         )
 
