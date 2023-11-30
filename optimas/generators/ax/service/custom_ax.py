@@ -125,7 +125,8 @@ class CustomAxClient(AxClient):
 
         fixed_feats = InstantiationBase.make_fixed_observation_features(
             fixed_features=FixedFeatures(
-                parameters={}, trial_index=self._get_last_completed_trial_index()
+                parameters={},
+                trial_index=self._get_last_completed_trial_index(),
             )
         )
         if fixed_features:
