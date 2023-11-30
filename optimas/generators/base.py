@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import os
+from copy import deepcopy
 from typing import List, Dict, Optional, Union
 
 import numpy as np
@@ -87,8 +88,10 @@ class Generator:
     ) -> None:
         if objectives is None:
             objectives = [Objective()]
-        self._varying_parameters = varying_parameters
-        self._objectives = objectives
+        # Store copies to prevent unexpected behavior if parameters are changed
+        # externally.
+        self._varying_parameters = deepcopy(varying_parameters)
+        self._objectives = deepcopy(objectives)
         self._constraints = constraints
         self._analyzed_parameters = (
             [] if analyzed_parameters is None else analyzed_parameters
