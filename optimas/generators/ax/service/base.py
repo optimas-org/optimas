@@ -107,9 +107,15 @@ class AxServiceGenerator(AxGenerator):
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
-            parameters, trial_id = self._ax_client.get_next_trial(
-                fixed_features=self._fixed_features
-            )
+            try:
+                parameters, trial_id = self._ax_client.get_next_trial(
+                    fixed_features=self._fixed_features
+                )
+            # Occurs when not using a CustomAxClient (i.e., when the AxClient
+            # is provided by the user using an AxClientGenerator). In that
+            # case, there is also no need to support FixedFeatures.
+            except TypeError:
+                parameters, trial_id = self._ax_client.get_next_trial()
             trial.parameter_values = [
                 parameters.get(var.name) for var in self._varying_parameters
             ]
