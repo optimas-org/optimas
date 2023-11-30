@@ -573,7 +573,7 @@ class Generator:
 
     def _update_parameter(self, parameter: VaryingParameter):
         """Perform the operations needed by to update the parameter.
-        
+
         This method must be implemented by the subclasses if
         `allow_updating_parameters=True`.
         """

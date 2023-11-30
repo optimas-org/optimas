@@ -87,7 +87,7 @@ class AxGenerator(Generator):
             model_history_dir=model_history_dir,
             custom_trial_parameters=custom_trial_parameters,
             allow_fixed_parameters=allow_fixed_parameters,
-            allow_updating_parameters=allow_updating_parameters
+            allow_updating_parameters=allow_updating_parameters,
         )
         self._determine_torch_device()
 

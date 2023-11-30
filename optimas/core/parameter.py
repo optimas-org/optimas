@@ -91,12 +91,12 @@ class VaryingParameter(Parameter):
     def default_value(self) -> float:
         """Get the default value of the varying parameter."""
         return self._default_value
-    
+
     @property
     def is_fixed(self) -> bool:
         """Get whether the parameter is fixed to a certain value."""
         return self._is_fixed
-    
+
     def update_range(self, lower_bound: float, upper_bound: float) -> None:
         """Update range of the parameter.
 
@@ -108,7 +108,7 @@ class VaryingParameter(Parameter):
         self._check_range(lower_bound, upper_bound)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
-    
+
     def fix_value(self, value: float) -> None:
         """Fix the value of the parameter.
 

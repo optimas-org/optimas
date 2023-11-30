@@ -124,7 +124,7 @@ class CustomAxClient(AxClient):
 
         fixed_feats = ObservationFeatures(
             parameters={},
-            trial_index=np.int64(self._get_last_completed_trial_index())
+            trial_index=np.int64(self._get_last_completed_trial_index()),
         )
         if fixed_features:
             fixed_feats.update_features(fixed_features)
