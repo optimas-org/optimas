@@ -107,7 +107,6 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
 
     def _create_generation_steps(self) -> List[GenerationStep]:
         """Create generation steps for single-fidelity optimization."""
-
         # Select BO model.
         model_kwargs = {
             "torch_dtype": torch.double,

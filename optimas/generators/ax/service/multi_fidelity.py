@@ -87,7 +87,6 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
 
     def _create_generation_steps(self) -> List[GenerationStep]:
         """Create generation steps for multifidelity optimization."""
-
         # Make generation strategy:
         steps = []
 

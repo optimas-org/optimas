@@ -40,28 +40,36 @@ class CustomAxClient(AxClient):
         force: bool = False,
         fixed_features: Optional[ObservationFeatures] = None,
     ) -> Tuple[TParameterization, int]:
-        """
-        Generate trial with the next set of parameters to try in the iteration process.
+        """Modified method that supports `fixed_features` as argument.
+
+        Generate trial with the next set of parameters to try in the iteration
+        process.
 
         Note: Service API currently supports only 1-arm trials.
 
-        Args:
-            ttl_seconds: If specified, will consider the trial failed after this
+        Parameters
+        ----------
+            ttl_seconds : int, optional
+                If specified, will consider the trial failed after this
                 many seconds. Used to detect dead trials that were not marked
                 failed properly.
-            force: If set to True, this function will bypass the global stopping
+            force : bool, optional
+                If set to True, this function will bypass the global stopping
                 strategy's decision and generate a new trial anyway.
-            fixed_features: An ObservationFeatures object containing any
+            fixed_features : ObservationFeatures, optional
+                An ObservationFeatures object containing any
                 features that should be fixed at specified values during
                 generation.
 
-        Returns:
+        Returns
+        -------
             Tuple of trial parameterization, trial index
         """
-
-        # Check if the global stopping strategy suggests to stop the optimization.
-        # This is needed only if there is actually a stopping strategy specified,
-        # and if this function is not forced to generate a new trial.
+        # Check if the global stopping strategy suggests to stop the
+        # optimization.
+        # This is needed only if there is actually a stopping strategy
+        # specified, and if this function is not forced to generate a new
+        # trial.
         if self.global_stopping_strategy and (not force):
             # The strategy itself will check if enough trials have already been
             # completed.
@@ -84,8 +92,8 @@ class CustomAxClient(AxClient):
         except MaxParallelismReachedException as e:
             if self._early_stopping_strategy is not None:
                 e.message += (  # noqa: B306
-                    " When stopping trials early, make sure to call `stop_trial_early` "
-                    "on the stopped trial."
+                    " When stopping trials early, make sure to call "
+                    "`stop_trial_early` on the stopped trial."
                 )
             raise e
         logger.info(
@@ -110,18 +118,21 @@ class CustomAxClient(AxClient):
     ) -> GeneratorRun:
         """Generate new generator run for this experiment.
 
-        Args:
-            n: Number of arms to generate.
-            fixed_features: An ObservationFeatures object containing any
+        Parameters
+        ----------
+            n: int, optional
+                Number of arms to generate.
+            fixed_features: ObservationFeatures, optional,
+                An ObservationFeatures object containing any
                 features that should be fixed at specified values during
                 generation.
         """
         # If random seed is not set for this optimization, context manager does
-        # nothing; otherwise, it sets the random seed for torch, but only for the
-        # scope of this call. This is important because torch seed is set globally,
-        # so if we just set the seed without the context manager, it can have
-        # serious negative impact on the performance of the models that employ
-        # stochasticity.
+        # nothing; otherwise, it sets the random seed for torch, but only for
+        # the scope of this call. This is important because torch seed is set
+        # globally, so if we just set the seed without the context manager, it
+        # can have serious negative impact on the performance of the models
+        # that employ stochasticity.
 
         fixed_feats = InstantiationBase.make_fixed_observation_features(
             fixed_features=FixedFeatures(
