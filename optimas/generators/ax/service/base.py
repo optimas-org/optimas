@@ -1,17 +1,26 @@
 """Contains the definition of the base Ax generator using the service API."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 import os
 
 from packaging import version
 from ax.version import version as ax_version
-from ax.service.ax_client import AxClient
+from ax.core.observation import ObservationFeatures
+from ax.service.utils.instantiation import (
+    InstantiationBase,
+    ObjectiveProperties,
+)
 from ax.modelbridge.registry import Models
+from ax.modelbridge.generation_strategy import (
+    GenerationStep,
+    GenerationStrategy,
+)
 
 from optimas.utils.other import update_object
 from optimas.core import Objective, Trial, VaryingParameter, Parameter
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
+from .custom_ax import CustomAxClient as AxClient
 
 
 class AxServiceGenerator(AxGenerator):
@@ -79,15 +88,20 @@ class AxServiceGenerator(AxGenerator):
             save_model=save_model,
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,
+            allow_fixed_parameters=True,
+            allow_updating_parameters=True,
         )
         self._n_init = n_init
         self._enforce_n_init = enforce_n_init
         self._ax_client = self._create_ax_client()
+        self._fixed_features = None
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
-            parameters, trial_id = self._ax_client.get_next_trial()
+            parameters, trial_id = self._ax_client.get_next_trial(
+                fixed_features=self._fixed_features
+            )
             trial.parameter_values = [
                 parameters.get(var.name) for var in self._varying_parameters
             ]
@@ -130,7 +144,48 @@ class AxServiceGenerator(AxGenerator):
                         gs.current_step.num_trials -= 1
 
     def _create_ax_client(self) -> AxClient:
-        """Create Ax client (must be implemented by subclasses)."""
+        """Create Ax client."""
+        ax_client = AxClient(
+            generation_strategy=GenerationStrategy(
+                self._create_generation_steps()
+            ),
+            verbose_logging=False,
+        )
+        ax_client.create_experiment(
+            parameters=self._create_ax_parameters(),
+            objectives=self._create_ax_objectives(),
+        )
+        return ax_client
+
+    def _create_ax_parameters(self) -> List:
+        """Create list of parameters to pass to an Ax."""
+        parameters = []
+        fixed_parameters = {}
+        for var in self._varying_parameters:
+            parameters.append(
+                {
+                    "name": var.name,
+                    "type": "range",
+                    "bounds": [var.lower_bound, var.upper_bound],
+                    "is_fidelity": var.is_fidelity,
+                    "target_value": var.fidelity_target_value,
+                }
+            )
+            if var.is_fixed:
+                fixed_parameters[var.name] = var.default_value
+        # Store fixed parameters as fixed features.
+        self._fixed_features = ObservationFeatures(fixed_parameters)
+        return parameters
+
+    def _create_ax_objectives(self) -> Dict[str, ObjectiveProperties]:
+        """Create list of objectives to pass to an Ax."""
+        objectives = {}
+        for obj in self.objectives:
+            objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
+        return objectives
+
+    def _create_generation_steps(self) -> List[GenerationStep]:
+        """Create generation steps (must be implemented by subclasses)."""
         raise NotImplementedError
 
     def _save_model_to_file(self) -> None:
@@ -172,3 +227,11 @@ class AxServiceGenerator(AxGenerator):
         super()._update(new_generator)
         update_object(original_ax_client, new_generator._ax_client)
         self._ax_client = original_ax_client
+
+    def _update_parameter(self, parameter):
+        """Update a parameter from the search space."""
+        parameters = self._create_ax_parameters()
+        new_search_space = InstantiationBase.make_search_space(parameters, None)
+        self._ax_client.experiment.search_space.update_parameter(
+            new_search_space.parameters[parameter.name]
+        )

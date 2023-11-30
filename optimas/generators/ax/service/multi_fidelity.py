@@ -3,13 +3,8 @@
 from typing import List, Optional
 
 import torch
-from ax.service.ax_client import AxClient
-from ax.modelbridge.generation_strategy import (
-    GenerationStep,
-    GenerationStrategy,
-)
+from ax.modelbridge.generation_strategy import GenerationStep
 from ax.modelbridge.registry import Models
-from ax.service.utils.instantiation import ObjectiveProperties
 
 from optimas.core import Objective, VaryingParameter, Parameter
 from .base import AxServiceGenerator
@@ -90,20 +85,8 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             model_history_dir=model_history_dir,
         )
 
-    def _create_ax_client(self) -> None:
-        """Create multifidelity Ax client."""
-        # Create parameter list.
-        parameters = list()
-        for var in self._varying_parameters:
-            parameters.append(
-                {
-                    "name": var.name,
-                    "type": "range",
-                    "bounds": [var.lower_bound, var.upper_bound],
-                    "is_fidelity": var.is_fidelity,
-                    "target_value": var.fidelity_target_value,
-                }
-            )
+    def _create_generation_steps(self) -> List[GenerationStep]:
+        """Create generation steps for multifidelity optimization."""
 
         # Make generation strategy:
         steps = []
@@ -124,18 +107,9 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
                     "cost_intercept": self.fidel_cost_intercept,
                     "torch_dtype": torch.double,
                     "torch_device": torch.device(self.torch_device),
+                    "fit_out_of_design": True,  # Support updating search space.
                 },
             )
         )
 
-        gs = GenerationStrategy(steps)
-
-        ax_objs = {}
-        for obj in self.objectives:
-            ax_objs[obj.name] = ObjectiveProperties(minimize=obj.minimize)
-
-        # Create client and experiment.
-        ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
-        ax_client.create_experiment(parameters=parameters, objectives=ax_objs)
-
-        return ax_client
+        return steps
