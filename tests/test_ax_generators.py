@@ -242,11 +242,11 @@ def test_ax_single_fidelity_fixed_params():
     exploration.run(n_evals=10)
 
     # Update range of x0 and run 10 evals.
-    var1.update_range(-20., 0.)
+    var1.update_range(-20.0, 0.0)
     gen.update_parameter(var1)
     exploration.run(n_evals=10)
     assert all(exploration.history["x0"][-10:] >= -20)
-    assert all(exploration.history["x0"][-10:] <= 0.)
+    assert all(exploration.history["x0"][-10:] <= 0.0)
 
     # Fix of x0 and run 5 evals.
     var1.fix_value(-9)
@@ -255,7 +255,7 @@ def test_ax_single_fidelity_fixed_params():
     assert all(exploration.history["x0"][-5:] == -9)
 
     # Evaluate a custom trial.
-    exploration.evaluate_trials([{"x0": -7., "x1":10.}])
+    exploration.evaluate_trials([{"x0": -7.0, "x1": 10.0}])
     assert exploration.history["x0"].to_numpy()[-1] == -7
 
     # Free value and run 3 evals.
