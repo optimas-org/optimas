@@ -4,9 +4,7 @@ from typing import Optional, Tuple
 
 from ax.service.ax_client import (
     AxClient,
-    FixedFeatures,
     GeneratorRun,
-    InstantiationBase,
     MaxParallelismReachedException,
     ObservationFeatures,
     OptimizationShouldStop,
@@ -17,6 +15,10 @@ from ax.service.ax_client import (
     not_none,
     retry_on_exception,
     CHOLESKY_ERROR_ANNOTATION,
+)
+from ax.service.utils.instantiation import (
+    FixedFeatures,
+    InstantiationBase,
 )
 
 
