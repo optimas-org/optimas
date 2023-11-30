@@ -60,7 +60,7 @@ def test_template_evaluator():
 
     # Run exploration.
     exploration.run()
-    
+
     # Check that the multidimensional analyzed parameters worked as expected.
     for p0_data in exploration.history["p0"]:
         np.testing.assert_array_equal(
@@ -74,6 +74,7 @@ def test_template_evaluator():
         fig.savefig(
             os.path.join(exploration.exploration_dir_path, f"test_fig_{i}.png")
         )
+
 
 if __name__ == "__main__":
     test_template_evaluator()
