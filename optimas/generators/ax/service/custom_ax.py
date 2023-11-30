@@ -2,10 +2,11 @@
 
 from typing import Optional, Tuple
 
-import numpy as np
 from ax.service.ax_client import (
     AxClient,
+    FixedFeatures,
     GeneratorRun,
+    InstantiationBase,
     MaxParallelismReachedException,
     ObservationFeatures,
     OptimizationShouldStop,
@@ -122,9 +123,10 @@ class CustomAxClient(AxClient):
         # serious negative impact on the performance of the models that employ
         # stochasticity.
 
-        fixed_feats = ObservationFeatures(
-            parameters={},
-            trial_index=np.int64(self._get_last_completed_trial_index())
+        fixed_feats = InstantiationBase.make_fixed_observation_features(
+            fixed_features=FixedFeatures(
+                parameters={}, trial_index=self._get_last_completed_trial_index()
+            )
         )
         if fixed_features:
             fixed_feats.update_features(fixed_features)
