@@ -1,15 +1,9 @@
 """Contains the definition of the multi-fidelity Ax generator."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 
-import torch
-from ax.service.ax_client import AxClient
-from ax.modelbridge.generation_strategy import (
-    GenerationStep,
-    GenerationStrategy,
-)
+from ax.modelbridge.generation_strategy import GenerationStep
 from ax.modelbridge.registry import Models
-from ax.service.utils.instantiation import ObjectiveProperties
 
 from optimas.core import Objective, VaryingParameter, Parameter
 from .base import AxServiceGenerator
@@ -35,6 +29,11 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
+    fit_out_of_design : bool, optional
+        Whether to fit the surrogate model taking into account evaluations
+        outside of the range of the varying parameters. This can be useful
+        if the range of parameter has been reduced during the optimization.
+        By default, False.
     fidel_cost_intercept : float, optional
         The cost intercept for the affine cost of the form
         `cost_intercept + n`, where `n` is the number of generated points.
@@ -67,6 +66,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
+        fit_out_of_design: Optional[bool] = False,
         fidel_cost_intercept: Optional[float] = 1.0,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
@@ -82,6 +82,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             analyzed_parameters=analyzed_parameters,
             n_init=n_init,
             enforce_n_init=enforce_n_init,
+            fit_out_of_design=fit_out_of_design,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,
@@ -90,52 +91,28 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             model_history_dir=model_history_dir,
         )
 
-    def _create_ax_client(self) -> None:
-        """Create multifidelity Ax client."""
-        # Create parameter list.
-        parameters = list()
-        for var in self._varying_parameters:
-            parameters.append(
-                {
-                    "name": var.name,
-                    "type": "range",
-                    "bounds": [var.lower_bound, var.upper_bound],
-                    "is_fidelity": var.is_fidelity,
-                    "target_value": var.fidelity_target_value,
-                }
-            )
+    def _create_generation_steps(
+        self, bo_model_kwargs: Dict
+    ) -> List[GenerationStep]:
+        """Create generation steps for multifidelity optimization."""
+        # Add cost intercept to model kwargs.
+        bo_model_kwargs["cost_intercept"] = self.fidel_cost_intercept
 
-        # Make generation strategy:
+        # Make generation strategy.
         steps = []
 
-        # If there is no past history,
-        # adds Sobol initialization with `batch_size` random trials:
-        # if self.history is None:
+        # Add Sobol initialization with `n_init` random trials.
         steps.append(
             GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
         )
 
-        # continue indefinitely with GPKG.
+        # Continue indefinitely with GPKG.
         steps.append(
             GenerationStep(
                 model=Models.GPKG,
                 num_trials=-1,
-                model_kwargs={
-                    "cost_intercept": self.fidel_cost_intercept,
-                    "torch_dtype": torch.double,
-                    "torch_device": torch.device(self.torch_device),
-                },
+                model_kwargs=bo_model_kwargs,
             )
         )
 
-        gs = GenerationStrategy(steps)
-
-        ax_objs = {}
-        for obj in self.objectives:
-            ax_objs[obj.name] = ObjectiveProperties(minimize=obj.minimize)
-
-        # Create client and experiment.
-        ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
-        ax_client.create_experiment(parameters=parameters, objectives=ax_objs)
-
-        return ax_client
+        return steps

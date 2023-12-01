@@ -50,6 +50,13 @@ class AxGenerator(Generator):
         For some generators, it might be necessary to attach additional
         parameters to the trials. If so, they can be given here as a list.
         By default, ``None``.
+    allow_fixed_parameters : bool, optional
+        Whether the generator supports ``VaryingParameter``s whose value
+        has been fixed. By default, False.
+    allow_updating_parameters : list of TrialParameter
+        Whether the generator supports updating the ``VaryingParameter``s.
+        If so, the `_update_parameter` method must be implemented.
+        By default, False.
 
     """
 
@@ -65,6 +72,8 @@ class AxGenerator(Generator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
         custom_trial_parameters: Optional[TrialParameter] = None,
+        allow_fixed_parameters: Optional[bool] = False,
+        allow_updating_parameters: Optional[bool] = False,
     ) -> None:
         super().__init__(
             varying_parameters=varying_parameters,
@@ -77,6 +86,8 @@ class AxGenerator(Generator):
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,
             custom_trial_parameters=custom_trial_parameters,
+            allow_fixed_parameters=allow_fixed_parameters,
+            allow_updating_parameters=allow_updating_parameters,
         )
         self._determine_torch_device()
 

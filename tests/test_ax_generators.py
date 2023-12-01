@@ -217,6 +217,56 @@ def test_ax_single_fidelity_moo_fb():
     assert n_ax_trials == exploration.history.shape[0]
 
 
+def test_ax_single_fidelity_updated_params():
+    """
+    Test that an exploration with a single-fidelity generator runs
+    as expected when the varing parameters are updated.
+    """
+
+    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f", minimize=False)
+
+    gen = AxSingleFidelityGenerator(
+        varying_parameters=[var1, var2],
+        objectives=[obj],
+        fit_out_of_design=True,
+    )
+    ev = FunctionEvaluator(function=eval_func_sf)
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        sim_workers=2,
+        exploration_dir_path="./tests_output/test_ax_single_fidelity_up",
+    )
+
+    # Run exploration.
+    exploration.run(n_evals=10)
+
+    # Update range of x0 and run 10 evals.
+    var1.update_range(-20.0, 0.0)
+    gen.update_parameter(var1)
+    exploration.run(n_evals=10)
+    assert all(exploration.history["x0"][-10:] >= -20)
+    assert all(exploration.history["x0"][-10:] <= 0.0)
+
+    # Fix of x0 and run 5 evals.
+    var1.fix_value(-9)
+    gen.update_parameter(var1)
+    exploration.run(n_evals=5)
+    assert all(exploration.history["x0"][-5:] == -9)
+
+    # Evaluate a custom trial.
+    exploration.evaluate_trials([{"x0": -7.0, "x1": 10.0}])
+    assert exploration.history["x0"].to_numpy()[-1] == -7
+
+    # Free value and run 3 evals.
+    var1.free_value()
+    gen.update_parameter(var1)
+    exploration.run(n_evals=3)
+    assert all(exploration.history["x0"][-3:] != -9)
+
+
 def test_ax_multi_fidelity():
     """Test that an exploration with a multifidelity generator runs"""
 
@@ -520,6 +570,7 @@ if __name__ == "__main__":
     test_ax_single_fidelity_moo()
     test_ax_single_fidelity_fb()
     test_ax_single_fidelity_moo_fb()
+    test_ax_single_fidelity_updated_params()
     test_ax_multi_fidelity()
     test_ax_multitask()
     test_ax_client()
