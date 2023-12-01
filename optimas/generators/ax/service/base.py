@@ -173,6 +173,7 @@ class AxServiceGenerator(AxGenerator):
         ax_client.create_experiment(
             parameters=self._create_ax_parameters(),
             objectives=self._create_ax_objectives(),
+immutable_search_space_and_opt_config=False, 
         )
         return ax_client
 
