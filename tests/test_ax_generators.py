@@ -223,7 +223,7 @@ def test_ax_single_fidelity_updated_params():
     as expected when the varing parameters are updated.
     """
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var1 = VaryingParameter("x0", -50.0, - 30.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
 
