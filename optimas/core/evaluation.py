@@ -5,7 +5,7 @@ from typing import Optional
 from .parameter import Parameter
 
 
-class Evaluation():
+class Evaluation:
     """Class used to store the evaluation of a parameter.
 
     The evaluation consists of the observed value and the observation noise.
@@ -19,11 +19,9 @@ class Evaluation():
     sem : float, optional
         The observation noise of the evaluation.
     """
+
     def __init__(
-        self,
-        parameter: Parameter,
-        value: float,
-        sem: Optional[float] = None
+        self, parameter: Parameter, value: float, sem: Optional[float] = None
     ) -> None:
         self._parameter = parameter
         self._value = value

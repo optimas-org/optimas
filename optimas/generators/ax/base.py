@@ -1,10 +1,19 @@
 """Contains the definition of the base Ax generator."""
 from typing import List, Optional
+import logging
 
 import torch
 
 from optimas.core import Objective, TrialParameter, VaryingParameter, Parameter
 from optimas.generators.base import Generator
+
+
+# Disable Ax loggers to get cleaner output. In principle, setting
+# `verbose_logging=False` in the `AxClient` should already avoid most of the
+# logs, but this does not work when using 'spawn' multiprocessing.
+for logger in logging.root.manager.loggerDict:
+    if logger.startswith("ax.") or logger == "ax":
+        logging.getLogger(logger).setLevel(logging.ERROR)
 
 
 class AxGenerator(Generator):
@@ -41,7 +50,16 @@ class AxGenerator(Generator):
         For some generators, it might be necessary to attach additional
         parameters to the trials. If so, they can be given here as a list.
         By default, ``None``.
+    allow_fixed_parameters : bool, optional
+        Whether the generator supports ``VaryingParameter``s whose value
+        has been fixed. By default, False.
+    allow_updating_parameters : list of TrialParameter
+        Whether the generator supports updating the ``VaryingParameter``s.
+        If so, the `_update_parameter` method must be implemented.
+        By default, False.
+
     """
+
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
@@ -52,8 +70,10 @@ class AxGenerator(Generator):
         dedicated_resources: Optional[bool] = False,
         save_model: Optional[bool] = False,
         model_save_period: Optional[int] = 5,
-        model_history_dir: Optional[str] = 'model_history',
-        custom_trial_parameters: Optional[TrialParameter] = None
+        model_history_dir: Optional[str] = "model_history",
+        custom_trial_parameters: Optional[TrialParameter] = None,
+        allow_fixed_parameters: Optional[bool] = False,
+        allow_updating_parameters: Optional[bool] = False,
     ) -> None:
         super().__init__(
             varying_parameters=varying_parameters,
@@ -65,7 +85,9 @@ class AxGenerator(Generator):
             save_model=save_model,
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,
-            custom_trial_parameters=custom_trial_parameters
+            custom_trial_parameters=custom_trial_parameters,
+            allow_fixed_parameters=allow_fixed_parameters,
+            allow_updating_parameters=allow_updating_parameters,
         )
         self._determine_torch_device()
 
@@ -73,6 +95,6 @@ class AxGenerator(Generator):
         """Determine whether to run the generator on GPU (CUDA) or CPU."""
         # Use CUDA if available.
         if self.use_cuda and torch.cuda.is_available():
-            self.torch_device = 'cuda'
+            self.torch_device = "cuda"
         else:
-            self.torch_device = 'cpu'
+            self.torch_device = "cpu"

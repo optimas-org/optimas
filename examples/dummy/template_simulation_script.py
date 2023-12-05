@@ -1,12 +1,12 @@
-"""
-Dummy script for fast test; this does not actually run a simulation,
-but instead calculate the result of a test function and store
-the results in a file result.txt
+"""Simple template script used for demonstration.
+
+The script evaluates an analytical expression and stores the results in a
+`result.txt` file that is later read by the analysis function.
 """
 import numpy as np
 
 # 2D function with multiple minima
-result = -({{x0}} + 10*np.cos({{x0}}))*({{x1}} + 5*np.cos({{x1}}))
+result = -({{x0}} + 10 * np.cos({{x0}})) * ({{x1}} + 5 * np.cos({{x1}}))
 
-with open('result.txt', 'w') as f:
+with open("result.txt", "w") as f:
     f.write("%f" % result)

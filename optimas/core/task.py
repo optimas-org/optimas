@@ -1,4 +1,4 @@
-"""Contains the definition of the Task class used for multitask optimization"""
+"""Contains the definition of the Task class for multitask optimization."""
 
 from .base import NamedBase
 
@@ -14,21 +14,20 @@ class Task(NamedBase):
         Number of task evaluations to perform in the initialization batch.
     n_opt : int
         Number of task evaluations to perform per optimization batch.
+
     """
-    def __init__(
-        self,
-        name: str,
-        n_init: int,
-        n_opt: int
-    ) -> None:
+
+    def __init__(self, name: str, n_init: int, n_opt: int) -> None:
         super().__init__(name)
         self._n_init = n_init
         self._n_opt = n_opt
 
     @property
     def n_init(self) -> int:
+        """Get number of task evaluations to perform for initialization."""
         return self._n_init
 
     @property
     def n_opt(self) -> int:
+        """Get number of task evaluations to perform per optimization batch."""
         return self._n_opt

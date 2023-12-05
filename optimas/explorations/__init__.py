@@ -1,4 +1,4 @@
 from .base import Exploration
 
 
-__all__ = ['Exploration']
+__all__ = ["Exploration"]

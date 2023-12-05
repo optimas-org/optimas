@@ -1,3 +1,5 @@
+.. _generators:
+
 Generators
 ==========
 
@@ -12,3 +14,4 @@ Generators
     AxSingleFidelityGenerator
     AxMultiFidelityGenerator
     AxMultitaskGenerator
+    AxClientGenerator
