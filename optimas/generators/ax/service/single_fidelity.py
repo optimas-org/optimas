@@ -1,15 +1,9 @@
 """Contains the definition of the single-fidelity Ax generator."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 
-import torch
-from ax.service.ax_client import AxClient
-from ax.modelbridge.generation_strategy import (
-    GenerationStep,
-    GenerationStrategy,
-)
+from ax.modelbridge.generation_strategy import GenerationStep
 from ax.modelbridge.registry import Models
-from ax.service.utils.instantiation import ObjectiveProperties
 
 from optimas.core import Objective, VaryingParameter, Parameter
 from .base import AxServiceGenerator
@@ -44,6 +38,11 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
+    fit_out_of_design : bool, optional
+        Whether to fit the surrogate model taking into account evaluations
+        outside of the range of the varying parameters. This can be useful
+        if the range of parameter has been reduced during the optimization.
+        By default, False.
     fully_bayesian : bool, optional
         Whether to optimize the hyperparameters of the GP with a fully
         Bayesian approach (using SAAS priors) instead of maximizing
@@ -87,6 +86,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
+        fit_out_of_design: Optional[bool] = False,
         fully_bayesian: Optional[bool] = False,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
@@ -102,6 +102,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             analyzed_parameters=analyzed_parameters,
             n_init=n_init,
             enforce_n_init=enforce_n_init,
+            fit_out_of_design=fit_out_of_design,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,
@@ -110,26 +111,11 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             model_history_dir=model_history_dir,
         )
 
-    def _create_ax_client(self):
-        """Create single-fidelity Ax client."""
-        # Create parameter list.
-        parameters = list()
-        for var in self._varying_parameters:
-            parameters.append(
-                {
-                    "name": var.name,
-                    "type": "range",
-                    "bounds": [var.lower_bound, var.upper_bound],
-                    # Suppresses warning when the type is not given explicitly
-                    "value_type": var.dtype.__name__,
-                }
-            )
-
+    def _create_generation_steps(
+        self, bo_model_kwargs: Dict
+    ) -> List[GenerationStep]:
+        """Create generation steps for single-fidelity optimization."""
         # Select BO model.
-        model_kwargs = {
-            "torch_dtype": torch.double,
-            "torch_device": torch.device(self.torch_device),
-        }
         if self._fully_bayesian:
             if len(self.objectives) > 1:
                 # Use a SAAS model with qNEHVI acquisition function.
@@ -138,8 +124,8 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
                 # Use a SAAS model with qNEI acquisition function.
                 MODEL_CLASS = Models.FULLYBAYESIAN
             # Disable additional logs from fully Bayesian model.
-            model_kwargs["disable_progbar"] = True
-            model_kwargs["verbose"] = False
+            bo_model_kwargs["disable_progbar"] = True
+            bo_model_kwargs["verbose"] = False
         else:
             if len(self.objectives) > 1:
                 # Use a model with qNEHVI acquisition function.
@@ -148,35 +134,21 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
                 # Use a model with qNEI acquisition function.
                 MODEL_CLASS = Models.GPEI
 
-        # Make generation strategy:
+        # Make generation strategy.
         steps = []
 
-        # If there is no past history,
-        # adds Sobol initialization with `n_init` random trials:
-        # if self.history is None:
+        # Add Sobol initialization with `n_init` random trials.
         steps.append(
             GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
         )
 
-        # continue indefinitely with BO.
+        # Continue indefinitely with BO.
         steps.append(
             GenerationStep(
                 model=MODEL_CLASS,
                 num_trials=-1,
-                model_kwargs=model_kwargs,
+                model_kwargs=bo_model_kwargs,
             )
         )
 
-        gs = GenerationStrategy(steps)
-
-        ax_objectives = {}
-        for obj in self.objectives:
-            ax_objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
-
-        # Create client and experiment.
-        ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
-        ax_client.create_experiment(
-            parameters=parameters, objectives=ax_objectives
-        )
-
-        return ax_client
+        return steps
