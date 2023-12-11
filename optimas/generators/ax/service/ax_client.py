@@ -25,6 +25,9 @@ class AxClientGenerator(AxServiceGenerator):
     analyzed_parameters : list of Parameter, optional
         List of parameters to analyze at each trial, but which are not
         optimization objectives. By default ``None``.
+    abandon_failed_trials : bool, optional
+        Whether failed trials should be abandoned (i.e., not suggested again).
+        By default, ``True``.
     gpu_id : int, optional
         The ID of the GPU in which to run the generator. By default, ``0``.
         This parameter will only have an effect if any ``GenerationStep`` in
@@ -60,6 +63,7 @@ class AxClientGenerator(AxServiceGenerator):
         self,
         ax_client: AxClient,
         analyzed_parameters: Optional[List[Parameter]] = None,
+        abandon_failed_trials: Optional[bool] = True,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
         save_model: Optional[bool] = True,
@@ -76,6 +80,7 @@ class AxClientGenerator(AxServiceGenerator):
             objectives=objectives,
             analyzed_parameters=analyzed_parameters,
             enforce_n_init=True,
+            abandon_failed_trials=abandon_failed_trials,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,
