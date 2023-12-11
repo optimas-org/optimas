@@ -18,7 +18,13 @@ from ax.modelbridge.generation_strategy import (
 )
 
 from optimas.utils.other import update_object
-from optimas.core import Objective, Trial, VaryingParameter, Parameter, TrialStatus
+from optimas.core import (
+    Objective,
+    Trial,
+    VaryingParameter,
+    Parameter,
+    TrialStatus,
+)
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
 from .custom_ax import CustomAxClient as AxClient
@@ -147,7 +153,10 @@ class AxServiceGenerator(AxGenerator):
 
                 # Since data was given externally, reduce number of
                 # initialization trials, but only if they have not failed.
-                if trial.status != TrialStatus.FAILED and not self._enforce_n_init:
+                if (
+                    trial.status != TrialStatus.FAILED
+                    and not self._enforce_n_init
+                ):
                     gs = self._ax_client.generation_strategy
                     if version.parse(ax_version) >= version.parse("0.3.5"):
                         cs = gs.current_step

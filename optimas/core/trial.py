@@ -123,12 +123,12 @@ class Trial:
     def custom_parameters(self) -> List[TrialParameter]:
         """Get the list of custom trial parameters."""
         return self._custom_parameters
-    
+
     @property
     def status(self) -> TrialStatus:
         """Get current trial status."""
         return self._status
-    
+
     def mark_as(self, status) -> None:
         """Set trial status.
 

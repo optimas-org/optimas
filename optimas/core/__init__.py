@@ -12,5 +12,5 @@ __all__ = [
     "Objective",
     "Task",
     "Trial",
-    "TrialStatus"
+    "TrialStatus",
 ]
