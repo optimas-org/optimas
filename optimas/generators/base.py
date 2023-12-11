@@ -100,7 +100,7 @@ class Generator:
         self._save_model = save_model
         self._model_save_period = model_save_period
         self._model_history_dir = model_history_dir
-        self._n_completed_trials_last_saved = 0
+        self._n_evaluated_trials_last_saved = 0
         self._use_cuda = use_cuda
         self._gpu_id = gpu_id
         self._dedicated_resources = dedicated_resources
@@ -162,12 +162,30 @@ class Generator:
 
     @property
     def n_completed_trials(self) -> int:
-        """Get the number of completed (evaluated) trials."""
+        """Get the number of successfully evaluated trials."""
         n_completed = 0
         for trial in self._given_trials:
-            if trial.completed():
+            if trial.completed:
                 n_completed += 1
         return n_completed
+    
+    @property
+    def n_failed_trials(self) -> int:
+        """Get the number of unsuccessfully evaluated trials."""
+        n_failed = 0
+        for trial in self._given_trials:
+            if trial.failed:
+                n_failed += 1
+        return n_failed
+    
+    @property
+    def n_evaluated_trials(self) -> int:
+        """Get the number of evaluated trials."""
+        n_evaluated = 0
+        for trial in self._given_trials:
+            if trial.evaluated:
+                n_evaluated += 1
+        return n_evaluated
 
     def ask(self, n_trials: int) -> List[Trial]:
         """Ask the generator to suggest the next ``n_trials`` to evaluate.
@@ -237,13 +255,16 @@ class Generator:
                 self._add_external_evaluated_trial(trial)
         self._tell(trials)
         for trial in trials:
-            log_msg = "Completed trial {} with objective(s) {}".format(
-                trial.index, trial.objectives_as_dict()
-            )
-            if trial.analyzed_parameters:
-                log_msg += " and analyzed parameter(s) {}".format(
-                    trial.analyzed_parameters_as_dict()
+            if not trial.failed:
+                log_msg = "Completed trial {} with objective(s) {}".format(
+                    trial.index, trial.objectives_as_dict()
                 )
+                if trial.analyzed_parameters:
+                    log_msg += " and analyzed parameter(s) {}".format(
+                        trial.analyzed_parameters_as_dict()
+                    )
+            else:
+                log_msg = f"Failed to evaluate trial {trial.index}."
             logger.info(log_msg)
         if allow_saving_model and self._save_model:
             self.save_model_to_file()
@@ -446,16 +467,16 @@ class Generator:
     def save_model_to_file(self) -> None:
         """Save model to file."""
         # Get number of completed trials since last model was saved.
-        n_new = self.n_completed_trials - self._n_completed_trials_last_saved
+        n_new = self.n_evaluated_trials - self._n_evaluated_trials_last_saved
         # Save model only if save period is reached.
         if n_new >= self._model_save_period:
-            self._n_completed_trials_last_saved = self.n_completed_trials
+            self._n_evaluated_trials_last_saved = self.n_evaluated_trials
             if not os.path.exists(self._model_history_dir):
                 os.mkdir(self._model_history_dir)
             self._save_model_to_file()
             logger.info(
-                "Saved model to file after {} completed trials.".format(
-                    self.n_completed_trials
+                "Saved model to file after {} evaluated trials.".format(
+                    self.n_evaluated_trials
                 )
             )
 

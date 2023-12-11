@@ -128,6 +128,21 @@ class Trial:
     def status(self) -> TrialStatus:
         """Get current trial status."""
         return self._status
+    
+    @property
+    def completed(self) -> bool:
+        """Determine whether the trial has been successfully evaluated."""
+        return self._status == TrialStatus.COMPLETED
+    
+    @property
+    def failed(self) -> bool:
+        """Determine whether the trial evaluation has failed."""
+        return self._status == TrialStatus.FAILED
+
+    @property
+    def evaluated(self) -> bool:
+        """Determine whether the trial has been evaluated."""
+        return self.completed() or self.failed()
 
     def mark_as(self, status) -> None:
         """Set trial status.
@@ -185,9 +200,3 @@ class Trial:
             params[par.name] = (ev.value, ev.sem)
         return params
 
-    def completed(self) -> bool:
-        """Determine whether the trial has been completed."""
-        for par, ev in self._mapped_evaluations.items():
-            if ev is None:
-                return False
-        return True
