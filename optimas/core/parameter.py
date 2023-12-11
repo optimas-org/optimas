@@ -59,11 +59,13 @@ class VaryingParameter(Parameter):
         dtype: Optional[np.dtype] = float,
     ) -> None:
         super().__init__(name, dtype)
+        self._check_range(lower_bound, upper_bound)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._is_fidelity = is_fidelity
         self._fidelity_target_value = fidelity_target_value
         self._default_value = default_value
+        self._is_fixed = False
 
     @property
     def lower_bound(self) -> float:
@@ -89,6 +91,52 @@ class VaryingParameter(Parameter):
     def default_value(self) -> float:
         """Get the default value of the varying parameter."""
         return self._default_value
+
+    @property
+    def is_fixed(self) -> bool:
+        """Get whether the parameter is fixed to a certain value."""
+        return self._is_fixed
+
+    def update_range(self, lower_bound: float, upper_bound: float) -> None:
+        """Update range of the parameter.
+
+        Parameters
+        ----------
+        lower_bound, upper_bound : float
+            Lower and upper bounds of the range in which the parameter can vary.
+        """
+        self._check_range(lower_bound, upper_bound)
+        self._lower_bound = lower_bound
+        self._upper_bound = upper_bound
+
+    def fix_value(self, value: float) -> None:
+        """Fix the value of the parameter.
+
+        The value must be within the range of the parameter.
+
+        Parameters
+        ----------
+        value : float
+            The value to which the parameter will be fixed.
+        """
+        if value < self.lower_bound or value > self.upper_bound:
+            raise ValueError(
+                f"The value {value} is outside of the range of parameter "
+                f"{self.name}: [{self.lower_bound},{self.upper_bound}]"
+            )
+        self._default_value = value
+        self._is_fixed = True
+
+    def free_value(self) -> None:
+        """Free the value of the parameter."""
+        self._is_fixed = False
+
+    def _check_range(self, lower_bound, upper_bound):
+        if upper_bound <= lower_bound:
+            raise ValueError(
+                "Inconsistent range bounds. "
+                f"Upper bound ({upper_bound}) < lower bound ({lower_bound})."
+            )
 
 
 class TrialParameter(Parameter):
