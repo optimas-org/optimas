@@ -248,7 +248,7 @@ def test_ax_single_fidelity_updated_params():
     gen.update_parameter(var1)
     # Make sure we have an evaluation in the new range (it currently fails
     # otherwise).
-    exploration.evaluate_trials([{"x0":-10.0, "x1":10.0}])
+    exploration.evaluate_trials([{"x0": -10.0, "x1": 10.0}])
     exploration.run(n_evals=10)
     assert all(exploration.history["x0"][-10:] >= -20)
     assert all(exploration.history["x0"][-10:] <= 0.0)
