@@ -52,7 +52,7 @@ class AxServiceGenerator(AxGenerator):
         external data is supplied. By default, ``False``.
     abandon_failed_trials : bool, optional
         Whether failed trials should be abandoned (i.e., not suggested again).
-        By default, ``False``.
+        By default, ``True``.
     fit_out_of_design : bool, optional
         Whether to fit the surrogate model taking into account evaluations
         outside of the range of the varying parameters. This can be useful
@@ -86,7 +86,7 @@ class AxServiceGenerator(AxGenerator):
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
-        abandon_failed_trials: Optional[bool] = False,
+        abandon_failed_trials: Optional[bool] = True,
         fit_out_of_design: Optional[bool] = False,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
