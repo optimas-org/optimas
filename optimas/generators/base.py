@@ -395,7 +395,9 @@ class Generator:
         # Check for missing fields in the data.
         required_parameters = self.varying_parameters
         if include_evaluations:
-            required_parameters = required_parameters + self.objectives + self.analyzed_parameters
+            required_parameters = (
+                required_parameters + self.objectives + self.analyzed_parameters
+            )
         required_fields = [p.name for p in required_parameters]
         required_fields += [p.save_name for p in self._custom_trial_parameters]
         missing_fields = [f for f in required_fields if f not in given_fields]
