@@ -1,16 +1,27 @@
 """Contains the definition of the base Ax generator using the service API."""
 
-from typing import List, Optional
-
+from typing import List, Optional, Dict
 import os
 
-from ax.service.ax_client import AxClient
+import torch
+from packaging import version
+from ax.version import version as ax_version
+from ax.core.observation import ObservationFeatures
+from ax.service.utils.instantiation import (
+    InstantiationBase,
+    ObjectiveProperties,
+)
 from ax.modelbridge.registry import Models
+from ax.modelbridge.generation_strategy import (
+    GenerationStep,
+    GenerationStrategy,
+)
 
 from optimas.utils.other import update_object
 from optimas.core import Objective, Trial, VaryingParameter, Parameter, TrialStatus
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
+from .custom_ax import CustomAxClient as AxClient
 
 
 class AxServiceGenerator(AxGenerator):
@@ -36,6 +47,11 @@ class AxServiceGenerator(AxGenerator):
     abandon_failed_trials : bool, optional
         Whether failed trials should be abandoned (i.e., not suggested again).
         By default, ``False``.
+    fit_out_of_design : bool, optional
+        Whether to fit the surrogate model taking into account evaluations
+        outside of the range of the varying parameters. This can be useful
+        if the range of parameter has been reduced during the optimization.
+        By default, False.
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
@@ -65,6 +81,7 @@ class AxServiceGenerator(AxGenerator):
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
         abandon_failed_trials: Optional[bool] = False,
+        fit_out_of_design: Optional[bool] = False,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -82,16 +99,28 @@ class AxServiceGenerator(AxGenerator):
             save_model=save_model,
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,
+            allow_fixed_parameters=True,
+            allow_updating_parameters=True,
         )
         self._n_init = n_init
         self._enforce_n_init = enforce_n_init
         self._abandon_failed_trials = abandon_failed_trials
+        self._fit_out_of_design = fit_out_of_design
         self._ax_client = self._create_ax_client()
+        self._fixed_features = None
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
-            parameters, trial_id = self._ax_client.get_next_trial()
+            try:
+                parameters, trial_id = self._ax_client.get_next_trial(
+                    fixed_features=self._fixed_features
+                )
+            # Occurs when not using a CustomAxClient (i.e., when the AxClient
+            # is provided by the user using an AxClientGenerator). In that
+            # case, there is also no need to support FixedFeatures.
+            except TypeError:
+                parameters, trial_id = self._ax_client.get_next_trial()
             trial.parameter_values = [
                 parameters.get(var.name) for var in self._varying_parameters
             ]
@@ -120,7 +149,14 @@ class AxServiceGenerator(AxGenerator):
                 # initialization trials, but only if they have not failed.
                 if trial.status != TrialStatus.FAILED and not self._enforce_n_init:
                     gs = self._ax_client.generation_strategy
-                    ngen, _ = gs._num_trials_to_gen_and_complete_in_curr_step()
+                    if version.parse(ax_version) >= version.parse("0.3.5"):
+                        cs = gs.current_step
+                        ngen, _ = cs.num_trials_to_gen_and_complete()
+                    else:
+                        (
+                            ngen,
+                            _,
+                        ) = gs._num_trials_to_gen_and_complete_in_curr_step()
                     # Reduce only if there are still Sobol trials to generate.
                     if gs.current_step.model == Models.SOBOL and ngen > 0:
                         gs.current_step.num_trials -= 1
@@ -136,7 +172,56 @@ class AxServiceGenerator(AxGenerator):
                         ax_trial.mark_failed()
 
     def _create_ax_client(self) -> AxClient:
-        """Create Ax client (must be implemented by subclasses)."""
+        """Create Ax client."""
+        bo_model_kwargs = {
+            "torch_dtype": torch.double,
+            "torch_device": torch.device(self.torch_device),
+            "fit_out_of_design": self._fit_out_of_design,
+        }
+        ax_client = AxClient(
+            generation_strategy=GenerationStrategy(
+                self._create_generation_steps(bo_model_kwargs)
+            ),
+            verbose_logging=False,
+        )
+        ax_client.create_experiment(
+            parameters=self._create_ax_parameters(),
+            objectives=self._create_ax_objectives(),
+        )
+        return ax_client
+
+    def _create_ax_parameters(self) -> List:
+        """Create list of parameters to pass to an Ax."""
+        parameters = []
+        fixed_parameters = {}
+        for var in self._varying_parameters:
+            parameters.append(
+                {
+                    "name": var.name,
+                    "type": "range",
+                    "bounds": [var.lower_bound, var.upper_bound],
+                    "is_fidelity": var.is_fidelity,
+                    "target_value": var.fidelity_target_value,
+                    "value_type": var.dtype.__name__,
+                }
+            )
+            if var.is_fixed:
+                fixed_parameters[var.name] = var.default_value
+        # Store fixed parameters as fixed features.
+        self._fixed_features = ObservationFeatures(fixed_parameters)
+        return parameters
+
+    def _create_ax_objectives(self) -> Dict[str, ObjectiveProperties]:
+        """Create list of objectives to pass to an Ax."""
+        objectives = {}
+        for obj in self.objectives:
+            objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
+        return objectives
+
+    def _create_generation_steps(
+        self, bo_model_kwargs: Dict
+    ) -> List[GenerationStep]:
+        """Create generation steps (must be implemented by subclasses)."""
         raise NotImplementedError
 
     def _save_model_to_file(self) -> None:
@@ -178,3 +263,11 @@ class AxServiceGenerator(AxGenerator):
         super()._update(new_generator)
         update_object(original_ax_client, new_generator._ax_client)
         self._ax_client = original_ax_client
+
+    def _update_parameter(self, parameter):
+        """Update a parameter from the search space."""
+        parameters = self._create_ax_parameters()
+        new_search_space = InstantiationBase.make_search_space(parameters, None)
+        self._ax_client.experiment.search_space.update_parameter(
+            new_search_space.parameters[parameter.name]
+        )
