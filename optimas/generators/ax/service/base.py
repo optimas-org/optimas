@@ -8,7 +8,7 @@ from ax.service.ax_client import AxClient
 from ax.modelbridge.registry import Models
 
 from optimas.utils.other import update_object
-from optimas.core import Objective, Trial, VaryingParameter, Parameter
+from optimas.core import Objective, Trial, VaryingParameter, Parameter, TrialStatus
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
 
@@ -33,6 +33,9 @@ class AxServiceGenerator(AxGenerator):
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
+    abandon_failed_trials : bool, optional
+        Whether failed trials should be abandoned (i.e., not suggested again).
+        By default, ``False``.
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
@@ -61,6 +64,7 @@ class AxServiceGenerator(AxGenerator):
         analyzed_parameters: Optional[List[Parameter]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
+        abandon_failed_trials: Optional[bool] = False,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -81,6 +85,7 @@ class AxServiceGenerator(AxGenerator):
         )
         self._n_init = n_init
         self._enforce_n_init = enforce_n_init
+        self._abandon_failed_trials = abandon_failed_trials
         self._ax_client = self._create_ax_client()
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
@@ -100,9 +105,8 @@ class AxServiceGenerator(AxGenerator):
             for ev in trial.objective_evaluations:
                 objective_eval[ev.parameter.name] = (ev.value, ev.sem)
             try:
-                self._ax_client.complete_trial(
-                    trial_index=trial.ax_trial_id, raw_data=objective_eval
-                )
+                trial_id = trial.ax_trial_id
+                ax_trial = self._ax_client.get_trial(trial_id)
             except AttributeError:
                 params = {}
                 for var, value in zip(
@@ -110,16 +114,26 @@ class AxServiceGenerator(AxGenerator):
                 ):
                     params[var.name] = value
                 _, trial_id = self._ax_client.attach_trial(params)
-                self._ax_client.complete_trial(trial_id, objective_eval)
+                ax_trial = self._ax_client.get_trial(trial_id)
 
                 # Since data was given externally, reduce number of
-                # initialization trials.
-                if not self._enforce_n_init:
+                # initialization trials, but only if they have not failed.
+                if trial.status != TrialStatus.FAILED and not self._enforce_n_init:
                     gs = self._ax_client.generation_strategy
                     ngen, _ = gs._num_trials_to_gen_and_complete_in_curr_step()
                     # Reduce only if there are still Sobol trials to generate.
                     if gs.current_step.model == Models.SOBOL and ngen > 0:
                         gs.current_step.num_trials -= 1
+            finally:
+                if trial.status == TrialStatus.COMPLETED:
+                    self._ax_client.complete_trial(
+                        trial_index=trial_id, raw_data=objective_eval
+                    )
+                elif trial.status == TrialStatus.FAILED:
+                    if self._abandon_failed_trials:
+                        ax_trial.mark_abandoned()
+                    else:
+                        ax_trial.mark_failed()
 
     def _create_ax_client(self) -> AxClient:
         """Create Ax client (must be implemented by subclasses)."""
