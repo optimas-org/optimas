@@ -123,11 +123,12 @@ def test_ax_single_fidelity_int():
         evaluator=ev,
         max_evals=10,
         sim_workers=2,
-        exploration_dir_path="./tests_output/test_ax_single_fidelity",
+        exploration_dir_path="./tests_output/test_ax_single_fidelity_int",
     )
 
     # Get reference to original AxClient.
     ax_client = gen._ax_client
+    assert ax_client.experiment.search_space.parameters["x0"].python_type == int
 
     # Run exploration.
     exploration.run()
