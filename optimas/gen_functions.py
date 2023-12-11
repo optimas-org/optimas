@@ -12,6 +12,7 @@ from libensemble.tools.persistent_support import PersistentSupport
 from libensemble.resources.resources import Resources
 
 from optimas.core import Evaluation
+from optimas.core.trial import TrialStatus
 
 
 def persistent_generator(H, persis_info, gen_specs, libE_info):
@@ -99,10 +100,14 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             for i in range(n):
                 trial_index = int(calc_in["trial_index"][i])
                 trial = generator.get_trial(trial_index)
-                for par in objectives + analyzed_parameters:
-                    y = calc_in[par.name][i]
-                    ev = Evaluation(parameter=par, value=y)
-                    trial.complete_evaluation(ev)
+                for obj in objectives:
+                    if np.isnan(calc_in[obj.name][i]):
+                        trial.mark_as(TrialStatus.FAILED)
+                if trial.status != TrialStatus.FAILED:
+                    for par in objectives + analyzed_parameters:
+                        y = calc_in[par.name][i]
+                        ev = Evaluation(parameter=par, value=y)
+                        trial.complete_evaluation(ev)
                 # Register trial with unknown SEM
                 generator.tell([trial])
             # Set the number of points to generate to that number:

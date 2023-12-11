@@ -17,6 +17,7 @@ from optimas.core import (
     VaryingParameter,
     Parameter,
     TrialParameter,
+    TrialStatus,
 )
 
 logger = get_logger(__name__)
@@ -380,11 +381,15 @@ class Generator:
             for par in self._custom_trial_parameters:
                 setattr(trial, par.name, trial_data[par.save_name][i])
             if include_evaluations:
-                for par in self._objectives + self._analyzed_parameters:
-                    ev = Evaluation(
-                        parameter=par, value=trial_data[par.name][i]
-                    )
-                    trial.complete_evaluation(ev)
+                for obj in self.objectives:
+                    if np.isnan(trial_data[obj.name][i]):
+                        trial.mark_as(TrialStatus.FAILED)
+                if trial.status != TrialStatus.FAILED:
+                    for par in self._objectives + self._analyzed_parameters:
+                        ev = Evaluation(
+                            parameter=par, value=trial_data[par.name][i]
+                        )
+                        trial.complete_evaluation(ev)
             trials.append(trial)
         return trials
 
