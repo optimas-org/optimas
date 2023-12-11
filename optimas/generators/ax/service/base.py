@@ -188,6 +188,7 @@ class AxServiceGenerator(AxGenerator):
                     "bounds": [var.lower_bound, var.upper_bound],
                     "is_fidelity": var.is_fidelity,
                     "target_value": var.fidelity_target_value,
+                    "value_type": var.dtype.__name__,
                 }
             )
             if var.is_fixed:
