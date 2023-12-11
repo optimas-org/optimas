@@ -38,6 +38,7 @@ from optimas.core import (
     Parameter,
     Task,
     Trial,
+    TrialStatus,
 )
 from .ax_metric import AxMetric
 
@@ -225,10 +226,13 @@ class AxMultitaskGenerator(AxGenerator):
             ax_trial.run()
             # Incorporate observations.
             for trial in trials_i:
-                objective_eval = {}
-                oe = trial.objective_evaluations[0]
-                objective_eval["f"] = (oe.value, oe.sem)
-                ax_trial.run_metadata[trial.arm_name] = objective_eval
+                if trial.status != TrialStatus.FAILED:
+                    objective_eval = {}
+                    oe = trial.objective_evaluations[0]
+                    objective_eval["f"] = (oe.value, oe.sem)
+                    ax_trial.run_metadata[trial.arm_name] = objective_eval
+                else:
+                    ax_trial.mark_arm_abandoned(trial.arm_name)
             # Mark batch trial as completed.
             ax_trial.mark_completed()
             # Keep track of high-fidelity trials.
@@ -245,10 +249,13 @@ class AxMultitaskGenerator(AxGenerator):
                 "External data can only be loaded into generator before "
                 "initialization."
             )
-            objective_eval = {}
-            oe = trial.objective_evaluations[0]
-            objective_eval["f"] = (oe.value, oe.sem)
-            self.current_trial.run_metadata[trial.arm_name] = objective_eval
+            if trial.status != TrialStatus.FAILED:
+                objective_eval = {}
+                oe = trial.objective_evaluations[0]
+                objective_eval["f"] = (oe.value, oe.sem)
+                self.current_trial.run_metadata[trial.arm_name] = objective_eval
+            else:
+                self.current_trial.mark_arm_abandoned(trial.arm_name)
             if trial.trial_type == self.lofi_task.name:
                 self.returned_lofi_trials += 1
                 if self.returned_lofi_trials == self.n_gen_lofi:
