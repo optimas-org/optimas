@@ -424,7 +424,7 @@ def test_ax_multitask():
 
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=True)
+    obj = Objective("f", minimize=False)
 
     task1 = Task("task_1", n_init=2, n_opt=1)
     task2 = Task("task_2", n_init=5, n_opt=3)
