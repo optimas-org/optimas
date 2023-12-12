@@ -107,6 +107,7 @@ def check_run_ax_service(ax_client, gen, exploration, n_failed_expected):
     n_ax_trials = ax_trials.shape[0]
     assert n_ax_trials == exploration.history.shape[0]
 
+
 def test_ax_single_fidelity():
     """
     Test that an exploration with a single-fidelity generator runs
@@ -221,7 +222,7 @@ def test_ax_single_fidelity_moo():
 
     # Run exploration.
     exploration.run()
-    
+
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
@@ -397,7 +398,7 @@ def test_ax_multi_fidelity():
 
     # Run exploration.
     exploration.run()
-    
+
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
@@ -440,7 +441,7 @@ def test_ax_multitask():
 
 def test_ax_client():
     """Test that an exploration with a user-given AxClient runs"""
-    
+
     global trial_count
     global trials_to_fail
     trial_count = 0
