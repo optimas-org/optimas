@@ -12,7 +12,7 @@ from optimas.generators import (
     AxClientGenerator,
 )
 from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
-from optimas.core import VaryingParameter, Objective, Task, Parameter
+from optimas.core import VaryingParameter, Objective, Task
 
 
 # Some tests will use threading (instead of multiprocessing) to be able to
