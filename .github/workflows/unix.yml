@@ -12,18 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, '3.10', 3.11]
+        python-version: [3.9, '3.10', 3.11]
 
     steps:
     - uses: actions/checkout@v2
-    - name: Cache conda
-      uses: actions/cache@v2
-      # Increase this value to reset cache
-      env: {CACHE_NUMBER: 0}
-      with:
-        path: ~/conda_pkgs_dir
-        key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ matrix.python-version }}
-
     - uses: conda-incubator/setup-miniconda@v2
       name: Setup conda
       with:
@@ -32,6 +24,7 @@ jobs:
         auto-activate-base: false
         channels: defaults
         channel-priority: true
+        python-version: ${{ matrix.python-version }}
 
     - shell: bash -l {0}
       name: Install dependencies

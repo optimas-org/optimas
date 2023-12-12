@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 import os
+from copy import deepcopy
 from typing import List, Dict, Optional, Union
 
 import numpy as np
@@ -59,6 +60,13 @@ class Generator:
         For some generators, it might be necessary to attach additional
         parameters to the trials. If so, they can be given here as a list.
         By default, ``None``.
+    allow_fixed_parameters : bool, optional
+        Whether the generator supports ``VaryingParameter``s whose value
+        has been fixed. By default, False.
+    allow_updating_parameters : list of TrialParameter
+        Whether the generator supports updating the ``VaryingParameter``s.
+        If so, the `_update_parameter` method must be implemented.
+        By default, False.
 
     """
 
@@ -75,11 +83,15 @@ class Generator:
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
         custom_trial_parameters: Optional[List[TrialParameter]] = None,
+        allow_fixed_parameters: Optional[bool] = False,
+        allow_updating_parameters: Optional[bool] = False,
     ) -> None:
         if objectives is None:
             objectives = [Objective()]
-        self._varying_parameters = varying_parameters
-        self._objectives = objectives
+        # Store copies to prevent unexpected behavior if parameters are changed
+        # externally.
+        self._varying_parameters = deepcopy(varying_parameters)
+        self._objectives = deepcopy(objectives)
         self._constraints = constraints
         self._analyzed_parameters = (
             [] if analyzed_parameters is None else analyzed_parameters
@@ -94,10 +106,13 @@ class Generator:
         self._custom_trial_parameters = (
             [] if custom_trial_parameters is None else custom_trial_parameters
         )
+        self._allow_fixed_parameters = allow_fixed_parameters
+        self._allow_updating_parameters = allow_updating_parameters
         self._gen_function = persistent_generator
         self._given_trials = []  # Trials given for evaluation.
         self._queued_trials = []  # Trials queued to be given for evaluation.
         self._trial_count = 0
+        self._check_parameters(self._varying_parameters)
 
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
@@ -292,6 +307,41 @@ class Generator:
             if trial.index == trial_index:
                 return trial
 
+    def update_parameter(self, parameter: VaryingParameter):
+        """Update a varying parameter of the generator.
+
+        This method should be called, for example, after updating the range
+        of the parameter, or fixing its value.
+
+        Parameters
+        ----------
+        parameter : VaryingParameter
+            The updated parameter. It must have the name of one of the
+            existing parameters.
+        """
+        if not self._allow_updating_parameters:
+            raise ValueError(
+                f"The parameters of a {self.__class__.__name__} cannot be "
+                "updated."
+            )
+        if not isinstance(parameter, VaryingParameter):
+            raise ValueError(
+                "Updated parameter must be a VaryingParameter, not a "
+                f"{type(parameter)}."
+            )
+        gen_vps = [vp.name for vp in self._varying_parameters]
+        if parameter.name not in gen_vps:
+            raise ValueError(
+                f"Cannot update parameter {parameter.name}. "
+                f"Available parameters are {gen_vps}."
+            )
+        self._check_parameters([parameter])
+        for i, vp in enumerate(self._varying_parameters):
+            if vp.name == parameter.name:
+                self._varying_parameters[i] = parameter
+                break
+        self._update_parameter(parameter)
+
     def _add_trial_to_queue(
         self, trial: Trial, queue_index: Optional[int] = None
     ) -> None:
@@ -343,9 +393,11 @@ class Generator:
         given_fields = trial_data.columns.values.tolist()
 
         # Check for missing fields in the data.
-        required_parameters = self.varying_parameters + self.analyzed_parameters
+        required_parameters = self.varying_parameters
         if include_evaluations:
-            required_parameters += self.objectives
+            required_parameters = (
+                required_parameters + self.objectives + self.analyzed_parameters
+            )
         required_fields = [p.name for p in required_parameters]
         required_fields += [p.save_name for p in self._custom_trial_parameters]
         missing_fields = [f for f in required_fields if f not in given_fields]
@@ -523,3 +575,21 @@ class Generator:
     def _save_model_to_file(self):
         """Save model method to be implemented by the Generator subclasses."""
         pass
+
+    def _update_parameter(self, parameter: VaryingParameter):
+        """Perform the operations needed by to update the parameter.
+
+        This method must be implemented by the subclasses if
+        `allow_updating_parameters=True`.
+        """
+        raise NotImplementedError
+
+    def _check_parameters(self, parameters: List[VaryingParameter]):
+        """Check the validity of the varying parameters."""
+        if not self._allow_fixed_parameters:
+            for vp in parameters:
+                if vp.is_fixed:
+                    raise ValueError(
+                        f"{self.__class__.__name__} does not support fixing "
+                        "the value of a VaryingParameter."
+                    )

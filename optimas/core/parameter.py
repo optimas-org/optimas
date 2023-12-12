@@ -8,7 +8,7 @@ keyword arguments). This is needed for backward compatibility.
 from typing import Optional, Any
 import json
 
-from pydantic import BaseModel, Extra, validator
+from pydantic import BaseModel, Extra, validator, PrivateAttr
 import numpy as np
 
 
@@ -84,6 +84,7 @@ class VaryingParameter(Parameter):
     is_fidelity: Optional[bool] = False
     fidelity_target_value: Optional[float] = None
     default_value: Optional[float] = None
+    _is_fixed: bool = PrivateAttr(False)
 
     def __init__(
         self,
@@ -104,6 +105,53 @@ class VaryingParameter(Parameter):
             fidelity_target_value=fidelity_target_value,
             default_value=default_value,
         )
+
+    @property
+    def is_fixed(self) -> bool:
+        """Get whether the parameter is fixed to a certain value."""
+        return self._is_fixed
+
+    def update_range(self, lower_bound: float, upper_bound: float) -> None:
+        """Update range of the parameter.
+
+        Parameters
+        ----------
+        lower_bound, upper_bound : float
+            Lower and upper bounds of the range in which the parameter can vary.
+        """
+        self._check_range(lower_bound, upper_bound)
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+
+    def fix_value(self, value: float) -> None:
+        """Fix the value of the parameter.
+
+        The value must be within the range of the parameter.
+
+        Parameters
+        ----------
+        value : float
+            The value to which the parameter will be fixed.
+        """
+        if value < self.lower_bound or value > self.upper_bound:
+            raise ValueError(
+                f"The value {value} is outside of the range of parameter "
+                f"{self.name}: [{self.lower_bound},{self.upper_bound}]"
+            )
+        self.default_value = value
+        self._is_fixed = True
+
+    def free_value(self) -> None:
+        """Free the value of the parameter."""
+        self._is_fixed = False
+
+    def _check_range(self, lower_bound, upper_bound):
+        # TODO, turn this into a pydantic validator.
+        if upper_bound <= lower_bound:
+            raise ValueError(
+                "Inconsistent range bounds. "
+                f"Upper bound ({upper_bound}) < lower bound ({lower_bound})."
+            )
 
 
 class TrialParameter(Parameter):
