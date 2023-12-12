@@ -144,6 +144,13 @@ class Exploration:
             run until the number of evaluations reaches `max_evals`.
 
         """
+        # Store current working directory. It has been observed that sometimes
+        # (especially when using `local_threading`) the working directory
+        # is changed to the exploration directory after the call to `libE`.
+        # As a workaround, the cwd is stored and then set again at the end of
+        # `run`.
+        cwd = os.getcwd()
+
         # Set exit criteria to maximum number of evaluations.
         remaining_evals = self.max_evals - self._n_evals
         if remaining_evals < 1:
@@ -205,6 +212,9 @@ class Exploration:
         # Update number of evaluation in this exploration.
         n_evals_final = self.generator.n_evaluated_trials
         self._n_evals += n_evals_final - n_evals_initial
+
+        # Reset `cwd` to initial value before `libE` was called.
+        os.chdir(cwd)
 
     def attach_trials(
         self,
