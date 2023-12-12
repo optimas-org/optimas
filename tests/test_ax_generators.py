@@ -1,3 +1,5 @@
+import threading
+
 import numpy as np
 from ax.service.ax_client import AxClient, ObjectiveProperties
 from ax.utils.measurement.synthetic_functions import hartmann6
@@ -10,43 +12,70 @@ from optimas.generators import (
     AxClientGenerator,
 )
 from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
-from optimas.core import VaryingParameter, Objective, Task
+from optimas.core import VaryingParameter, Objective, Task, Parameter
+
+
+# Some tests will use threading (instead of multiprocessing) to be able to
+# trigger failed trials based on a global counter.
+threadLock = threading.Lock()
+trial_count = 0
+trials_to_fail = []
 
 
 def eval_func_sf(input_params, output_params):
     """Evaluation function for single-fidelity test"""
-    x0 = input_params["x0"]
-    x1 = input_params["x1"]
-    result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
-    output_params["f"] = result
+    global trial_count
+    global trials_to_fail
+    with threadLock:
+        x0 = input_params["x0"]
+        x1 = input_params["x1"]
+        result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
+        if trial_count not in trials_to_fail:
+            output_params["f"] = result
+        trial_count += 1
 
 
 def eval_func_sf_moo(input_params, output_params):
     """Evaluation function for multi-objective single-fidelity test"""
-    x0 = input_params["x0"]
-    x1 = input_params["x1"]
-    result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
-    output_params["f"] = result
-    output_params["f2"] = result * 2
+    global trial_count
+    global trials_to_fail
+    with threadLock:
+        x0 = input_params["x0"]
+        x1 = input_params["x1"]
+        result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
+        if trial_count not in trials_to_fail:
+            output_params["f"] = result
+            output_params["f2"] = result * 2
+        trial_count += 1
 
 
 def eval_func_mf(input_params, output_params):
     """Evaluation function for multifidelity test"""
-    x0 = input_params["x0"]
-    x1 = input_params["x1"]
-    resolution = input_params["res"]
-    result = -(
-        (x0 + 10 * np.cos(x0 + 0.1 * resolution))
-        * (x1 + 5 * np.cos(x1 - 0.2 * resolution))
-    )
-    output_params["f"] = result
+    global trial_count
+    global trials_to_fail
+    with threadLock:
+        x0 = input_params["x0"]
+        x1 = input_params["x1"]
+        resolution = input_params["res"]
+        result = -(
+            (x0 + 10 * np.cos(x0 + 0.1 * resolution))
+            * (x1 + 5 * np.cos(x1 - 0.2 * resolution))
+        )
+        if trial_count not in trials_to_fail:
+            output_params["f"] = result
+        trial_count += 1
 
 
 def eval_func_ax_client(input_params, output_params):
     """Evaluation function for the AxClient test"""
-    x = np.array([input_params.get(f"x{i+1}") for i in range(6)])
-    output_params["hartmann6"] = hartmann6(x)
-    output_params["l2norm"] = np.sqrt((x**2).sum())
+    global trial_count
+    global trials_to_fail
+    with threadLock:
+        x = np.array([input_params.get(f"x{i+1}") for i in range(6)])
+        if trial_count not in trials_to_fail:
+            output_params["hartmann6"] = hartmann6(x)
+            output_params["l2norm"] = np.sqrt((x**2).sum())
+        trial_count += 1
 
 
 def eval_func_task_1(input_params, output_params):
@@ -65,11 +94,28 @@ def eval_func_task_2(input_params, output_params):
     output_params["f"] = result
 
 
+def check_run_ax_service(ax_client, gen, exploration, n_failed_expected):
+    # Check that the generator has been updated and that the failed trials are
+    # accounted.
+    assert gen.n_evaluated_trials == exploration.history.shape[0]
+    assert gen.n_failed_trials == n_failed_expected
+    assert gen.n_completed_trials == gen.n_evaluated_trials - n_failed_expected
+    ax_trials = ax_client.get_trials_data_frame()
+    assert (ax_trials.trial_status == "ABANDONED").sum() == n_failed_expected
+
+    # Check that the original ax client has been updated.
+    n_ax_trials = ax_trials.shape[0]
+    assert n_ax_trials == exploration.history.shape[0]
+
 def test_ax_single_fidelity():
     """
     Test that an exploration with a single-fidelity generator runs
     and that the generator and Ax client are updated after running.
     """
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = [2, 6]
 
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
@@ -85,6 +131,7 @@ def test_ax_single_fidelity():
         max_evals=10,
         sim_workers=2,
         exploration_dir_path="./tests_output/test_ax_single_fidelity",
+        libe_comms="local_threading",
     )
 
     # Get reference to original AxClient.
@@ -93,12 +140,8 @@ def test_ax_single_fidelity():
     # Run exploration.
     exploration.run()
 
-    # Check that the generator has been updated.
-    assert gen.n_completed_trials == exploration.history.shape[0]
-
-    # Check that the original ax client has been updated.
-    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
-    assert n_ax_trials == exploration.history.shape[0]
+    # Perform checks.
+    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
@@ -109,6 +152,10 @@ def test_ax_single_fidelity_int():
     Test that an exploration with a single-fidelity generator runs
     correctly with an integer parameter.
     """
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = [2, 6]
 
     var1 = VaryingParameter("x0", -50.0, 5.0, dtype=int)
     var2 = VaryingParameter("x1", -5.0, 15.0)
@@ -124,6 +171,7 @@ def test_ax_single_fidelity_int():
         max_evals=10,
         sim_workers=2,
         exploration_dir_path="./tests_output/test_ax_single_fidelity_int",
+        libe_comms="local_threading",
     )
 
     # Get reference to original AxClient.
@@ -133,12 +181,8 @@ def test_ax_single_fidelity_int():
     # Run exploration.
     exploration.run()
 
-    # Check that the generator has been updated.
-    assert gen.n_completed_trials == exploration.history.shape[0]
-
-    # Check that the original ax client has been updated.
-    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
-    assert n_ax_trials == exploration.history.shape[0]
+    # Perform checks.
+    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
     # Check correct variable type.
     assert exploration.history["x0"].to_numpy().dtype == int
@@ -149,6 +193,10 @@ def test_ax_single_fidelity_moo():
     Test that an exploration with a multi-objective single-fidelity generator
     runs and that the generator and Ax client are updated after running.
     """
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = [2, 6]
 
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
@@ -165,6 +213,7 @@ def test_ax_single_fidelity_moo():
         max_evals=10,
         sim_workers=2,
         exploration_dir_path="./tests_output/test_ax_single_fidelity_moo",
+        libe_comms="local_threading",
     )
 
     # Get reference to original AxClient.
@@ -172,13 +221,9 @@ def test_ax_single_fidelity_moo():
 
     # Run exploration.
     exploration.run()
-
-    # Check that the generator has been updated.
-    assert gen.n_completed_trials == exploration.history.shape[0]
-
-    # Check that the original ax client has been updated.
-    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
-    assert n_ax_trials == exploration.history.shape[0]
+    
+    # Perform checks.
+    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
 
 def test_ax_single_fidelity_fb():
@@ -186,6 +231,10 @@ def test_ax_single_fidelity_fb():
     Test that an exploration with a fully Bayesian single-fidelity generator
     runs and that the generator and Ax client are updated after running.
     """
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = [2, 6]
 
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
@@ -201,6 +250,7 @@ def test_ax_single_fidelity_fb():
         max_evals=10,
         sim_workers=2,
         exploration_dir_path="./tests_output/test_ax_single_fidelity_fb",
+        libe_comms="local_threading",
     )
 
     # Get reference to original AxClient.
@@ -209,12 +259,8 @@ def test_ax_single_fidelity_fb():
     # Run exploration.
     exploration.run()
 
-    # Check that the generator has been updated.
-    assert gen.n_completed_trials == exploration.history.shape[0]
-
-    # Check that the original ax client has been updated.
-    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
-    assert n_ax_trials == exploration.history.shape[0]
+    # Perform checks.
+    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
 
 def test_ax_single_fidelity_moo_fb():
@@ -223,6 +269,10 @@ def test_ax_single_fidelity_moo_fb():
     single-fidelity generator runs and that the generator and Ax client
     are updated after running.
     """
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = [2, 6]
 
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
@@ -241,6 +291,7 @@ def test_ax_single_fidelity_moo_fb():
         max_evals=10,
         sim_workers=2,
         exploration_dir_path="./tests_output/test_ax_single_fidelity_moo_fb",
+        libe_comms="local_threading",
     )
 
     # Get reference to original AxClient.
@@ -249,12 +300,8 @@ def test_ax_single_fidelity_moo_fb():
     # Run exploration.
     exploration.run()
 
-    # Check that the generator has been updated.
-    assert gen.n_completed_trials == exploration.history.shape[0]
-
-    # Check that the original ax client has been updated.
-    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
-    assert n_ax_trials == exploration.history.shape[0]
+    # Perform checks.
+    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
 
 def test_ax_single_fidelity_updated_params():
@@ -262,6 +309,11 @@ def test_ax_single_fidelity_updated_params():
     Test that an exploration with a single-fidelity generator runs
     as expected when the varing parameters are updated.
     """
+    # Prevent trials from failing in this test.
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = []
 
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
@@ -278,6 +330,7 @@ def test_ax_single_fidelity_updated_params():
         evaluator=ev,
         sim_workers=2,
         exploration_dir_path="./tests_output/test_ax_single_fidelity_up",
+        libe_comms="local_threading",
     )
 
     # Run exploration.
@@ -313,6 +366,11 @@ def test_ax_single_fidelity_updated_params():
 def test_ax_multi_fidelity():
     """Test that an exploration with a multifidelity generator runs"""
 
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = [2, 5]
+
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
     var3 = VaryingParameter(
@@ -331,9 +389,17 @@ def test_ax_multi_fidelity():
         sim_workers=2,
         run_async=False,
         exploration_dir_path="./tests_output/test_ax_multi_fidelity",
+        libe_comms="local_threading",
     )
 
+    # Get reference to original AxClient.
+    ax_client = gen._ax_client
+
+    # Run exploration.
     exploration.run()
+    
+    # Perform checks.
+    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
     # Save history for later restart test
     np.save("./tests_output/ax_mf_history", exploration._libe_history.H)
@@ -344,7 +410,7 @@ def test_ax_multitask():
 
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    obj = Objective("f", minimize=True)
 
     task1 = Task("task_1", n_init=2, n_opt=1)
     task2 = Task("task_2", n_init=5, n_opt=3)
@@ -374,6 +440,12 @@ def test_ax_multitask():
 
 def test_ax_client():
     """Test that an exploration with a user-given AxClient runs"""
+    
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = [2, 5]
+
     # Create the AxClient from https://ax.dev/tutorials/gpei_hartmann_service.html.
     ax_client = AxClient()
     ax_client.create_experiment(
@@ -426,9 +498,13 @@ def test_ax_client():
         sim_workers=2,
         run_async=False,
         exploration_dir_path="./tests_output/test_ax_client",
+        libe_comms="local_threading",
     )
 
     exploration.run()
+
+    # Perform checks.
+    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
 
 def test_ax_single_fidelity_with_history():
@@ -455,6 +531,9 @@ def test_ax_single_fidelity_with_history():
     )
 
     exploration.run()
+
+    # Perform checks.
+    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
 
 def test_ax_multi_fidelity_with_history():
