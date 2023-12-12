@@ -167,7 +167,7 @@ class AxServiceGenerator(AxGenerator):
                     if gs.current_step.model == Models.SOBOL and ngen > 0:
                         gs.current_step.num_trials -= 1
             finally:
-                if trial.completed:                    
+                if trial.completed:
                     objective_eval = {}
                     for ev in trial.objective_evaluations:
                         objective_eval[ev.parameter.name] = (ev.value, ev.sem)

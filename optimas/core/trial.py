@@ -128,12 +128,12 @@ class Trial:
     def status(self) -> TrialStatus:
         """Get current trial status."""
         return self._status
-    
+
     @property
     def completed(self) -> bool:
         """Determine whether the trial has been successfully evaluated."""
         return self._status == TrialStatus.COMPLETED
-    
+
     @property
     def failed(self) -> bool:
         """Determine whether the trial evaluation has failed."""
@@ -199,4 +199,3 @@ class Trial:
             ev = self._mapped_evaluations[par.name]
             params[par.name] = (ev.value, ev.sem)
         return params
-
