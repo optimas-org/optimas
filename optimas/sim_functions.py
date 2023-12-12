@@ -65,6 +65,13 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         if calc_status != WORKER_DONE:
             break
 
+    # If required, fail when the objectives are NaN.
+    if user_specs["fail_on_nan"]:
+        for obj in user_specs["objectives"]:
+            if np.isnan(libE_output[obj]):
+                calc_status = TASK_FAILED
+                break
+
     if calc_status == WORKER_DONE:
         libE_output["trial_status"] = TrialStatus.COMPLETED.name
     else:
@@ -156,8 +163,14 @@ def run_function(H, persis_info, sim_specs, libE_info):
     for name in libE_output.dtype.names:
         libE_output[name].fill(np.nan)
 
+    # Run evaluation.
     try:
         evaluation_func(input_values, libE_output)
+        # If required, fail when the objectives are NaN.
+        if user_specs["fail_on_nan"]:
+            for obj in user_specs["objectives"]:
+                if np.isnan(libE_output[obj]):
+                    raise ValueError("NaN objective value.")
         calc_status = WORKER_DONE
         libE_output["trial_status"] = TrialStatus.COMPLETED.name
     except Exception:
