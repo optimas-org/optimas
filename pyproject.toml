@@ -26,6 +26,7 @@ dependencies = [
     'jinja2',
     'ax-platform >= 0.3.4',
     'mpi4py',
+    'pydantic < 2.0',
 ]
 dynamic = ['version']
 
