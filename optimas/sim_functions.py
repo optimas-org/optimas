@@ -142,7 +142,6 @@ def execute_and_analyze_simulation(
 
 def run_function(H, persis_info, sim_specs, libE_info):
     """Run an evaluation defined with a `FunctionEvaluator`."""
-
     input_values = {}
     for name in H.dtype.names:
         value = H[name][0]
