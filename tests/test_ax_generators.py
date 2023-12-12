@@ -24,7 +24,7 @@ trials_to_fail = []
 
 def eval_func_sf(input_params, output_params):
     """Evaluation function for single-fidelity test.
-    
+
     This function can trigger a failed evaluation by not filling in the
     output parameters.
     """
@@ -41,7 +41,7 @@ def eval_func_sf(input_params, output_params):
 
 def eval_func_sf_moo(input_params, output_params):
     """Evaluation function for multi-objective single-fidelity test.
-    
+
     This function can trigger a failed evaluation by raising an exception."""
     global trial_count
     global trials_to_fail
@@ -58,7 +58,7 @@ def eval_func_sf_moo(input_params, output_params):
 
 def eval_func_mf(input_params, output_params):
     """Evaluation function for multifidelity test.
-    
+
     This function can trigger a failed evaluation by raising an exception."""
     global trial_count
     global trials_to_fail
@@ -78,7 +78,7 @@ def eval_func_mf(input_params, output_params):
 
 def eval_func_ax_client(input_params, output_params):
     """Evaluation function for the AxClient test,
-    
+
     This function can trigger a failed evaluation by raising an exception."""
     global trial_count
     global trials_to_fail

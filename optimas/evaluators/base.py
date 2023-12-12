@@ -80,7 +80,7 @@ class Evaluator:
                 "n_procs": self._n_procs,
                 "n_gpus": self._n_gpus,
                 "fail_on_nan": self._fail_on_nan,
-                "objectives": [obj.name for obj in objectives]
+                "objectives": [obj.name for obj in objectives],
             },
         }
         return sim_specs
