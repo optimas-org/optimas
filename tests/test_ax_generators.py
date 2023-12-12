@@ -531,6 +531,10 @@ def test_ax_single_fidelity_with_history():
         exploration_dir_path="./tests_output/test_ax_single_fidelity_with_history",
     )
 
+    # Get reference to original AxClient.
+    ax_client = gen._ax_client
+
+    # Run exploration.
     exploration.run()
 
     # Perform checks.
