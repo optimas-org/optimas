@@ -47,7 +47,8 @@ def convert_to_dataframe(
     """
     # Get fields in given data.
     if isinstance(data, np.ndarray):
-        d = {label: data[label].flatten() for label in data.dtype.names}
+        # Labels with multidimensional arrays are converted to a list of lists.
+        d = {label: data[label].tolist() for label in data.dtype.names}
         return pd.DataFrame(d)
     elif isinstance(data, pd.DataFrame):
         return data

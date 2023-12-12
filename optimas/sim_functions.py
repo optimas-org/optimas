@@ -135,7 +135,7 @@ def execute_and_analyze_simulation(
         if analysis_func is not None:
             # Extract the objective function for the current simulation,
             # as well as a few diagnostics
-            analysis_func(task.workdir, libE_output)
+            analysis_func(task.workdir, libE_output[0])
 
     return calc_status
 
@@ -165,7 +165,7 @@ def run_function(H, persis_info, sim_specs, libE_info):
 
     # Run evaluation.
     try:
-        evaluation_func(input_values, libE_output)
+        evaluation_func(input_values, libE_output[0])
         # If required, fail when the objectives are NaN.
         if user_specs["fail_on_nan"]:
             for obj in user_specs["objectives"]:
