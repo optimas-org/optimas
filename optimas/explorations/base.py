@@ -13,6 +13,7 @@ from libensemble.tools import add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
 
+from optimas.core.trial import TrialStatus
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.evaluators.function_evaluator import FunctionEvaluator
@@ -364,6 +365,13 @@ class Exploration:
             a problem in the data. If set to `True`, the error will be ignored.
         """
         evaluation_data = convert_to_dataframe(evaluation_data)
+
+        # Determine if evaluations come from past history array and, if so,
+        # keep only those that finished.
+        is_history = "sim_ended" in evaluation_data
+        if is_history:
+            evaluation_data = evaluation_data[evaluation_data["sim_ended"]]
+
         n_evals = len(evaluation_data)
         if n_evals == 0:
             return
@@ -401,13 +409,16 @@ class Exploration:
         for field in fields:
             if field in history_new.dtype.names:
                 history_new[field] = evaluation_data[field]
-        history_new["sim_started"] = True
-        history_new["sim_ended"] = True
-        history_new["trial_index"] = np.arange(
-            self.generator._trial_count,
-            self.generator._trial_count + n_evals,
-            dtype=int,
-        )
+        if not is_history:
+            history_new["sim_started"] = True
+            history_new["sim_ended"] = True
+            history_new["trial_index"] = np.arange(
+                self.generator._trial_count,
+                self.generator._trial_count + n_evals,
+                dtype=int,
+            )
+        if "trial_status" not in fields:
+            history_new["trial_status"] = TrialStatus.COMPLETED.name
 
         # Incorporate new history into generator.
         self.generator.incorporate_history(history_new)

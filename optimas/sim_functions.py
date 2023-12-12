@@ -5,6 +5,7 @@ import numpy as np
 from libensemble.executors.executor import Executor
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
+from optimas.core.trial import TrialStatus
 from optimas.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -64,6 +65,10 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         if calc_status != WORKER_DONE:
             break
 
+    if calc_status == WORKER_DONE:
+        libE_output["trial_status"] = TrialStatus.COMPLETED.name
+    else:
+        libE_output["trial_status"] = TrialStatus.FAILED.name
     return libE_output, persis_info, calc_status
 
 
@@ -130,8 +135,6 @@ def execute_and_analyze_simulation(
 
 def run_function(H, persis_info, sim_specs, libE_info):
     """Run an evaluation defined with a `FunctionEvaluator`."""
-    # By default, indicate that task failed
-    calc_status = TASK_FAILED
 
     input_values = {}
     for name in H.dtype.names:
@@ -153,6 +156,12 @@ def run_function(H, persis_info, sim_specs, libE_info):
     for name in libE_output.dtype.names:
         libE_output[name].fill(np.nan)
 
-    evaluation_func(input_values, libE_output)
+    try:
+        evaluation_func(input_values, libE_output)
+        calc_status = WORKER_DONE
+        libE_output["trial_status"] = TrialStatus.COMPLETED.name
+    except Exception:
+        calc_status = TASK_FAILED
+        libE_output["trial_status"] = TrialStatus.FAILED.name
 
     return libE_output, persis_info, calc_status

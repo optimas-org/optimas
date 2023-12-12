@@ -420,6 +420,8 @@ class Generator:
             required_parameters += self.objectives
         required_fields = [p.name for p in required_parameters]
         required_fields += [p.save_name for p in self._custom_trial_parameters]
+        if include_evaluations:
+            required_fields += ["trial_status"]
         missing_fields = [f for f in required_fields if f not in given_fields]
         if missing_fields:
             raise ValueError(
@@ -452,10 +454,9 @@ class Generator:
             for par in self._custom_trial_parameters:
                 setattr(trial, par.name, trial_data[par.save_name][i])
             if include_evaluations:
-                for obj in self.objectives:
-                    if np.isnan(trial_data[obj.name][i]):
-                        trial.mark_as(TrialStatus.FAILED)
-                if trial.status != TrialStatus.FAILED:
+                if trial_data["trial_status"][i] == TrialStatus.FAILED.name:
+                    trial.mark_as(TrialStatus.FAILED)
+                else:
                     for par in self._objectives + self._analyzed_parameters:
                         ev = Evaluation(
                             parameter=par, value=trial_data[par.name][i]
@@ -503,7 +504,7 @@ class Generator:
             # Generator input. This is a RNG, no need for inputs.
             "in": ["sim_id"],
             "persis_in": (
-                ["sim_id", "trial_index"]
+                ["sim_id", "trial_index", "trial_status"]
                 + [obj.name for obj in self._objectives]
                 + [par.name for par in self._analyzed_parameters]
             ),

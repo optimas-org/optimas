@@ -69,6 +69,7 @@ class Evaluator:
             "out": (
                 [(obj.name, obj.dtype) for obj in objectives]
                 + [(par.name, par.dtype) for par in analyzed_parameters]
+                + [("trial_status", str, 10)]
             ),
             "user": {
                 "n_procs": self._n_procs,

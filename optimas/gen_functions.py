@@ -99,11 +99,11 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             # Update the GP with latest simulation results
             for i in range(n):
                 trial_index = int(calc_in["trial_index"][i])
+                trial_status = calc_in["trial_status"][i]
                 trial = generator.get_trial(trial_index)
-                for obj in objectives:
-                    if np.isnan(calc_in[obj.name][i]):
-                        trial.mark_as(TrialStatus.FAILED)
-                if trial.status != TrialStatus.FAILED:
+                if trial_status == TrialStatus.FAILED.name:
+                    trial.mark_as(TrialStatus.FAILED)
+                else:
                     for par in objectives + analyzed_parameters:
                         y = calc_in[par.name][i]
                         ev = Evaluation(parameter=par, value=y)
