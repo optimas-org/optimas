@@ -136,9 +136,6 @@ class AxServiceGenerator(AxGenerator):
     def _tell(self, trials: List[Trial]) -> None:
         """Incorporate evaluated trials into Ax client."""
         for trial in trials:
-            objective_eval = {}
-            for ev in trial.objective_evaluations:
-                objective_eval[ev.parameter.name] = (ev.value, ev.sem)
             try:
                 trial_id = trial.ax_trial_id
                 ax_trial = self._ax_client.get_trial(trial_id)
@@ -170,11 +167,14 @@ class AxServiceGenerator(AxGenerator):
                     if gs.current_step.model == Models.SOBOL and ngen > 0:
                         gs.current_step.num_trials -= 1
             finally:
-                if trial.status == TrialStatus.COMPLETED:
+                if trial.completed:                    
+                    objective_eval = {}
+                    for ev in trial.objective_evaluations:
+                        objective_eval[ev.parameter.name] = (ev.value, ev.sem)
                     self._ax_client.complete_trial(
                         trial_index=trial_id, raw_data=objective_eval
                     )
-                elif trial.status == TrialStatus.FAILED:
+                elif trial.failed:
                     if self._abandon_failed_trials:
                         ax_trial.mark_abandoned()
                     else:
@@ -238,7 +238,7 @@ class AxServiceGenerator(AxGenerator):
         file_path = os.path.join(
             self._model_history_dir,
             "ax_client_at_eval_{}.json".format(
-                self._n_completed_trials_last_saved
+                self._n_evaluated_trials_last_saved
             ),
         )
         self._ax_client.save_to_json_file(file_path)

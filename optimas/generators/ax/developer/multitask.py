@@ -454,7 +454,7 @@ class AxMultitaskGenerator(AxGenerator):
         file_path = os.path.join(
             self._model_history_dir,
             "ax_experiment_at_eval_{}.json".format(
-                self._n_completed_trials_last_saved
+                self._n_evaluated_trials_last_saved
             ),
         )
         save_experiment(
