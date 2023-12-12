@@ -126,7 +126,7 @@ class Exploration:
     def history(self) -> pd.DataFrame:
         """Get the exploration history."""
         history = convert_to_dataframe(self._libe_history.H)
-        ordered_columns = ["trial_index"]
+        ordered_columns = ["trial_index", "trial_status"]
         ordered_columns += [p.name for p in self.generator.varying_parameters]
         ordered_columns += [p.name for p in self.generator.objectives]
         ordered_columns += [p.name for p in self.generator.analyzed_parameters]
