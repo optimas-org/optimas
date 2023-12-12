@@ -168,7 +168,7 @@ class Generator:
             if trial.completed:
                 n_completed += 1
         return n_completed
-    
+
     @property
     def n_failed_trials(self) -> int:
         """Get the number of unsuccessfully evaluated trials."""
@@ -177,7 +177,7 @@ class Generator:
             if trial.failed:
                 n_failed += 1
         return n_failed
-    
+
     @property
     def n_evaluated_trials(self) -> int:
         """Get the number of evaluated trials."""
