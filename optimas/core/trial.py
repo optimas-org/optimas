@@ -142,7 +142,7 @@ class Trial:
     @property
     def evaluated(self) -> bool:
         """Determine whether the trial has been evaluated."""
-        return self.completed() or self.failed()
+        return self.completed or self.failed
 
     def mark_as(self, status) -> None:
         """Set trial status.
