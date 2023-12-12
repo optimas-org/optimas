@@ -22,7 +22,7 @@ classifiers = [
     'Programming Language :: Python :: 3.11',
 ]
 dependencies = [
-    'libensemble >= 1.1.0',
+    'libensemble @ git+https://github.com/Libensemble/libensemble@develop',
     'jinja2',
     'ax-platform >= 0.3.4',
     'mpi4py',
@@ -33,6 +33,7 @@ dynamic = ['version']
 test = [
     'flake8',
     'pytest',
+    'matplotlib',
 ]
 
 [project.urls]

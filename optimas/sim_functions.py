@@ -124,7 +124,7 @@ def execute_and_analyze_simulation(
         if analysis_func is not None:
             # Extract the objective function for the current simulation,
             # as well as a few diagnostics
-            analysis_func(task.workdir, libE_output)
+            analysis_func(task.workdir, libE_output[0])
 
     return calc_status
 
@@ -155,6 +155,6 @@ def run_function(H, persis_info, sim_specs, libE_info):
     for name in H.dtype.names:
         libE_output[name] = H[name][0]
 
-    evaluation_func(input_values, libE_output)
+    evaluation_func(input_values, libE_output[0])
 
     return libE_output, persis_info, calc_status
