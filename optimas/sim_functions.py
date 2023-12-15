@@ -173,7 +173,7 @@ def run_function(H, persis_info, sim_specs, libE_info):
         for obj in user_specs["objectives"]:
             if np.isnan(libE_output[obj]):
                 calc_status = TASK_FAILED
-    
+
     # Set trial status.
     if calc_status == WORKER_DONE:
         libE_output["trial_status"] = TrialStatus.COMPLETED.name
