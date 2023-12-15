@@ -72,10 +72,12 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
                 calc_status = TASK_FAILED
                 break
 
+    # Set trial status.
     if calc_status == WORKER_DONE:
         libE_output["trial_status"] = TrialStatus.COMPLETED.name
     else:
         libE_output["trial_status"] = TrialStatus.FAILED.name
+
     return libE_output, persis_info, calc_status
 
 
@@ -133,12 +135,9 @@ def execute_and_analyze_simulation(
     # Data analysis from the last simulation
     if calc_status == WORKER_DONE:
         if analysis_func is not None:
-            try:
-                # Extract the objective function for the current simulation,
-                # as well as a few diagnostics
-                analysis_func(task.workdir, libE_output[0])
-            except Exception:
-                calc_status = TASK_FAILED
+            # Extract the objective function for the current simulation,
+            # as well as a few diagnostics
+            analysis_func(task.workdir, libE_output[0])
 
     return calc_status
 
@@ -166,17 +165,19 @@ def run_function(H, persis_info, sim_specs, libE_info):
         libE_output[name].fill(np.nan)
 
     # Run evaluation.
-    try:
-        evaluation_func(input_values, libE_output[0])
-        # If required, fail when the objectives are NaN.
-        if user_specs["fail_on_nan"]:
-            for obj in user_specs["objectives"]:
-                if np.isnan(libE_output[obj]):
-                    raise ValueError("NaN objective value.")
-        calc_status = WORKER_DONE
+    evaluation_func(input_values, libE_output[0])
+    calc_status = WORKER_DONE
+
+    # If required, fail when the objectives are NaN.
+    if user_specs["fail_on_nan"]:
+        for obj in user_specs["objectives"]:
+            if np.isnan(libE_output[obj]):
+                calc_status = TASK_FAILED
+    
+    # Set trial status.
+    if calc_status == WORKER_DONE:
         libE_output["trial_status"] = TrialStatus.COMPLETED.name
-    except Exception:
-        calc_status = TASK_FAILED
+    else:
         libE_output["trial_status"] = TrialStatus.FAILED.name
 
     return libE_output, persis_info, calc_status

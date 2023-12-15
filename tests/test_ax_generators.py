@@ -42,7 +42,9 @@ def eval_func_sf(input_params, output_params):
 def eval_func_sf_moo(input_params, output_params):
     """Evaluation function for multi-objective single-fidelity test.
 
-    This function can trigger a failed evaluation by raising an exception."""
+    This function can trigger a failed evaluation by not filling in the
+    output parameters.
+    """
     global trial_count
     global trials_to_fail
     with threadLock:
@@ -50,16 +52,17 @@ def eval_func_sf_moo(input_params, output_params):
         x0 = input_params["x0"]
         x1 = input_params["x1"]
         result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
-        if trial_count - 1 in trials_to_fail:
-            raise ValueError
-        output_params["f"] = result
-        output_params["f2"] = result * 2
+        if trial_count - 1 not in trials_to_fail:
+            output_params["f"] = result
+            output_params["f2"] = result * 2
 
 
 def eval_func_mf(input_params, output_params):
     """Evaluation function for multifidelity test.
 
-    This function can trigger a failed evaluation by raising an exception."""
+    This function can trigger a failed evaluation by not filling in the
+    output parameters.
+    """
     global trial_count
     global trials_to_fail
     with threadLock:
@@ -71,24 +74,24 @@ def eval_func_mf(input_params, output_params):
             (x0 + 10 * np.cos(x0 + 0.1 * resolution))
             * (x1 + 5 * np.cos(x1 - 0.2 * resolution))
         )
-        if trial_count - 1 in trials_to_fail:
-            raise ValueError
-        output_params["f"] = result
+        if trial_count - 1 not in trials_to_fail:
+            output_params["f"] = result
 
 
 def eval_func_ax_client(input_params, output_params):
-    """Evaluation function for the AxClient test,
+    """Evaluation function for the AxClient test.
 
-    This function can trigger a failed evaluation by raising an exception."""
+    This function can trigger a failed evaluation by not filling in the
+    output parameters.
+    """
     global trial_count
     global trials_to_fail
     with threadLock:
         trial_count += 1
         x = np.array([input_params.get(f"x{i+1}") for i in range(6)])
-        if trial_count - 1 in trials_to_fail:
-            raise ValueError
-        output_params["hartmann6"] = hartmann6(x)
-        output_params["l2norm"] = np.sqrt((x**2).sum())
+        if trial_count - 1 not in trials_to_fail:
+            output_params["hartmann6"] = hartmann6(x)
+            output_params["l2norm"] = np.sqrt((x**2).sum())
 
 
 def eval_func_task_1(input_params, output_params):
@@ -722,15 +725,15 @@ def test_ax_service_init():
 
 if __name__ == "__main__":
     test_ax_single_fidelity()
-    test_ax_single_fidelity_int()
-    test_ax_single_fidelity_moo()
-    test_ax_single_fidelity_fb()
-    test_ax_single_fidelity_moo_fb()
-    test_ax_single_fidelity_updated_params()
-    test_ax_multi_fidelity()
-    test_ax_multitask()
-    test_ax_client()
-    test_ax_single_fidelity_with_history()
-    test_ax_multi_fidelity_with_history()
-    test_ax_multitask_with_history()
-    test_ax_service_init()
+    # test_ax_single_fidelity_int()
+    # test_ax_single_fidelity_moo()
+    # test_ax_single_fidelity_fb()
+    # test_ax_single_fidelity_moo_fb()
+    # test_ax_single_fidelity_updated_params()
+    # test_ax_multi_fidelity()
+    # test_ax_multitask()
+    # test_ax_client()
+    # test_ax_single_fidelity_with_history()
+    # test_ax_multi_fidelity_with_history()
+    # test_ax_multitask_with_history()
+    # test_ax_service_init()
