@@ -133,9 +133,12 @@ def execute_and_analyze_simulation(
     # Data analysis from the last simulation
     if calc_status == WORKER_DONE:
         if analysis_func is not None:
-            # Extract the objective function for the current simulation,
-            # as well as a few diagnostics
-            analysis_func(task.workdir, libE_output[0])
+            try:
+                # Extract the objective function for the current simulation,
+                # as well as a few diagnostics
+                analysis_func(task.workdir, libE_output[0])
+            except Exception:
+                calc_status = TASK_FAILED
 
     return calc_status
 
