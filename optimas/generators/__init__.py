@@ -14,6 +14,8 @@ except ImportError as e:
         AxMultiFidelityGenerator = AxImportErrorDummyGenerator
         AxClientGenerator = AxImportErrorDummyGenerator
         AxMultitaskGenerator = AxImportErrorDummyGenerator
+    else:
+        raise(e)
 
 # Import optimas native generators
 from .grid_sampling import GridSamplingGenerator
