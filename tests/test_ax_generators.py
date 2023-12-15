@@ -118,6 +118,10 @@ def check_run_ax_service(ax_client, gen, exploration, n_failed_expected):
     assert gen.n_completed_trials == gen.n_evaluated_trials - n_failed_expected
     ax_trials = ax_client.get_trials_data_frame()
     assert (ax_trials.trial_status == "ABANDONED").sum() == n_failed_expected
+    np.testing.assert_array_equal(
+        exploration.history.trial_status == "FAILED",
+        ax_trials.trial_status == "ABANDONED"
+    )
 
     # Check that the original ax client has been updated.
     n_ax_trials = ax_trials.shape[0]
@@ -725,15 +729,15 @@ def test_ax_service_init():
 
 if __name__ == "__main__":
     test_ax_single_fidelity()
-    # test_ax_single_fidelity_int()
-    # test_ax_single_fidelity_moo()
-    # test_ax_single_fidelity_fb()
-    # test_ax_single_fidelity_moo_fb()
-    # test_ax_single_fidelity_updated_params()
-    # test_ax_multi_fidelity()
-    # test_ax_multitask()
-    # test_ax_client()
-    # test_ax_single_fidelity_with_history()
-    # test_ax_multi_fidelity_with_history()
-    # test_ax_multitask_with_history()
-    # test_ax_service_init()
+    test_ax_single_fidelity_int()
+    test_ax_single_fidelity_moo()
+    test_ax_single_fidelity_fb()
+    test_ax_single_fidelity_moo_fb()
+    test_ax_single_fidelity_updated_params()
+    test_ax_multi_fidelity()
+    test_ax_multitask()
+    test_ax_client()
+    test_ax_single_fidelity_with_history()
+    test_ax_multi_fidelity_with_history()
+    test_ax_multitask_with_history()
+    test_ax_service_init()
