@@ -10,6 +10,7 @@ except ImportError as e:
         # raise an error only if the user tries to instantiate them
         # and tell them to install ax-platform
         from .ax.import_error_dummy_generator import AxImportErrorDummyGenerator
+
         AxSingleFidelityGenerator = AxImportErrorDummyGenerator
         AxMultiFidelityGenerator = AxImportErrorDummyGenerator
         AxClientGenerator = AxImportErrorDummyGenerator
