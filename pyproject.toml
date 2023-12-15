@@ -24,7 +24,6 @@ classifiers = [
 dependencies = [
     'libensemble @ git+https://github.com/Libensemble/libensemble@develop',
     'jinja2',
-    'ax-platform >= 0.3.4',
     'mpi4py',
 ]
 dynamic = ['version']
@@ -33,6 +32,7 @@ dynamic = ['version']
 test = [
     'flake8',
     'pytest',
+    'pandas',
     'matplotlib',
 ]
 
