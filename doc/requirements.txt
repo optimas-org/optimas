@@ -1,5 +1,5 @@
-ax-platform >= 0.2.9
-libensemble >= 0.9.2
+ax-platform >= 0.3.4
+libensemble @ git+https://github.com/Libensemble/libensemble@develop
 matplotlib
 numpydoc
 pydata-sphinx-theme
