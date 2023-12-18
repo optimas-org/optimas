@@ -24,6 +24,7 @@ classifiers = [
 dependencies = [
     'libensemble @ git+https://github.com/Libensemble/libensemble@develop',
     'jinja2',
+    'pandas',
     'mpi4py',
 ]
 dynamic = ['version']
@@ -32,10 +33,12 @@ dynamic = ['version']
 test = [
     'flake8',
     'pytest',
-    'pandas',
+    'ax-platform >= 0.3.4',
     'matplotlib',
 ]
-
+full = [
+    'ax-platform >= 0.3.4',
+]
 [project.urls]
 Documentation = 'https://optimas.readthedocs.io/'
 
