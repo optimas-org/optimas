@@ -45,6 +45,7 @@ extensions = [
     # 'sphinx_gallery.gen_gallery',
     "numpydoc",
     "matplotlib.sphinxext.plot_directive",
+    "sphinxcontrib.autodoc_pydantic",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -114,6 +115,13 @@ autosummary_context = {
     # Methods that should be skipped when generating the docs
     "skipmethods": ["__init__"]
 }
+
+# Autodoc pydantic settings.
+autodoc_pydantic_model_show_json = False
+autodoc_pydantic_model_show_config_summary = False
+autodoc_pydantic_model_show_field_summary = False
+autodoc_pydantic_model_hide_paramlist = False
+autodoc_pydantic_model_undoc_members = False
 
 # ------------------------------------------------------------------------------
 # Matplotlib plot_directive options

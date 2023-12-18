@@ -6,3 +6,4 @@ pydata-sphinx-theme
 sphinx-copybutton
 sphinx-design
 sphinx-gallery
+autodoc_pydantic >= 2.0.1
