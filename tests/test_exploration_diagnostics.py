@@ -60,11 +60,11 @@ def test_exploration_diagnostics():
         )
 
     for p_in, p_out in zip(gen.varying_parameters, diags.varying_parameters):
-        assert p_in.json() == p_out.json()
+        assert p_in.model_dump_json() == p_out.model_dump_json()
     for p_in, p_out in zip(gen.objectives, diags.objectives):
-        assert p_in.json() == p_out.json()
+        assert p_in.model_dump_json() == p_out.model_dump_json()
     for p_in, p_out in zip(gen.analyzed_parameters, diags.analyzed_parameters):
-        assert p_in.json() == p_out.json()
+        assert p_in.model_dump_json() == p_out.model_dump_json()
 
     diags.plot_objective(show_trace=True)
     plt.savefig(os.path.join(exploration_dir_path, "optimization.png"))
