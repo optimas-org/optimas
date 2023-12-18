@@ -202,7 +202,7 @@ class ExplorationDiagnostics:
             t_trace, obj_trace = self.get_objective_trace(
                 objective, fidelity_parameter
             )
-            ax.plot(t_trace, obj_trace)
+            ax.step(t_trace, obj_trace, where='post')
 
     def get_objective_trace(
         self,
