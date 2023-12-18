@@ -6,18 +6,9 @@ keyword arguments). This is needed for backward compatibility.
 """
 
 from typing import Optional, Any
-import json
 
-from pydantic import BaseModel, Extra, validator, PrivateAttr
+from pydantic import BaseModel, field_serializer, validator, PrivateAttr
 import numpy as np
-
-
-def json_dumps_dtype(v, *, default):
-    """Add support for dumping numpy dtype to json."""
-    for key, value in v.items():
-        if key == "dtype":
-            v[key] = np.dtype(value).descr
-    return json.dumps(v)
 
 
 class Parameter(BaseModel):
@@ -54,9 +45,10 @@ class Parameter(BaseModel):
         else:
             return v
 
-    class Config:
-        extra = Extra.ignore
-        json_dumps = json_dumps_dtype
+    @field_serializer('dtype')
+    def serialize_dtype(self, value, _info):
+        """Add support for dumping numpy dtype to json."""
+        return np.dtype(value).descr
 
 
 class VaryingParameter(Parameter):
