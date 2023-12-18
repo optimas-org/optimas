@@ -69,6 +69,9 @@ class VaryingParameter(Parameter):
     default_value : float, optional
         Default value of the parameter when it is not being varied. Only needed
         for some generators.
+    dtype : data-type
+        The data type of the parameter. Any object that can be converted to a
+        numpy dtype.
     """
 
     lower_bound: float
@@ -156,7 +159,7 @@ class TrialParameter(Parameter):
     save_name : str
         Name under which the parameter should be saved to the history array. If
         not given, the parameter ``name`` will be used.
-    dtype : np.dtype
+    dtype : data-type
         The data type of the parameter.
     """
 
@@ -182,6 +185,9 @@ class Objective(Parameter):
     minimize : bool, optional
         Indicates whether the objective should be minimized or,
         otherwise, maximized. By default, ``True``.
+    dtype : data-type
+        The data type of the parameter. Any object that can be converted to a
+        numpy dtype.
     """
 
     minimize: Optional[bool] = True
