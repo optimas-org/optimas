@@ -45,7 +45,7 @@ class Parameter(BaseModel):
         else:
             return v
 
-    @field_serializer('dtype')
+    @field_serializer("dtype")
     def serialize_dtype(self, value, _info):
         """Add support for dumping numpy dtype to json."""
         return np.dtype(value).descr
