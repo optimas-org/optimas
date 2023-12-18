@@ -32,7 +32,7 @@ class Parameter(BaseModel):
         super().__init__(name=name, dtype=dtype, **kwargs)
 
     @validator("dtype", pre=True)
-    def check_valid_dtype(cls, v):
+    def _check_valid_dtype(cls, v):
         """Check that the given dtype can be converted to a numpy dtype."""
         try:
             # For dtypes that were serialized with `json_dumps_dtype`.
@@ -46,7 +46,7 @@ class Parameter(BaseModel):
             return v
 
     @field_serializer("dtype")
-    def serialize_dtype(self, value, _info):
+    def _serialize_dtype(self, value, _info):
         """Add support for dumping numpy dtype to json."""
         return np.dtype(value).descr
 
