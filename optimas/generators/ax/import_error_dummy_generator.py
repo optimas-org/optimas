@@ -1,9 +1,8 @@
-"""Contains the definition of dummy generator that raises an import error"""
+"""Contains the definition of dummy generator that raises an import error."""
 
 
 class AxImportErrorDummyGenerator(object):
-    """Class that raises an error when instantiated, telling
-    the user to install ax-platform.
+    """Class that raises an error when instantiated, telling the user to install ax-platform.
 
     This class replaces all other Ax-based classes,
     when Ax is not installed
