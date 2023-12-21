@@ -7,7 +7,7 @@ from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
 from optimas.evaluators import FunctionEvaluator
 from optimas.core import VaryingParameter, Objective
-from optimas.post_processing import ExplorationDiagnostics
+from optimas.diagnostics import ExplorationDiagnostics
 
 
 def eval_func(input_params, output_params):
