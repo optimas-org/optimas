@@ -229,6 +229,7 @@ class ExplorationDiagnostics:
         else:
             df = self.history.copy()
         df = df[df.sim_ended]
+        df = df.sort_values("sim_ended_time")
         time = df.sim_ended_time
         if relative_start_time:
             time = time - df["gen_started_time"].min()
