@@ -268,7 +268,7 @@ def test_ax_single_fidelity_updated_params():
     obj = Objective("f", minimize=False)
 
     # Start with a fixed value of x0.
-    var1.fix_value(-10.)
+    var1.fix_value(-10.0)
 
     gen = AxSingleFidelityGenerator(
         varying_parameters=[var1, var2],
