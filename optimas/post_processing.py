@@ -234,7 +234,6 @@ class ExplorationDiagnostics:
         if relative_start_time:
             time = time - df["gen_started_time"].min()
 
-        df = df.sort_values("sim_ended_time")
         t = time.values
         if objective.minimize:
             obj_trace = df[objective.name].cummin().values
