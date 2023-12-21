@@ -82,13 +82,13 @@ class ExplorationDiagnostics:
             d = json.load(f)
         for _, param in d.items():
             if param["type"] == "VaryingParameter":
-                p = VaryingParameter.parse_raw(param["value"])
+                p = VaryingParameter.model_validate_json(param["value"])
                 varying_parameters.append(p)
             elif param["type"] == "Objective":
-                p = Objective.parse_raw(param["value"])
+                p = Objective.model_validate_json(param["value"])
                 objectives.append(p)
             elif param["type"] == "Parameter":
-                p = Parameter.parse_raw(param["value"])
+                p = Parameter.model_validate_json(param["value"])
                 analyzed_parameters.append(p)
 
         # Create exploration using dummy generator and evaluator.
