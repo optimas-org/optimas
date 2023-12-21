@@ -21,28 +21,14 @@ class ExplorationDiagnostics:
 
     Parameters
     ----------
-    path : str
+    source : str
         Path to the exploration directory or to an
-        individual `.npy` history file.
-    exploration : Exploration
-        An exploration instance.
-
+        individual `.npy` history file, or an ``Exploration`` instance.
     """
 
-    def __init__(
-        self,
-        path: Optional[str] = None,
-        exploration: Optional[Exploration] = None,
-    ) -> None:
-        if path is None and exploration is None:
-            raise ValueError(
-                "Please specify either a `path` or an `exploration`."
-            )
-        elif path is not None and exploration is not None:
-            raise ValueError(
-                "Only one of `path` or `exploration` should be specified."
-            )
-        elif path is not None:
+    def __init__(self, source: Union[str, Exploration]) -> None:
+        if isinstance(source, str):
+            path = source
             # Find the `npy` file that contains the results
             if os.path.isdir(path):
                 # Get history files sorted by creation date.
@@ -75,6 +61,13 @@ class ExplorationDiagnostics:
                     "The path should either point to a folder or a `.npy` file."
                 )
             exploration = self._create_exploration(params_file, output_file)
+        elif isinstance(source, Exploration):
+            exploration = source
+        else:
+            ValueError(
+                "The source of the exploration diagnostics should be a `path` "
+                f"or an `Exploration`, not of type {type(source)}."
+            )
         self._exploration = exploration
 
     def _create_exploration(
