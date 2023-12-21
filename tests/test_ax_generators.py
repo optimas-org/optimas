@@ -267,6 +267,9 @@ def test_ax_single_fidelity_updated_params():
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
 
+    # Start with a fixed value of x0.
+    var1.fix_value(-10.)
+
     gen = AxSingleFidelityGenerator(
         varying_parameters=[var1, var2],
         objectives=[obj],
@@ -281,14 +284,18 @@ def test_ax_single_fidelity_updated_params():
     )
 
     # Run exploration.
-    exploration.run(n_evals=10)
+    exploration.run(n_evals=5)
+    assert all(exploration.history["x0"] == -10)
+
+    # Free value of x0 and run 5 evals.
+    var1.free_value()
+    gen.update_parameter(var1)
+    exploration.run(n_evals=5)
+    assert not all(exploration.history["x0"][-5:] == -10)
 
     # Update range of x0 and run 10 evals.
     var1.update_range(-20.0, 0.0)
     gen.update_parameter(var1)
-    # Make sure we have an evaluation in the new range (it currently fails
-    # otherwise).
-    exploration.evaluate_trials([{"x0": -10.0, "x1": 10.0}])
     exploration.run(n_evals=10)
     assert all(exploration.history["x0"][-10:] >= -20)
     assert all(exploration.history["x0"][-10:] <= 0.0)
@@ -609,16 +616,16 @@ def test_ax_service_init():
 
 
 if __name__ == "__main__":
-    test_ax_single_fidelity()
-    test_ax_single_fidelity_int()
-    test_ax_single_fidelity_moo()
-    test_ax_single_fidelity_fb()
-    test_ax_single_fidelity_moo_fb()
+    # test_ax_single_fidelity()
+    # test_ax_single_fidelity_int()
+    # test_ax_single_fidelity_moo()
+    # test_ax_single_fidelity_fb()
+    # test_ax_single_fidelity_moo_fb()
     test_ax_single_fidelity_updated_params()
-    test_ax_multi_fidelity()
-    test_ax_multitask()
-    test_ax_client()
-    test_ax_single_fidelity_with_history()
-    test_ax_multi_fidelity_with_history()
-    test_ax_multitask_with_history()
-    test_ax_service_init()
+    # test_ax_multi_fidelity()
+    # test_ax_multitask()
+    # test_ax_client()
+    # test_ax_single_fidelity_with_history()
+    # test_ax_multi_fidelity_with_history()
+    # test_ax_multitask_with_history()
+    # test_ax_service_init()
