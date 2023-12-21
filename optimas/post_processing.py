@@ -3,7 +3,7 @@ import os
 from warnings import warn
 import pathlib
 import json
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -11,6 +11,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from optimas.core import VaryingParameter, Objective, Parameter
+from optimas.generators.base import Generator
+from optimas.evaluators.base import Evaluator
+from optimas.explorations import Exploration
 
 
 class ExplorationDiagnostics:
@@ -21,203 +24,183 @@ class ExplorationDiagnostics:
     path : str
         Path to the exploration directory or to an
         individual `.npy` history file.
-    relative_start_time : bool, optional
-        Whether the time diagnostics should be relative to the start time
-        of the exploration. By default, True.
-    remove_unfinished_evaluations : bool, optional
-        Whether the data from unfinished evaluations (e.g., due to failed
-        evaluation) should be removed from the diagnostics. By default, True.
+    exploration : Exploration
+        An exploration instance.
 
     """
 
     def __init__(
         self,
-        path: str,
-        relative_start_time: Optional[bool] = True,
-        remove_unfinished_evaluations: Optional[bool] = True,
+        path: Optional[str] = None,
+        exploration: Optional[Exploration] = None,
     ) -> None:
-        # Find the `npy` file that contains the results
-        if os.path.isdir(path):
-            # Get history files sorted by creation date.
-            output_files = [
-                filename
-                for filename in os.listdir(path)
-                if "_history_" in filename and filename.endswith(".npy")
-            ]
-            output_files.sort(
-                key=lambda f: os.path.getmtime(os.path.join(path, f))
+        if path is None and exploration is None:
+            raise ValueError(
+                "Please specify either a `path` or an `exploration`."
             )
-            if len(output_files) == 0:
+        elif path is not None and exploration is not None:
+            raise ValueError(
+                "Only one of `path` or `exploration` should be specified."
+            )
+        elif path is not None:
+            # Find the `npy` file that contains the results
+            if os.path.isdir(path):
+                # Get history files sorted by creation date.
+                output_files = [
+                    filename
+                    for filename in os.listdir(path)
+                    if "_history_" in filename and filename.endswith(".npy")
+                ]
+                output_files.sort(
+                    key=lambda f: os.path.getmtime(os.path.join(path, f))
+                )
+                if len(output_files) == 0:
+                    raise RuntimeError(
+                        "The specified path does not contain any history file."
+                    )
+                elif len(output_files) > 1:
+                    warn(
+                        "The specified path contains multiple history files. "
+                        "The most recent one will be used."
+                    )
+                output_file = os.path.join(path, output_files[-1])
+                params_file = os.path.join(path, "exploration_parameters.json")
+            elif path.endswith(".npy"):
+                output_file = path
+                params_file = os.path.join(
+                    pathlib.Path(path).parent, "exploration_parameters.json"
+                )
+            else:
                 raise RuntimeError(
-                    "The specified path does not contain any history file."
+                    "The path should either point to a folder or a `.npy` file."
                 )
-            elif len(output_files) > 1:
-                warn(
-                    "The specified path contains multiple history files. "
-                    "The most recent one will be used."
-                )
-            output_file = output_files[-1]
-            params_file = os.path.join(path, "exploration_parameters.json")
-        elif path.endswith(".npy"):
-            output_file = path
-            params_file = os.path.join(
-                pathlib.Path(path).parent, "exploration_parameters.json"
-            )
-        else:
-            raise RuntimeError(
-                "The path should either point to a folder or a `.npy` file."
-            )
+            exploration = self._create_exploration(params_file, output_file)
+        self._exploration = exploration
 
-        # Load the file as a pandas DataFrame
-        history = np.load(os.path.join(path, output_file))
-        d = {label: history[label].flatten() for label in history.dtype.names}
-        self._history = pd.DataFrame(d)
-
-        # Only keep the simulations that finished properly
-        if remove_unfinished_evaluations:
-            self._history = self._history[self._history.sim_ended]
-
-        # Make the time relative to the start of the simulation
-        if relative_start_time:
-            start_time = self._history["gen_started_time"].min()
-            self._history["sim_started_time"] -= start_time
-            self._history["sim_ended_time"] -= start_time
-            self._history["gen_started_time"] -= start_time
-            self._history["gen_ended_time"] -= start_time
-            self._history["gen_informed_time"] -= start_time
-
-        # Read varying parameters, objectives, etc.
-        self._read_exploration_parameters(params_file)
-
-        # Rearrange history dataframe.
-        self._rearrange_dataframe_columns()
-
-    def _read_exploration_parameters(self, params_file: str) -> None:
-        """Read exploration parameters from json file."""
-        self._varying_parameters = {}
-        self._analyzed_parameters = {}
-        self._objectives = {}
-
+    def _create_exploration(
+        self, params_file: str, history_path: str
+    ) -> Exploration:
+        """Create exploration from saved files."""
+        # Create exploration parameters.
+        varying_parameters = []
+        analyzed_parameters = []
+        objectives = []
         with open(params_file) as f:
             d = json.load(f)
         for _, param in d.items():
             if param["type"] == "VaryingParameter":
                 p = VaryingParameter.parse_raw(param["value"])
-                self._varying_parameters[p.name] = p
+                varying_parameters.append(p)
             elif param["type"] == "Objective":
                 p = Objective.parse_raw(param["value"])
-                self._objectives[p.name] = p
+                objectives.append(p)
             elif param["type"] == "Parameter":
                 p = Parameter.parse_raw(param["value"])
-                self._analyzed_parameters[p.name] = p
+                analyzed_parameters.append(p)
 
-    def _rearrange_dataframe_columns(self) -> None:
-        """Rearrange dataframe columns.
-
-        This is needed to have a consistent and more convenient output
-        when printing or viewing the dataframe because the order of the
-        numpy history file is different from run to run.
-        """
-        ordered_columns = ["trial_index"]
-        ordered_columns += self._varying_parameters.keys()
-        ordered_columns += self._objectives.keys()
-        ordered_columns += self._analyzed_parameters.keys()
-        ordered_columns += [
-            "sim_id",
-            "sim_worker",
-            "sim_started_time",
-            "sim_ended_time",
-            "sim_started",
-            "sim_ended",
-            "gen_worker",
-            "gen_started_time",
-            "gen_ended_time",
-            "gen_informed_time",
-            "gen_informed",
-            "cancel_requested",
-            "kill_sent",
-            "given_back",
-            "num_procs",
-            "num_gpus",
-        ]
-        ordered_columns += [
-            c for c in self._history if c not in ordered_columns
-        ]
-        self._history = self._history[ordered_columns]
+        # Create exploration using dummy generator and evaluator.
+        return Exploration(
+            generator=Generator(
+                varying_parameters=varying_parameters,
+                objectives=objectives,
+                analyzed_parameters=analyzed_parameters,
+            ),
+            evaluator=Evaluator(sim_function=None),
+            history=history_path,
+        )
 
     @property
     def history(self) -> pd.DataFrame:
         """Return a pandas DataFrame with the exploration history."""
-        return self._history
+        return self._exploration.history
 
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
         """Get the varying parameters of the exploration."""
-        return list(self._varying_parameters.values())
+        return self._exploration.generator.varying_parameters
 
     @property
     def analyzed_parameters(self) -> List[Parameter]:
         """Get the analyzed parameters of the exploration."""
-        return list(self._analyzed_parameters.values())
+        return self._exploration.generator.analyzed_parameters
 
     @property
     def objectives(self) -> List[Objective]:
         """Get the objectives of the exploration."""
-        return list(self._objectives.values())
+        return self._exploration.generator.objectives
 
     def plot_objective(
         self,
-        objective: Optional[str] = None,
+        objective: Optional[Union[str, Objective]] = None,
         fidelity_parameter: Optional[str] = None,
         show_trace: Optional[bool] = False,
+        relative_start_time: Optional[bool] = True,
     ) -> None:
         """Plot the values that where reached during the optimization.
 
         Parameters
         ----------
         objective : str, optional
-            Name of the objective to plot. If `None`, the first objective of
-            the exploration is shown.
+            Objective, or name of the objective to plot. If `None`, the first
+            objective of the exploration is shown.
         fidelity_parameter: str, optional
             Name of the fidelity parameter. If given, the different fidelity
             will be plotted in different colors.
         show_trace : bool, optional
             Whether to show the cumulative maximum or minimum of the objective.
+        relative_start_time : bool, optional
+            Whether the time axis should be relative to the start time
+            of the exploration. By default, True.
 
         """
         if fidelity_parameter is not None:
-            fidelity = self._history[fidelity_parameter]
+            fidelity = self.history[fidelity_parameter]
         else:
             fidelity = None
         if objective is None:
-            objective = list(self._objectives.keys())[0]
+            objective = self.objectives[0]
+        elif isinstance(objective, str):
+            objective_names = [obj.name for obj in self.objectives]
+            if objective in objective_names:
+                objective = self.objectives[objective_names.index(objective)]
+            else:
+                raise ValueError(
+                    f"Objective {objective} not found. Available objectives "
+                    f"are {objective_names}."
+                )
+        history = self.history
+        history = history[history.sim_ended]
+        time = history.sim_ended_time
+        if relative_start_time:
+            time = time - history["gen_started_time"].min()
         _, ax = plt.subplots()
-        ax.scatter(
-            self._history.sim_ended_time, self._history[objective], c=fidelity
-        )
-        ax.set_ylabel(objective)
+        ax.scatter(time, history[objective.name], c=fidelity)
+        ax.set_ylabel(objective.name)
         ax.set_xlabel("Time (s)")
 
         if show_trace:
             t_trace, obj_trace = self.get_objective_trace(
-                objective, fidelity_parameter
+                objective,
+                fidelity_parameter,
+                relative_start_time=relative_start_time,
             )
             ax.step(t_trace, obj_trace, where="post")
 
     def get_objective_trace(
         self,
-        objective: Optional[str] = None,
+        objective: Optional[Union[str, Objective]] = None,
         fidelity_parameter: Optional[str] = None,
         min_fidelity: Optional[float] = None,
         t_array: Optional[npt.NDArray] = None,
+        relative_start_time: Optional[bool] = True,
     ) -> Tuple[npt.NDArray, npt.NDArray]:
         """Get the cumulative maximum or minimum of the objective.
 
         Parameters
         ----------
         objective : str, optional
-            Name of the objective to plot. If `None`, the first objective of
-            the exploration is shown.
+            Objective, or name of the objective to plot. If `None`, the first
+            objective of the exploration is shown.
         fidelity_parameter: str, optional
             Name of the fidelity parameter. If `fidelity_parameter`
             and `min_fidelity` are set, only the runs with fidelity
@@ -227,6 +210,9 @@ class ExplorationDiagnostics:
         t_array: 1D numpy array, optional
             Array with time values. If provided, the trace is interpolated
             to the times in the array.
+        relative_start_time : bool, optional
+            Whether the time axis should be relative to the start time
+            of the exploration. By default, True.
 
         Returns
         -------
@@ -236,17 +222,26 @@ class ExplorationDiagnostics:
         if objective is None:
             objective = self.objectives[0]
         elif isinstance(objective, str):
-            objective = self._objectives[objective]
+            objective_names = [obj.name for obj in self.objectives]
+            if objective in objective_names:
+                objective = self.objectives[objective_names.index(objective)]
+            else:
+                raise ValueError(
+                    f"Objective {objective} not found. Available objectives "
+                    f"are {objective_names}."
+                )
         if fidelity_parameter is not None:
             assert min_fidelity is not None
-            df = self._history[
-                self._history[fidelity_parameter] >= min_fidelity
-            ]
+            df = self.history[self.history[fidelity_parameter] >= min_fidelity]
         else:
-            df = self._history.copy()
+            df = self.history.copy()
+        df = df[df.sim_ended]
+        time = df.sim_ended_time
+        if relative_start_time:
+            time = time - df["gen_started_time"].min()
 
         df = df.sort_values("sim_ended_time")
-        t = df.sim_ended_time.values
+        t = time.values
         if objective.minimize:
             obj_trace = df[objective.name].cummin().values
         else:
@@ -269,7 +264,9 @@ class ExplorationDiagnostics:
         return t_array, obj_trace_array
 
     def plot_worker_timeline(
-        self, fidelity_parameter: Optional[str] = None
+        self,
+        fidelity_parameter: Optional[str] = None,
+        relative_start_time: Optional[bool] = True,
     ) -> None:
         """Plot the timeline of worker utilization.
 
@@ -278,16 +275,24 @@ class ExplorationDiagnostics:
         fidelity_parameter: string or None
             Name of the fidelity parameter. If given, the different fidelity
             will be plotted in different colors.
+        relative_start_time : bool, optional
+            Whether the time axis should be relative to the start time
+            of the exploration. By default, True.
         """
-        df = self._history
+        df = self.history
         if fidelity_parameter is not None:
             min_fidelity = df[fidelity_parameter].min()
             max_fidelity = df[fidelity_parameter].max()
 
+        sim_started_time = df["sim_started_time"]
+        sim_ended_time = df["sim_ended_time"]
+        if relative_start_time:
+            sim_started_time = sim_started_time - df["gen_started_time"].min()
+            sim_ended_time = sim_ended_time - df["gen_started_time"].min()
         _, ax = plt.subplots()
         for i in range(len(df)):
-            start = df["sim_started_time"].iloc[i]
-            duration = df["sim_ended_time"].iloc[i] - start
+            start = sim_started_time.iloc[i]
+            duration = sim_ended_time.iloc[i] - start
             if fidelity_parameter is not None:
                 fidelity = df[fidelity_parameter].iloc[i]
                 color = plt.cm.viridis(
