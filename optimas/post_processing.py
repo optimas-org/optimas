@@ -127,6 +127,7 @@ class ExplorationDiagnostics:
         objective: Optional[Union[str, Objective]] = None,
         fidelity_parameter: Optional[str] = None,
         show_trace: Optional[bool] = False,
+        use_time_axis: Optional[bool] = False,
         relative_start_time: Optional[bool] = True,
     ) -> None:
         """Plot the values that where reached during the optimization.
@@ -141,6 +142,9 @@ class ExplorationDiagnostics:
             will be plotted in different colors.
         show_trace : bool, optional
             Whether to show the cumulative maximum or minimum of the objective.
+        use_time_axis : bool, optional
+            Whether the x axis should be the time at which the evaluations
+            were completed, instead of the evaluation index.
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
@@ -163,18 +167,24 @@ class ExplorationDiagnostics:
                 )
         history = self.history
         history = history[history.sim_ended]
-        time = history.sim_ended_time
-        if relative_start_time:
-            time = time - history["gen_started_time"].min()
+        if use_time_axis:
+            x = history.sim_ended_time
+            xlabel = "Time (s)"
+            if relative_start_time:
+                x = x - history["gen_started_time"].min()
+        else:
+            x = history.trial_index
+            xlabel = "Number of evaluations"
         _, ax = plt.subplots()
-        ax.scatter(time, history[objective.name], c=fidelity)
+        ax.scatter(x, history[objective.name], c=fidelity)
         ax.set_ylabel(objective.name)
-        ax.set_xlabel("Time (s)")
+        ax.set_xlabel(xlabel)
 
         if show_trace:
             t_trace, obj_trace = self.get_objective_trace(
                 objective,
                 fidelity_parameter,
+                use_time_axis=use_time_axis,
                 relative_start_time=relative_start_time,
             )
             ax.step(t_trace, obj_trace, where="post")
@@ -184,6 +194,7 @@ class ExplorationDiagnostics:
         objective: Optional[Union[str, Objective]] = None,
         fidelity_parameter: Optional[str] = None,
         min_fidelity: Optional[float] = None,
+        use_time_axis: Optional[bool] = False,
         t_array: Optional[npt.NDArray] = None,
         relative_start_time: Optional[bool] = True,
     ) -> Tuple[npt.NDArray, npt.NDArray]:
@@ -200,9 +211,12 @@ class ExplorationDiagnostics:
             above `min_fidelity` are considered.
         fidelity_min: float, optional
             Minimum fidelity above which points are considered
+        use_time_axis : bool, optional
+            Whether the x axis should be the time at which the evaluations
+            were completed, instead of the evaluation index.
         t_array: 1D numpy array, optional
             Array with time values. If provided, the trace is interpolated
-            to the times in the array.
+            to the times in the array. Requires ``use_time_axis=True``.
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
@@ -229,12 +243,16 @@ class ExplorationDiagnostics:
         else:
             df = self.history.copy()
         df = df[df.sim_ended]
-        df = df.sort_values("sim_ended_time")
-        time = df.sim_ended_time
-        if relative_start_time:
-            time = time - df["gen_started_time"].min()
 
-        t = time.values
+        if use_time_axis:
+            df = df.sort_values("sim_ended_time")
+            x = df.sim_ended_time
+            if relative_start_time:
+                x = x - df["gen_started_time"].min()
+            x = x.values
+        else:
+            x = df.trial_index.values
+
         if objective.minimize:
             obj_trace = df[objective.name].cummin().values
         else:
@@ -243,18 +261,17 @@ class ExplorationDiagnostics:
         if t_array is not None:
             # Interpolate the trace curve on t_array
             N_interp = len(t_array)
-            N_ref = len(t)
+            N_ref = len(x)
             obj_trace_array = np.zeros_like(t_array)
             i_ref = 0
             for i_interp in range(N_interp):
-                while i_ref < N_ref - 1 and t[i_ref + 1] < t_array[i_interp]:
+                while i_ref < N_ref - 1 and x[i_ref + 1] < t_array[i_interp]:
                     i_ref += 1
                 obj_trace_array[i_interp] = obj_trace[i_ref]
-        else:
-            t_array = t
-            obj_trace_array = obj_trace
+            x = t_array
+            obj_trace = obj_trace_array
 
-        return t_array, obj_trace_array
+        return x, obj_trace
 
     def plot_worker_timeline(
         self,
