@@ -14,8 +14,6 @@ import os
 import sys
 from datetime import date
 
-sys.path.insert(0, os.path.abspath("../.."))
-
 
 # -- Import version ----------------------------------------------------------
 from optimas import __version__  # noqa: E402
