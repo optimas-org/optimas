@@ -1,7 +1,7 @@
 .. _optimas-with-simulations:
 
-Running optimas with simulations
-================================
+Running simulations
+===================
 
 A common use case for optimas is to run an optimization or parameter scan
 where each evaluation consists of running a simulation that is defined in an
