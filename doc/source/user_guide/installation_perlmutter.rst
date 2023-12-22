@@ -17,7 +17,7 @@ environment, in which to install *optimas*.
     python3 -m venv $HOME/sw/perlmutter/gpu/venvs/optimas
     source $HOME/sw/perlmutter/gpu/venvs/optimas/bin/activate
 
-    python3 -m pip install optimas
+    pip install optimas[all]
 
 Running an optimas job
 ~~~~~~~~~~~~~~~~~~~~~~
