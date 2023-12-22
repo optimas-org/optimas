@@ -56,4 +56,4 @@ This will install the latest development version with all dependencies.
 
 .. code::
 
-    pip install "optimas[all] @ git+https://github.com/optimas-org/optimas.git" 
+    pip install "optimas[all] @ git+https://github.com/optimas-org/optimas.git"
