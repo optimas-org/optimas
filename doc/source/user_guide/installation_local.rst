@@ -31,10 +31,29 @@ On Windows:
 
     conda install -c conda-forge mpi4py msmpi
 
-Install optimas
-~~~~~~~~~~~~~~~
-Install the latest release from PyPI
+Install optimas from PyPI (recommended)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This will install the latest stable release.
+
+Installing with only the **basic** dependencies:
 
 .. code::
 
     pip install optimas
+
+Installing with **all** dependencies:
+
+.. code::
+
+    pip install optimas[all]
+
+Use this option if you plan to do Bayesian optimization
+(see :ref:`dependencies` for more details).
+
+Install from GitHub
+~~~~~~~~~~~~~~~~~~~
+This will install the latest development version with all dependencies.
+
+.. code::
+
+    pip install "optimas[all] @ git+https://github.com/optimas-org/optimas.git" 

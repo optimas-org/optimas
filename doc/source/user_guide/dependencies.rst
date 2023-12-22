@@ -1,9 +1,46 @@
+.. _dependencies:
+
 Dependencies
 ============
 
 Optimas relies on the following packages:
 
-* `mpi4py <https://pypi.org/project/mpi4py/>`_ - Python bindings for MPI. Required for launching parallel simulations.
-* `libEnsemble <https://pypi.org/project/libensemble/>`_ - The backbone of optimas, orchestrates the concurrent evaluation of simulations, the resource detection and allocation, and the communication between simulations and manager.
 * `jinja2 <https://pypi.org/project/jinja2/>`_ - Needed to generate simulation scripts from templates.
-* `Ax <https://pypi.org/project/ax-platform/>`_ - Algorithms for Bayesian optimization.
+* `libEnsemble <https://pypi.org/project/libensemble/>`_ - The backbone of optimas, orchestrates the concurrent evaluation of simulations, the resource detection and allocation, and the communication between simulations and manager.
+* `mpi4py <https://pypi.org/project/mpi4py/>`_ - Python bindings for MPI. Required for launching parallel simulations.
+* `pandas <https://pypi.org/project/pandas/>`_ - Enable output as pandas DataFrames.
+* `pydantic <https://pypi.org/project/pydantic/>`_ - Input validation and object serialization.
+* (optional) `Ax <https://pypi.org/project/ax-platform/>`_ - Algorithms for Bayesian optimization.
+
+
+The installed dependencies will determine which generators are available for use.
+See table below for a summary.
+
+.. list-table:: Available generators and their dependencies
+   :widths: 35 25 25
+   :header-rows: 1
+
+   * - Generator
+     - ``pip install optimas``
+     - ``pip install optimas[all]``
+   * - :class:`~optimas.generators.LineSamplingGenerator`
+     - ✅
+     - ✅
+   * - :class:`~optimas.generators.GridSamplingGenerator`
+     - ✅
+     - ✅
+   * - :class:`~optimas.generators.RandomSamplingGenerator`
+     - ✅
+     - ✅
+   * - :class:`~optimas.generators.AxSingleFidelityGenerator`
+     - ❌
+     - ✅
+   * - :class:`~optimas.generators.AxMultiFidelityGenerator`
+     - ❌
+     - ✅
+   * - :class:`~optimas.generators.AxMultitaskGenerator`
+     - ❌
+     - ✅
+   * - :class:`~optimas.generators.AxClientGenerator`
+     - ❌
+     - ✅
