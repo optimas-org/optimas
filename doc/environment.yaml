@@ -2,3 +2,16 @@ name: readthedocs
 dependencies:
   - python=3.11
   - mpi4py
+  - pip:
+    - -e .
+    - autodoc_pydantic >= 2.0.1
+    - ax-platform >= 0.3.4
+    - ipykernel
+    - libensemble @ git+https://github.com/Libensemble/libensemble@develop
+    - matplotlib
+    - nbsphinx
+    - numpydoc
+    - pydata-sphinx-theme
+    - sphinx-copybutton
+    - sphinx-design
+    - sphinx-gallery
