@@ -30,8 +30,8 @@ def get_logger(name, level=logging.INFO) -> logging.Logger:
         datefmt="%m-%d %H:%M:%S",
     )
 
-    # Add handler to log to standard error.
-    sth = logging.StreamHandler(stream=sys.stderr)
+    # Add handler to log to standard output.
+    sth = logging.StreamHandler(stream=sys.stdout)
     sth.setFormatter(formatter)
     logger.addHandler(sth)
     return logger
