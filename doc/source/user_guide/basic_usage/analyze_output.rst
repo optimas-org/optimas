@@ -15,7 +15,7 @@ In every run, the following log files are generated:
 - ``libE-stats.txt``: log indicating the worker, start time, end time, etc. of
   each evaluation.
 - ``ensemble.log``: log of ``libEnsemble`` containing the main events of
-  the run. This includes the commands with each evaluation was launched.
+  the run. This includes the commands with which each evaluation was launched.
 - ``exploration_history_after_sim_<last_simulation_number>.npy``:
   numpy file that contains the
   `history array <https://libensemble.readthedocs.io/en/main/function_guides/history_array.html>`_
@@ -25,7 +25,7 @@ In every run, the following log files are generated:
   :class:`~optimas.core.Objective`\s, analyzed
   :class:`~optimas.core.Parameter`\s and other useful diagnostics.
   The periodicity with which this file is updated can be set with the
-  ``history_save_period`` of the :class:`~optimas.explorations.Exploration`.
+  ``history_save_period`` argument of the :class:`~optimas.explorations.Exploration`.
 - ``exploration_parameters.json``: JSON file containing a serialized
   version of the :class:`~optimas.core.VaryingParameter`\s,
   :class:`~optimas.core.Objective`\s and other
