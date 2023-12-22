@@ -4,6 +4,7 @@ dependencies:
   - mpi4py
   - pip
   - pip:
+    - -e ..
     - autodoc_pydantic >= 2.0.1
     - ipykernel
     - matplotlib
