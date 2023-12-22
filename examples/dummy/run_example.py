@@ -57,9 +57,7 @@ ev = TemplateEvaluator(
 
 
 # Create exploration.
-exp = Exploration(
-    generator=gen, evaluator=ev, max_evals=15, sim_workers=2
-)
+exp = Exploration(generator=gen, evaluator=ev, max_evals=15, sim_workers=2)
 
 
 # To safely perform exploration, run it in the block below (this is needed
