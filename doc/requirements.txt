@@ -1,5 +1,6 @@
 autodoc_pydantic >= 2.0.1
 ax-platform >= 0.3.4
+ipykernel
 libensemble @ git+https://github.com/Libensemble/libensemble@develop
 matplotlib
 nbsphinx
