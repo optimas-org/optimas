@@ -7,6 +7,7 @@ This reference manual details all classes included in optimas.
     :maxdepth: 2
 
     core
+    generators
     evaluators
     exploration
-    generators
+    diagnostics

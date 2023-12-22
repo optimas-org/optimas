@@ -26,6 +26,7 @@ dependencies = [
     'jinja2',
     'ax-platform >= 0.3.4',
     'mpi4py',
+    'pydantic >= 2.0',
 ]
 dynamic = ['version']
 
@@ -54,4 +55,4 @@ target-version = ['py39', 'py310', 'py311']
 
 [tool.pydocstyle]
 convention = "numpy"
-add-ignore = ["D104", "D107", "D203", "D213"]
+add-ignore = ["D104", "D106", "D107", "D203", "D213"]

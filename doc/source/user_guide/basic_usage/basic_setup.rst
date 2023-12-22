@@ -1,5 +1,5 @@
-Setting up an optimas run
-=========================
+Exploration setup
+=================
 
 This section covers the basic workflow of setting up an optimas
 :class:`~optimas.explorations.Exploration`, which is typically used to launch
