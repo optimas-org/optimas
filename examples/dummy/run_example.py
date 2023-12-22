@@ -45,7 +45,7 @@ obj = Objective("f", minimize=True)
 
 # Create generator.
 gen = AxSingleFidelityGenerator(
-    varying_parameters=[var_1, var_2], objectives=[obj], n_init=4
+    varying_parameters=[var_1, var_2], objectives=[obj], n_init=2
 )
 
 
@@ -58,7 +58,7 @@ ev = TemplateEvaluator(
 
 # Create exploration.
 exp = Exploration(
-    generator=gen, evaluator=ev, max_evals=10, sim_workers=4, run_async=True
+    generator=gen, evaluator=ev, max_evals=15, sim_workers=2
 )
 
 

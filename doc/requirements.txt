@@ -3,6 +3,7 @@ ax-platform >= 0.3.4
 libensemble @ git+https://github.com/Libensemble/libensemble@develop
 matplotlib
 numpydoc
+nbsphinx
 pydata-sphinx-theme
 sphinx-copybutton
 sphinx-design
