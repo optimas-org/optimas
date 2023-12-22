@@ -37,9 +37,10 @@ test = [
     'ax-platform >= 0.3.4',
     'matplotlib',
 ]
-full = [
+all = [
     'ax-platform >= 0.3.4',
 ]
+
 [project.urls]
 Documentation = 'https://optimas.readthedocs.io/'
 
