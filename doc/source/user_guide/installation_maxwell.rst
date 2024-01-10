@@ -71,7 +71,7 @@ Install FBPIC:
 .. code::
 
     mamba install cudatoolkit=11.8
-    pip install cupy-cuda118
+    pip install cupy-cuda11x
     pip install fbpic
 
 
