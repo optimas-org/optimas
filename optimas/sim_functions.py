@@ -2,8 +2,8 @@
 import jinja2
 import numpy as np
 
-from libensemble.executors.executor import Executor
-from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
+from libensemble.executors.executor import Executor, TimeoutExpired
+from libensemble.message_numbers import WORKER_DONE, TASK_FAILED, WORKER_KILL_ON_TIMEOUT
 
 from optimas.utils.logger import get_logger
 
@@ -60,6 +60,7 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
             num_gpus=step_specs["num_gpus"],
             env_script=step_specs["env_script"],
             mpi_runner_type=step_specs["env_mpi"],
+            timeout=step_specs["timeout"],
         )
         # If a step has failed, do not continue with next steps.
         if calc_status != WORKER_DONE:
@@ -78,6 +79,7 @@ def execute_and_analyze_simulation(
     num_gpus,
     env_script,
     mpi_runner_type,
+    timeout,
 ):
     """Run simulation, handle outcome and analyze results."""
     # Create simulation input file.
@@ -104,7 +106,10 @@ def execute_and_analyze_simulation(
     )
 
     # Wait for simulation to complete
-    task.wait()
+    try:
+        task.wait(timeout=timeout)
+    except TimeoutExpired:
+        task.kill()
 
     # Set calc_status with optional prints.
     if task.finished:
@@ -112,6 +117,8 @@ def execute_and_analyze_simulation(
             calc_status = WORKER_DONE
         elif task.state == "FAILED":
             calc_status = TASK_FAILED
+        elif task.state == "USER_KILLED":
+            calc_status = WORKER_KILL_ON_TIMEOUT
         if task.state not in ["FINISHED", "FAILED", "USER_KILLED"]:
             print(
                 "Warning: Task {} in unknown state {}. Error code {}".format(
