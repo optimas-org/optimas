@@ -2,8 +2,8 @@
 import jinja2
 import numpy as np
 
-from libensemble.executors.executor import Executor, TimeoutExpired
-from libensemble.message_numbers import WORKER_DONE, TASK_FAILED, WORKER_KILL_ON_TIMEOUT
+from libensemble.executors.executor import Executor, TimeoutExpired, ExecutorException
+from libensemble.message_numbers import WORKER_DONE, TASK_FAILED, WORKER_KILL_ON_TIMEOUT, CALC_EXCEPTION
 
 from optimas.utils.logger import get_logger
 
@@ -104,27 +104,26 @@ def execute_and_analyze_simulation(
         env_script=env_script,
         mpi_runner_type=mpi_runner_type,
     )
+    task_launch_failed = False
 
     # Wait for simulation to complete
     try:
         task.wait(timeout=timeout)
     except TimeoutExpired:
         task.kill()
+    except ExecutorException:
+        task_launch_failed = True
 
     # Set calc_status with optional prints.
-    if task.finished:
+    if task_launch_failed:
+        calc_status = CALC_EXCEPTION
+    elif task.finished:
         if task.state == "FINISHED":
             calc_status = WORKER_DONE
         elif task.state == "FAILED":
             calc_status = TASK_FAILED
         elif task.state == "USER_KILLED":
             calc_status = WORKER_KILL_ON_TIMEOUT
-        if task.state not in ["FINISHED", "FAILED", "USER_KILLED"]:
-            print(
-                "Warning: Task {} in unknown state {}. Error code {}".format(
-                    task.name, task.state, task.errcode
-                )
-            )
 
     # Data analysis from the last simulation
     if calc_status == WORKER_DONE:
