@@ -76,6 +76,14 @@ def test_exploration_diagnostics():
         diags.plot_worker_timeline()
         plt.savefig(os.path.join(exploration_dir_path, "timeline.png"))
 
+        best_ev_f1 = diags.get_best_evaluation("f1")
+        best_ev_f2 = diags.get_best_evaluation("f2")
+        assert best_ev_f1.index == np.argmax(diags.history["f1"])
+        assert best_ev_f2.index == np.argmin(diags.history["f2"])
+        pareto_evs = diags.get_pareto_frontier_evaluations()
+        assert best_ev_f1.index.to_numpy() in pareto_evs.index.to_numpy()
+        assert best_ev_f2.index.to_numpy() in pareto_evs.index.to_numpy()
+
         # Check that all 3 possible objective inputs give the same result.
         _, trace1 = diags.get_objective_trace()
         _, trace2 = diags.get_objective_trace("f1")

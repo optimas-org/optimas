@@ -205,51 +205,12 @@ class ExplorationDiagnostics:
             Whether to show the indices of the best evaluations. By default
             ``False``.
         """
-        if len(self.objectives) < 2:
-            raise ValueError(
-                "Cannot get Pareto frontier because only a single objective "
-                "is available."
-            )
-        if objectives is None:
-            if len(self.objectives) == 2:
-                objectives = self.objectives
-            else:
-                raise ValueError(
-                    f"There are {len(self.objectives)} available. "
-                    "Please specify 2 objectives from which to plot the "
-                    "Pareto frontier."
-                )
-        else:
-            if len(objectives) != 2:
-                raise ValueError(
-                    f"This plot requires 2 objectives ({len(objectives)} "
-                    "given)."
-                )
-            for i, objective in enumerate(objectives):
-                if isinstance(objective, str):
-                    objective_names = [obj.name for obj in self.objectives]
-                    if objective in objective_names:
-                        objectives[i] = self.objectives[
-                            objective_names.index(objective)
-                        ]
-                    else:
-                        raise ValueError(
-                            f"Objective {objective} not found. "
-                            f"Available objectives are {objective_names}."
-                        )
-
-        # Get pareto front
+        objectives = self._check_pareto_objectives(objectives)
+        pareto_evals = self.get_pareto_frontier_evaluations(objectives)
         x_data = self.history[objectives[0].name].to_numpy()
         y_data = self.history[objectives[1].name].to_numpy()
-        x_minimize = objectives[0].minimize
-        y_minimize = objectives[1].minimize
-        i_sort = np.argsort(x_data)
-        if not x_minimize:
-            i_sort = i_sort[::-1]  # Sort in descending order
-        if y_minimize:
-            y_cum = np.minimum.accumulate(y_data[i_sort])
-        else:
-            y_cum = np.maximum.accumulate(y_data[i_sort])
+        x_pareto = pareto_evals[objectives[0].name].to_numpy()
+        y_pareto = pareto_evals[objectives[1].name].to_numpy()
 
         # Create figure
         _, axes = plt.subplots()
@@ -261,8 +222,6 @@ class ExplorationDiagnostics:
         axes.set(xlabel=objectives[0].name, ylabel=objectives[1].name)
 
         # Plot best evaluations
-        y_pareto, i_pareto = np.unique(y_cum, return_index=True)
-        x_pareto = x_data[i_sort][i_pareto]
         axes.scatter(
             x_pareto,
             y_pareto,
@@ -276,11 +235,11 @@ class ExplorationDiagnostics:
 
         # Plot pareto front
         axes.step(
-            x_data[i_sort],
-            y_cum,
+            x_pareto,
+            y_pareto,
             c="k",
             lw=1,
-            where="post",
+            where="pre" if objectives[1].minimize else "post",
             zorder=1,
             label="Pareto frontier",
         )
@@ -288,7 +247,9 @@ class ExplorationDiagnostics:
 
         # Add evaluation indices to plot.
         if show_best_evaluation_indices:
-            sim_id_pareto = self.history["sim_id"].to_numpy()[i_sort][i_pareto]
+            sim_id_pareto = self.history["sim_id"].to_numpy()[
+                pareto_evals.index
+            ]
             for i, id in enumerate(sim_id_pareto):
                 axes.annotate(
                     str(id),
@@ -298,6 +259,65 @@ class ExplorationDiagnostics:
                     va="top",
                     textcoords="offset points",
                 )
+
+    def get_best_evaluation(
+        self, objective: Optional[Union[str, Objective]] = None
+    ) -> pd.DataFrame:
+        """Get the evaluation with the best objective value.
+
+        Parameters
+        ----------
+        objective : str or Objective, optional
+            Objective to consider for determining the best evaluation. Only.
+            needed if there is more than one objective. By default ``None``.
+        """
+        if objective is None:
+            objective = self.objectives[0]
+        elif isinstance(objective, str):
+            objective_names = [obj.name for obj in self.objectives]
+            if objective in objective_names:
+                objective = self.objectives[objective_names.index(objective)]
+            else:
+                raise ValueError(
+                    f"Objective {objective} not found. Available objectives "
+                    f"are {objective_names}."
+                )
+        history = self.history[self.history.sim_ended]
+        if objective.minimize:
+            i_best = np.argmin(history[objective.name])
+        else:
+            i_best = np.argmax(history[objective.name])
+        return history.iloc[[i_best]]
+
+    def get_pareto_frontier_evaluations(
+        self,
+        objectives: Optional[List[Union[str, Objective]]] = None,
+    ) -> pd.DataFrame:
+        """Get data of evaluations in the Pareto frontier.
+
+        This function is currently limited to the Pareto frontier of two
+        objectives.
+
+        Parameters
+        ----------
+        objectives : list of str or Objective, optional
+            A list with two objectives to plot. Only needed when the
+            optimization had more than two objectives. By default ``None``.
+        """
+        objectives = self._check_pareto_objectives(objectives)
+        x_data = self.history[objectives[0].name].to_numpy()
+        y_data = self.history[objectives[1].name].to_numpy()
+        x_minimize = objectives[0].minimize
+        y_minimize = objectives[1].minimize
+        i_sort = np.argsort(x_data)
+        if not x_minimize:
+            i_sort = i_sort[::-1]  # Sort in descending order
+        if y_minimize:
+            y_cum = np.minimum.accumulate(y_data[i_sort])
+        else:
+            y_cum = np.maximum.accumulate(y_data[i_sort])
+        _, i_pareto = np.unique(y_cum, return_index=True)
+        return self.history.iloc[i_sort[i_pareto]]
 
     def get_objective_trace(
         self,
@@ -431,3 +451,41 @@ class ExplorationDiagnostics:
 
         ax.set_ylabel("Worker")
         ax.set_xlabel("Time (s)")
+
+    def _check_pareto_objectives(
+        self,
+        objectives: Optional[List[Union[str, Objective]]] = None,
+    ) -> List[Objective]:
+        """Check the objectives given to the Pareto methods."""
+        if len(self.objectives) < 2:
+            raise ValueError(
+                "Cannot get Pareto frontier because only a single objective "
+                "is available."
+            )
+        if objectives is None:
+            if len(self.objectives) == 2:
+                objectives = self.objectives
+            else:
+                raise ValueError(
+                    f"There are {len(self.objectives)} available. "
+                    "Please specify 2 objectives from which to get the "
+                    "Pareto frontier."
+                )
+        else:
+            if len(objectives) != 2:
+                raise ValueError(
+                    f"Two objectives are required ({len(objectives)} given)."
+                )
+            for i, objective in enumerate(objectives):
+                if isinstance(objective, str):
+                    objective_names = [obj.name for obj in self.objectives]
+                    if objective in objective_names:
+                        objectives[i] = self.objectives[
+                            objective_names.index(objective)
+                        ]
+                    else:
+                        raise ValueError(
+                            f"Objective {objective} not found. "
+                            f"Available objectives are {objective_names}."
+                        )
+        return objectives
