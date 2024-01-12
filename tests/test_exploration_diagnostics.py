@@ -70,7 +70,7 @@ def test_exploration_diagnostics():
         diags.plot_objective(show_trace=True)
         plt.savefig(os.path.join(exploration_dir_path, "optimization.png"))
 
-        diags.plot_pareto_frontier()
+        diags.plot_pareto_frontier(show_best_evaluation_indices=True)
         plt.savefig(os.path.join(exploration_dir_path, "pareto_frontier.png"))
 
         diags.plot_worker_timeline()

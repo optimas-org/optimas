@@ -193,7 +193,7 @@ class ExplorationDiagnostics:
         self,
         objectives: Optional[List[Union[str, Objective]]] = None,
         show_best_evaluation_indices: Optional[bool] = False,
-    ):
+    ) -> None:
         """Plot Pareto frontier of two optimization objectives.
 
         Parameters
@@ -286,8 +286,9 @@ class ExplorationDiagnostics:
         )
         axes.legend(frameon=False)
 
+        # Add evaluation indices to plot.
         if show_best_evaluation_indices:
-            sim_id_pareto = self.history["sim_id"][i_sort][i_pareto]
+            sim_id_pareto = self.history["sim_id"].to_numpy()[i_sort][i_pareto]
             for i, id in enumerate(sim_id_pareto):
                 axes.annotate(
                     str(id),
