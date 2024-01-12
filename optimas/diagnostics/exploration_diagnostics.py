@@ -189,6 +189,115 @@ class ExplorationDiagnostics:
             )
             ax.step(t_trace, obj_trace, where="post")
 
+    def plot_pareto_frontier(
+        self,
+        objectives: Optional[List[Union[str, Objective]]] = None,
+        show_best_evaluation_indices: Optional[bool] = False,
+    ):
+        """Plot Pareto frontier of two optimization objectives.
+
+        Parameters
+        ----------
+        objectives : list of str or Objective, optional
+            A list with two objectives to plot. Only needed when the
+            optimization had more than two objectives. By default ``None``.
+        show_best_evaluation_indices : bool, optional
+            Whether to show the indices of the best evaluations. By default
+            ``False``.
+        """
+        if len(self.objectives) < 2:
+            raise ValueError(
+                "Cannot get Pareto frontier because only a single objective "
+                "is available."
+            )
+        if objectives is None:
+            if len(self.objectives) == 2:
+                objectives = self.objectives
+            else:
+                raise ValueError(
+                    f"There are {len(self.objectives)} available. "
+                    "Please specify 2 objectives from which to plot the "
+                    "Pareto frontier."
+                )
+        else:
+            if len(objectives) != 2:
+                raise ValueError(
+                    f"This plot requires 2 objectives ({len(objectives)} "
+                    "given)."
+                )
+            for i, objective in enumerate(objectives):
+                if isinstance(objective, str):
+                    objective_names = [obj.name for obj in self.objectives]
+                    if objective in objective_names:
+                        objectives[i] = self.objectives[
+                            objective_names.index(objective)
+                        ]
+                    else:
+                        raise ValueError(
+                            f"Objective {objective} not found. "
+                            f"Available objectives are {objective_names}."
+                        )
+
+        # Get pareto front
+        x_data = self.history[objectives[0].name].to_numpy()
+        y_data = self.history[objectives[1].name].to_numpy()
+        x_minimize = objectives[0].minimize
+        y_minimize = objectives[1].minimize
+        i_sort = np.argsort(x_data)
+        if not x_minimize:
+            i_sort = i_sort[::-1]  # Sort in descending order
+        if y_minimize:
+            y_cum = np.minimum.accumulate(y_data[i_sort])
+        else:
+            y_cum = np.maximum.accumulate(y_data[i_sort])
+
+        # Create figure
+        _, axes = plt.subplots()
+
+        # Plot all evaluations
+        axes.scatter(
+            x_data, y_data, s=5, lw=0.0, alpha=0.5, label="All evaluations"
+        )
+        axes.set(xlabel=objectives[0].name, ylabel=objectives[1].name)
+
+        # Plot best evaluations
+        y_pareto, i_pareto = np.unique(y_cum, return_index=True)
+        x_pareto = x_data[i_sort][i_pareto]
+        axes.scatter(
+            x_pareto,
+            y_pareto,
+            s=15,
+            ec="k",
+            fc="tab:blue",
+            lw=0.5,
+            zorder=2,
+            label="Best evaluations",
+        )
+
+        # Plot pareto front
+        axes.step(
+            x_data[i_sort],
+            y_cum,
+            c="k",
+            lw=1,
+            where="post",
+            zorder=1,
+            label="Pareto frontier",
+        )
+        axes.legend(frameon=False)
+
+        if show_best_evaluation_indices:
+            sim_id_pareto = self.history["sim_id"][i_sort][i_pareto]
+            for i, id in enumerate(sim_id_pareto):
+                axes.annotate(
+                    str(id),
+                    (x_pareto[i], y_pareto[i]),
+                    (2, -2),
+                    fontsize=6,
+                    va="top",
+                    textcoords="offset points",
+                )
+
     def get_objective_trace(
         self,
         objective: Optional[Union[str, Objective]] = None,
