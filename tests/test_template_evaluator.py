@@ -120,7 +120,7 @@ def test_template_evaluator_timeout():
     exploration.run()
 
     # Check that no evaluations were successful.
-    assert np.testing.assert_array_equal(exploration.history["f"], 0.0)
+    np.testing.assert_array_equal(exploration.history["f"], 0.0)
 
 
 if __name__ == "__main__":
