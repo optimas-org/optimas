@@ -15,7 +15,9 @@ def eval_func(input_params, output_params):
     x0 = input_params["x0"]
     x1 = input_params["x1"]
     result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
+    result2 = -(x0 + 10 * np.cos(x0 + 10)) * (x1 + 5 * np.cos(x1 - 5))
     output_params["f1"] = result
+    output_params["f2"] = result2
 
 
 def test_exploration_diagnostics():
@@ -27,10 +29,11 @@ def test_exploration_diagnostics():
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f1", minimize=False)
+    obj2 = Objective("f2", minimize=True)
 
     # Create generator.
     gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
+        varying_parameters=[var1, var2], objectives=[obj, obj2]
     )
 
     # Create function evaluator.
@@ -40,7 +43,7 @@ def test_exploration_diagnostics():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=10,
+        max_evals=50,
         sim_workers=2,
         exploration_dir_path=exploration_dir_path,
     )
@@ -66,6 +69,9 @@ def test_exploration_diagnostics():
 
         diags.plot_objective(show_trace=True)
         plt.savefig(os.path.join(exploration_dir_path, "optimization.png"))
+
+        diags.plot_pareto_frontier()
+        plt.savefig(os.path.join(exploration_dir_path, "pareto_frontier.png"))
 
         diags.plot_worker_timeline()
         plt.savefig(os.path.join(exploration_dir_path, "timeline.png"))
