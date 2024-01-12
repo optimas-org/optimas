@@ -2,8 +2,17 @@
 import jinja2
 import numpy as np
 
-from libensemble.executors.executor import Executor, TimeoutExpired, ExecutorException
-from libensemble.message_numbers import WORKER_DONE, TASK_FAILED, WORKER_KILL_ON_TIMEOUT, CALC_EXCEPTION
+from libensemble.executors.executor import (
+    Executor,
+    TimeoutExpired,
+    ExecutorException,
+)
+from libensemble.message_numbers import (
+    WORKER_DONE,
+    TASK_FAILED,
+    WORKER_KILL_ON_TIMEOUT,
+    CALC_EXCEPTION,
+)
 
 from optimas.utils.logger import get_logger
 

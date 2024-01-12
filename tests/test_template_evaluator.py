@@ -84,7 +84,7 @@ def test_template_evaluator_timeout():
     to fail.
     """
     # Make evaluations sleep for 20 seconds.
-    os.environ['OPTIMAS_TEST_SLEEP'] = "20"
+    os.environ["OPTIMAS_TEST_SLEEP"] = "20"
 
     # Define variables and objectives.
     var1 = VaryingParameter("x0", -50.0, 5.0)
@@ -120,7 +120,7 @@ def test_template_evaluator_timeout():
     exploration.run()
 
     # Check that no evaluations were successful.
-    assert np.testing.assert_array_equal(exploration.history["f"], 0.)
+    assert np.testing.assert_array_equal(exploration.history["f"], 0.0)
 
 
 if __name__ == "__main__":
