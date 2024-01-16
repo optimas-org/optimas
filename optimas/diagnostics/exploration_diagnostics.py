@@ -49,18 +49,22 @@ class ExplorationDiagnostics:
                         "The specified path contains multiple history files. "
                         "The most recent one will be used."
                     )
+                exploration_dir_path = path
                 output_file = os.path.join(path, output_files[-1])
                 params_file = os.path.join(path, "exploration_parameters.json")
             elif path.endswith(".npy"):
+                exploration_dir_path = pathlib.Path(path).parent
                 output_file = path
                 params_file = os.path.join(
-                    pathlib.Path(path).parent, "exploration_parameters.json"
+                    exploration_dir_path, "exploration_parameters.json"
                 )
             else:
                 raise RuntimeError(
                     "The path should either point to a folder or a `.npy` file."
                 )
-            exploration = self._create_exploration(params_file, output_file)
+            exploration = self._create_exploration(
+                exploration_dir_path, params_file, output_file
+            )
         elif isinstance(source, Exploration):
             exploration = source
         else:
@@ -69,9 +73,10 @@ class ExplorationDiagnostics:
                 f"or an `Exploration`, not of type {type(source)}."
             )
         self._exploration = exploration
+        self._create_sim_dir_paths()
 
     def _create_exploration(
-        self, params_file: str, history_path: str
+        self, exploration_dir_path: str, params_file: str, history_path: str
     ) -> Exploration:
         """Create exploration from saved files."""
         # Create exploration parameters.
@@ -100,7 +105,30 @@ class ExplorationDiagnostics:
             ),
             evaluator=Evaluator(sim_function=None),
             history=history_path,
+            exploration_dir_path=exploration_dir_path,
         )
+
+    def _create_sim_dir_paths(self):
+        """Create a dict with the path to the sim dir of each evaluation."""
+        self._sim_dir_paths = {}
+        ensemble_dir_path = os.path.join(
+            self._exploration.exploration_dir_path, "evaluations"
+        )
+        if os.path.isdir(ensemble_dir_path):
+            sim_dirs = os.listdir(ensemble_dir_path)
+            for sim_dir in sim_dirs:
+                if sim_dir.startswith("sim"):
+                    try:
+                        trial_index = int(sim_dir[3:])
+                        self._sim_dir_paths[trial_index] = os.path.join(
+                            ensemble_dir_path, sim_dir
+                        )
+                    except ValueError:
+                        # Handle case in which conversion to an integer fails.
+                        # This can happen if there is a folder that starts with
+                        # "sim" but does not continue with a number. This is a
+                        # folder that might have been created by the user.
+                        pass
 
     @property
     def history(self) -> pd.DataFrame:
@@ -402,6 +430,36 @@ class ExplorationDiagnostics:
             obj_trace = obj_trace_array
 
         return x, obj_trace
+
+    def get_evaluation_path(self, trial_index: int) -> str:
+        """Get the path to the folder of the given evaluation.
+
+        Parameters
+        ----------
+        trial_index : int
+            Index of an evaluated trial.
+        """
+        try:
+            return self._sim_dir_paths[trial_index]
+        except KeyError:
+            raise ValueError(
+                f"Could not find evaluation folder of trial {trial_index}."
+                "This folder is only created when using a `TemplateEvaluator`."
+            )
+
+    def get_best_evaluation_path(
+        self, objective: Optional[Union[str, Objective]] = None
+    ) -> str:
+        """Get the path to the folder of the best evaluation.
+
+        Parameters
+        ----------
+        objective : str or Objective, optional
+            Objective to consider for determining the best evaluation. Only.
+            needed if there is more than one objective. By default ``None``.
+        """
+        best_ev = self.get_best_evaluation(objective)
+        return self.get_evaluation_path(best_ev["trial_index"].item())
 
     def plot_worker_timeline(
         self,
