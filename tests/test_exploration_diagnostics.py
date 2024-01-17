@@ -100,9 +100,9 @@ def test_exploration_diagnostics():
         for trial_index in diags.history["trial_index"]:
             if trial_index in [15, delete_index]:
                 with pytest.raises(ValueError):
-                    diags.get_evaluation_path(trial_index)
+                    diags.get_evaluation_dir_path(trial_index)
             else:
-                ev_path = diags.get_evaluation_path(trial_index)
+                ev_path = diags.get_evaluation_dir_path(trial_index)
                 assert int(ev_path[-4:]) == trial_index
 
         # Check best evaluations.
@@ -113,8 +113,8 @@ def test_exploration_diagnostics():
         pareto_evs = diags.get_pareto_frontier_evaluations()
         assert best_ev_f1.index.to_numpy() in pareto_evs.index.to_numpy()
         assert best_ev_f2.index.to_numpy() in pareto_evs.index.to_numpy()
-        best_ev_f1_path = diags.get_best_evaluation_path()
-        assert best_ev_f1_path == diags.get_evaluation_path(
+        best_ev_f1_path = diags.get_best_evaluation_dir_path()
+        assert best_ev_f1_path == diags.get_evaluation_dir_path(
             best_ev_f1["trial_index"].item()
         )
 

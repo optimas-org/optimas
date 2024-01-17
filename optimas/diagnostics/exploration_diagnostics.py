@@ -432,7 +432,7 @@ class ExplorationDiagnostics:
 
         return x, obj_trace
 
-    def get_evaluation_path(self, trial_index: int) -> str:
+    def get_evaluation_dir_path(self, trial_index: int) -> str:
         """Get the path to the directory of the given evaluation.
 
         Parameters
@@ -449,7 +449,7 @@ class ExplorationDiagnostics:
                 "`TemplateEvaluator`."
             )
 
-    def get_best_evaluation_path(
+    def get_best_evaluation_dir_path(
         self, objective: Optional[Union[str, Objective]] = None
     ) -> str:
         """Get the path to the directory of the best evaluation.
@@ -461,7 +461,7 @@ class ExplorationDiagnostics:
             needed if there is more than one objective. By default ``None``.
         """
         best_ev = self.get_best_evaluation(objective)
-        return self.get_evaluation_path(best_ev["trial_index"].item())
+        return self.get_evaluation_dir_path(best_ev["trial_index"].item())
 
     def delete_evaluation_dir(self, trial_index: int) -> None:
         """Delete the directory with the output of the given evaluation.
@@ -471,7 +471,7 @@ class ExplorationDiagnostics:
         trial_index : int
             Index of an evaluated trial.
         """
-        ev_dir_path = self.get_evaluation_path(trial_index)
+        ev_dir_path = self.get_evaluation_dir_path(trial_index)
         shutil.rmtree(ev_dir_path)
         del self._sim_dir_paths[trial_index]
 
