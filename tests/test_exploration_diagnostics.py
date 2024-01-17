@@ -93,7 +93,7 @@ def test_exploration_diagnostics():
         delete_index = 10
         if i == 0:
             diags.delete_evaluation_dir(delete_index)
-        else:            
+        else:
             with pytest.raises(ValueError):
                 diags.delete_evaluation_dir(delete_index)
         assert 15 not in diags._sim_dir_paths
