@@ -66,9 +66,8 @@ def test_exploration_diagnostics():
     exploration.run()
 
     # Test diagnostics with both possible initializations.
-    diags_from_file = ExplorationDiagnostics(exploration_dir_path)
-    diags_from_instance = ExplorationDiagnostics(exploration)
-    for diags in [diags_from_file, diags_from_instance]:
+    for i, diags_source in enumerate([exploration_dir_path, exploration]):
+        diags = ExplorationDiagnostics(diags_source)
         for name in exploration.history:
             np.testing.assert_array_equal(
                 diags.history[name], exploration.history[name]
@@ -91,9 +90,15 @@ def test_exploration_diagnostics():
         plt.savefig(os.path.join(exploration_dir_path, "timeline.png"))
 
         # Check the simulation paths.
+        delete_index = 10
+        if i == 0:
+            diags.delete_evaluation_dir(delete_index)
+        else:            
+            with pytest.raises(ValueError):
+                diags.delete_evaluation_dir(delete_index)
         assert 15 not in diags._sim_dir_paths
         for trial_index in diags.history["trial_index"]:
-            if trial_index == 15:
+            if trial_index in [15, delete_index]:
                 with pytest.raises(ValueError):
                     diags.get_evaluation_path(trial_index)
             else:

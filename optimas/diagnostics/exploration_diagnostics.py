@@ -1,5 +1,6 @@
 """Contains the definition of the ExplorationDiagnostics class."""
 import os
+import shutil
 from warnings import warn
 import pathlib
 import json
@@ -432,7 +433,7 @@ class ExplorationDiagnostics:
         return x, obj_trace
 
     def get_evaluation_path(self, trial_index: int) -> str:
-        """Get the path to the folder of the given evaluation.
+        """Get the path to the directory of the given evaluation.
 
         Parameters
         ----------
@@ -443,14 +444,15 @@ class ExplorationDiagnostics:
             return self._sim_dir_paths[trial_index]
         except KeyError:
             raise ValueError(
-                f"Could not find evaluation folder of trial {trial_index}."
-                "This folder is only created when using a `TemplateEvaluator`."
+                f"Could not find evaluation directory of trial {trial_index}."
+                "This directory is only created when using a "
+                "`TemplateEvaluator`."
             )
 
     def get_best_evaluation_path(
         self, objective: Optional[Union[str, Objective]] = None
     ) -> str:
-        """Get the path to the folder of the best evaluation.
+        """Get the path to the directory of the best evaluation.
 
         Parameters
         ----------
@@ -460,6 +462,18 @@ class ExplorationDiagnostics:
         """
         best_ev = self.get_best_evaluation(objective)
         return self.get_evaluation_path(best_ev["trial_index"].item())
+
+    def delete_evaluation_dir(self, trial_index: int) -> None:
+        """Delete the directory with the output of the given evaluation.
+
+        Parameters
+        ----------
+        trial_index : int
+            Index of an evaluated trial.
+        """
+        ev_dir_path = self.get_evaluation_path(trial_index)
+        shutil.rmtree(ev_dir_path)
+        del self._sim_dir_paths[trial_index]
 
     def plot_worker_timeline(
         self,
