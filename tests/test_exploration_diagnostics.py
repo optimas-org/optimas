@@ -35,7 +35,7 @@ def test_exploration_diagnostics():
 
     # Create generator.
     gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2], objectives=[obj, obj2]
+        varying_parameters=[var1, var2], objectives=[obj, obj2], seed=0
     )
 
     # Create template evaluator.
