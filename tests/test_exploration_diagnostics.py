@@ -83,8 +83,8 @@ def test_exploration_diagnostics():
         diags.plot_objective(show_trace=True)
         plt.savefig(os.path.join(exploration_dir_path, "optimization.png"))
 
-        diags.plot_pareto_frontier(show_best_evaluation_indices=True)
-        plt.savefig(os.path.join(exploration_dir_path, "pareto_frontier.png"))
+        diags.plot_pareto_front(show_best_evaluation_indices=True)
+        plt.savefig(os.path.join(exploration_dir_path, "pareto_front.png"))
 
         diags.plot_worker_timeline()
         plt.savefig(os.path.join(exploration_dir_path, "timeline.png"))
@@ -110,7 +110,7 @@ def test_exploration_diagnostics():
         best_ev_f2 = diags.get_best_evaluation("f2")
         assert best_ev_f1.index == np.argmax(diags.history["f1"])
         assert best_ev_f2.index == np.argmin(diags.history["f2"])
-        pareto_evs = diags.get_pareto_frontier_evaluations()
+        pareto_evs = diags.get_pareto_front_evaluations()
         assert best_ev_f1.index.to_numpy() in pareto_evs.index.to_numpy()
         assert best_ev_f2.index.to_numpy() in pareto_evs.index.to_numpy()
         best_ev_f1_path = diags.get_best_evaluation_dir_path()

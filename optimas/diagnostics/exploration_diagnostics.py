@@ -218,12 +218,12 @@ class ExplorationDiagnostics:
             )
             ax.step(t_trace, obj_trace, where="post")
 
-    def plot_pareto_frontier(
+    def plot_pareto_front(
         self,
         objectives: Optional[List[Union[str, Objective]]] = None,
         show_best_evaluation_indices: Optional[bool] = False,
     ) -> None:
-        """Plot Pareto frontier of two optimization objectives.
+        """Plot Pareto front of two optimization objectives.
 
         Parameters
         ----------
@@ -235,7 +235,7 @@ class ExplorationDiagnostics:
             ``False``.
         """
         objectives = self._check_pareto_objectives(objectives)
-        pareto_evals = self.get_pareto_frontier_evaluations(objectives)
+        pareto_evals = self.get_pareto_front_evaluations(objectives)
         x_data = self.history[objectives[0].name].to_numpy()
         y_data = self.history[objectives[1].name].to_numpy()
         x_pareto = pareto_evals[objectives[0].name].to_numpy()
@@ -270,7 +270,7 @@ class ExplorationDiagnostics:
             lw=1,
             where="pre" if objectives[1].minimize else "post",
             zorder=1,
-            label="Pareto frontier",
+            label="Pareto front",
         )
         axes.legend(frameon=False)
 
@@ -318,13 +318,13 @@ class ExplorationDiagnostics:
             i_best = np.argmax(history[objective.name])
         return history.iloc[[i_best]]
 
-    def get_pareto_frontier_evaluations(
+    def get_pareto_front_evaluations(
         self,
         objectives: Optional[List[Union[str, Objective]]] = None,
     ) -> pd.DataFrame:
-        """Get data of evaluations in the Pareto frontier.
+        """Get data of evaluations in the Pareto front.
 
-        This function is currently limited to the Pareto frontier of two
+        This function is currently limited to the Pareto front of two
         objectives.
 
         Parameters
@@ -531,7 +531,7 @@ class ExplorationDiagnostics:
         """Check the objectives given to the Pareto methods."""
         if len(self.objectives) < 2:
             raise ValueError(
-                "Cannot get Pareto frontier because only a single objective "
+                "Cannot get Pareto front because only a single objective "
                 "is available."
             )
         if objectives is None:
@@ -541,7 +541,7 @@ class ExplorationDiagnostics:
                 raise ValueError(
                     f"There are {len(self.objectives)} available. "
                     "Please specify 2 objectives from which to get the "
-                    "Pareto frontier."
+                    "Pareto front."
                 )
         else:
             if len(objectives) != 2:
