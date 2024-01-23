@@ -34,7 +34,7 @@ Create a new environment for optimas
 
 .. code::
 
-    mamba create -n optimas_env python
+    mamba create -n optimas_env python=3.11
 
 
 Activate the environment
