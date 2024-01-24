@@ -2,6 +2,7 @@
 
 import os
 import glob
+import json
 from typing import Optional, Union, Dict, List, Literal
 
 import numpy as np
@@ -193,6 +194,9 @@ class Exploration:
             self.generator.objectives,
             self.generator.analyzed_parameters,
         )
+
+        # Save exploration parameters to json file.
+        self._save_exploration_parameters()
 
         # Launch exploration with libEnsemble.
         history, persis_info, flag = libE(
@@ -566,3 +570,28 @@ class Exploration:
             "out": [("given_back", bool)],
             "user": {"async_return": self.run_async},
         }
+
+    def _save_exploration_parameters(self):
+        """Save exploration parameters to a JSON file."""
+        params = {}
+        for i, param in enumerate(self.generator.varying_parameters):
+            params[f"varying_parameter_{i}"] = {
+                "type": "VaryingParameter",
+                "value": param.model_dump_json(),
+            }
+        for i, param in enumerate(self.generator.objectives):
+            params[f"objective_{i}"] = {
+                "type": "Objective",
+                "value": param.model_dump_json(),
+            }
+        for i, param in enumerate(self.generator.analyzed_parameters):
+            params[f"analyzed_parameter_{i}"] = {
+                "type": "Parameter",
+                "value": param.model_dump_json(),
+            }
+        main_dir = os.path.abspath(self.exploration_dir_path)
+        if not os.path.isdir(main_dir):
+            os.makedirs(main_dir)
+        file_path = os.path.join(main_dir, "exploration_parameters.json")
+        with open(file_path, "w") as file:
+            file.write(json.dumps(params))

@@ -112,8 +112,8 @@ class AxServiceGenerator(AxGenerator):
         self._enforce_n_init = enforce_n_init
         self._abandon_failed_trials = abandon_failed_trials
         self._fit_out_of_design = fit_out_of_design
-        self._ax_client = self._create_ax_client()
         self._fixed_features = None
+        self._ax_client = self._create_ax_client()
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""

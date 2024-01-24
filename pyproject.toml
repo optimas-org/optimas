@@ -24,8 +24,9 @@ classifiers = [
 dependencies = [
     'libensemble @ git+https://github.com/Libensemble/libensemble@develop',
     'jinja2',
-    'ax-platform >= 0.3.4',
+    'pandas',
     'mpi4py',
+    'pydantic >= 2.0',
 ]
 dynamic = ['version']
 
@@ -33,7 +34,11 @@ dynamic = ['version']
 test = [
     'flake8',
     'pytest',
+    'ax-platform >= 0.3.4',
     'matplotlib',
+]
+all = [
+    'ax-platform >= 0.3.4',
 ]
 
 [project.urls]
@@ -54,4 +59,4 @@ target-version = ['py39', 'py310', 'py311']
 
 [tool.pydocstyle]
 convention = "numpy"
-add-ignore = ["D104", "D107", "D203", "D213"]
+add-ignore = ["D104", "D106", "D107", "D203", "D213"]

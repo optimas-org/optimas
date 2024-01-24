@@ -42,11 +42,12 @@ Activate the environment
     source $PROJECT/<username>/pyenvs/optimas_env/bin/activate
 
 
-Install ``optimas``
+Install ``optimas`` with all dependencies if you plan to do Bayesian optimization
+(see :ref:`dependencies` for more details).
 
 .. code::
 
-    pip install optimas
+    pip install optimas[all]
 
 
 Installing FBPIC and Wake-T (optional)

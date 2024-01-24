@@ -10,11 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
 from datetime import date
-
-sys.path.insert(0, os.path.abspath("../.."))
 
 
 # -- Import version ----------------------------------------------------------
@@ -45,6 +41,8 @@ extensions = [
     # 'sphinx_gallery.gen_gallery',
     "numpydoc",
     "matplotlib.sphinxext.plot_directive",
+    "sphinxcontrib.autodoc_pydantic",
+    "nbsphinx",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -114,6 +112,13 @@ autosummary_context = {
     # Methods that should be skipped when generating the docs
     "skipmethods": ["__init__"]
 }
+
+# Autodoc pydantic settings.
+autodoc_pydantic_model_show_json = False
+autodoc_pydantic_model_show_config_summary = False
+autodoc_pydantic_model_show_field_summary = False
+autodoc_pydantic_model_hide_paramlist = False
+autodoc_pydantic_model_undoc_members = False
 
 # ------------------------------------------------------------------------------
 # Matplotlib plot_directive options

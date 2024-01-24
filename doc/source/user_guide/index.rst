@@ -20,6 +20,7 @@ User guide
    basic_usage/basic_setup
    basic_usage/running_with_simulations
    basic_usage/analyze_output
+   basic_usage/exploration_diagnostics
 
 .. toctree::
    :maxdepth: 1
