@@ -524,6 +524,200 @@ class ExplorationDiagnostics:
         ax.set_ylabel("Worker")
         ax.set_xlabel("Time (s)")
 
+    def get_df_with_selection(
+        self,
+        df: pd.DataFrame,
+        select: dict
+    ) -> pd.DataFrame:
+        """Return the DataFrame after applying selection criterium.
+
+        Parameters
+        ----------
+        df : DataFrame
+            The DataFrame object
+        select: dict
+            A dictionary containing the selection criteria to apply.
+            e.g. {'f' : [None, -10.]} (get data with f < -10)
+        """
+        condition = ''
+        for key in select:
+            if select[key][0] is not None:
+                if condition != '':
+                    condition += ' and '
+                condition += '%s > %f' % (key, select[key][0])
+            if select[key][1] is not None:
+                if condition != '':
+                    condition += ' and '
+                condition += '%s < %f' % (key, select[key][1])
+        print('Selecting according to the condition: ', condition)
+        return df.query(condition)
+
+    def plot_history(
+        self, 
+        parnames: Optional[list] = None,
+        xname: Optional[str] = None, 
+        select: Optional[dict] = None, 
+        sort: Optional[dict] = None, 
+        top: Optional[dict] = None
+    ) -> None:
+        """Print selected parameters versus simulation index.
+
+        Parameters
+        ----------
+        parnames: list of strings, optional
+            List with the names of the parameters to show.
+
+        xname: string, optional
+            Name of the parameter to plot in the x axis.
+            By default is the index of the history DataFrame.
+
+        select: dict, optional
+            Contains a set of rules to filter the dataframe, e.g.
+            'f' : [None, -10.] (get data with f < -10)
+
+        sort: dict, optional
+            A dict containing as keys the names of the parameres to sort by 
+            and, as values, a Bool indicating if ordering ascendingly (True)
+            or descendingly (False)
+            e.g. {'f': False} sort simulations according to `f` descendingly.
+
+        top: int, optional
+            Highight the top n simulations according to the objectives.
+        """
+
+        # Copy the history DataFrame
+        df = self.history.copy()
+
+        # Get lists of variable names            
+        objective_names = [obj.name for obj in self.objectives]
+        varpar_names = [var.name for var in self.varying_parameters]
+
+        # Order list of simulations and re-index
+        if sort is not None:
+            df = df.sort_values(by=list(sort.keys()), ascending=tuple(sort.values())).reset_index(drop=True)
+
+        # Define the quantity to plot in the x axis
+        if xname is not None:
+            xvalues = df[xname]
+        else:
+            xvalues = list(df.index)
+
+        # Apply selection to the history DataFrame
+        if select is not None:
+            df_select = self.get_df_with_selection(df, select)
+        else:
+            df_select = None
+
+        # Select top cases in separate DataFrames
+        if top is not None:
+            df_top = []
+            for obj_name in objective_names:
+                for o in self.objectives:
+                    if o.name == obj_name:
+                        ascending = o.minimize
+                index_list = list(df.sort_values(by=obj_name, ascending=ascending).index)
+                df_top.append(df.loc[index_list[:top]])
+        else:
+            df_top = None
+
+        # Default list of parameters to show
+        if parnames is None:
+            parnames = objective_names.copy()
+            parnames.extend(varpar_names)
+        
+        # Make figure
+        nplots = len(parnames)
+
+        # Definitions for the axes
+        l_margin, width1, width2 = 0.08, 0.72, 0.15
+        b_margin, t_margin = 0.1, 0.04
+        xspacing = 0.015
+        yspacing = 0.04
+        height = (1. - b_margin - t_margin - (nplots - 1) * yspacing) / nplots
+        nbins = 25
+    
+        # Actual plotting
+        ax_histy_list = []
+        histy_list = []
+        for i in range(nplots):
+            bottom1 = b_margin + (nplots - 1 - i) * (yspacing + height)
+            rect_scatter = [l_margin, bottom1, width1, height]
+            rect_histy = [l_margin + width1 + xspacing, bottom1, width2, height]
+            
+            h = df[parnames[i]]
+            ax_scatter = plt.axes(rect_scatter)
+            plt.grid(color='lightgray', linestyle='dotted')
+            plt.plot(xvalues, h, 'o')
+            if df_select is not None:
+                xvalues_cut = list(df_select.index)
+                if xname is not None:
+                    xvalues_cut = df_select[xname]
+                h_cut = df_select[parnames[i]]
+                plt.plot(xvalues_cut, h_cut, 'o')
+
+            if df_top is not None:
+                for df_t in df_top:
+                    if xname is not None:
+                        xvalues_top = df_t[xname]
+                    else:
+                        xvalues_top = list(df_t.index)
+                    h_top = df_t[parnames[i]]
+                    plt.plot(xvalues_top, h_top, 'o')
+
+            # Plot cummin only when proceeds
+            if (parnames[i] in objective_names) and (not sort) and (xname is None):
+                for o in self.objectives:
+                    if o.name == parnames[i]:
+                        minimize = o.minimize
+                if minimize:
+                    cum = df[parnames[i]].cummin().values
+                else:
+                    cum = df[parnames[i]].cummax().values
+                plt.plot(xvalues, cum, '-', c='black')
+            
+            plt.title(parnames[i].replace('_', ' '), fontdict={'fontsize': 'x-small'}, loc='right', pad=2)
+        
+            ax_histy = plt.axes(rect_histy)
+            plt.grid(color='lightgray', linestyle='dotted')
+            ymin, ymax = ax_scatter.get_ylim()
+            binwidth = (ymax - ymin) / nbins
+            bins = np.arange(ymin, ymax + binwidth, binwidth)
+            histy, _, _ = ax_histy.hist(h, bins=bins,
+                    weights=100. * np.ones(len(h)) / len(h), orientation='horizontal')
+
+            if df_select is not None:
+                h_cut = df_select[parnames[i]]
+                ax_histy.hist(h_cut, bins=bins,
+                              weights=100. * np.ones(len(h_cut)) / len(h), 
+                              orientation='horizontal')
+
+            if df_top is not None:
+                for df_t in df_top:
+                    h_top = df_t[parnames[i]]
+                    ax_histy.hist(h_top, bins=bins,
+                                  weights=100. * np.ones(len(h_top)) / len(h), 
+                                  orientation='horizontal')
+                    
+            ax_histy.set_ylim(ax_scatter.get_ylim())
+
+            ax_histy_list.append(ax_histy)
+            histy_list.append(histy)
+
+            if i != nplots - 1:
+                ax_scatter.tick_params(labelbottom=False)
+                ax_histy.tick_params(labelbottom=False, labelleft=False)
+                ax_histy.set_xticks([])
+            else:
+                ax_histy.tick_params(labelbottom=False, labelleft=False)
+                ax_histy.set_xticks([])
+                ax_scatter.set_xlabel('Evaluation number')
+                if xname is not None:
+                    ax_scatter.set_xlabel(xname.replace('_', ' '))
+            
+            histmax = 1.1 * max([h.max() for h in histy_list])
+            for i, ax_h in enumerate(ax_histy_list):
+                ax_h.set_xlim(-1, histmax)
+
     def _check_pareto_objectives(
         self,
         objectives: Optional[List[Union[str, Objective]]] = None,
