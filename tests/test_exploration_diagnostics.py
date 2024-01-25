@@ -2,20 +2,24 @@ import os
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pytest
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
-from optimas.evaluators import FunctionEvaluator
+from optimas.evaluators import TemplateEvaluator
 from optimas.core import VaryingParameter, Objective
 from optimas.diagnostics import ExplorationDiagnostics
 
 
-def eval_func(input_params, output_params):
-    """Evaluation function used for testing"""
-    x0 = input_params["x0"]
-    x1 = input_params["x1"]
-    result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
-    output_params["f1"] = result
+def analysis_func(sim_dir, output_params):
+    """Analysis function used by the template evaluator."""
+    # Read back result from file
+    with open("f1.txt") as f:
+        f1 = float(f.read())
+    with open("f2.txt") as f:
+        f2 = float(f.read())
+    output_params["f1"] = f1
+    output_params["f2"] = f2
 
 
 def test_exploration_diagnostics():
@@ -27,31 +31,43 @@ def test_exploration_diagnostics():
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f1", minimize=False)
+    obj2 = Objective("f2", minimize=True)
 
     # Create generator.
     gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
+        varying_parameters=[var1, var2], objectives=[obj, obj2], seed=0
     )
 
-    # Create function evaluator.
-    ev = FunctionEvaluator(function=eval_func)
+    # Create template evaluator.
+    ev = TemplateEvaluator(
+        sim_template=os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            "resources",
+            "template_simulation_script_moo.py",
+        ),
+        analysis_func=analysis_func,
+    )
 
     # Create exploration.
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=10,
+        max_evals=50,
         sim_workers=2,
         exploration_dir_path=exploration_dir_path,
     )
 
     # Run exploration.
+    exploration.run(15)
+    # Attach an external evaluation to test later the evaluation folders.
+    exploration.attach_evaluations(
+        [{"x0": -10.0, "x1": 0.0, "f1": 10.0, "f2": 7.0}]
+    )
     exploration.run()
 
     # Test diagnostics with both possible initializations.
-    diags_from_file = ExplorationDiagnostics(exploration_dir_path)
-    diags_from_instance = ExplorationDiagnostics(exploration)
-    for diags in [diags_from_file, diags_from_instance]:
+    for i, diags_source in enumerate([exploration_dir_path, exploration]):
+        diags = ExplorationDiagnostics(diags_source)
         for name in exploration.history:
             np.testing.assert_array_equal(
                 diags.history[name], exploration.history[name]
@@ -67,8 +83,40 @@ def test_exploration_diagnostics():
         diags.plot_objective(show_trace=True)
         plt.savefig(os.path.join(exploration_dir_path, "optimization.png"))
 
+        diags.plot_pareto_front(show_best_evaluation_indices=True)
+        plt.savefig(os.path.join(exploration_dir_path, "pareto_front.png"))
+
         diags.plot_worker_timeline()
         plt.savefig(os.path.join(exploration_dir_path, "timeline.png"))
+
+        # Check the simulation paths.
+        delete_index = 10
+        if i == 0:
+            diags.delete_evaluation_dir(delete_index)
+        else:
+            with pytest.raises(ValueError):
+                diags.delete_evaluation_dir(delete_index)
+        assert 15 not in diags._sim_dir_paths
+        for trial_index in diags.history["trial_index"]:
+            if trial_index in [15, delete_index]:
+                with pytest.raises(ValueError):
+                    diags.get_evaluation_dir_path(trial_index)
+            else:
+                ev_path = diags.get_evaluation_dir_path(trial_index)
+                assert int(ev_path[-4:]) == trial_index
+
+        # Check best evaluations.
+        best_ev_f1 = diags.get_best_evaluation("f1")
+        best_ev_f2 = diags.get_best_evaluation("f2")
+        assert best_ev_f1.index == np.argmax(diags.history["f1"])
+        assert best_ev_f2.index == np.argmin(diags.history["f2"])
+        pareto_evs = diags.get_pareto_front_evaluations()
+        assert best_ev_f1.index.to_numpy() in pareto_evs.index.to_numpy()
+        assert best_ev_f2.index.to_numpy() in pareto_evs.index.to_numpy()
+        best_ev_f1_path = diags.get_best_evaluation_dir_path()
+        assert best_ev_f1_path == diags.get_evaluation_dir_path(
+            best_ev_f1["trial_index"].item()
+        )
 
         # Check that all 3 possible objective inputs give the same result.
         _, trace1 = diags.get_objective_trace()

@@ -1,5 +1,6 @@
 """Contains the definition of the ExplorationDiagnostics class."""
 import os
+import shutil
 from warnings import warn
 import pathlib
 import json
@@ -49,18 +50,22 @@ class ExplorationDiagnostics:
                         "The specified path contains multiple history files. "
                         "The most recent one will be used."
                     )
+                exploration_dir_path = path
                 output_file = os.path.join(path, output_files[-1])
                 params_file = os.path.join(path, "exploration_parameters.json")
             elif path.endswith(".npy"):
+                exploration_dir_path = pathlib.Path(path).parent
                 output_file = path
                 params_file = os.path.join(
-                    pathlib.Path(path).parent, "exploration_parameters.json"
+                    exploration_dir_path, "exploration_parameters.json"
                 )
             else:
                 raise RuntimeError(
                     "The path should either point to a folder or a `.npy` file."
                 )
-            exploration = self._create_exploration(params_file, output_file)
+            exploration = self._create_exploration(
+                exploration_dir_path, params_file, output_file
+            )
         elif isinstance(source, Exploration):
             exploration = source
         else:
@@ -69,9 +74,10 @@ class ExplorationDiagnostics:
                 f"or an `Exploration`, not of type {type(source)}."
             )
         self._exploration = exploration
+        self._create_sim_dir_paths()
 
     def _create_exploration(
-        self, params_file: str, history_path: str
+        self, exploration_dir_path: str, params_file: str, history_path: str
     ) -> Exploration:
         """Create exploration from saved files."""
         # Create exploration parameters.
@@ -100,7 +106,30 @@ class ExplorationDiagnostics:
             ),
             evaluator=Evaluator(sim_function=None),
             history=history_path,
+            exploration_dir_path=exploration_dir_path,
         )
+
+    def _create_sim_dir_paths(self):
+        """Create a dict with the path to the sim dir of each evaluation."""
+        self._sim_dir_paths = {}
+        ensemble_dir_path = os.path.join(
+            self._exploration.exploration_dir_path, "evaluations"
+        )
+        if os.path.isdir(ensemble_dir_path):
+            sim_dirs = os.listdir(ensemble_dir_path)
+            for sim_dir in sim_dirs:
+                if sim_dir.startswith("sim"):
+                    try:
+                        trial_index = int(sim_dir[3:])
+                        self._sim_dir_paths[trial_index] = os.path.join(
+                            ensemble_dir_path, sim_dir
+                        )
+                    except ValueError:
+                        # Handle case in which conversion to an integer fails.
+                        # This can happen if there is a folder that starts with
+                        # "sim" but does not continue with a number. This is a
+                        # folder that might have been created by the user.
+                        pass
 
     @property
     def history(self) -> pd.DataFrame:
@@ -189,6 +218,136 @@ class ExplorationDiagnostics:
             )
             ax.step(t_trace, obj_trace, where="post")
 
+    def plot_pareto_front(
+        self,
+        objectives: Optional[List[Union[str, Objective]]] = None,
+        show_best_evaluation_indices: Optional[bool] = False,
+    ) -> None:
+        """Plot Pareto front of two optimization objectives.
+
+        Parameters
+        ----------
+        objectives : list of str or Objective, optional
+            A list with two objectives to plot. Only needed when the
+            optimization had more than two objectives. By default ``None``.
+        show_best_evaluation_indices : bool, optional
+            Whether to show the indices of the best evaluations. By default
+            ``False``.
+        """
+        objectives = self._check_pareto_objectives(objectives)
+        pareto_evals = self.get_pareto_front_evaluations(objectives)
+        x_data = self.history[objectives[0].name].to_numpy()
+        y_data = self.history[objectives[1].name].to_numpy()
+        x_pareto = pareto_evals[objectives[0].name].to_numpy()
+        y_pareto = pareto_evals[objectives[1].name].to_numpy()
+
+        # Create figure
+        _, axes = plt.subplots()
+
+        # Plot all evaluations
+        axes.scatter(
+            x_data, y_data, s=5, lw=0.0, alpha=0.5, label="All evaluations"
+        )
+        axes.set(xlabel=objectives[0].name, ylabel=objectives[1].name)
+
+        # Plot best evaluations
+        axes.scatter(
+            x_pareto,
+            y_pareto,
+            s=15,
+            ec="k",
+            fc="tab:blue",
+            lw=0.5,
+            zorder=2,
+            label="Best evaluations",
+        )
+
+        # Plot pareto front
+        axes.step(
+            x_pareto,
+            y_pareto,
+            c="k",
+            lw=1,
+            where="pre" if objectives[1].minimize else "post",
+            zorder=1,
+            label="Pareto front",
+        )
+        axes.legend(frameon=False)
+
+        # Add evaluation indices to plot.
+        if show_best_evaluation_indices:
+            sim_id_pareto = self.history["sim_id"].to_numpy()[
+                pareto_evals.index
+            ]
+            for i, id in enumerate(sim_id_pareto):
+                axes.annotate(
+                    str(id),
+                    (x_pareto[i], y_pareto[i]),
+                    (2, -2),
+                    fontsize=6,
+                    va="top",
+                    textcoords="offset points",
+                )
+
+    def get_best_evaluation(
+        self, objective: Optional[Union[str, Objective]] = None
+    ) -> pd.DataFrame:
+        """Get the evaluation with the best objective value.
+
+        Parameters
+        ----------
+        objective : str or Objective, optional
+            Objective to consider for determining the best evaluation. Only.
+            needed if there is more than one objective. By default ``None``.
+        """
+        if objective is None:
+            objective = self.objectives[0]
+        elif isinstance(objective, str):
+            objective_names = [obj.name for obj in self.objectives]
+            if objective in objective_names:
+                objective = self.objectives[objective_names.index(objective)]
+            else:
+                raise ValueError(
+                    f"Objective {objective} not found. Available objectives "
+                    f"are {objective_names}."
+                )
+        history = self.history[self.history.sim_ended]
+        if objective.minimize:
+            i_best = np.argmin(history[objective.name])
+        else:
+            i_best = np.argmax(history[objective.name])
+        return history.iloc[[i_best]]
+
+    def get_pareto_front_evaluations(
+        self,
+        objectives: Optional[List[Union[str, Objective]]] = None,
+    ) -> pd.DataFrame:
+        """Get data of evaluations in the Pareto front.
+
+        This function is currently limited to the Pareto front of two
+        objectives.
+
+        Parameters
+        ----------
+        objectives : list of str or Objective, optional
+            A list with two objectives to plot. Only needed when the
+            optimization had more than two objectives. By default ``None``.
+        """
+        objectives = self._check_pareto_objectives(objectives)
+        x_data = self.history[objectives[0].name].to_numpy()
+        y_data = self.history[objectives[1].name].to_numpy()
+        x_minimize = objectives[0].minimize
+        y_minimize = objectives[1].minimize
+        i_sort = np.argsort(x_data)
+        if not x_minimize:
+            i_sort = i_sort[::-1]  # Sort in descending order
+        if y_minimize:
+            y_cum = np.minimum.accumulate(y_data[i_sort])
+        else:
+            y_cum = np.maximum.accumulate(y_data[i_sort])
+        _, i_pareto = np.unique(y_cum, return_index=True)
+        return self.history.iloc[i_sort[i_pareto]]
+
     def get_objective_trace(
         self,
         objective: Optional[Union[str, Objective]] = None,
@@ -273,6 +432,49 @@ class ExplorationDiagnostics:
 
         return x, obj_trace
 
+    def get_evaluation_dir_path(self, trial_index: int) -> str:
+        """Get the path to the directory of the given evaluation.
+
+        Parameters
+        ----------
+        trial_index : int
+            Index of an evaluated trial.
+        """
+        try:
+            return self._sim_dir_paths[trial_index]
+        except KeyError:
+            raise ValueError(
+                f"Could not find evaluation directory of trial {trial_index}."
+                "This directory is only created when using a "
+                "`TemplateEvaluator`."
+            )
+
+    def get_best_evaluation_dir_path(
+        self, objective: Optional[Union[str, Objective]] = None
+    ) -> str:
+        """Get the path to the directory of the best evaluation.
+
+        Parameters
+        ----------
+        objective : str or Objective, optional
+            Objective to consider for determining the best evaluation. Only.
+            needed if there is more than one objective. By default ``None``.
+        """
+        best_ev = self.get_best_evaluation(objective)
+        return self.get_evaluation_dir_path(best_ev["trial_index"].item())
+
+    def delete_evaluation_dir(self, trial_index: int) -> None:
+        """Delete the directory with the output of the given evaluation.
+
+        Parameters
+        ----------
+        trial_index : int
+            Index of an evaluated trial.
+        """
+        ev_dir_path = self.get_evaluation_dir_path(trial_index)
+        shutil.rmtree(ev_dir_path)
+        del self._sim_dir_paths[trial_index]
+
     def plot_worker_timeline(
         self,
         fidelity_parameter: Optional[str] = None,
@@ -321,3 +523,41 @@ class ExplorationDiagnostics:
 
         ax.set_ylabel("Worker")
         ax.set_xlabel("Time (s)")
+
+    def _check_pareto_objectives(
+        self,
+        objectives: Optional[List[Union[str, Objective]]] = None,
+    ) -> List[Objective]:
+        """Check the objectives given to the Pareto methods."""
+        if len(self.objectives) < 2:
+            raise ValueError(
+                "Cannot get Pareto front because only a single objective "
+                "is available."
+            )
+        if objectives is None:
+            if len(self.objectives) == 2:
+                objectives = self.objectives
+            else:
+                raise ValueError(
+                    f"There are {len(self.objectives)} available. "
+                    "Please specify 2 objectives from which to get the "
+                    "Pareto front."
+                )
+        else:
+            if len(objectives) != 2:
+                raise ValueError(
+                    f"Two objectives are required ({len(objectives)} given)."
+                )
+            for i, objective in enumerate(objectives):
+                if isinstance(objective, str):
+                    objective_names = [obj.name for obj in self.objectives]
+                    if objective in objective_names:
+                        objectives[i] = self.objectives[
+                            objective_names.index(objective)
+                        ]
+                    else:
+                        raise ValueError(
+                            f"Objective {objective} not found. "
+                            f"Available objectives are {objective_names}."
+                        )
+        return objectives
