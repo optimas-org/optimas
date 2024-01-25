@@ -89,7 +89,6 @@ def test_exploration_diagnostics():
         diags.plot_worker_timeline()
         plt.savefig(os.path.join(exploration_dir_path, "timeline.png"))
 
-        plt.clf()
         diags.plot_history(top=3)
         plt.savefig(os.path.join(exploration_dir_path, "history.png"))
 

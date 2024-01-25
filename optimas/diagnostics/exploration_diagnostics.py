@@ -10,11 +10,13 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from optimas.core import VaryingParameter, Objective, Parameter
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.explorations import Exploration
+from optimas.utils.other import get_df_with_selection
 
 
 class ExplorationDiagnostics:
@@ -284,7 +286,7 @@ class ExplorationDiagnostics:
                     str(id),
                     (x_pareto[i], y_pareto[i]),
                     (2, -2),
-                    fontsize=6,
+                    fontsize="xx-small",
                     va="top",
                     textcoords="offset points",
                 )
@@ -524,41 +526,14 @@ class ExplorationDiagnostics:
         ax.set_ylabel("Worker")
         ax.set_xlabel("Time (s)")
 
-    def get_df_with_selection(
-        self,
-        df: pd.DataFrame,
-        select: dict
-    ) -> pd.DataFrame:
-        """Return the DataFrame after applying selection criterium.
-
-        Parameters
-        ----------
-        df : DataFrame
-            The DataFrame object
-        select: dict
-            A dictionary containing the selection criteria to apply.
-            e.g. {'f' : [None, -10.]} (get data with f < -10)
-        """
-        condition = ''
-        for key in select:
-            if select[key][0] is not None:
-                if condition != '':
-                    condition += ' and '
-                condition += '%s > %f' % (key, select[key][0])
-            if select[key][1] is not None:
-                if condition != '':
-                    condition += ' and '
-                condition += '%s < %f' % (key, select[key][1])
-        print('Selecting according to the condition: ', condition)
-        return df.query(condition)
-
     def plot_history(
         self, 
         parnames: Optional[list] = None,
         xname: Optional[str] = None, 
         select: Optional[dict] = None, 
         sort: Optional[dict] = None, 
-        top: Optional[dict] = None
+        top: Optional[dict] = None,
+        fig: Optional[Figure] = None,
     ) -> None:
         """Print selected parameters versus simulation index.
 
@@ -583,6 +558,9 @@ class ExplorationDiagnostics:
 
         top: int, optional
             Highight the top n simulations according to the objectives.
+
+        fig: Figure, optional
+            Matplotlib Figure object to use for this plot.
         """
 
         # Copy the history DataFrame
@@ -604,7 +582,7 @@ class ExplorationDiagnostics:
 
         # Apply selection to the history DataFrame
         if select is not None:
-            df_select = self.get_df_with_selection(df, select)
+            df_select = get_df_with_selection(df, select)
         else:
             df_select = None
 
@@ -626,6 +604,9 @@ class ExplorationDiagnostics:
             parnames.extend(varpar_names)
         
         # Make figure
+        if fig is None:
+            _ = plt.figure()
+
         nplots = len(parnames)
 
         # Definitions for the axes
@@ -664,7 +645,7 @@ class ExplorationDiagnostics:
                     h_top = df_t[parnames[i]]
                     plt.plot(xvalues_top, h_top, 'o')
 
-            # Plot cummin only when proceeds
+            # Plot trace only when proceeds
             if (parnames[i] in objective_names) and (not sort) and (xname is None):
                 for o in self.objectives:
                     if o.name == parnames[i]:
@@ -673,7 +654,7 @@ class ExplorationDiagnostics:
                     cum = df[parnames[i]].cummin().values
                 else:
                     cum = df[parnames[i]].cummax().values
-                plt.plot(xvalues, cum, '-', c='black')
+                plt.step(xvalues, cum, where='post', ls='-', c='black')
             
             plt.title(parnames[i].replace('_', ' '), fontdict={'fontsize': 'x-small'}, loc='right', pad=2)
         
