@@ -82,7 +82,7 @@ def execute_and_analyze_simulation(
     """Run simulation, handle outcome and analyze results."""
     # Create simulation input file.
     with open(sim_template, "r") as f:
-        template = jinja2.Template(f.read())
+        template = jinja2.Template(f.read(), keep_trailing_newline=True)
     with open(sim_template, "w") as f:
         f.write(template.render(input_values))
 
