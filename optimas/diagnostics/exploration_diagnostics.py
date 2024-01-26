@@ -587,7 +587,7 @@ class ExplorationDiagnostics:
         if xname is not None:
             xvalues = df[xname]
         else:
-            xvalues = list(df.index)
+            xvalues = df.index
 
         # Apply selection to the history DataFrame
         if select is not None:
@@ -627,16 +627,16 @@ class ExplorationDiagnostics:
             # Draw scatter plot
             ax_scatter = axs[i][0]
             ax_scatter.grid(color='lightgray', linestyle='dotted')
-            h = df[parnames[i]]
-            ax_scatter.plot(xvalues, h, 'o')
+            yvalues = df[parnames[i]]
+            ax_scatter.plot(xvalues, yvalues, 'o')
 
             # Draw selection
             if df_select is not None:
-                xvalues_cut = list(df_select.index)
+                xvalues_cut = df_select.index
                 if xname is not None:
                     xvalues_cut = df_select[xname]
-                h_cut = df_select[parnames[i]]
-                ax_scatter.plot(xvalues_cut, h_cut, 'o', 
+                yvalues_cut = df_select[parnames[i]]
+                ax_scatter.plot(xvalues_cut, yvalues_cut, 'o', 
                                 label='select')
 
             # Draw top evaluations
@@ -645,10 +645,10 @@ class ExplorationDiagnostics:
                     if xname is not None:
                         xvalues_top = df_t[xname]
                     else:
-                        xvalues_top = list(df_t.index)
-                    h_top = df_t[parnames[i]]
+                        xvalues_top = df_t.index
+                    yvalues_top = df_t[parnames[i]]
                     label='top %i' % top
-                    ax_scatter.plot(xvalues_top, h_top, 'o', 
+                    ax_scatter.plot(xvalues_top, yvalues_top, 'o', 
                                     label=label)
 
             # Draw the trace only for `objective` parameters 
@@ -670,25 +670,25 @@ class ExplorationDiagnostics:
             nbins = 25
             binwidth = (ymax - ymin) / nbins
             bins = np.arange(ymin, ymax + binwidth, binwidth)
-            histy, *_ = ax_histy.hist(h, bins=bins,
-                                    weights=100. * np.ones(len(h)) / len(h), 
+            histy, *_ = ax_histy.hist(yvalues, bins=bins,
+                                    weights=100. * np.ones(len(yvalues)) / len(yvalues), 
                                     orientation='horizontal')
 
             # Draw selection
             if df_select is not None:
-                h_cut = df_select[parnames[i]]
-                ax_histy.hist(h_cut, bins=bins,
-                              weights=100. * np.ones(len(h_cut)) / len(h), 
+                yvalues_cut = df_select[parnames[i]]
+                ax_histy.hist(yvalues_cut, bins=bins,
+                              weights=100. * np.ones(len(yvalues_cut)) / len(yvalues), 
                               orientation='horizontal',
                               label='selection')
 
             # Draw top evaluations
             if df_top is not None:
                 for df_t in df_top:
-                    h_top = df_t[parnames[i]]
+                    yvalues_top = df_t[parnames[i]]
                     label = 'top %i' % top
-                    ax_histy.hist(h_top, bins=bins,
-                                  weights=100. * np.ones(len(h_top)) / len(h), 
+                    ax_histy.hist(yvalues_top, bins=bins,
+                                  weights=100. * np.ones(len(yvalues_top)) / len(yvalues), 
                                   orientation='horizontal', 
                                   label=label)
                     
