@@ -10,7 +10,6 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 
 from optimas.core import VaryingParameter, Objective, Parameter
 from optimas.generators.base import Generator
