@@ -201,6 +201,7 @@ class ExplorationDiagnostics:
         history = self.history
         history = history[history.sim_ended]
         if use_time_axis:
+            history = history[history.sim_id >= 0]
             x = history.sim_ended_time
             xlabel = "Time (s)"
             if relative_start_time:
@@ -502,6 +503,8 @@ class ExplorationDiagnostics:
             All additional keyword arguments are passed to the `pyplot.subplots` call. 
         """
         df = self.history
+        df = df[df.sim_id >= 0]
+
         if fidelity_parameter is not None:
             min_fidelity = df[fidelity_parameter].min()
             max_fidelity = df[fidelity_parameter].max()
