@@ -571,7 +571,6 @@ class ExplorationDiagnostics:
         **subplots_kw
             All additional keyword arguments are passed to the `pyplot.subplots` call. 
         """
-
         # Copy the history DataFrame
         df = self.history.copy()
 
