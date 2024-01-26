@@ -160,6 +160,7 @@ class ExplorationDiagnostics:
         show_trace: Optional[bool] = False,
         use_time_axis: Optional[bool] = False,
         relative_start_time: Optional[bool] = True,
+        **subplots_kw,
     ) -> None:
         """Plot the values that where reached during the optimization.
 
@@ -179,7 +180,8 @@ class ExplorationDiagnostics:
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
-
+        **subplots_kw
+            All additional keyword arguments are passed to the `pyplot.subplots` call. 
         """
         if fidelity_parameter is not None:
             fidelity = self.history[fidelity_parameter]
@@ -206,7 +208,7 @@ class ExplorationDiagnostics:
         else:
             x = history.trial_index
             xlabel = "Number of evaluations"
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(**subplots_kw)
         ax.scatter(x, history[objective.name], c=fidelity)
         ax.set_ylabel(objective.name)
         ax.set_xlabel(xlabel)
@@ -224,6 +226,7 @@ class ExplorationDiagnostics:
         self,
         objectives: Optional[List[Union[str, Objective]]] = None,
         show_best_evaluation_indices: Optional[bool] = False,
+        **subplots_kw,
     ) -> None:
         """Plot Pareto front of two optimization objectives.
 
@@ -235,6 +238,8 @@ class ExplorationDiagnostics:
         show_best_evaluation_indices : bool, optional
             Whether to show the indices of the best evaluations. By default
             ``False``.
+        **subplots_kw
+            All additional keyword arguments are passed to the `pyplot.subplots` call. 
         """
         objectives = self._check_pareto_objectives(objectives)
         pareto_evals = self.get_pareto_front_evaluations(objectives)
@@ -244,7 +249,7 @@ class ExplorationDiagnostics:
         y_pareto = pareto_evals[objectives[1].name].to_numpy()
 
         # Create figure
-        _, axes = plt.subplots()
+        _, axes = plt.subplots(**subplots_kw)
 
         # Plot all evaluations
         axes.scatter(
@@ -481,6 +486,7 @@ class ExplorationDiagnostics:
         self,
         fidelity_parameter: Optional[str] = None,
         relative_start_time: Optional[bool] = True,
+        **subplots_kw,
     ) -> None:
         """Plot the timeline of worker utilization.
 
@@ -492,6 +498,8 @@ class ExplorationDiagnostics:
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
+        **subplots_kw
+            All additional keyword arguments are passed to the `pyplot.subplots` call. 
         """
         df = self.history
         if fidelity_parameter is not None:
@@ -503,7 +511,7 @@ class ExplorationDiagnostics:
         if relative_start_time:
             sim_started_time = sim_started_time - df["gen_started_time"].min()
             sim_ended_time = sim_ended_time - df["gen_started_time"].min()
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(**subplots_kw)
         for i in range(len(df)):
             start = sim_started_time.iloc[i]
             duration = sim_ended_time.iloc[i] - start
@@ -542,27 +550,21 @@ class ExplorationDiagnostics:
         ----------
         parnames: list of strings, optional
             List with the names of the parameters to show.
-
         xname: string, optional
             Name of the parameter to plot in the x axis.
             By default is the index of the history DataFrame.
-
         select: dict, optional
             Contains a set of rules to filter the dataframe, e.g.
             'f' : [None, -10.] (get data with f < -10)
-
         sort: dict, optional
             A dict containing as keys the names of the parameres to sort by 
             and, as values, a Bool indicating if ordering ascendingly (True)
             or descendingly (False)
             e.g. {'f': False} sort simulations according to f descendingly.
-
         top: int, optional
             Highight the top n simulations of every objective.
-
         show_legend : bool, optional
             Whether to show the legend.
-
         **subplots_kw
             All additional keyword arguments are passed to the `pyplot.subplots` call. 
         """
