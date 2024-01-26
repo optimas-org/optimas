@@ -397,7 +397,7 @@ class Exploration:
         for field in fields:
             if field in history_new.dtype.names:
                 history_new[field] = evaluation_data[field]
-        
+
         current_time = time.time()
         history_new["gen_started_time"] = current_time
         history_new["gen_ended_time"] = current_time
