@@ -67,10 +67,7 @@ def convert_to_dataframe(
         raise ValueError(f"Cannot convert {type(data)} to a pandas dataframe.")
 
 
-def get_df_with_selection(
-    df: pd.DataFrame,
-    select: dict
-) -> pd.DataFrame:
+def get_df_with_selection(df: pd.DataFrame, select: dict) -> pd.DataFrame:
     """Return the DataFrame after applying selection criterium.
 
     Parameters
@@ -81,15 +78,15 @@ def get_df_with_selection(
         A dictionary containing the selection criteria to apply.
         e.g. {'f' : [None, -10.]} (get data with f < -10)
     """
-    condition = ''
+    condition = ""
     for key in select:
         if select[key][0] is not None:
-            if condition != '':
-                condition += ' and '
-            condition += '%s > %f' % (key, select[key][0])
+            if condition != "":
+                condition += " and "
+            condition += "%s > %f" % (key, select[key][0])
         if select[key][1] is not None:
-            if condition != '':
-                condition += ' and '
-            condition += '%s < %f' % (key, select[key][1])
+            if condition != "":
+                condition += " and "
+            condition += "%s < %f" % (key, select[key][1])
 
     return df.query(condition)
