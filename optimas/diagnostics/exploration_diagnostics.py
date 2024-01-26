@@ -4,7 +4,7 @@ import shutil
 from warnings import warn
 import pathlib
 import json
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Dict, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -15,6 +15,7 @@ from optimas.core import VaryingParameter, Objective, Parameter
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.explorations import Exploration
+from optimas.utils.other import get_df_with_selection
 
 
 class ExplorationDiagnostics:
@@ -158,6 +159,7 @@ class ExplorationDiagnostics:
         show_trace: Optional[bool] = False,
         use_time_axis: Optional[bool] = False,
         relative_start_time: Optional[bool] = True,
+        **subplots_kw,
     ) -> None:
         """Plot the values that where reached during the optimization.
 
@@ -177,7 +179,8 @@ class ExplorationDiagnostics:
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
-
+        **subplots_kw
+            All additional keyword arguments are passed to the `pyplot.subplots` call.
         """
         if fidelity_parameter is not None:
             fidelity = self.history[fidelity_parameter]
@@ -204,7 +207,7 @@ class ExplorationDiagnostics:
         else:
             x = history.trial_index
             xlabel = "Number of evaluations"
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(**subplots_kw)
         ax.scatter(x, history[objective.name], c=fidelity)
         ax.set_ylabel(objective.name)
         ax.set_xlabel(xlabel)
@@ -222,6 +225,7 @@ class ExplorationDiagnostics:
         self,
         objectives: Optional[List[Union[str, Objective]]] = None,
         show_best_evaluation_indices: Optional[bool] = False,
+        **subplots_kw,
     ) -> None:
         """Plot Pareto front of two optimization objectives.
 
@@ -233,6 +237,8 @@ class ExplorationDiagnostics:
         show_best_evaluation_indices : bool, optional
             Whether to show the indices of the best evaluations. By default
             ``False``.
+        **subplots_kw
+            All additional keyword arguments are passed to the `pyplot.subplots` call.
         """
         objectives = self._check_pareto_objectives(objectives)
         pareto_evals = self.get_pareto_front_evaluations(objectives)
@@ -242,7 +248,7 @@ class ExplorationDiagnostics:
         y_pareto = pareto_evals[objectives[1].name].to_numpy()
 
         # Create figure
-        _, axes = plt.subplots()
+        _, axes = plt.subplots(**subplots_kw)
 
         # Plot all evaluations
         axes.scatter(
@@ -284,7 +290,7 @@ class ExplorationDiagnostics:
                     str(id),
                     (x_pareto[i], y_pareto[i]),
                     (2, -2),
-                    fontsize=6,
+                    fontsize="xx-small",
                     va="top",
                     textcoords="offset points",
                 )
@@ -479,6 +485,7 @@ class ExplorationDiagnostics:
         self,
         fidelity_parameter: Optional[str] = None,
         relative_start_time: Optional[bool] = True,
+        **subplots_kw,
     ) -> None:
         """Plot the timeline of worker utilization.
 
@@ -490,8 +497,12 @@ class ExplorationDiagnostics:
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
+        **subplots_kw
+            All additional keyword arguments are passed to the `pyplot.subplots` call.
         """
         df = self.history
+        df = df[df.sim_id >= 0]
+
         if fidelity_parameter is not None:
             min_fidelity = df[fidelity_parameter].min()
             max_fidelity = df[fidelity_parameter].max()
@@ -501,7 +512,7 @@ class ExplorationDiagnostics:
         if relative_start_time:
             sim_started_time = sim_started_time - df["gen_started_time"].min()
             sim_ended_time = sim_ended_time - df["gen_started_time"].min()
-        _, ax = plt.subplots()
+        _, ax = plt.subplots(**subplots_kw)
         for i in range(len(df)):
             start = sim_started_time.iloc[i]
             duration = sim_ended_time.iloc[i] - start
@@ -523,6 +534,207 @@ class ExplorationDiagnostics:
 
         ax.set_ylabel("Worker")
         ax.set_xlabel("Time (s)")
+
+    def plot_history(
+        self,
+        parnames: Optional[list] = None,
+        xname: Optional[str] = None,
+        select: Optional[Dict] = None,
+        sort: Optional[Dict] = None,
+        top: Optional[Dict] = None,
+        show_legend: Optional[bool] = False,
+        **subplots_kw,
+    ) -> None:
+        """Print selected parameters versus evaluation index.
+
+        Parameters
+        ----------
+        parnames: list of strings, optional
+            List with the names of the parameters to show.
+        xname: string, optional
+            Name of the parameter to plot in the x axis.
+            By default is the index of the history DataFrame.
+        select: dict, optional
+            Contains a set of rules to filter the dataframe, e.g.
+            'f' : [None, -10.] (get data with f < -10)
+        sort: dict, optional
+            A dict containing as keys the names of the parameres to sort by
+            and, as values, a Bool indicating if ordering ascendingly (True)
+            or descendingly (False)
+            e.g. {'f': False} sort simulations according to f descendingly.
+        top: int, optional
+            Highight the top n simulations of every objective.
+        show_legend : bool, optional
+            Whether to show the legend.
+        **subplots_kw
+            All additional keyword arguments are passed to the `pyplot.subplots` call.
+        """
+        # Copy the history DataFrame
+        df = self.history.copy()
+
+        # Get lists of variable names
+        objective_names = [obj.name for obj in self.objectives]
+        varpar_names = [var.name for var in self.varying_parameters]
+
+        # Order list of simulations and re-index
+        if sort is not None:
+            df = df.sort_values(
+                by=list(sort.keys()), ascending=tuple(sort.values())
+            ).reset_index(drop=True)
+
+        # Define the quantity to plot in the x axis
+        if xname is not None:
+            xvalues = df[xname]
+        else:
+            xvalues = df.index
+
+        # Apply selection to the history DataFrame
+        if select is not None:
+            df_select = get_df_with_selection(df, select)
+        else:
+            df_select = None
+
+        # Select top cases in separate DataFrames
+        if top is not None:
+            df_top = []
+            for obj_name in objective_names:
+                for o in self.objectives:
+                    if o.name == obj_name:
+                        ascending = o.minimize
+                index_list = list(
+                    df.sort_values(by=obj_name, ascending=ascending).index
+                )
+                df_top.append(df.loc[index_list[:top]])
+        else:
+            df_top = None
+
+        # Default list of parameters to show
+        if parnames is None:
+            parnames = objective_names.copy()
+            parnames.extend(varpar_names)
+
+        # Make figure
+        nplots = len(parnames)
+        _, axs = plt.subplots(nplots, 2, width_ratios=[0.8, 0.2], **subplots_kw)
+        plt.subplots_adjust(wspace=0.05)
+
+        # Actual plotting
+        ax_histy_list = []
+        histy_list = []
+        for i in range(nplots):
+            # Draw scatter plot
+            ax_scatter = axs[i][0]
+            ax_scatter.grid(color="lightgray", linestyle="dotted")
+            yvalues = df[parnames[i]]
+            ax_scatter.plot(xvalues, yvalues, "o")
+
+            # Draw selection
+            if df_select is not None:
+                xvalues_cut = df_select.index
+                if xname is not None:
+                    xvalues_cut = df_select[xname]
+                yvalues_cut = df_select[parnames[i]]
+                ax_scatter.plot(xvalues_cut, yvalues_cut, "o", label="select")
+
+            # Draw top evaluations
+            if df_top is not None:
+                for df_t in df_top:
+                    if xname is not None:
+                        xvalues_top = df_t[xname]
+                    else:
+                        xvalues_top = df_t.index
+                    yvalues_top = df_t[parnames[i]]
+                    label = "top %i" % top
+                    ax_scatter.plot(xvalues_top, yvalues_top, "o", label=label)
+
+            # Draw the trace only for `objective` parameters
+            if (
+                (parnames[i] in objective_names)
+                and (not sort)
+                and (xname is None)
+            ):
+                for o in self.objectives:
+                    if o.name == parnames[i]:
+                        minimize = o.minimize
+                if minimize:
+                    cum = df[parnames[i]].cummin().values
+                else:
+                    cum = df[parnames[i]].cummax().values
+                ax_scatter.step(
+                    xvalues, cum, zorder=-1, where="post", c="black"
+                )
+
+            # Draw projected histogram
+            ax_histy = axs[i][1]
+            ax_histy.grid(color="lightgray", linestyle="dotted")
+            ymin, ymax = ax_scatter.get_ylim()
+            nbins = 25
+            binwidth = (ymax - ymin) / nbins
+            bins = np.arange(ymin, ymax + binwidth, binwidth)
+            histy, *_ = ax_histy.hist(
+                yvalues,
+                bins=bins,
+                weights=100.0 * np.ones(len(yvalues)) / len(yvalues),
+                orientation="horizontal",
+            )
+
+            # Draw selection
+            if df_select is not None:
+                yvalues_cut = df_select[parnames[i]]
+                ax_histy.hist(
+                    yvalues_cut,
+                    bins=bins,
+                    weights=100.0 * np.ones(len(yvalues_cut)) / len(yvalues),
+                    orientation="horizontal",
+                    label="selection",
+                )
+
+            # Draw top evaluations
+            if df_top is not None:
+                for df_t in df_top:
+                    yvalues_top = df_t[parnames[i]]
+                    label = "top %i" % top
+                    ax_histy.hist(
+                        yvalues_top,
+                        bins=bins,
+                        weights=100.0
+                        * np.ones(len(yvalues_top))
+                        / len(yvalues),
+                        orientation="horizontal",
+                        label=label,
+                    )
+
+            ax_histy.set_ylim(ax_scatter.get_ylim())
+
+            # Tuning axes and labels
+            ax_scatter.set_title(
+                parnames[i].replace("_", " "),
+                fontdict={"fontsize": "x-small"},
+                loc="right",
+                pad=2,
+            )
+
+            if i != nplots - 1:
+                ax_scatter.tick_params(labelbottom=False)
+                ax_histy.tick_params(labelbottom=False, labelleft=False)
+            else:
+                ax_scatter.set_xlabel("Evaluation number")
+                if xname is not None:
+                    ax_scatter.set_xlabel(xname.replace("_", " "))
+                ax_histy.set_xlabel("%")
+                ax_histy.tick_params(labelbottom=True, labelleft=False)
+                if show_legend:
+                    ax_histy.legend(fontsize="xx-small")
+
+            # Make loist of histograms and axes for further manipulation
+            # outside the loop
+            ax_histy_list.append(ax_histy)
+            histy_list.append(histy)
+
+        # Set the range of the histograms axes
+        histmax = 1.1 * max([h.max() for h in histy_list])
+        for i, ax_h in enumerate(ax_histy_list):
+            ax_h.set_xlim(-1, histmax)
 
     def _check_pareto_objectives(
         self,
