@@ -404,7 +404,7 @@ class Exploration:
         for field in fields:
             if field in history_new.dtype.names:
                 history_new[field] = evaluation_data[field]
-        
+
         if not is_history:
             current_time = time.time()
             history_new["gen_started_time"] = current_time
