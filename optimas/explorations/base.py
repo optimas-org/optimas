@@ -3,6 +3,7 @@
 import os
 import glob
 import json
+import time
 from typing import Optional, Union, Dict, List, Literal
 
 import numpy as np
@@ -359,6 +360,13 @@ class Exploration:
             a problem in the data. If set to `True`, the error will be ignored.
         """
         evaluation_data = convert_to_dataframe(evaluation_data)
+
+        # Determine if evaluations come from past history array and, if so,
+        # keep only those that finished.
+        is_history = "sim_ended" in evaluation_data
+        if is_history:
+            evaluation_data = evaluation_data[evaluation_data["sim_ended"]]
+
         n_evals = len(evaluation_data)
         if n_evals == 0:
             return
@@ -396,13 +404,22 @@ class Exploration:
         for field in fields:
             if field in history_new.dtype.names:
                 history_new[field] = evaluation_data[field]
-        history_new["sim_started"] = True
-        history_new["sim_ended"] = True
-        history_new["trial_index"] = np.arange(
-            self.generator._trial_count,
-            self.generator._trial_count + n_evals,
-            dtype=int,
-        )
+
+        if not is_history:
+            current_time = time.time()
+            history_new["gen_started_time"] = current_time
+            history_new["gen_ended_time"] = current_time
+            history_new["gen_informed_time"] = current_time
+            history_new["sim_started_time"] = current_time
+            history_new["sim_ended_time"] = current_time
+            history_new["gen_informed"] = True
+            history_new["sim_started"] = True
+            history_new["sim_ended"] = True
+            history_new["trial_index"] = np.arange(
+                self.generator._trial_count,
+                self.generator._trial_count + n_evals,
+                dtype=int,
+            )
 
         # Incorporate new history into generator.
         self.generator.incorporate_history(history_new)
