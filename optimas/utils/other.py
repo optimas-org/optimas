@@ -67,7 +67,7 @@ def convert_to_dataframe(
         raise ValueError(f"Cannot convert {type(data)} to a pandas dataframe.")
 
 
-def get_df_with_selection(df: pd.DataFrame, select: dict) -> pd.DataFrame:
+def get_df_with_selection(df: pd.DataFrame, select: Dict) -> pd.DataFrame:
     """Return the DataFrame after applying selection criterium.
 
     Parameters

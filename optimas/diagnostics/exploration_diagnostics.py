@@ -4,7 +4,7 @@ import shutil
 from warnings import warn
 import pathlib
 import json
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Dict, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -539,9 +539,9 @@ class ExplorationDiagnostics:
         self,
         parnames: Optional[list] = None,
         xname: Optional[str] = None,
-        select: Optional[dict] = None,
-        sort: Optional[dict] = None,
-        top: Optional[dict] = None,
+        select: Optional[Dict] = None,
+        sort: Optional[Dict] = None,
+        top: Optional[Dict] = None,
         show_legend: Optional[bool] = False,
         **subplots_kw,
     ) -> None:
