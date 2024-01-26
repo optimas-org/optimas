@@ -91,5 +91,5 @@ def get_df_with_selection(
             if condition != '':
                 condition += ' and '
             condition += '%s < %f' % (key, select[key][1])
-    print('Selecting according to the condition: ', condition)
+
     return df.query(condition)

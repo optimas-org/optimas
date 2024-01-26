@@ -533,9 +533,10 @@ class ExplorationDiagnostics:
         select: Optional[dict] = None, 
         sort: Optional[dict] = None, 
         top: Optional[dict] = None,
-        fig: Optional[Figure] = None,
+        show_legend: Optional[bool] = False,
+        **subplots_kw
     ) -> None:
-        """Print selected parameters versus simulation index.
+        """Print selected parameters versus evaluation index.
 
         Parameters
         ----------
@@ -554,13 +555,16 @@ class ExplorationDiagnostics:
             A dict containing as keys the names of the parameres to sort by 
             and, as values, a Bool indicating if ordering ascendingly (True)
             or descendingly (False)
-            e.g. {'f': False} sort simulations according to `f` descendingly.
+            e.g. {'f': False} sort simulations according to f descendingly.
 
         top: int, optional
-            Highight the top n simulations according to the objectives.
+            Highight the top n simulations of every objective.
 
-        fig: Figure, optional
-            Matplotlib Figure object to use for this plot.
+        show_legend : bool, optional
+            Whether to show the legend.
+
+        **subplots_kw
+            All additional keyword arguments are passed to the `pyplot.subplots` call. 
         """
 
         # Copy the history DataFrame
@@ -604,38 +608,33 @@ class ExplorationDiagnostics:
             parnames.extend(varpar_names)
         
         # Make figure
-        if fig is None:
-            _ = plt.figure()
-
         nplots = len(parnames)
+        _, axs = plt.subplots(nplots, 2, 
+                              width_ratios=[0.8, 0.2], 
+                              **subplots_kw)
+        plt.subplots_adjust(wspace=0.05)
 
-        # Definitions for the axes
-        l_margin, width1, width2 = 0.08, 0.72, 0.15
-        b_margin, t_margin = 0.1, 0.04
-        xspacing = 0.015
-        yspacing = 0.04
-        height = (1. - b_margin - t_margin - (nplots - 1) * yspacing) / nplots
-        nbins = 25
-    
         # Actual plotting
         ax_histy_list = []
         histy_list = []
-        for i in range(nplots):
-            bottom1 = b_margin + (nplots - 1 - i) * (yspacing + height)
-            rect_scatter = [l_margin, bottom1, width1, height]
-            rect_histy = [l_margin + width1 + xspacing, bottom1, width2, height]
-            
+        for i in range(nplots):            
+
+            # Draw scatter plot
+            ax_scatter = axs[i][0]
+            ax_scatter.grid(color='lightgray', linestyle='dotted')
             h = df[parnames[i]]
-            ax_scatter = plt.axes(rect_scatter)
-            plt.grid(color='lightgray', linestyle='dotted')
-            plt.plot(xvalues, h, 'o')
+            ax_scatter.plot(xvalues, h, 'o')
+
+            # Draw selection
             if df_select is not None:
                 xvalues_cut = list(df_select.index)
                 if xname is not None:
                     xvalues_cut = df_select[xname]
                 h_cut = df_select[parnames[i]]
-                plt.plot(xvalues_cut, h_cut, 'o')
+                ax_scatter.plot(xvalues_cut, h_cut, 'o', 
+                                label='select')
 
+            # Draw top evaluations
             if df_top is not None:
                 for df_t in df_top:
                     if xname is not None:
@@ -643,9 +642,11 @@ class ExplorationDiagnostics:
                     else:
                         xvalues_top = list(df_t.index)
                     h_top = df_t[parnames[i]]
-                    plt.plot(xvalues_top, h_top, 'o')
+                    label='top %i' % top
+                    ax_scatter.plot(xvalues_top, h_top, 'o', 
+                                    label=label)
 
-            # Plot trace only when proceeds
+            # Draw the trace only for `objective` parameters 
             if (parnames[i] in objective_names) and (not sort) and (xname is None):
                 for o in self.objectives:
                     if o.name == parnames[i]:
@@ -654,50 +655,66 @@ class ExplorationDiagnostics:
                     cum = df[parnames[i]].cummin().values
                 else:
                     cum = df[parnames[i]].cummax().values
-                plt.step(xvalues, cum, where='post', ls='-', c='black')
+                ax_scatter.step(xvalues, cum, zorder=-1, where='post', c='black')
             
-            plt.title(parnames[i].replace('_', ' '), fontdict={'fontsize': 'x-small'}, loc='right', pad=2)
         
-            ax_histy = plt.axes(rect_histy)
-            plt.grid(color='lightgray', linestyle='dotted')
+            # Draw projected histogram
+            ax_histy = axs[i][1]
+            ax_histy.grid(color='lightgray', linestyle='dotted')
             ymin, ymax = ax_scatter.get_ylim()
+            nbins = 25
             binwidth = (ymax - ymin) / nbins
             bins = np.arange(ymin, ymax + binwidth, binwidth)
-            histy, _, _ = ax_histy.hist(h, bins=bins,
-                    weights=100. * np.ones(len(h)) / len(h), orientation='horizontal')
+            histy, *_ = ax_histy.hist(h, bins=bins,
+                                    weights=100. * np.ones(len(h)) / len(h), 
+                                    orientation='horizontal')
 
+            # Draw selection
             if df_select is not None:
                 h_cut = df_select[parnames[i]]
                 ax_histy.hist(h_cut, bins=bins,
                               weights=100. * np.ones(len(h_cut)) / len(h), 
-                              orientation='horizontal')
+                              orientation='horizontal',
+                              label='selection')
 
+            # Draw top evaluations
             if df_top is not None:
                 for df_t in df_top:
                     h_top = df_t[parnames[i]]
+                    label = 'top %i' % top
                     ax_histy.hist(h_top, bins=bins,
                                   weights=100. * np.ones(len(h_top)) / len(h), 
-                                  orientation='horizontal')
+                                  orientation='horizontal', 
+                                  label=label)
                     
             ax_histy.set_ylim(ax_scatter.get_ylim())
 
-            ax_histy_list.append(ax_histy)
-            histy_list.append(histy)
+            # Tuning axes and labels
+            ax_scatter.set_title(parnames[i].replace('_', ' '), 
+                                 fontdict={'fontsize': 'x-small'}, 
+                                 loc='right', pad=2)
 
             if i != nplots - 1:
                 ax_scatter.tick_params(labelbottom=False)
                 ax_histy.tick_params(labelbottom=False, labelleft=False)
-                ax_histy.set_xticks([])
             else:
-                ax_histy.tick_params(labelbottom=False, labelleft=False)
-                ax_histy.set_xticks([])
                 ax_scatter.set_xlabel('Evaluation number')
                 if xname is not None:
                     ax_scatter.set_xlabel(xname.replace('_', ' '))
-            
-            histmax = 1.1 * max([h.max() for h in histy_list])
-            for i, ax_h in enumerate(ax_histy_list):
-                ax_h.set_xlim(-1, histmax)
+                ax_histy.set_xlabel('%')
+                ax_histy.tick_params(labelbottom=True, labelleft=False)
+                if show_legend:
+                    ax_histy.legend(fontsize='xx-small')
+
+            # Make loist of histograms and axes for further manipulation 
+            # outside the loop
+            ax_histy_list.append(ax_histy)
+            histy_list.append(histy)
+
+        # Set the range of the histograms axes
+        histmax = 1.1 * max([h.max() for h in histy_list])
+        for i, ax_h in enumerate(ax_histy_list):
+            ax_h.set_xlim(-1, histmax)
 
     def _check_pareto_objectives(
         self,
