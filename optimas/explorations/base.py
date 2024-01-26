@@ -3,6 +3,7 @@
 import os
 import glob
 import json
+import time
 from typing import Optional, Union, Dict, List, Literal
 
 import numpy as np
@@ -396,6 +397,14 @@ class Exploration:
         for field in fields:
             if field in history_new.dtype.names:
                 history_new[field] = evaluation_data[field]
+        
+        current_time = time.time()
+        history_new["gen_started_time"] = current_time
+        history_new["gen_ended_time"] = current_time
+        history_new["gen_informed_time"] = current_time
+        history_new["sim_started_time"] = current_time
+        history_new["sim_ended_time"] = current_time
+        history_new["gen_informed"] = True
         history_new["sim_started"] = True
         history_new["sim_ended"] = True
         history_new["trial_index"] = np.arange(
