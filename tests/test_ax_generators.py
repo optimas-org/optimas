@@ -161,8 +161,11 @@ def test_ax_single_fidelity():
     # Run exploration.
     exploration.run()
 
+    # Mark a trials as failed by hand
+    exploration.mark_evaluation_as_failed(8)
+
     # Perform checks.
-    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
+    check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail) + 1)
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
@@ -569,7 +572,7 @@ def test_ax_single_fidelity_with_history():
     exploration.run()
 
     # Perform checks.
-    check_run_ax_service(ax_client, gen, exploration, n_failed_expected=2)
+    check_run_ax_service(ax_client, gen, exploration, n_failed_expected=3)
 
 
 def test_ax_multi_fidelity_with_history():
@@ -736,7 +739,7 @@ def test_ax_service_init():
 
 if __name__ == "__main__":
     test_ax_single_fidelity()
-    test_ax_single_fidelity_int()
+    # test_ax_single_fidelity_int()
     test_ax_single_fidelity_moo()
     test_ax_single_fidelity_fb()
     test_ax_single_fidelity_moo_fb()
