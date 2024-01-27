@@ -16,6 +16,11 @@ from ax.modelbridge.generation_strategy import (
     GenerationStep,
     GenerationStrategy,
 )
+from ax.utils.notebook.plotting import render
+from ax.plot.contour import plot_contour
+from ax.plot.diagnostic import interact_cross_validation
+from ax.plot.slice import interact_slice
+from ax.modelbridge.cross_validation import cross_validate
 
 from optimas.utils.other import update_object
 from optimas.core import Objective, Trial, VaryingParameter, Parameter
@@ -256,4 +261,82 @@ class AxServiceGenerator(AxGenerator):
         new_search_space = InstantiationBase.make_search_space(parameters, None)
         self._ax_client.experiment.search_space.update_parameter(
             new_search_space.parameters[parameter.name]
+        )
+
+    def plot_contour(
+        self,
+        param_x: Optional[str] = None,
+        param_y: Optional[str] = None,
+        objective: Optional[str] = None,
+        slice_values: Optional[Dict] = None,
+    ):
+        """Plot a 2D slice of the surrogate model.
+
+        Parameters
+        ----------
+        param_x : str, optional
+            Name of the varying parameter sliced on the x axis. If not given,
+            the first varying parameter will used. By default ``None``.
+        param_y : str, optional
+            Name of the varying parameter sliced on the y axis. If not given,
+            the second varying parameter will used. By default ``None``.
+        objective : str, optional
+            Name of the objective to plot. If not given, the first objective
+            will be shown. By default ``None``.
+        slice_values : Optional[Dict], optional
+            A dictionary ``{name: val}`` for the fixed values of the other
+            parameters. If not provided, then the values of the best predicted
+            parametrization will be used. By default ``None``.
+        """         
+        if len(self.varying_parameters) < 2:
+            raise ValueError(
+                "Cannot plot contour because there are less than 2 varying "
+                "parameters."
+            )
+        if param_x is None:
+            param_x = self.varying_parameters[0].name
+        if param_y is None:
+            param_y = self.varying_parameters[1].name
+        if objective is None:
+            objective = self.objectives[0].name
+        self._ax_client.fit_model()
+        if slice_values is None:
+            slice_values, _ = self._ax_client.get_best_parameters()
+        render(
+            plot_contour(
+                model=self._ax_client.generation_strategy.model,
+                param_x=param_x,
+                param_y=param_y,
+                metric_name=objective,
+                slice_values=slice_values,
+            )
+        )
+
+    def plot_cross_validation(self):
+        """Show an interactive cross-validation plot."""
+        self._ax_client.fit_model()
+        render(
+            interact_cross_validation(
+                cross_validate(self._ax_client.generation_strategy.model)
+            )
+        )
+
+    def plot_slice(self, slice_values: Optional[Dict] = None):
+        """Plot a 1D slide of the surrogate model.
+
+        Parameters
+        ----------
+        slice_values : dict, optional
+            A dictionary ``{name: val}`` for the fixed values of the other
+            parameters. If not provided, then the values of the best predicted
+            parametrization will be used. By default ``None``.
+        """
+        self._ax_client.fit_model()
+        if slice_values is None:
+            slice_values, _ = self._ax_client.get_best_parameters()
+        render(
+            interact_slice(
+                self._ax_client.generation_strategy.model,
+                slice_values=slice_values,
+            )
         )
