@@ -1,9 +1,9 @@
 """Contains the definition of the Task class for multitask optimization."""
 
-from .base import NamedBase
+from pydantic import BaseModel
 
 
-class Task(NamedBase):
+class Task(BaseModel):
     """Defines a task to be used in multitask optimization.
 
     Parameters
@@ -17,17 +17,9 @@ class Task(NamedBase):
 
     """
 
+    name: str
+    n_init: int
+    n_opt: int
+
     def __init__(self, name: str, n_init: int, n_opt: int) -> None:
-        super().__init__(name)
-        self._n_init = n_init
-        self._n_opt = n_opt
-
-    @property
-    def n_init(self) -> int:
-        """Get number of task evaluations to perform for initialization."""
-        return self._n_init
-
-    @property
-    def n_opt(self) -> int:
-        """Get number of task evaluations to perform per optimization batch."""
-        return self._n_opt
+        super().__init__(name=name, n_init=n_init, n_opt=n_opt)

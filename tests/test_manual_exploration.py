@@ -4,7 +4,7 @@ import pandas as pd
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
 from optimas.evaluators import FunctionEvaluator
-from optimas.core import VaryingParameter, Objective
+from optimas.core import VaryingParameter, Objective, Parameter
 
 
 def eval_func(input_params, output_params):
@@ -13,6 +13,7 @@ def eval_func(input_params, output_params):
     x1 = input_params["x1"]
     result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
     output_params["f"] = result
+    output_params["par1"] = 1.0
 
 
 def test_manual_exploration():
@@ -25,6 +26,7 @@ def test_manual_exploration():
     vars = []
     for name, lb, ub in zip(names, lower_bounds, upper_bounds):
         vars.append(VaryingParameter(name, lb, ub))
+    par1 = Parameter("par1")
 
     # Set number of evaluations.
     n_evals = 10
@@ -41,6 +43,7 @@ def test_manual_exploration():
         "x0": [-2.0, 1.3, 0.5],
         "x1": [2.7, 1.0, 3.5],
         "f": [2.0, 4.0, 6.0],
+        "par1": [1.0, 1.0, 1.0],
     }
     n_attached_trials = len(trials_to_attach["x0"])
     n_attached_evals = len(evals_to_attach["x0"])
@@ -54,6 +57,7 @@ def test_manual_exploration():
         gen = RandomSamplingGenerator(
             varying_parameters=vars,
             objectives=[obj],
+            analyzed_parameters=[par1],
             distribution="uniform",
             seed=1,
         )

@@ -34,7 +34,7 @@ Create a new environment for optimas
 
 .. code::
 
-    mamba create -n optimas_env python
+    mamba create -n optimas_env python=3.11
 
 
 Activate the environment
@@ -51,11 +51,12 @@ Install ``mpi4py``
     pip install mpi4py --no-cache-dir
 
 
-Install ``optimas``
+Install ``optimas`` with all dependencies if you plan to do Bayesian optimization
+(see :ref:`dependencies` for more details).
 
 .. code::
 
-    pip install optimas
+    pip install optimas[all]
 
 
 Installing FBPIC and Wake-T (optional)
@@ -70,7 +71,7 @@ Install FBPIC:
 .. code::
 
     mamba install cudatoolkit=11.8
-    pip install cupy-cuda118
+    pip install cupy-cuda11x
     pip install fbpic
 
 

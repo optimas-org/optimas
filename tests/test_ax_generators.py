@@ -104,6 +104,46 @@ def test_ax_single_fidelity():
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
 
 
+def test_ax_single_fidelity_int():
+    """
+    Test that an exploration with a single-fidelity generator runs
+    correctly with an integer parameter.
+    """
+
+    var1 = VaryingParameter("x0", -50.0, 5.0, dtype=int)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f", minimize=False)
+
+    gen = AxSingleFidelityGenerator(
+        varying_parameters=[var1, var2], objectives=[obj]
+    )
+    ev = FunctionEvaluator(function=eval_func_sf)
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        max_evals=10,
+        sim_workers=2,
+        exploration_dir_path="./tests_output/test_ax_single_fidelity_int",
+    )
+
+    # Get reference to original AxClient.
+    ax_client = gen._ax_client
+    assert ax_client.experiment.search_space.parameters["x0"].python_type == int
+
+    # Run exploration.
+    exploration.run()
+
+    # Check that the generator has been updated.
+    assert gen.n_completed_trials == exploration.history.shape[0]
+
+    # Check that the original ax client has been updated.
+    n_ax_trials = ax_client.get_trials_data_frame().shape[0]
+    assert n_ax_trials == exploration.history.shape[0]
+
+    # Check correct variable type.
+    assert exploration.history["x0"].to_numpy().dtype == int
+
+
 def test_ax_single_fidelity_moo():
     """
     Test that an exploration with a multi-objective single-fidelity generator
@@ -227,6 +267,9 @@ def test_ax_single_fidelity_updated_params():
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
 
+    # Start with a fixed value of x0.
+    var1.fix_value(-10.0)
+
     gen = AxSingleFidelityGenerator(
         varying_parameters=[var1, var2],
         objectives=[obj],
@@ -241,7 +284,14 @@ def test_ax_single_fidelity_updated_params():
     )
 
     # Run exploration.
-    exploration.run(n_evals=10)
+    exploration.run(n_evals=5)
+    assert all(exploration.history["x0"] == -10)
+
+    # Free value of x0 and run 5 evals.
+    var1.free_value()
+    gen.update_parameter(var1)
+    exploration.run(n_evals=5)
+    assert not all(exploration.history["x0"][-5:] == -10)
 
     # Update range of x0 and run 10 evals.
     var1.update_range(-20.0, 0.0)
@@ -567,6 +617,7 @@ def test_ax_service_init():
 
 if __name__ == "__main__":
     test_ax_single_fidelity()
+    test_ax_single_fidelity_int()
     test_ax_single_fidelity_moo()
     test_ax_single_fidelity_fb()
     test_ax_single_fidelity_moo_fb()

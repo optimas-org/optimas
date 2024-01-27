@@ -101,8 +101,8 @@ class AxServiceGenerator(AxGenerator):
         self._n_init = n_init
         self._enforce_n_init = enforce_n_init
         self._fit_out_of_design = fit_out_of_design
-        self._ax_client = self._create_ax_client()
         self._fixed_features = None
+        self._ax_client = self._create_ax_client()
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
@@ -188,6 +188,7 @@ class AxServiceGenerator(AxGenerator):
                     "bounds": [var.lower_bound, var.upper_bound],
                     "is_fidelity": var.is_fidelity,
                     "target_value": var.fidelity_target_value,
+                    "value_type": var.dtype.__name__,
                 }
             )
             if var.is_fixed:

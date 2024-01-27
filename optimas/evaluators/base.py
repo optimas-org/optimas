@@ -67,11 +67,11 @@ class Evaluator:
             # May be a 1D array.
             "in": [var.name for var in varying_parameters],
             "out": (
-                [(obj.name, float) for obj in objectives]
+                [(obj.name, obj.dtype) for obj in objectives]
                 # f is the single float output that LibEnsemble minimizes.
                 + [(par.name, par.dtype) for par in analyzed_parameters]
                 # input parameters
-                + [(var.name, float) for var in varying_parameters]
+                + [(var.name, var.dtype) for var in varying_parameters]
             ),
             "user": {
                 "n_procs": self._n_procs,
