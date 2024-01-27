@@ -1,4 +1,5 @@
 import numpy as np
+
 from ax.service.ax_client import AxClient, ObjectiveProperties
 from ax.utils.measurement.synthetic_functions import hartmann6
 
@@ -65,6 +66,13 @@ def eval_func_task_2(input_params, output_params):
     output_params["f"] = result
 
 
+def make_plots(gen):
+    """Make plots with Service API generators."""
+    gen.plot_contour()
+    gen.plot_cross_validation()
+    gen.plot_slice()
+
+
 def test_ax_single_fidelity():
     """
     Test that an exploration with a single-fidelity generator runs
@@ -102,6 +110,9 @@ def test_ax_single_fidelity():
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_single_fidelity_int():
@@ -143,6 +154,9 @@ def test_ax_single_fidelity_int():
     # Check correct variable type.
     assert exploration.history["x0"].to_numpy().dtype == int
 
+    # Check that plotting functions don't crash.
+    make_plots(gen)
+
 
 def test_ax_single_fidelity_moo():
     """
@@ -180,6 +194,9 @@ def test_ax_single_fidelity_moo():
     n_ax_trials = ax_client.get_trials_data_frame().shape[0]
     assert n_ax_trials == exploration.history.shape[0]
 
+    # Check that plotting functions don't crash.
+    make_plots(gen)
+
 
 def test_ax_single_fidelity_fb():
     """
@@ -215,6 +232,9 @@ def test_ax_single_fidelity_fb():
     # Check that the original ax client has been updated.
     n_ax_trials = ax_client.get_trials_data_frame().shape[0]
     assert n_ax_trials == exploration.history.shape[0]
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_single_fidelity_moo_fb():
@@ -255,6 +275,9 @@ def test_ax_single_fidelity_moo_fb():
     # Check that the original ax client has been updated.
     n_ax_trials = ax_client.get_trials_data_frame().shape[0]
     assert n_ax_trials == exploration.history.shape[0]
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_single_fidelity_updated_params():
@@ -316,6 +339,9 @@ def test_ax_single_fidelity_updated_params():
     exploration.run(n_evals=3)
     assert all(exploration.history["x0"][-3:] != -9)
 
+    # Check that plotting functions don't crash.
+    make_plots(gen)
+
 
 def test_ax_multi_fidelity():
     """Test that an exploration with a multifidelity generator runs"""
@@ -344,6 +370,9 @@ def test_ax_multi_fidelity():
 
     # Save history for later restart test
     np.save("./tests_output/ax_mf_history", exploration._libe_history.H)
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_multitask():
@@ -437,6 +466,9 @@ def test_ax_client():
 
     exploration.run()
 
+    # Check that plotting functions don't crash.
+    make_plots(gen)
+
 
 def test_ax_single_fidelity_with_history():
     """
@@ -462,6 +494,9 @@ def test_ax_single_fidelity_with_history():
     )
 
     exploration.run()
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_multi_fidelity_with_history():
@@ -623,9 +658,9 @@ if __name__ == "__main__":
     test_ax_single_fidelity_moo_fb()
     test_ax_single_fidelity_updated_params()
     test_ax_multi_fidelity()
-    test_ax_multitask()
-    test_ax_client()
-    test_ax_single_fidelity_with_history()
-    test_ax_multi_fidelity_with_history()
-    test_ax_multitask_with_history()
-    test_ax_service_init()
+    # test_ax_multitask()
+    # test_ax_client()
+    # test_ax_single_fidelity_with_history()
+    # test_ax_multi_fidelity_with_history()
+    # test_ax_multitask_with_history()
+    # test_ax_service_init()
