@@ -256,7 +256,7 @@ class AxServiceGenerator(AxGenerator):
         update_object(original_ax_client, new_generator._ax_client)
         self._ax_client = original_ax_client
 
-    def _update_parameter(self, parameter):
+    def _update_parameter(self, parameter: VaryingParameter) -> None:
         """Update a parameter from the search space."""
         parameters = self._create_ax_parameters()
         new_search_space = InstantiationBase.make_search_space(parameters, None)
@@ -264,7 +264,7 @@ class AxServiceGenerator(AxGenerator):
             new_search_space.parameters[parameter.name]
         )
 
-    def _get_best_values(self, objective):
+    def _get_best_values(self, objective: str) -> None:
         """Get the values of the best predicted parametrization."""
         objective_names = [obj.name for obj in self.objectives]
         if objective in objective_names:
@@ -297,7 +297,7 @@ class AxServiceGenerator(AxGenerator):
         param_y: Optional[str] = None,
         objective: Optional[str] = None,
         slice_values: Optional[Dict] = None,
-    ):
+    ) -> None:
         """Plot a 2D slice of the surrogate model.
 
         Parameters
@@ -340,7 +340,7 @@ class AxServiceGenerator(AxGenerator):
             )
         )
 
-    def plot_cross_validation(self):
+    def plot_cross_validation(self) -> None:
         """Show an interactive cross-validation plot."""
         self._ax_client.fit_model()
         render(
