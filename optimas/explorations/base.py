@@ -437,6 +437,18 @@ class Exploration:
         # Incorporate new history into generator.
         self.generator.incorporate_history(history_new)
 
+    def mark_evaluation_as_failed(self, trial_index):
+        """Mark an already evaluated trial as failed.
+
+        Parameters
+        ----------
+        trial_index : int
+            The index of the trial.
+        """
+        self.generator.mark_trial_as_failed(trial_index)
+        i = np.where(self._libe_history.H["trial_index"] == trial_index)[0][0]
+        self._libe_history.H[i]["trial_status"] = TrialStatus.FAILED.name
+
     def _create_executor(self) -> None:
         """Create libEnsemble executor."""
         self.executor = MPIExecutor()

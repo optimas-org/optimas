@@ -328,6 +328,32 @@ class Generator:
         for trial in self._given_trials + self._queued_trials:
             if trial.index == trial_index:
                 return trial
+            
+    def mark_trial_as_failed(self, trial_index: int):        
+        """Mark an already evaluated trial as failed.
+
+        Parameters
+        ----------
+        trial_index : int
+            The index of the trial.
+        """        
+        trial = self.get_trial(trial_index)
+        if trial.failed:
+            return
+        elif trial.completed:
+            self._mark_trial_as_failed(trial)
+            trial.mark_as(TrialStatus.FAILED)
+        else:
+            raise ValueError(
+                "Cannot mark trial as failed because it has not yet been "
+                "evaluated."
+            )
+
+    def _mark_trial_as_failed(self, trial: Trial):
+        raise NotImplementedError(
+            f"The trials of a {self.__class__.__name__} cannot be "
+            "marked as failed after completion."
+        )
 
     def update_parameter(self, parameter: VaryingParameter):
         """Update a varying parameter of the generator.

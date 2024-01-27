@@ -280,3 +280,11 @@ class AxServiceGenerator(AxGenerator):
         self._ax_client.experiment.search_space.update_parameter(
             new_search_space.parameters[parameter.name]
         )
+
+    def _mark_trial_as_failed(self, trial: Trial):
+        """Mark a trial as failed so that is not used for fitting the model."""
+        ax_trial = self._ax_client.get_trial(trial.ax_trial_id)
+        if self._abandon_failed_trials:
+            ax_trial.mark_abandoned(unsafe=True)
+        else:
+            ax_trial.mark_failed(unsafe=True)

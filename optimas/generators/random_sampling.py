@@ -101,3 +101,7 @@ class RandomSamplingGenerator(Generator):
         return self._rng.normal(
             self._center, self._width, (n_trials, self._n_vars)
         )
+    
+    def _mark_trial_as_failed(self, trial: Trial):
+        """No need to do anything, since there is no surrogate model."""
+        pass
