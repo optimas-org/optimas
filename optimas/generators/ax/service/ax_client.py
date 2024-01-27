@@ -131,6 +131,7 @@ class AxClientGenerator(AxServiceGenerator):
             analyzed_parameters = []
         for constraint in ax_config.outcome_constraints:
             analyzed_parameters.append(Parameter(name=constraint.metric.name))
+        return analyzed_parameters
 
     def _create_ax_client(self) -> AxClient:
         """Override the base function to simply return the given."""
