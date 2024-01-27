@@ -68,7 +68,9 @@ class AxClientGenerator(AxServiceGenerator):
     ):
         varying_parameters = self._get_varying_parameters(ax_client)
         objectives = self._get_objectives(ax_client)
-        self._add_constraint_metrics_to_analyzed_parameters(analyzed_parameters, ax_client)
+        self._add_constraint_metrics_to_analyzed_parameters(
+            analyzed_parameters, ax_client
+        )
         use_cuda = self._use_cuda(ax_client)
         self._ax_client = ax_client
         super().__init__(

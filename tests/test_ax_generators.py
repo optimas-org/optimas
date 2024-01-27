@@ -20,7 +20,7 @@ def eval_func_sf(input_params, output_params):
     result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
     output_params["f"] = result
     if "p1" in output_params.dtype.names:
-        output_params["p1"] = x0 ** 2
+        output_params["p1"] = x0**2
 
 
 def eval_func_sf_moo(input_params, output_params):
@@ -83,7 +83,7 @@ def test_ax_single_fidelity():
         objectives=[obj],
         analyzed_parameters=[p1],
         parameter_constraints=["x0 + x1 <= 10"],
-        outcome_constraints=["p1 <= 30"]
+        outcome_constraints=["p1 <= 30"],
     )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
@@ -109,7 +109,7 @@ def test_ax_single_fidelity():
 
     # Check constraints.
     history = exploration.history
-    assert all(history["x0"] + history["x1"] <= 10. + 1e-3)
+    assert all(history["x0"] + history["x1"] <= 10.0 + 1e-3)
     ocs = gen._ax_client.experiment.optimization_config.outcome_constraints
     assert len(ocs) == 1
     assert ocs[0].metric.name == p1.name
