@@ -68,7 +68,7 @@ class AxClientGenerator(AxServiceGenerator):
     ):
         varying_parameters = self._get_varying_parameters(ax_client)
         objectives = self._get_objectives(ax_client)
-        self._add_constraint_metrics_to_analyzed_parameters(
+        analyzed_parameters = self._add_constraints_to_analyzed_parameters(
             analyzed_parameters, ax_client
         )
         use_cuda = self._use_cuda(ax_client)
@@ -116,7 +116,7 @@ class AxClientGenerator(AxServiceGenerator):
             objectives.append(obj)
         return objectives
 
-    def _add_constraint_metrics_to_analyzed_parameters(
+    def _add_constraints_to_analyzed_parameters(
         self, analyzed_parameters: List[Parameter], ax_client: AxClient
     ):
         """Add outcome constraints to the list of analyzed parameters.
@@ -127,6 +127,8 @@ class AxClientGenerator(AxServiceGenerator):
         parameters in the optimization log.
         """
         ax_config = ax_client.experiment.optimization_config
+        if ax_config.outcome_constraints and analyzed_parameters is None:
+            analyzed_parameters = []
         for constraint in ax_config.outcome_constraints:
             analyzed_parameters.append(Parameter(name=constraint.metric.name))
 
