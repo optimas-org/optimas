@@ -21,6 +21,14 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     analyzed_parameters : list of Parameter, optional
         List of parameters to analyze at each trial, but which are not
         optimization objectives. By default ``None``.
+    parameter_constraints : list of str, optional
+        List of string representation of parameter
+        constraints, such as "x3 >= x4" or "-x3 + 2*x4 - 3.5*x5 >= 2". For
+        the latter constraints, any number of arguments is accepted, and
+        acceptable operators are "<=" and ">=".
+    outcome_constraints : list of str, optional
+        List of string representation of outcome
+        constraints of form "metric_name >= bound", like "m1 <= 3."
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. If external data is attached to the exploration, the
@@ -64,6 +72,8 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         varying_parameters: List[VaryingParameter],
         objectives: List[Objective],
         analyzed_parameters: Optional[List[Parameter]] = None,
+        parameter_constraints: Optional[List[str]] = None,
+        outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
         fit_out_of_design: Optional[bool] = False,
@@ -80,6 +90,8 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             varying_parameters=varying_parameters,
             objectives=objectives,
             analyzed_parameters=analyzed_parameters,
+            parameter_constraints=parameter_constraints,
+            outcome_constraints=outcome_constraints,
             n_init=n_init,
             enforce_n_init=enforce_n_init,
             fit_out_of_design=fit_out_of_design,

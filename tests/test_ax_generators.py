@@ -10,7 +10,7 @@ from optimas.generators import (
     AxClientGenerator,
 )
 from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
-from optimas.core import VaryingParameter, Objective, Task
+from optimas.core import VaryingParameter, Objective, Task, Parameter
 
 
 def eval_func_sf(input_params, output_params):
@@ -19,6 +19,8 @@ def eval_func_sf(input_params, output_params):
     x1 = input_params["x1"]
     result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
     output_params["f"] = result
+    if "p1" in output_params.dtype.names:
+        output_params["p1"] = x0 ** 2
 
 
 def eval_func_sf_moo(input_params, output_params):
@@ -74,9 +76,14 @@ def test_ax_single_fidelity():
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
+    p1 = Parameter("p1")
 
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
+        varying_parameters=[var1, var2],
+        objectives=[obj],
+        analyzed_parameters=[p1],
+        parameter_constraints=["x0 + x1 <= 10"],
+        outcome_constraints=["p1 <= 30"]
     )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
@@ -99,6 +106,13 @@ def test_ax_single_fidelity():
     # Check that the original ax client has been updated.
     n_ax_trials = ax_client.get_trials_data_frame().shape[0]
     assert n_ax_trials == exploration.history.shape[0]
+
+    # Check constraints.
+    history = exploration.history
+    assert all(history["x0"] + history["x1"] <= 10. + 1e-3)
+    ocs = gen._ax_client.experiment.optimization_config.outcome_constraints
+    assert len(ocs) == 1
+    assert ocs[0].metric.name == p1.name
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
