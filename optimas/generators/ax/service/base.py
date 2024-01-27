@@ -3,6 +3,7 @@
 from typing import List, Optional, Dict
 import os
 
+import numpy as np
 import torch
 from packaging import version
 from ax.version import version as ax_version
@@ -19,7 +20,7 @@ from ax.modelbridge.generation_strategy import (
 from ax.utils.notebook.plotting import render
 from ax.plot.contour import plot_contour
 from ax.plot.diagnostic import interact_cross_validation
-from ax.plot.slice import interact_slice
+from ax.plot.slice import plot_slice
 from ax.modelbridge.cross_validation import cross_validate
 
 from optimas.utils.other import update_object
@@ -263,6 +264,33 @@ class AxServiceGenerator(AxGenerator):
             new_search_space.parameters[parameter.name]
         )
 
+    def _get_best_values(self, objective):
+        """Get the values of the best predicted parametrization."""
+        objective_names = [obj.name for obj in self.objectives]
+        if objective in objective_names:
+            objective = self.objectives[objective_names.index(objective)]
+        else:
+            raise ValueError(
+                f"Objective {objective} not found. Available objectives "
+                f"are {objective_names}."
+            )
+
+        if len(self.objectives) > 1:
+            pp = self._ax_client.get_pareto_optimal_parameters()
+            obj_vals = [
+                objs[objective.name] for i, (vals, (objs, covs)) in pp.items()
+            ]
+            param_vals = [vals for i, (vals, (objs, covs)) in pp.items()]
+            if objective.minimize:
+                best_obj_i = np.argmin(obj_vals)
+            else:
+                best_obj_i = np.argmax(obj_vals)
+            slice_values = param_vals[best_obj_i]
+
+        else:
+            slice_values, _ = self._ax_client.get_best_parameters()
+        return slice_values
+
     def plot_contour(
         self,
         param_x: Optional[str] = None,
@@ -287,7 +315,7 @@ class AxServiceGenerator(AxGenerator):
             A dictionary ``{name: val}`` for the fixed values of the other
             parameters. If not provided, then the values of the best predicted
             parametrization will be used. By default ``None``.
-        """         
+        """
         if len(self.varying_parameters) < 2:
             raise ValueError(
                 "Cannot plot contour because there are less than 2 varying "
@@ -301,7 +329,7 @@ class AxServiceGenerator(AxGenerator):
             objective = self.objectives[0].name
         self._ax_client.fit_model()
         if slice_values is None:
-            slice_values, _ = self._ax_client.get_best_parameters()
+            slice_values = self._get_best_values(objective)
         render(
             plot_contour(
                 model=self._ax_client.generation_strategy.model,
@@ -321,22 +349,39 @@ class AxServiceGenerator(AxGenerator):
             )
         )
 
-    def plot_slice(self, slice_values: Optional[Dict] = None):
+    def plot_slice(
+        self,
+        param: Optional[str] = None,
+        objective: Optional[str] = None,
+        slice_values: Optional[Dict] = None,
+    ) -> None:
         """Plot a 1D slide of the surrogate model.
 
         Parameters
         ----------
+        param : str, optional
+            Name of the varying parameter sliced on the x axis. If not given,
+            the first varying parameter will used. By default ``None``.
+        objective : str, optional
+            Name of the objective to plot. If not given, the first objective
+            will be shown. By default ``None``.
         slice_values : dict, optional
             A dictionary ``{name: val}`` for the fixed values of the other
             parameters. If not provided, then the values of the best predicted
             parametrization will be used. By default ``None``.
         """
+        if param is None:
+            param = self.varying_parameters[0].name
+        if objective is None:
+            objective = self.objectives[0].name
         self._ax_client.fit_model()
         if slice_values is None:
-            slice_values, _ = self._ax_client.get_best_parameters()
+            slice_values = self._get_best_values(objective)
         render(
-            interact_slice(
+            plot_slice(
                 self._ax_client.generation_strategy.model,
+                param_name=param,
+                metric_name=objective,
                 slice_values=slice_values,
             )
         )
