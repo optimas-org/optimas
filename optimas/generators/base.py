@@ -328,15 +328,15 @@ class Generator:
         for trial in self._given_trials + self._queued_trials:
             if trial.index == trial_index:
                 return trial
-            
-    def mark_trial_as_failed(self, trial_index: int):        
+
+    def mark_trial_as_failed(self, trial_index: int):
         """Mark an already evaluated trial as failed.
 
         Parameters
         ----------
         trial_index : int
             The index of the trial.
-        """        
+        """
         trial = self.get_trial(trial_index)
         if trial.failed:
             return
