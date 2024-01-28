@@ -21,6 +21,7 @@ from ax.utils.notebook.plotting import render
 from ax.plot.contour import plot_contour
 from ax.plot.diagnostic import interact_cross_validation
 from ax.plot.slice import plot_slice
+from ax.plot.feature_importances import plot_feature_importance_by_feature
 from ax.modelbridge.cross_validation import cross_validate
 
 from optimas.utils.other import update_object
@@ -345,7 +346,20 @@ class AxServiceGenerator(AxGenerator):
         self._ax_client.fit_model()
         render(
             interact_cross_validation(
-                cross_validate(self._ax_client.generation_strategy.model)
+                cross_validate(model=self._ax_client.generation_strategy.model)
+            )
+        )
+
+    def plot_feature_importance(self):
+        """Plot the importance of the input parameters.
+        
+        The feature importance score represents how useful each parameter
+        is for predicting the model outcome.
+        """
+        self._ax_client.fit_model()
+        render(
+            plot_feature_importance_by_feature(
+                model=self._ax_client.generation_strategy.model
             )
         )
 
@@ -379,7 +393,7 @@ class AxServiceGenerator(AxGenerator):
             slice_values = self._get_best_values(objective)
         render(
             plot_slice(
-                self._ax_client.generation_strategy.model,
+                model=self._ax_client.generation_strategy.model,
                 param_name=param,
                 metric_name=objective,
                 slice_values=slice_values,
