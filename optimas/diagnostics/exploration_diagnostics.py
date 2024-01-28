@@ -10,7 +10,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
+from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
 
 from optimas.core import VaryingParameter, Objective, Parameter
 from optimas.generators.base import Generator
@@ -160,7 +160,7 @@ class ExplorationDiagnostics:
         show_trace: Optional[bool] = False,
         use_time_axis: Optional[bool] = False,
         relative_start_time: Optional[bool] = True,
-        subplot_spec: Optional[GridSpec] = None,
+        subplot_spec: Optional[SubplotSpec] = None,
     ) -> None:
         """Plot the values that where reached during the optimization.
 
@@ -232,7 +232,7 @@ class ExplorationDiagnostics:
         objectives: Optional[List[Union[str, Objective]]] = None,
         show_best_evaluation_indices: Optional[bool] = False,
         show_legend: Optional[bool] = False,
-        subplot_spec: Optional[GridSpec] = None,
+        subplot_spec: Optional[SubplotSpec] = None,
     ) -> None:
         """Plot Pareto front of two optimization objectives.
 
@@ -498,7 +498,7 @@ class ExplorationDiagnostics:
         self,
         fidelity_parameter: Optional[str] = None,
         relative_start_time: Optional[bool] = True,
-        subplot_spec: Optional[GridSpec] = None,
+        subplot_spec: Optional[SubplotSpec] = None,
     ) -> None:
         """Plot the timeline of worker utilization.
 
@@ -562,7 +562,7 @@ class ExplorationDiagnostics:
         sort: Optional[Dict] = None,
         top: Optional[Dict] = None,
         show_legend: Optional[bool] = False,
-        subplot_spec: Optional[GridSpec] = None,
+        subplot_spec: Optional[SubplotSpec] = None,
     ) -> None:
         """Print selected parameters versus evaluation index.
 
