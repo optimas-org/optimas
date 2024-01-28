@@ -635,14 +635,11 @@ class ExplorationDiagnostics:
         # Make figure
         nplots = len(parnames)
         if subplot_spec is None:
-            gs = GridSpec(nplots, 2, 
-                          width_ratios=[0.8, 0.2], 
-                          wspace=0.05)
+            gs = GridSpec(nplots, 2, width_ratios=[0.8, 0.2], wspace=0.05)
         else:
-            gs = GridSpecFromSubplotSpec(nplots, 2,
-                            subplot_spec,
-                            width_ratios=[0.8, 0.2], 
-                            wspace=0.05)
+            gs = GridSpecFromSubplotSpec(
+                nplots, 2, subplot_spec, width_ratios=[0.8, 0.2], wspace=0.05
+            )
 
         # Actual plotting
         ax_histy_list = []
