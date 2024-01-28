@@ -111,6 +111,11 @@ class AxServiceGenerator(AxGenerator):
         self._fixed_features = None
         self._ax_client = self._create_ax_client()
 
+    @property
+    def ax_client(self) -> AxClient:
+        """Get the underlying AxClient."""
+        return self._ax_client
+
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
@@ -350,7 +355,7 @@ class AxServiceGenerator(AxGenerator):
             )
         )
 
-    def plot_feature_importance(self):
+    def plot_feature_importance(self) -> None:
         """Plot the importance of the input parameters.
         
         The feature importance score represents how useful each parameter
