@@ -80,15 +80,19 @@ def test_exploration_diagnostics():
         for p_i, p_o in zip(gen.analyzed_parameters, diags.analyzed_parameters):
             assert p_i.model_dump_json() == p_o.model_dump_json()
 
+        fig = plt.figure()
         diags.plot_objective(show_trace=True)
         plt.savefig(os.path.join(exploration_dir_path, "optimization.png"))
 
+        fig.clf()
         diags.plot_pareto_front(show_best_evaluation_indices=True)
         plt.savefig(os.path.join(exploration_dir_path, "pareto_front.png"))
 
+        fig.clf()
         diags.plot_worker_timeline()
         plt.savefig(os.path.join(exploration_dir_path, "timeline.png"))
 
+        fig.clf()
         diags.plot_history(top=5, show_legend=True)
         plt.savefig(os.path.join(exploration_dir_path, "history.png"))
 

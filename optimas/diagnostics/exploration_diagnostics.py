@@ -10,6 +10,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 
 from optimas.core import VaryingParameter, Objective, Parameter
 from optimas.generators.base import Generator
@@ -159,7 +160,7 @@ class ExplorationDiagnostics:
         show_trace: Optional[bool] = False,
         use_time_axis: Optional[bool] = False,
         relative_start_time: Optional[bool] = True,
-        **subplots_kw,
+        subplot_spec: Optional[GridSpec] = None,
     ) -> None:
         """Plot the values that where reached during the optimization.
 
@@ -179,8 +180,8 @@ class ExplorationDiagnostics:
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
-        **subplots_kw
-            All additional keyword arguments are passed to the `pyplot.subplots` call.
+        subplot_spec: SubplotSpec, optional
+            Spec from which the layout parameters are inherited.
         """
         if fidelity_parameter is not None:
             fidelity = self.history[fidelity_parameter]
@@ -207,7 +208,12 @@ class ExplorationDiagnostics:
         else:
             x = history.trial_index
             xlabel = "Number of evaluations"
-        _, ax = plt.subplots(**subplots_kw)
+
+        if subplot_spec is None:
+            gs = GridSpec(1, 1)
+        else:
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec)
+        ax = plt.subplot(gs[0])
         ax.scatter(x, history[objective.name], c=fidelity)
         ax.set_ylabel(objective.name)
         ax.set_xlabel(xlabel)
@@ -225,7 +231,8 @@ class ExplorationDiagnostics:
         self,
         objectives: Optional[List[Union[str, Objective]]] = None,
         show_best_evaluation_indices: Optional[bool] = False,
-        **subplots_kw,
+        show_legend: Optional[bool] = False,
+        subplot_spec: Optional[GridSpec] = None,
     ) -> None:
         """Plot Pareto front of two optimization objectives.
 
@@ -237,8 +244,10 @@ class ExplorationDiagnostics:
         show_best_evaluation_indices : bool, optional
             Whether to show the indices of the best evaluations. By default
             ``False``.
-        **subplots_kw
-            All additional keyword arguments are passed to the `pyplot.subplots` call.
+        show_legend : bool, optional
+            Whether to show the legend.
+        subplot_spec: SubplotSpec, optional
+            Spec from which the layout parameters are inherited.
         """
         objectives = self._check_pareto_objectives(objectives)
         pareto_evals = self.get_pareto_front_evaluations(objectives)
@@ -247,9 +256,12 @@ class ExplorationDiagnostics:
         x_pareto = pareto_evals[objectives[0].name].to_numpy()
         y_pareto = pareto_evals[objectives[1].name].to_numpy()
 
-        # Create figure
-        _, axes = plt.subplots(**subplots_kw)
-
+        # Create axes
+        if subplot_spec is None:
+            gs = GridSpec(1, 1)
+        else:
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec)
+        axes = plt.subplot(gs[0])
         # Plot all evaluations
         axes.scatter(
             x_data, y_data, s=5, lw=0.0, alpha=0.5, label="All evaluations"
@@ -278,7 +290,8 @@ class ExplorationDiagnostics:
             zorder=1,
             label="Pareto front",
         )
-        axes.legend(frameon=False)
+        if show_legend:
+            axes.legend(frameon=False, fontsize="x-small")
 
         # Add evaluation indices to plot.
         if show_best_evaluation_indices:
@@ -485,7 +498,7 @@ class ExplorationDiagnostics:
         self,
         fidelity_parameter: Optional[str] = None,
         relative_start_time: Optional[bool] = True,
-        **subplots_kw,
+        subplot_spec: Optional[GridSpec] = None,
     ) -> None:
         """Plot the timeline of worker utilization.
 
@@ -497,8 +510,8 @@ class ExplorationDiagnostics:
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
-        **subplots_kw
-            All additional keyword arguments are passed to the `pyplot.subplots` call.
+        subplot_spec: SubplotSpec, optional
+            Spec from which the layout parameters are inherited.
         """
         df = self.history
         df = df[df.sim_id >= 0]
@@ -512,7 +525,13 @@ class ExplorationDiagnostics:
         if relative_start_time:
             sim_started_time = sim_started_time - df["gen_started_time"].min()
             sim_ended_time = sim_ended_time - df["gen_started_time"].min()
-        _, ax = plt.subplots(**subplots_kw)
+
+        if subplot_spec is None:
+            gs = GridSpec(1, 1)
+        else:
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec)
+        ax = plt.subplot(gs[0])
+
         for i in range(len(df)):
             start = sim_started_time.iloc[i]
             duration = sim_ended_time.iloc[i] - start
@@ -543,7 +562,7 @@ class ExplorationDiagnostics:
         sort: Optional[Dict] = None,
         top: Optional[Dict] = None,
         show_legend: Optional[bool] = False,
-        **subplots_kw,
+        subplot_spec: Optional[GridSpec] = None,
     ) -> None:
         """Print selected parameters versus evaluation index.
 
@@ -566,8 +585,8 @@ class ExplorationDiagnostics:
             Highight the top n simulations of every objective.
         show_legend : bool, optional
             Whether to show the legend.
-        **subplots_kw
-            All additional keyword arguments are passed to the `pyplot.subplots` call.
+        subplot_spec: SubplotSpec, optional
+            Spec from which the layout parameters are inherited.
         """
         # Copy the history DataFrame
         df = self.history.copy()
@@ -615,15 +634,22 @@ class ExplorationDiagnostics:
 
         # Make figure
         nplots = len(parnames)
-        _, axs = plt.subplots(nplots, 2, width_ratios=[0.8, 0.2], **subplots_kw)
-        plt.subplots_adjust(wspace=0.05)
+        if subplot_spec is None:
+            gs = GridSpec(nplots, 2, 
+                          width_ratios=[0.8, 0.2], 
+                          wspace=0.05)
+        else:
+            gs = GridSpecFromSubplotSpec(nplots, 2,
+                            subplot_spec,
+                            width_ratios=[0.8, 0.2], 
+                            wspace=0.05)
 
         # Actual plotting
         ax_histy_list = []
         histy_list = []
         for i in range(nplots):
             # Draw scatter plot
-            ax_scatter = axs[i][0]
+            ax_scatter = plt.subplot(gs[i, 0])
             ax_scatter.grid(color="lightgray", linestyle="dotted")
             yvalues = df[parnames[i]]
             ax_scatter.plot(xvalues, yvalues, "o")
@@ -665,7 +691,7 @@ class ExplorationDiagnostics:
                 )
 
             # Draw projected histogram
-            ax_histy = axs[i][1]
+            ax_histy = plt.subplot(gs[i, 1])
             ax_histy.grid(color="lightgray", linestyle="dotted")
             ymin, ymax = ax_scatter.get_ylim()
             nbins = 25
