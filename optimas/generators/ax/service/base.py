@@ -357,7 +357,7 @@ class AxServiceGenerator(AxGenerator):
 
     def plot_feature_importance(self) -> None:
         """Plot the importance of the input parameters.
-        
+
         The feature importance score represents how useful each parameter
         is for predicting the model outcome.
         """
