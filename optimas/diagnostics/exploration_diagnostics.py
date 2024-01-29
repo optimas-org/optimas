@@ -134,6 +134,11 @@ class ExplorationDiagnostics:
                         pass
 
     @property
+    def exploration_dir_path(self) -> str:
+        """Get the exploration dir path"""
+        return self._exploration.exploration_dir_path
+
+    @property
     def history(self) -> pd.DataFrame:
         """Return a pandas DataFrame with the exploration history."""
         return self._exploration.history
@@ -824,3 +829,41 @@ class ExplorationDiagnostics:
                             f"Available objectives are {objective_names}."
                         )
         return objectives
+
+    def print_history_entry(self, index: Union[int, List[int]]) -> None:
+        """Print the parameters of the given evaluation indices.
+
+        Parameters
+        ----------
+        index : int or list of int
+            The index or a list of indices with the entries to print.
+        """
+        if isinstance(index, list):
+            index_list = index
+        elif isinstance(index, int):
+            index_list = [index]
+
+        # Get lists of variable names
+        objective_names = [obj.name for obj in self.objectives]
+        varpar_names = [var.name for var in self.varying_parameters]
+        anapar_names = [var.name for var in self.analyzed_parameters]
+
+        for index in index_list:
+            h = self.history.loc[index]
+            print('Evaluation %i with sim_id = %i' % (index, h['sim_id']))
+            try:    
+                sim_path = self.get_evaluation_dir_path(index)
+            except ValueError:
+                sim_path = None
+            if sim_path is not None:
+                print('%20s = %s' % ('path', self.get_evaluation_dir_path(index)))
+            print('Objective functions:')
+            for name in objective_names:
+                print('%20s = %10.5f' % (name, h[name]))
+            print('varying parameters:')
+            for name in varpar_names:
+                print('%20s = %10.5f' % (name, h[name]))
+            print('analyzed parameters:')
+            for name in anapar_names:
+                print('%20s = %10.5f' % (name, h[name]))
+            print()
