@@ -152,6 +152,39 @@ class ExplorationDiagnostics:
         """Get the objectives of the exploration."""
         return self._exploration.generator.objectives
 
+    def _get_varying_parameter(self, name: str) -> VaryingParameter:
+        """Get varying parameter by name."""
+        for par in self.varying_parameters:
+            if name == par.name:
+                return par
+        raise ValueError(
+            f"Varying parameter {name} not found. "
+            "Available varying parameters are: "
+            f"{[par.name for par in self.varying_parameters]}."
+            )
+
+    def _get_analyzed_parameter(self, name: str) -> Parameter:
+        """Get analyzed parameter by name."""
+        for par in self.analyzed_parameters:
+            if name == par.name:
+                return par
+        raise ValueError(
+            f"Analyzed parameter {name} not found. "
+            "Available analyzed parameters are: "
+            f"{[par.name for par in self.analyzed_parameters]}."
+            )
+
+    def _get_objective(self, name: str) -> Objective:
+        """Get objective by name."""
+        for par in self.objectives:
+            if name == par.name:
+                return par
+        raise ValueError(
+            f"Objective {name} not found. "
+            "Available objectives are: "
+            f"{[par.name for par in self.objectives]}."
+            )
+
     def plot_objective(
         self,
         objective: Optional[Union[str, Objective]] = None,
@@ -189,14 +222,7 @@ class ExplorationDiagnostics:
         if objective is None:
             objective = self.objectives[0]
         elif isinstance(objective, str):
-            objective_names = [obj.name for obj in self.objectives]
-            if objective in objective_names:
-                objective = self.objectives[objective_names.index(objective)]
-            else:
-                raise ValueError(
-                    f"Objective {objective} not found. Available objectives "
-                    f"are {objective_names}."
-                )
+            objective = self._get_objective(objective)
         history = self.history
         history = history[history.sim_ended]
         if use_time_axis:
@@ -309,14 +335,7 @@ class ExplorationDiagnostics:
         if objective is None:
             objective = self.objectives[0]
         elif isinstance(objective, str):
-            objective_names = [obj.name for obj in self.objectives]
-            if objective in objective_names:
-                objective = self.objectives[objective_names.index(objective)]
-            else:
-                raise ValueError(
-                    f"Objective {objective} not found. Available objectives "
-                    f"are {objective_names}."
-                )
+            objective = self._get_objective(objective)
         history = self.history[self.history.sim_ended]
         if objective.minimize:
             i_best = np.argmin(history[objective.name])
@@ -394,14 +413,7 @@ class ExplorationDiagnostics:
         if objective is None:
             objective = self.objectives[0]
         elif isinstance(objective, str):
-            objective_names = [obj.name for obj in self.objectives]
-            if objective in objective_names:
-                objective = self.objectives[objective_names.index(objective)]
-            else:
-                raise ValueError(
-                    f"Objective {objective} not found. Available objectives "
-                    f"are {objective_names}."
-                )
+            objective = self._get_objective(objective)
         if fidelity_parameter is not None:
             assert min_fidelity is not None
             df = self.history[self.history[fidelity_parameter] >= min_fidelity]
@@ -542,6 +554,7 @@ class ExplorationDiagnostics:
         select: Optional[Dict] = None,
         sort: Optional[Dict] = None,
         top: Optional[Dict] = None,
+        show_top_evaluation_indices: Optional[bool] = False,
         show_legend: Optional[bool] = False,
         **subplots_kw,
     ) -> None:
@@ -563,7 +576,9 @@ class ExplorationDiagnostics:
             or descendingly (False)
             e.g. {'f': False} sort simulations according to f descendingly.
         top: int, optional
-            Highight the top n simulations of every objective.
+            Highight the 'top' evaluations of every objective.
+        show_top_evaluation_indices : bool, optional
+            Whether to show the indices of the top evaluations.
         show_legend : bool, optional
             Whether to show the legend.
         **subplots_kw
@@ -594,17 +609,17 @@ class ExplorationDiagnostics:
         else:
             df_select = None
 
-        # Select top cases in separate DataFrames
+        # Select top cases in each objective in separate DataFrames
+        # stored in a dictionary with the objective name as key 
         if top is not None:
-            df_top = []
+            df_top = {}
             for obj_name in objective_names:
-                for o in self.objectives:
-                    if o.name == obj_name:
-                        ascending = o.minimize
+                obj = self._get_objective(obj_name)
+                ascending = obj.minimize
                 index_list = list(
                     df.sort_values(by=obj_name, ascending=ascending).index
                 )
-                df_top.append(df.loc[index_list[:top]])
+                df_top[obj_name] = df.loc[index_list[:top]]
         else:
             df_top = None
 
@@ -638,7 +653,7 @@ class ExplorationDiagnostics:
 
             # Draw top evaluations
             if df_top is not None:
-                for df_t in df_top:
+                for key, df_t in df_top.items():
                     if xname is not None:
                         xvalues_top = df_t[xname]
                     else:
@@ -647,16 +662,34 @@ class ExplorationDiagnostics:
                     label = "top %i" % top
                     ax_scatter.plot(xvalues_top, yvalues_top, "o", label=label)
 
+                    # Add evaluation indices to plot
+                    if show_top_evaluation_indices:
+                        sim_id_top = df_t["sim_id"]
+                        obj = self._get_objective(key)
+                        if obj.minimize:
+                            va = "bottom"
+                            xytext = (2, 2)
+                        else:
+                            va = "top"
+                            xytext = (2, -2)
+                        for x, y, id in zip(xvalues_top, yvalues_top, sim_id_top):
+                            ax_scatter.annotate(
+                                str(id),
+                                (x, y),
+                                xytext,
+                                fontsize="xx-small",
+                                va=va,
+                                textcoords="offset points",
+                            )
+
             # Draw the trace only for `objective` parameters
             if (
                 (parnames[i] in objective_names)
                 and (not sort)
                 and (xname is None)
             ):
-                for o in self.objectives:
-                    if o.name == parnames[i]:
-                        minimize = o.minimize
-                if minimize:
+                obj = self._get_objective(parnames[i])
+                if obj.minimize:
                     cum = df[parnames[i]].cummin().values
                 else:
                     cum = df[parnames[i]].cummax().values
@@ -691,7 +724,7 @@ class ExplorationDiagnostics:
 
             # Draw top evaluations
             if df_top is not None:
-                for df_t in df_top:
+                for key, df_t in df_top.items():
                     yvalues_top = df_t[parnames[i]]
                     label = "top %i" % top
                     ax_histy.hist(
@@ -762,14 +795,5 @@ class ExplorationDiagnostics:
                 )
             for i, objective in enumerate(objectives):
                 if isinstance(objective, str):
-                    objective_names = [obj.name for obj in self.objectives]
-                    if objective in objective_names:
-                        objectives[i] = self.objectives[
-                            objective_names.index(objective)
-                        ]
-                    else:
-                        raise ValueError(
-                            f"Objective {objective} not found. "
-                            f"Available objectives are {objective_names}."
-                        )
+                    objectives[i] = self._get_objective(objective)
         return objectives
