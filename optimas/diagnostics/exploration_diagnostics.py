@@ -161,6 +161,7 @@ class ExplorationDiagnostics:
         use_time_axis: Optional[bool] = False,
         relative_start_time: Optional[bool] = True,
         subplot_spec: Optional[SubplotSpec] = None,
+        **figure_kw
     ) -> None:
         """Plot the values that where reached during the optimization.
 
@@ -181,7 +182,11 @@ class ExplorationDiagnostics:
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
         subplot_spec: SubplotSpec, optional
-            Spec from which the layout parameters are inherited.
+            The location of the plot in the GridSpec of an existing figure.
+            If not given, a new figure will be created.
+        **figure_kw
+            Additional keyword arguments to pass to `pyplot.figure`. Only used
+            if no ``subplot_spec`` is given.
         """
         if fidelity_parameter is not None:
             fidelity = self.history[fidelity_parameter]
@@ -210,10 +215,12 @@ class ExplorationDiagnostics:
             xlabel = "Number of evaluations"
 
         if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
             gs = GridSpec(1, 1)
         else:
+            fig = plt.gcf()
             gs = GridSpecFromSubplotSpec(1, 1, subplot_spec)
-        ax = plt.subplot(gs[0])
+        ax = fig.add_subplot(gs[0])
         ax.scatter(x, history[objective.name], c=fidelity)
         ax.set_ylabel(objective.name)
         ax.set_xlabel(xlabel)
@@ -233,6 +240,7 @@ class ExplorationDiagnostics:
         show_best_evaluation_indices: Optional[bool] = False,
         show_legend: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
+        **figure_kw
     ) -> None:
         """Plot Pareto front of two optimization objectives.
 
@@ -247,7 +255,11 @@ class ExplorationDiagnostics:
         show_legend : bool, optional
             Whether to show the legend.
         subplot_spec: SubplotSpec, optional
-            Spec from which the layout parameters are inherited.
+            The location of the plot in the GridSpec of an existing figure.
+            If not given, a new figure will be created.
+        **figure_kw
+            Additional keyword arguments to pass to `pyplot.figure`. Only used
+            if no ``subplot_spec`` is given.
         """
         objectives = self._check_pareto_objectives(objectives)
         pareto_evals = self.get_pareto_front_evaluations(objectives)
@@ -258,10 +270,12 @@ class ExplorationDiagnostics:
 
         # Create axes
         if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
             gs = GridSpec(1, 1)
         else:
+            fig = plt.gcf()
             gs = GridSpecFromSubplotSpec(1, 1, subplot_spec)
-        axes = plt.subplot(gs[0])
+        axes = fig.add_subplot(gs[0])
         # Plot all evaluations
         axes.scatter(
             x_data, y_data, s=5, lw=0.0, alpha=0.5, label="All evaluations"
@@ -499,6 +513,7 @@ class ExplorationDiagnostics:
         fidelity_parameter: Optional[str] = None,
         relative_start_time: Optional[bool] = True,
         subplot_spec: Optional[SubplotSpec] = None,
+        **figure_kw
     ) -> None:
         """Plot the timeline of worker utilization.
 
@@ -511,7 +526,11 @@ class ExplorationDiagnostics:
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
         subplot_spec: SubplotSpec, optional
-            Spec from which the layout parameters are inherited.
+            The location of the plot in the GridSpec of an existing figure.
+            If not given, a new figure will be created.
+        **figure_kw
+            Additional keyword arguments to pass to `pyplot.figure`. Only used
+            if no ``subplot_spec`` is given.
         """
         df = self.history
         df = df[df.sim_id >= 0]
@@ -527,10 +546,12 @@ class ExplorationDiagnostics:
             sim_ended_time = sim_ended_time - df["gen_started_time"].min()
 
         if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
             gs = GridSpec(1, 1)
         else:
+            fig = plt.gcf()
             gs = GridSpecFromSubplotSpec(1, 1, subplot_spec)
-        ax = plt.subplot(gs[0])
+        ax = fig.add_subplot(gs[0])
 
         for i in range(len(df)):
             start = sim_started_time.iloc[i]
@@ -563,6 +584,7 @@ class ExplorationDiagnostics:
         top: Optional[Dict] = None,
         show_legend: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
+        **figure_kw
     ) -> None:
         """Print selected parameters versus evaluation index.
 
@@ -586,7 +608,11 @@ class ExplorationDiagnostics:
         show_legend : bool, optional
             Whether to show the legend.
         subplot_spec: SubplotSpec, optional
-            Spec from which the layout parameters are inherited.
+            The location of the plot in the GridSpec of an existing figure.
+            If not given, a new figure will be created.
+        **figure_kw
+            Additional keyword arguments to pass to `pyplot.figure`. Only used
+            if no ``subplot_spec`` is given.
         """
         # Copy the history DataFrame
         df = self.history.copy()
@@ -635,8 +661,10 @@ class ExplorationDiagnostics:
         # Make figure
         nplots = len(parnames)
         if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
             gs = GridSpec(nplots, 2, width_ratios=[0.8, 0.2], wspace=0.05)
         else:
+            fig = plt.gcf()
             gs = GridSpecFromSubplotSpec(
                 nplots, 2, subplot_spec, width_ratios=[0.8, 0.2], wspace=0.05
             )
@@ -646,7 +674,7 @@ class ExplorationDiagnostics:
         histy_list = []
         for i in range(nplots):
             # Draw scatter plot
-            ax_scatter = plt.subplot(gs[i, 0])
+            ax_scatter = fig.add_subplot(gs[i, 0])
             ax_scatter.grid(color="lightgray", linestyle="dotted")
             yvalues = df[parnames[i]]
             ax_scatter.plot(xvalues, yvalues, "o")
@@ -688,7 +716,7 @@ class ExplorationDiagnostics:
                 )
 
             # Draw projected histogram
-            ax_histy = plt.subplot(gs[i, 1])
+            ax_histy = fig.add_subplot(gs[i, 1])
             ax_histy.grid(color="lightgray", linestyle="dotted")
             ymin, ymax = ax_scatter.get_ylim()
             nbins = 25
