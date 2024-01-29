@@ -161,7 +161,7 @@ class ExplorationDiagnostics:
         use_time_axis: Optional[bool] = False,
         relative_start_time: Optional[bool] = True,
         subplot_spec: Optional[SubplotSpec] = None,
-        **figure_kw
+        **figure_kw,
     ) -> None:
         """Plot the values that where reached during the optimization.
 
@@ -240,7 +240,7 @@ class ExplorationDiagnostics:
         show_best_evaluation_indices: Optional[bool] = False,
         show_legend: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
-        **figure_kw
+        **figure_kw,
     ) -> None:
         """Plot Pareto front of two optimization objectives.
 
@@ -513,7 +513,7 @@ class ExplorationDiagnostics:
         fidelity_parameter: Optional[str] = None,
         relative_start_time: Optional[bool] = True,
         subplot_spec: Optional[SubplotSpec] = None,
-        **figure_kw
+        **figure_kw,
     ) -> None:
         """Plot the timeline of worker utilization.
 
@@ -584,7 +584,7 @@ class ExplorationDiagnostics:
         top: Optional[Dict] = None,
         show_legend: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
-        **figure_kw
+        **figure_kw,
     ) -> None:
         """Print selected parameters versus evaluation index.
 
