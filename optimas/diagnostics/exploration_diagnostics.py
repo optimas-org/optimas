@@ -53,12 +53,12 @@ class ExplorationDiagnostics:
                         "The most recent one will be used."
                     )
                 exploration_dir_path = path
-                output_file = os.path.join(path, output_files[-1])
-                params_file = os.path.join(path, "exploration_parameters.json")
+                self.history_file = os.path.join(path, output_files[-1])
+                self.params_file = os.path.join(path, "exploration_parameters.json")
             elif path.endswith(".npy"):
                 exploration_dir_path = pathlib.Path(path).parent
-                output_file = path
-                params_file = os.path.join(
+                self.history_file = path
+                self.params_file = os.path.join(
                     exploration_dir_path, "exploration_parameters.json"
                 )
             else:
@@ -66,7 +66,7 @@ class ExplorationDiagnostics:
                     "The path should either point to a folder or a `.npy` file."
                 )
             exploration = self._create_exploration(
-                exploration_dir_path, params_file, output_file
+                exploration_dir_path, self.params_file, self.history_file
             )
         elif isinstance(source, Exploration):
             exploration = source
@@ -830,40 +830,39 @@ class ExplorationDiagnostics:
                         )
         return objectives
 
-    def print_history_entry(self, index: Union[int, List[int]]) -> None:
-        """Print the parameters of the given evaluation indices.
+    def print_evaluation(self, trial_index: int) -> None:
+        """Print the parameters of the given evaluation.
 
         Parameters
         ----------
-        index : int or list of int
-            The index or a list of indices with the entries to print.
+        trial_index : int
+            Index of an evaluated trial.
         """
-        if isinstance(index, list):
-            index_list = index
-        elif isinstance(index, int):
-            index_list = [index]
+        h = self.history.loc[trial_index]
+        print('Evaluation %i: ' % (trial_index))
+        print('%20s = %s' % ('sim_id', h['sim_id']))
 
-        # Get lists of variable names
+        try:    
+            sim_path = self.get_evaluation_dir_path(trial_index)
+            print('%20s = %s' % ('dir_path', self.get_evaluation_dir_path(trial_index)))
+        except ValueError:
+            sim_path = None
+            print('%20s = None' % ('dir_path'))
+
+        print('objective functions:')
         objective_names = [obj.name for obj in self.objectives]
-        varpar_names = [var.name for var in self.varying_parameters]
-        anapar_names = [var.name for var in self.analyzed_parameters]
+        for name in objective_names:
+            print('%20s = %10.5f' % (name, h[name]))
 
-        for index in index_list:
-            h = self.history.loc[index]
-            print('Evaluation %i with sim_id = %i' % (index, h['sim_id']))
-            try:    
-                sim_path = self.get_evaluation_dir_path(index)
-            except ValueError:
-                sim_path = None
-            if sim_path is not None:
-                print('%20s = %s' % ('path', self.get_evaluation_dir_path(index)))
-            print('Objective functions:')
-            for name in objective_names:
-                print('%20s = %10.5f' % (name, h[name]))
-            print('varying parameters:')
-            for name in varpar_names:
-                print('%20s = %10.5f' % (name, h[name]))
+        print('varying parameters:')
+        varpar_names = [var.name for var in self.varying_parameters]
+        for name in varpar_names:
+            print('%20s = %10.5f' % (name, h[name]))
+
+        if len(self.analyzed_parameters) > 0:
+            anapar_names = [var.name for var in self.analyzed_parameters]
             print('analyzed parameters:')
             for name in anapar_names:
                 print('%20s = %10.5f' % (name, h[name]))
-            print()
+
+        print()
