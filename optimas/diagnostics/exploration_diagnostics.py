@@ -162,7 +162,7 @@ class ExplorationDiagnostics:
             f"Varying parameter {name} not found. "
             "Available varying parameters are: "
             f"{[par.name for par in self.varying_parameters]}."
-            )
+        )
 
     def _get_analyzed_parameter(self, name: str) -> Parameter:
         """Get analyzed parameter by name."""
@@ -173,7 +173,7 @@ class ExplorationDiagnostics:
             f"Analyzed parameter {name} not found. "
             "Available analyzed parameters are: "
             f"{[par.name for par in self.analyzed_parameters]}."
-            )
+        )
 
     def _get_objective(self, name: str) -> Objective:
         """Get objective by name."""
@@ -184,7 +184,7 @@ class ExplorationDiagnostics:
             f"Objective {name} not found. "
             "Available objectives are: "
             f"{[par.name for par in self.objectives]}."
-            )
+        )
 
     def plot_objective(
         self,
@@ -655,7 +655,7 @@ class ExplorationDiagnostics:
             df_select = None
 
         # Select top cases in each objective in separate DataFrames
-        # stored in a dictionary with the objective name as key 
+        # stored in a dictionary with the objective name as key
         if top is not None:
             df_top = {}
             for obj_name in objective_names:
@@ -723,7 +723,9 @@ class ExplorationDiagnostics:
                         else:
                             va = "top"
                             xytext = (2, -2)
-                        for x, y, id in zip(xvalues_top, yvalues_top, sim_id_top):
+                        for x, y, id in zip(
+                            xvalues_top, yvalues_top, sim_id_top
+                        ):
                             ax_scatter.annotate(
                                 str(id),
                                 (x, y),
