@@ -1,4 +1,5 @@
 """Definition of other utilities used internally by optimas."""
+
 from typing import Any, Union, List, Dict
 
 import numpy as np

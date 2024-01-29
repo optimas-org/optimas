@@ -1,4 +1,5 @@
 """Contains the definition of the ExplorationDiagnostics class."""
+
 import os
 import shutil
 from warnings import warn

@@ -12,6 +12,7 @@ history. The calculation of `f` and the additional parameters is performed
 in the `analyze_simulation` function, which for convenience is here defined in
 the `analysis_script.py` file.
 """
+
 from optimas.core import Parameter, VaryingParameter, Objective
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import TemplateEvaluator

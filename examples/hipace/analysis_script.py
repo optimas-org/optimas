@@ -1,4 +1,5 @@
 """Defines the analysis function that runs after the simulation."""
+
 import os
 from openpmd_viewer.addons import LpaDiagnostics
 import numpy as np

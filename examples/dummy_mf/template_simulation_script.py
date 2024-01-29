@@ -3,6 +3,7 @@
 The script evaluates an analytical expression and stores the results in a
 `result.txt` file that is later read by the analysis function.
 """
+
 import numpy as np
 
 # 2D function with multiple minima
