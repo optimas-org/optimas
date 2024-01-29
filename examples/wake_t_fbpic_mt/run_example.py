@@ -11,6 +11,7 @@ The calculation of the objective `f` is performed in the `analyze_simulation`
 function, which for convenience is here defined in the `analysis_script.py`
 file.
 """
+
 from optimas.core import VaryingParameter, Objective, Task
 from optimas.generators import AxMultitaskGenerator
 from optimas.evaluators import TemplateEvaluator, MultitaskEvaluator
