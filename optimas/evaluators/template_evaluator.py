@@ -46,6 +46,10 @@ class TemplateEvaluator(Evaluator):
         If the `env_script` loads an MPI different than the one in the optimas
         environment, indicate it here. Possible values are "mpich", "openmpi",
         "aprun", "srun", "jsrun", "msmpi".
+    stdout : str, optional
+        A standard output filename.
+    stderr : str, optional
+        A standard error filename.
 
     """
 
@@ -59,6 +63,8 @@ class TemplateEvaluator(Evaluator):
         n_gpus: Optional[int] = None,
         env_script: Optional[str] = None,
         env_mpi: Optional[str] = None,
+        stdout: Optional[str] = None,
+        stderr: Optional[str] = None,
     ) -> None:
         super().__init__(
             sim_function=run_template_simulation, n_procs=n_procs, n_gpus=n_gpus
@@ -69,6 +75,8 @@ class TemplateEvaluator(Evaluator):
         self.env_script = env_script
         self.env_mpi = env_mpi
         self.sim_files = [] if sim_files is None else sim_files
+        self.stdout = stdout
+        self.stderr = stderr
         self._app_name = "sim"
 
     @property
@@ -99,6 +107,8 @@ class TemplateEvaluator(Evaluator):
         sim_specs["user"]["num_gpus"] = self._n_gpus
         sim_specs["user"]["env_script"] = self.env_script
         sim_specs["user"]["env_mpi"] = self.env_mpi
+        sim_specs["user"]["stdout"] = self.stdout
+        sim_specs["user"]["stderr"] = self.stderr
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
