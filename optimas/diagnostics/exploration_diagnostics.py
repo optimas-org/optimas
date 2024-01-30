@@ -136,7 +136,7 @@ class ExplorationDiagnostics:
 
     @property
     def exploration_dir_path(self) -> str:
-        """Get the exploration dir path"""
+        """Get the exploration dir path."""
         return self._exploration.exploration_dir_path
 
     @property
