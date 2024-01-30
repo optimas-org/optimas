@@ -894,7 +894,7 @@ class ExplorationDiagnostics:
 
         print()
 
-    def show_top_evaluations(
+    def print_top_evaluations(
             self, top: Optional[int] = 3, objective: Optional[Union[str, Objective]] = None
     ) -> str:
         """Print top evaluations according to the given objective. 
