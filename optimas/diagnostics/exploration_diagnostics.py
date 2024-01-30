@@ -893,3 +893,30 @@ class ExplorationDiagnostics:
                 print('%20s = %10.5f' % (name, h[name]))
 
         print()
+
+    def show_top_evaluations(
+            self, top: Optional[int] = 3, objective: Optional[Union[str, Objective]] = None
+    ) -> str:
+        """Print top evaluations according to the given objective. 
+
+        Parameters
+        ----------
+        top : int, optional
+            Number of top evaluations to consider (3 by default).
+            e.g. top = 3 means that the three best evaluations will be shown.
+        objective : str, optional
+            Objective, or name of the objective to plot. If `None`, the first
+            objective of the exploration is shown.
+        """
+        if objective is None:
+            objective = self.objectives[0]
+        if isinstance(objective, str):
+            objective = self._get_objective(objective)
+        top_indices = list(self.history.sort_values(by=objective.name, 
+                                            ascending=objective.minimize).index)[:top]
+        objective_names = [obj.name for obj in self.objectives]
+        varpar_names = [var.name for var in self.varying_parameters]
+        anapar_names = [var.name for var in self.analyzed_parameters]
+        print('Top %i evaluations in metric %s (minimize = %s): ' % (top, objective.name, objective.minimize), top_indices)
+        print()
+        print(self.history.loc[top_indices][objective_names + varpar_names + anapar_names])
