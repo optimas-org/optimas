@@ -1,4 +1,5 @@
 """Template simulation script for optimizing an APL with Wake-T."""
+
 import numpy as np
 from wake_t.utilities.bunch_generation import get_gaussian_bunch_from_twiss
 from wake_t.beamline_elements import ActivePlasmaLens

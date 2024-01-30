@@ -4,6 +4,7 @@ The simulation code is determined from the `task` parameter. The beam
 current, position and length are parameters exposed to the optimizer to
 try to achieve optimal beam loading.
 """
+
 import numpy as np
 import scipy.constants as ct
 from wake_t import GaussianPulse, PlasmaStage, ParticleBunch

@@ -1,4 +1,5 @@
 """Contains the definition of the simulation functions given to libEnsemble."""
+
 import jinja2
 import numpy as np
 
