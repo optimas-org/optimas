@@ -55,7 +55,9 @@ class ExplorationDiagnostics:
                     )
                 exploration_dir_path = path
                 self.history_file = os.path.join(path, output_files[-1])
-                self.params_file = os.path.join(path, "exploration_parameters.json")
+                self.params_file = os.path.join(
+                    path, "exploration_parameters.json"
+                )
             elif path.endswith(".npy"):
                 exploration_dir_path = pathlib.Path(path).parent
                 self.history_file = path
@@ -866,38 +868,43 @@ class ExplorationDiagnostics:
             Index of an evaluated trial.
         """
         h = self.history.loc[trial_index]
-        print('Evaluation %i: ' % (trial_index))
-        print('%20s = %s' % ('sim_id', h['sim_id']))
+        print("Evaluation %i: " % (trial_index))
+        print("%20s = %s" % ("sim_id", h["sim_id"]))
 
-        try:    
+        try:
             sim_path = self.get_evaluation_dir_path(trial_index)
-            print('%20s = %s' % ('dir_path', self.get_evaluation_dir_path(trial_index)))
+            print(
+                "%20s = %s"
+                % ("dir_path", self.get_evaluation_dir_path(trial_index))
+            )
         except ValueError:
             sim_path = None
-            print('%20s = None' % ('dir_path'))
+            print("%20s = None" % ("dir_path"))
 
-        print('objective functions:')
+        print("objective functions:")
         objective_names = [obj.name for obj in self.objectives]
         for name in objective_names:
-            print('%20s = %10.5f' % (name, h[name]))
+            print("%20s = %10.5f" % (name, h[name]))
 
-        print('varying parameters:')
+        print("varying parameters:")
         varpar_names = [var.name for var in self.varying_parameters]
         for name in varpar_names:
-            print('%20s = %10.5f' % (name, h[name]))
+            print("%20s = %10.5f" % (name, h[name]))
 
         if len(self.analyzed_parameters) > 0:
             anapar_names = [var.name for var in self.analyzed_parameters]
-            print('analyzed parameters:')
+            print("analyzed parameters:")
             for name in anapar_names:
-                print('%20s = %10.5f' % (name, h[name]))
+                print("%20s = %10.5f" % (name, h[name]))
 
         print()
 
     def print_top_evaluations(
-            self, top: Optional[int] = 3, objective: Optional[Union[str, Objective]] = None
+        self,
+        top: Optional[int] = 3,
+        objective: Optional[Union[str, Objective]] = None,
     ) -> str:
-        """Print top evaluations according to the given objective. 
+        """Print top evaluations according to the given objective.
 
         Parameters
         ----------
@@ -912,11 +919,22 @@ class ExplorationDiagnostics:
             objective = self.objectives[0]
         if isinstance(objective, str):
             objective = self._get_objective(objective)
-        top_indices = list(self.history.sort_values(by=objective.name, 
-                                            ascending=objective.minimize).index)[:top]
+        top_indices = list(
+            self.history.sort_values(
+                by=objective.name, ascending=objective.minimize
+            ).index
+        )[:top]
         objective_names = [obj.name for obj in self.objectives]
         varpar_names = [var.name for var in self.varying_parameters]
         anapar_names = [var.name for var in self.analyzed_parameters]
-        print('Top %i evaluations in metric %s (minimize = %s): ' % (top, objective.name, objective.minimize), top_indices)
+        print(
+            "Top %i evaluations in metric %s (minimize = %s): "
+            % (top, objective.name, objective.minimize),
+            top_indices,
+        )
         print()
-        print(self.history.loc[top_indices][objective_names + varpar_names + anapar_names])
+        print(
+            self.history.loc[top_indices][
+                objective_names + varpar_names + anapar_names
+            ]
+        )
