@@ -23,12 +23,12 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         optimization objectives. By default ``None``.
     parameter_constraints : list of str, optional
         List of string representation of parameter
-        constraints, such as "x3 >= x4" or "-x3 + 2*x4 - 3.5*x5 >= 2". For
-        the latter constraints, any number of arguments is accepted, and
-        acceptable operators are "<=" and ">=".
+        constraints, such as ``"x3 >= x4"`` or ``"-x3 + 2*x4 - 3.5*x5 >= 2"``.
+        For the latter constraints, any number of arguments is accepted, and
+        acceptable operators are ``<=`` and ``>=``.
     outcome_constraints : list of str, optional
         List of string representation of outcome
-        constraints of form "metric_name >= bound", like "m1 <= 3."
+        constraints of form ``"metric_name >= bound"``, like ``"m1 <= 3."``.
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. If external data is attached to the exploration, the
