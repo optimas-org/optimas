@@ -1,4 +1,5 @@
 """Script for simulating an LPA with ionization injection with FBPIC."""
+
 import numpy as np
 from scipy.constants import c, e, m_e, m_p
 

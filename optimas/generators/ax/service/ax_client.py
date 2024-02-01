@@ -1,4 +1,5 @@
 """Contains the definition of the Ax generator that uses a custom AxClient."""
+
 from typing import List, Optional
 
 from ax.service.ax_client import AxClient
