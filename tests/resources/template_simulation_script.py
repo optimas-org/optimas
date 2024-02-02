@@ -3,6 +3,7 @@
 The template takes two parameters x0 and x1 as input
 and stores the result in `result.txt`.
 """
+
 import os
 import time
 import numpy as np
