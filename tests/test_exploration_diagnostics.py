@@ -133,6 +133,10 @@ def test_exploration_diagnostics():
             best_ev_f1["trial_index"].item()
         )
 
+        # Check printing methods.
+        diags.print_best_evaluations(top=3, objective="f1")
+        diags.print_evaluation(best_ev_f1["trial_index"].item())
+
         # Check that all 3 possible objective inputs give the same result.
         _, trace1 = diags.get_objective_trace()
         _, trace2 = diags.get_objective_trace("f1")

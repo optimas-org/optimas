@@ -881,7 +881,7 @@ class ExplorationDiagnostics:
             sim_path = None
             print("%20s = None" % ("dir_path"))
 
-        print("objective functions:")
+        print("objectives:")
         objective_names = [obj.name for obj in self.objectives]
         for name in objective_names:
             print("%20s = %10.5f" % (name, h[name]))
@@ -899,11 +899,11 @@ class ExplorationDiagnostics:
 
         print()
 
-    def print_top_evaluations(
+    def print_best_evaluations(
         self,
         top: Optional[int] = 3,
         objective: Optional[Union[str, Objective]] = None,
-    ) -> str:
+    ) -> None:
         """Print top evaluations according to the given objective.
 
         Parameters
