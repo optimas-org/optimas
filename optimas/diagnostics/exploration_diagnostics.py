@@ -54,14 +54,12 @@ class ExplorationDiagnostics:
                         "The most recent one will be used."
                     )
                 exploration_dir_path = path
-                self.history_file = os.path.join(path, output_files[-1])
-                self.params_file = os.path.join(
-                    path, "exploration_parameters.json"
-                )
+                output_file = os.path.join(path, output_files[-1])
+                params_file = os.path.join(path, "exploration_parameters.json")
             elif path.endswith(".npy"):
                 exploration_dir_path = pathlib.Path(path).parent
-                self.history_file = path
-                self.params_file = os.path.join(
+                output_file = path
+                params_file = os.path.join(
                     exploration_dir_path, "exploration_parameters.json"
                 )
             else:
@@ -69,7 +67,7 @@ class ExplorationDiagnostics:
                     "The path should either point to a folder or a `.npy` file."
                 )
             exploration = self._create_exploration(
-                exploration_dir_path, self.params_file, self.history_file
+                exploration_dir_path, params_file, output_file
             )
         elif isinstance(source, Exploration):
             exploration = source
