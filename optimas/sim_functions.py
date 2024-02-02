@@ -61,6 +61,8 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
             num_gpus=step_specs["num_gpus"],
             env_script=step_specs["env_script"],
             mpi_runner_type=step_specs["env_mpi"],
+            stdout=step_specs["stdout"],
+            stderr=step_specs["stderr"],
         )
         # If a step has failed, do not continue with next steps.
         if calc_status != WORKER_DONE:
@@ -79,6 +81,8 @@ def execute_and_analyze_simulation(
     num_gpus,
     env_script,
     mpi_runner_type,
+    stdout,
+    stderr,
 ):
     """Run simulation, handle outcome and analyze results."""
     # Create simulation input file.
@@ -96,8 +100,8 @@ def execute_and_analyze_simulation(
     task = Executor.executor.submit(
         app_name=app_name,
         app_args=sim_template,
-        stdout="out.txt",
-        stderr="err.txt",
+        stdout=stdout,
+        stderr=stderr,
         num_procs=num_procs,
         num_gpus=num_gpus,
         env_script=env_script,
