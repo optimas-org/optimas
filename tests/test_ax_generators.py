@@ -42,6 +42,8 @@ def eval_func_mf(input_params, output_params):
         * (x1 + 5 * np.cos(x1 - 0.2 * resolution))
     )
     output_params["f"] = result
+    if "p1" in output_params.dtype.names:
+        output_params["p1"] = x0**2
 
 
 def eval_func_ax_client(input_params, output_params):
@@ -340,9 +342,13 @@ def test_ax_multi_fidelity():
         "res", 1.0, 8.0, is_fidelity=True, fidelity_target_value=8.0
     )
     obj = Objective("f", minimize=False)
+    p1 = Parameter("p1")
 
     gen = AxMultiFidelityGenerator(
-        varying_parameters=[var1, var2, var3], objectives=[obj]
+        varying_parameters=[var1, var2, var3],
+        objectives=[obj],
+        analyzed_parameters=[p1],
+        outcome_constraints=["p1 <= 30"],
     )
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
@@ -355,6 +361,11 @@ def test_ax_multi_fidelity():
     )
 
     exploration.run()
+
+    # Check constraints.
+    ocs = gen._ax_client.experiment.optimization_config.outcome_constraints
+    assert len(ocs) == 1
+    assert ocs[0].metric.name == p1.name
 
     # Save history for later restart test
     np.save("./tests_output/ax_mf_history", exploration._libe_history.H)
@@ -493,9 +504,12 @@ def test_ax_multi_fidelity_with_history():
         "res", 1.0, 8.0, is_fidelity=True, fidelity_target_value=8.0
     )
     obj = Objective("f", minimize=False)
+    p1 = Parameter("p1")
 
     gen = AxMultiFidelityGenerator(
-        varying_parameters=[var1, var2, var3], objectives=[obj]
+        varying_parameters=[var1, var2, var3],
+        objectives=[obj],
+        analyzed_parameters=[p1],
     )
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
