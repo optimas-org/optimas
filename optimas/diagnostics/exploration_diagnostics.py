@@ -135,6 +135,11 @@ class ExplorationDiagnostics:
                         pass
 
     @property
+    def exploration_dir_path(self) -> str:
+        """Get the exploration dir path."""
+        return self._exploration.exploration_dir_path
+
+    @property
     def history(self) -> pd.DataFrame:
         """Return a pandas DataFrame with the exploration history."""
         return self._exploration.history
@@ -851,3 +856,83 @@ class ExplorationDiagnostics:
                 if isinstance(objective, str):
                     objectives[i] = self._get_objective(objective)
         return objectives
+
+    def print_evaluation(self, trial_index: int) -> None:
+        """Print the parameters of the given evaluation.
+
+        Parameters
+        ----------
+        trial_index : int
+            Index of an evaluated trial.
+        """
+        h = self.history.loc[trial_index]
+        print("Evaluation %i: " % (trial_index))
+        print("%20s = %s" % ("sim_id", h["sim_id"]))
+
+        try:
+            sim_path = self.get_evaluation_dir_path(trial_index)
+            print(
+                "%20s = %s"
+                % ("dir_path", self.get_evaluation_dir_path(trial_index))
+            )
+        except ValueError:
+            sim_path = None
+            print("%20s = None" % ("dir_path"))
+
+        print("objectives:")
+        objective_names = [obj.name for obj in self.objectives]
+        for name in objective_names:
+            print("%20s = %10.5f" % (name, h[name]))
+
+        print("varying parameters:")
+        varpar_names = [var.name for var in self.varying_parameters]
+        for name in varpar_names:
+            print("%20s = %10.5f" % (name, h[name]))
+
+        if len(self.analyzed_parameters) > 0:
+            anapar_names = [var.name for var in self.analyzed_parameters]
+            print("analyzed parameters:")
+            for name in anapar_names:
+                print("%20s = %10.5f" % (name, h[name]))
+
+        print()
+
+    def print_best_evaluations(
+        self,
+        top: Optional[int] = 3,
+        objective: Optional[Union[str, Objective]] = None,
+    ) -> None:
+        """Print top evaluations according to the given objective.
+
+        Parameters
+        ----------
+        top : int, optional
+            Number of top evaluations to consider (3 by default).
+            e.g. top = 3 means that the three best evaluations will be shown.
+        objective : str, optional
+            Objective, or name of the objective to plot. If `None`, the first
+            objective of the exploration is shown.
+        """
+        if objective is None:
+            objective = self.objectives[0]
+        if isinstance(objective, str):
+            objective = self._get_objective(objective)
+        top_indices = list(
+            self.history.sort_values(
+                by=objective.name, ascending=objective.minimize
+            ).index
+        )[:top]
+        objective_names = [obj.name for obj in self.objectives]
+        varpar_names = [var.name for var in self.varying_parameters]
+        anapar_names = [var.name for var in self.analyzed_parameters]
+        print(
+            "Top %i evaluations in metric %s (minimize = %s): "
+            % (top, objective.name, objective.minimize),
+            top_indices,
+        )
+        print()
+        print(
+            self.history.loc[top_indices][
+                objective_names + varpar_names + anapar_names
+            ]
+        )

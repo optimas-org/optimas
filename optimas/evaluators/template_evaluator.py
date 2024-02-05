@@ -49,6 +49,10 @@ class TemplateEvaluator(Evaluator):
     timeout : float, optional
         Time in seconds until the evaluation is forcibly terminated. By default
         ``None`` (i.e., no timeout).
+    stdout : str, optional
+        A standard output filename.
+    stderr : str, optional
+        A standard error filename.
 
     """
 
@@ -63,6 +67,8 @@ class TemplateEvaluator(Evaluator):
         env_script: Optional[str] = None,
         env_mpi: Optional[str] = None,
         timeout: Optional[float] = None,
+        stdout: Optional[str] = None,
+        stderr: Optional[str] = None,
     ) -> None:
         super().__init__(
             sim_function=run_template_simulation, n_procs=n_procs, n_gpus=n_gpus
@@ -74,6 +80,8 @@ class TemplateEvaluator(Evaluator):
         self.env_mpi = env_mpi
         self.timeout = timeout
         self.sim_files = [] if sim_files is None else sim_files
+        self.stdout = stdout
+        self.stderr = stderr
         self._app_name = "sim"
 
     @property
@@ -105,6 +113,8 @@ class TemplateEvaluator(Evaluator):
         sim_specs["user"]["env_script"] = self.env_script
         sim_specs["user"]["env_mpi"] = self.env_mpi
         sim_specs["user"]["timeout"] = self.timeout
+        sim_specs["user"]["stdout"] = self.stdout
+        sim_specs["user"]["stderr"] = self.stderr
         return sim_specs
 
     def get_libe_specs(self) -> Dict:
