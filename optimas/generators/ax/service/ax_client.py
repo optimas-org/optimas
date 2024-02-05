@@ -69,7 +69,9 @@ class AxClientGenerator(AxServiceGenerator):
     ):
         varying_parameters = self._get_varying_parameters(ax_client)
         objectives = self._get_objectives(ax_client)
-        self._add_constraints_to_objectives(objectives, ax_client)
+        analyzed_parameters = self._add_constraints_to_analyzed_parameters(
+            analyzed_parameters, ax_client
+        )
         use_cuda = self._use_cuda(ax_client)
         self._ax_client = ax_client
         super().__init__(
@@ -115,19 +117,22 @@ class AxClientGenerator(AxServiceGenerator):
             objectives.append(obj)
         return objectives
 
-    def _add_constraints_to_objectives(
-        self, objectives: List[Objective], ax_client: AxClient
+    def _add_constraints_to_analyzed_parameters(
+        self, analyzed_parameters: List[Parameter], ax_client: AxClient
     ):
-        """Add outcome constraints in the AxClient to the list of objectives.
+        """Add outcome constraints to the list of analyzed parameters.
 
         This is currently needed because optimas does not yet have a
         proper definition of constraints. The constraints will be correctly
-        handled and given to the AxClient, but will appear as objectives
-        in the optimization log.
+        handled and given to the AxClient, but will appear as analyzed
+        parameters in the optimization log.
         """
         ax_config = ax_client.experiment.optimization_config
+        if ax_config.outcome_constraints and analyzed_parameters is None:
+            analyzed_parameters = []
         for constraint in ax_config.outcome_constraints:
-            objectives.append(Objective(name=constraint.metric.name))
+            analyzed_parameters.append(Parameter(name=constraint.metric.name))
+        return analyzed_parameters
 
     def _create_ax_client(self) -> AxClient:
         """Override the base function to simply return the given."""
