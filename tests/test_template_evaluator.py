@@ -76,5 +76,53 @@ def test_template_evaluator():
         )
 
 
+def test_template_evaluator_timeout():
+    """Test the evaluation timeout.
+
+    All evaluations will sleep for 20 seconds. This should trigger the 1
+    second timeout set in the `TemplateEvaluator`, causing all evaluations
+    to fail.
+    """
+    # Make evaluations sleep for 20 seconds.
+    os.environ["OPTIMAS_TEST_SLEEP"] = "20"
+
+    # Define variables and objectives.
+    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f", minimize=False)
+
+    # Define variables and objectives.
+    gen = RandomSamplingGenerator(
+        varying_parameters=[var1, var2],
+        objectives=[obj],
+    )
+
+    # Create template evaluator with 1s timeout.
+    ev = TemplateEvaluator(
+        sim_template=os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            "resources",
+            "template_simulation_script.py",
+        ),
+        timeout=1,
+    )
+
+    # Create exploration.
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        max_evals=10,
+        sim_workers=2,
+        exploration_dir_path="./tests_output/test_template_evaluator_timeout",
+    )
+
+    # Run exploration.
+    exploration.run()
+
+    # Check that no evaluations were successful.
+    np.testing.assert_array_equal(exploration.history["f"], 0.0)
+
+
 if __name__ == "__main__":
     test_template_evaluator()
+    test_template_evaluator_timeout()
