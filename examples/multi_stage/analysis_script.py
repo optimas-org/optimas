@@ -1,4 +1,5 @@
 """Defines the analysis function that runs after the simulation."""
+
 import os
 
 import numpy as np
