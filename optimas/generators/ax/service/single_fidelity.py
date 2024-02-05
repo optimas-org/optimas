@@ -36,8 +36,9 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         For the latter constraints, any number of arguments is accepted, and
         acceptable operators are ``<=`` and ``>=``.
     outcome_constraints : list of str, optional
-        List of string representation of outcome
-        constraints of form ``"metric_name >= bound"``, like ``"m1 <= 3."``.
+        List of string representation of outcome constraints (i.e., constraints
+        on any of the ``analyzed_parameters``) of form
+        ``"metric_name >= bound"``, like ``"m1 <= 3."``.
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. If external data is attached to the exploration, the
