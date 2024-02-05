@@ -483,7 +483,7 @@ def test_ax_client():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=6,
+        max_evals=13,
         sim_workers=2,
         run_async=False,
         exploration_dir_path="./tests_output/test_ax_client",
