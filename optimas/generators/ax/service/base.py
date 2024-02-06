@@ -216,6 +216,18 @@ class AxServiceGenerator(AxGenerator):
         parameters = []
         fixed_parameters = {}
         for var in self._varying_parameters:
+            # Determine parameter type.
+            value_dtype = np.dtype(var.dtype)
+            if value_dtype.kind == "f":
+                value_type = "float"
+            elif value_dtype.kind == "i":
+                value_type = "int"
+            else:
+                raise ValueError(
+                    "Ax range parameter can only be of type 'float'ot 'int', "
+                    "not {var.dtype}."
+                )
+            # Create parameter dict and append to list.
             parameters.append(
                 {
                     "name": var.name,
@@ -223,7 +235,7 @@ class AxServiceGenerator(AxGenerator):
                     "bounds": [var.lower_bound, var.upper_bound],
                     "is_fidelity": var.is_fidelity,
                     "target_value": var.fidelity_target_value,
-                    "value_type": var.dtype.__name__,
+                    "value_type": value_type,
                 }
             )
             if var.is_fixed:
