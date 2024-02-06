@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from packaging import version
 from ax.version import version as ax_version
+from ax.core.types import TParameterization
 from ax.core.observation import ObservationFeatures
 from ax.service.utils.instantiation import (
     InstantiationBase,
@@ -24,11 +25,15 @@ from ax.plot.slice import plot_slice
 from ax.plot.feature_importances import plot_feature_importance_by_feature
 from ax.modelbridge.cross_validation import cross_validate
 
+
+from optimas.utils.logger import get_logger
 from optimas.utils.other import update_object
 from optimas.core import Objective, Trial, VaryingParameter, Parameter
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
 from .custom_ax import CustomAxClient as AxClient
+
+logger = get_logger(__name__)
 
 
 class AxServiceGenerator(AxGenerator):
@@ -307,7 +312,7 @@ class AxServiceGenerator(AxGenerator):
             new_search_space.parameters[parameter.name]
         )
 
-    def _get_best_values(self, objective: str) -> None:
+    def _get_best_values(self, objective: str) -> Optional[TParameterization]:
         """Get the values of the best predicted parametrization."""
         objective_names = [obj.name for obj in self.objectives]
         if objective in objective_names:
@@ -331,7 +336,11 @@ class AxServiceGenerator(AxGenerator):
             slice_values = param_vals[best_obj_i]
 
         else:
-            slice_values, _ = self._ax_client.get_best_parameters()
+            result = self._ax_client.get_best_parameters()
+            if result is not None:
+                slice_values, _ = result
+            else:
+                slice_values = None
         return slice_values
 
     def plot_contour(
@@ -373,6 +382,11 @@ class AxServiceGenerator(AxGenerator):
         self._ax_client.fit_model()
         if slice_values is None:
             slice_values = self._get_best_values(objective)
+        if slice_values is None:
+            logger.info(
+                "Could not determine best parameters. The 2D countour will be "
+                "a slice along the mean of the range of the varying parameters."
+            )
         render(
             plot_contour(
                 model=self._ax_client.generation_strategy.model,
@@ -433,6 +447,11 @@ class AxServiceGenerator(AxGenerator):
         self._ax_client.fit_model()
         if slice_values is None:
             slice_values = self._get_best_values(objective)
+        if slice_values is None:
+            logger.info(
+                "Could not determine best parameters. The model will be "
+                "sliced along the mean of the range of the varying parameters."
+            )
         render(
             plot_slice(
                 model=self._ax_client.generation_strategy.model,
