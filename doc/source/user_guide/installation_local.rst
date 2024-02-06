@@ -50,6 +50,13 @@ Installing with **all** dependencies:
 Use this option if you plan to do Bayesian optimization
 (see :ref:`dependencies` for more details).
 
+Install from conda-forge
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+    conda install optimas --channel conda-forge
+
 Install from GitHub
 ~~~~~~~~~~~~~~~~~~~
 This will install the latest development version with all dependencies.
