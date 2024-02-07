@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 
 from xopt import VOCS
-from xopt.generators import NelderMeadGenerator as XoptNelderMeadGenerator
-from xopt.generators.scipy.neldermead import NelderMeadOptions
+from xopt.generators.scipy.neldermead import NelderMeadGenerator as XoptNelderMeadGenerator
 
 from optimas.core import (
     Objective,
@@ -68,28 +67,4 @@ class NelderMeadGenerator(Generator):
         initial_point = {}
         for var in self.varying_parameters:
             initial_point[var.name] = (var.lower_bound + var.upper_bound) / 2
-        options = NelderMeadOptions(initial_point=initial_point)
-        self.xopt_gen = XoptNelderMeadGenerator(vocs=vocs, options=options)
-
-
-if __name__ == "__main__":
-
-    def f(x, y):
-        return -(x + 10 * np.cos(x)) * (y + 5 * np.cos(y))
-
-    var1 = VaryingParameter("x0", -50, 5)
-    var2 = VaryingParameter("x1", -5, 15)
-    obj = Objective("f", minimize=False)
-
-    gen = NelderMeadGenerator([var1, var2], objectives=[obj])
-
-    for i in range(100):
-        trial = gen.ask(1)
-        if trial:
-            trial = trial[0]
-            trial_params = trial.parameters_as_dict()
-            y = f(trial_params["x0"], trial_params["x1"])
-            print(y)
-            ev = Evaluation(parameter=obj, value=y)
-            trial.complete_evaluation(ev)
-            gen.tell([trial])
+        self.xopt_gen = XoptNelderMeadGenerator(vocs=vocs, initial_point=initial_point)
