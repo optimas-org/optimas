@@ -2,6 +2,7 @@
 
 The resolution of the simulation is variable and controlled by the optimizer.
 """
+
 import numpy as np
 from scipy.constants import c, e, m_e, m_p
 

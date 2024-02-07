@@ -3,6 +3,7 @@
 The template takes two parameters x0 and x1 as input
 and stores the result in `f1.txt` and `f2.txt`.
 """
+
 import numpy as np
 
 

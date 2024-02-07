@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 import pytest
 
@@ -92,6 +93,17 @@ def test_exploration_diagnostics():
         diags.plot_history(top=5, show_legend=True)
         plt.savefig(os.path.join(exploration_dir_path, "history.png"))
 
+        fig = plt.figure(figsize=(8, 5))
+        gs = GridSpec(2, 2, wspace=0.4, hspace=0.3, top=0.95, right=0.95)
+        diags.plot_history(top=10, show_legend=True, subplot_spec=gs[:, 0])
+        diags.plot_pareto_front(
+            show_best_evaluation_indices=True,
+            show_legend=True,
+            subplot_spec=gs[0, 1],
+        )
+        diags.plot_worker_timeline(subplot_spec=gs[1, 1])
+        plt.savefig(os.path.join(exploration_dir_path, "combined_plots.png"))
+
         # Check the simulation paths.
         delete_index = 10
         if i == 0:
@@ -120,6 +132,10 @@ def test_exploration_diagnostics():
         assert best_ev_f1_path == diags.get_evaluation_dir_path(
             best_ev_f1["trial_index"].item()
         )
+
+        # Check printing methods.
+        diags.print_best_evaluations(top=3, objective="f1")
+        diags.print_evaluation(best_ev_f1["trial_index"].item())
 
         # Check that all 3 possible objective inputs give the same result.
         _, trace1 = diags.get_objective_trace()
