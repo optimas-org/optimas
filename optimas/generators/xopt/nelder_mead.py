@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 
 from xopt import VOCS
-from xopt.generators.scipy.neldermead import NelderMeadGenerator as XoptNelderMeadGenerator
+from xopt.generators.scipy.neldermead import (
+    NelderMeadGenerator as XoptNelderMeadGenerator,
+)
 
 from optimas.core import (
     Objective,
@@ -67,4 +69,6 @@ class NelderMeadGenerator(Generator):
         initial_point = {}
         for var in self.varying_parameters:
             initial_point[var.name] = (var.lower_bound + var.upper_bound) / 2
-        self.xopt_gen = XoptNelderMeadGenerator(vocs=vocs, initial_point=initial_point)
+        self.xopt_gen = XoptNelderMeadGenerator(
+            vocs=vocs, initial_point=initial_point
+        )
