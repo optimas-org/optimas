@@ -1,4 +1,5 @@
 """Contains the definition of the generator functions given to libEnsemble."""
+
 import os
 
 import numpy as np

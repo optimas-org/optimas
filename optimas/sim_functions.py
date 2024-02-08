@@ -1,4 +1,5 @@
 """Contains the definition of the simulation functions given to libEnsemble."""
+
 import jinja2
 import numpy as np
 
@@ -60,6 +61,9 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
             num_gpus=step_specs["num_gpus"],
             env_script=step_specs["env_script"],
             mpi_runner_type=step_specs["env_mpi"],
+            timeout=step_specs["timeout"],
+            stdout=step_specs["stdout"],
+            stderr=step_specs["stderr"],
         )
         # If a step has failed, do not continue with next steps.
         if calc_status != WORKER_DONE:
@@ -91,6 +95,9 @@ def execute_and_analyze_simulation(
     num_gpus,
     env_script,
     mpi_runner_type,
+    timeout,
+    stdout,
+    stderr,
 ):
     """Run simulation, handle outcome and analyze results."""
     # Create simulation input file.
@@ -108,29 +115,15 @@ def execute_and_analyze_simulation(
     task = Executor.executor.submit(
         app_name=app_name,
         app_args=sim_template,
-        stdout="out.txt",
-        stderr="err.txt",
+        stdout=stdout,
+        stderr=stderr,
         num_procs=num_procs,
         num_gpus=num_gpus,
         env_script=env_script,
         mpi_runner_type=mpi_runner_type,
     )
 
-    # Wait for simulation to complete
-    task.wait()
-
-    # Set calc_status with optional prints.
-    if task.finished:
-        if task.state == "FINISHED":
-            calc_status = WORKER_DONE
-        elif task.state == "FAILED":
-            calc_status = TASK_FAILED
-        if task.state not in ["FINISHED", "FAILED", "USER_KILLED"]:
-            print(
-                "Warning: Task {} in unknown state {}. Error code {}".format(
-                    task.name, task.state, task.errcode
-                )
-            )
+    calc_status = Executor.executor.polling_loop(task, timeout=timeout)
 
     # Data analysis from the last simulation
     if calc_status == WORKER_DONE:

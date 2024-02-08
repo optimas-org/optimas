@@ -1,4 +1,5 @@
 """Contains the definition of the ExplorationDiagnostics class."""
+
 import os
 import shutil
 from warnings import warn
@@ -10,6 +11,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
 
 from optimas.core import VaryingParameter, Objective, Parameter
 from optimas.generators.base import Generator
@@ -133,6 +135,11 @@ class ExplorationDiagnostics:
                         pass
 
     @property
+    def exploration_dir_path(self) -> str:
+        """Get the exploration dir path."""
+        return self._exploration.exploration_dir_path
+
+    @property
     def history(self) -> pd.DataFrame:
         """Return a pandas DataFrame with the exploration history."""
         return self._exploration.history
@@ -152,6 +159,39 @@ class ExplorationDiagnostics:
         """Get the objectives of the exploration."""
         return self._exploration.generator.objectives
 
+    def _get_varying_parameter(self, name: str) -> VaryingParameter:
+        """Get varying parameter by name."""
+        for par in self.varying_parameters:
+            if name == par.name:
+                return par
+        raise ValueError(
+            f"Varying parameter {name} not found. "
+            "Available varying parameters are: "
+            f"{[par.name for par in self.varying_parameters]}."
+        )
+
+    def _get_analyzed_parameter(self, name: str) -> Parameter:
+        """Get analyzed parameter by name."""
+        for par in self.analyzed_parameters:
+            if name == par.name:
+                return par
+        raise ValueError(
+            f"Analyzed parameter {name} not found. "
+            "Available analyzed parameters are: "
+            f"{[par.name for par in self.analyzed_parameters]}."
+        )
+
+    def _get_objective(self, name: str) -> Objective:
+        """Get objective by name."""
+        for par in self.objectives:
+            if name == par.name:
+                return par
+        raise ValueError(
+            f"Objective {name} not found. "
+            "Available objectives are: "
+            f"{[par.name for par in self.objectives]}."
+        )
+
     def plot_objective(
         self,
         objective: Optional[Union[str, Objective]] = None,
@@ -159,7 +199,8 @@ class ExplorationDiagnostics:
         show_trace: Optional[bool] = False,
         use_time_axis: Optional[bool] = False,
         relative_start_time: Optional[bool] = True,
-        **subplots_kw,
+        subplot_spec: Optional[SubplotSpec] = None,
+        **figure_kw,
     ) -> None:
         """Plot the values that where reached during the optimization.
 
@@ -179,8 +220,12 @@ class ExplorationDiagnostics:
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
-        **subplots_kw
-            All additional keyword arguments are passed to the `pyplot.subplots` call.
+        subplot_spec: SubplotSpec, optional
+            The location of the plot in the GridSpec of an existing figure.
+            If not given, a new figure will be created.
+        **figure_kw
+            Additional keyword arguments to pass to `pyplot.figure`. Only used
+            if no ``subplot_spec`` is given.
         """
         if fidelity_parameter is not None:
             fidelity = self.history[fidelity_parameter]
@@ -189,14 +234,7 @@ class ExplorationDiagnostics:
         if objective is None:
             objective = self.objectives[0]
         elif isinstance(objective, str):
-            objective_names = [obj.name for obj in self.objectives]
-            if objective in objective_names:
-                objective = self.objectives[objective_names.index(objective)]
-            else:
-                raise ValueError(
-                    f"Objective {objective} not found. Available objectives "
-                    f"are {objective_names}."
-                )
+            objective = self._get_objective(objective)
         history = self.history
         history = history[history.sim_ended]
         if use_time_axis:
@@ -207,7 +245,14 @@ class ExplorationDiagnostics:
         else:
             x = history.trial_index
             xlabel = "Number of evaluations"
-        _, ax = plt.subplots(**subplots_kw)
+
+        if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
+            gs = GridSpec(1, 1)
+        else:
+            fig = plt.gcf()
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec)
+        ax = fig.add_subplot(gs[0])
         ax.scatter(x, history[objective.name], c=fidelity)
         ax.set_ylabel(objective.name)
         ax.set_xlabel(xlabel)
@@ -225,7 +270,9 @@ class ExplorationDiagnostics:
         self,
         objectives: Optional[List[Union[str, Objective]]] = None,
         show_best_evaluation_indices: Optional[bool] = False,
-        **subplots_kw,
+        show_legend: Optional[bool] = False,
+        subplot_spec: Optional[SubplotSpec] = None,
+        **figure_kw,
     ) -> None:
         """Plot Pareto front of two optimization objectives.
 
@@ -237,8 +284,14 @@ class ExplorationDiagnostics:
         show_best_evaluation_indices : bool, optional
             Whether to show the indices of the best evaluations. By default
             ``False``.
-        **subplots_kw
-            All additional keyword arguments are passed to the `pyplot.subplots` call.
+        show_legend : bool, optional
+            Whether to show the legend.
+        subplot_spec: SubplotSpec, optional
+            The location of the plot in the GridSpec of an existing figure.
+            If not given, a new figure will be created.
+        **figure_kw
+            Additional keyword arguments to pass to `pyplot.figure`. Only used
+            if no ``subplot_spec`` is given.
         """
         objectives = self._check_pareto_objectives(objectives)
         pareto_evals = self.get_pareto_front_evaluations(objectives)
@@ -247,9 +300,14 @@ class ExplorationDiagnostics:
         x_pareto = pareto_evals[objectives[0].name].to_numpy()
         y_pareto = pareto_evals[objectives[1].name].to_numpy()
 
-        # Create figure
-        _, axes = plt.subplots(**subplots_kw)
-
+        # Create axes
+        if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
+            gs = GridSpec(1, 1)
+        else:
+            fig = plt.gcf()
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec)
+        axes = fig.add_subplot(gs[0])
         # Plot all evaluations
         axes.scatter(
             x_data, y_data, s=5, lw=0.0, alpha=0.5, label="All evaluations"
@@ -278,7 +336,8 @@ class ExplorationDiagnostics:
             zorder=1,
             label="Pareto front",
         )
-        axes.legend(frameon=False)
+        if show_legend:
+            axes.legend(frameon=False, fontsize="x-small")
 
         # Add evaluation indices to plot.
         if show_best_evaluation_indices:
@@ -309,14 +368,7 @@ class ExplorationDiagnostics:
         if objective is None:
             objective = self.objectives[0]
         elif isinstance(objective, str):
-            objective_names = [obj.name for obj in self.objectives]
-            if objective in objective_names:
-                objective = self.objectives[objective_names.index(objective)]
-            else:
-                raise ValueError(
-                    f"Objective {objective} not found. Available objectives "
-                    f"are {objective_names}."
-                )
+            objective = self._get_objective(objective)
         history = self.history[self.history.sim_ended]
         if objective.minimize:
             i_best = np.argmin(history[objective.name])
@@ -394,14 +446,7 @@ class ExplorationDiagnostics:
         if objective is None:
             objective = self.objectives[0]
         elif isinstance(objective, str):
-            objective_names = [obj.name for obj in self.objectives]
-            if objective in objective_names:
-                objective = self.objectives[objective_names.index(objective)]
-            else:
-                raise ValueError(
-                    f"Objective {objective} not found. Available objectives "
-                    f"are {objective_names}."
-                )
+            objective = self._get_objective(objective)
         if fidelity_parameter is not None:
             assert min_fidelity is not None
             df = self.history[self.history[fidelity_parameter] >= min_fidelity]
@@ -485,7 +530,8 @@ class ExplorationDiagnostics:
         self,
         fidelity_parameter: Optional[str] = None,
         relative_start_time: Optional[bool] = True,
-        **subplots_kw,
+        subplot_spec: Optional[SubplotSpec] = None,
+        **figure_kw,
     ) -> None:
         """Plot the timeline of worker utilization.
 
@@ -497,8 +543,12 @@ class ExplorationDiagnostics:
         relative_start_time : bool, optional
             Whether the time axis should be relative to the start time
             of the exploration. By default, True.
-        **subplots_kw
-            All additional keyword arguments are passed to the `pyplot.subplots` call.
+        subplot_spec: SubplotSpec, optional
+            The location of the plot in the GridSpec of an existing figure.
+            If not given, a new figure will be created.
+        **figure_kw
+            Additional keyword arguments to pass to `pyplot.figure`. Only used
+            if no ``subplot_spec`` is given.
         """
         df = self.history
         df = df[df.sim_id >= 0]
@@ -512,7 +562,15 @@ class ExplorationDiagnostics:
         if relative_start_time:
             sim_started_time = sim_started_time - df["gen_started_time"].min()
             sim_ended_time = sim_ended_time - df["gen_started_time"].min()
-        _, ax = plt.subplots(**subplots_kw)
+
+        if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
+            gs = GridSpec(1, 1)
+        else:
+            fig = plt.gcf()
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec)
+        ax = fig.add_subplot(gs[0])
+
         for i in range(len(df)):
             start = sim_started_time.iloc[i]
             duration = sim_ended_time.iloc[i] - start
@@ -542,8 +600,10 @@ class ExplorationDiagnostics:
         select: Optional[Dict] = None,
         sort: Optional[Dict] = None,
         top: Optional[Dict] = None,
+        show_top_evaluation_indices: Optional[bool] = False,
         show_legend: Optional[bool] = False,
-        **subplots_kw,
+        subplot_spec: Optional[SubplotSpec] = None,
+        **figure_kw,
     ) -> None:
         """Print selected parameters versus evaluation index.
 
@@ -563,11 +623,17 @@ class ExplorationDiagnostics:
             or descendingly (False)
             e.g. {'f': False} sort simulations according to f descendingly.
         top: int, optional
-            Highight the top n simulations of every objective.
+            Highight the 'top' evaluations of every objective.
+        show_top_evaluation_indices : bool, optional
+            Whether to show the indices of the top evaluations.
         show_legend : bool, optional
             Whether to show the legend.
-        **subplots_kw
-            All additional keyword arguments are passed to the `pyplot.subplots` call.
+        subplot_spec: SubplotSpec, optional
+            The location of the plot in the GridSpec of an existing figure.
+            If not given, a new figure will be created.
+        **figure_kw
+            Additional keyword arguments to pass to `pyplot.figure`. Only used
+            if no ``subplot_spec`` is given.
         """
         # Copy the history DataFrame
         df = self.history.copy()
@@ -594,17 +660,17 @@ class ExplorationDiagnostics:
         else:
             df_select = None
 
-        # Select top cases in separate DataFrames
+        # Select top cases in each objective in separate DataFrames
+        # stored in a dictionary with the objective name as key
         if top is not None:
-            df_top = []
+            df_top = {}
             for obj_name in objective_names:
-                for o in self.objectives:
-                    if o.name == obj_name:
-                        ascending = o.minimize
+                obj = self._get_objective(obj_name)
+                ascending = obj.minimize
                 index_list = list(
                     df.sort_values(by=obj_name, ascending=ascending).index
                 )
-                df_top.append(df.loc[index_list[:top]])
+                df_top[obj_name] = df.loc[index_list[:top]]
         else:
             df_top = None
 
@@ -615,15 +681,21 @@ class ExplorationDiagnostics:
 
         # Make figure
         nplots = len(parnames)
-        _, axs = plt.subplots(nplots, 2, width_ratios=[0.8, 0.2], **subplots_kw)
-        plt.subplots_adjust(wspace=0.05)
+        if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
+            gs = GridSpec(nplots, 2, width_ratios=[0.8, 0.2], wspace=0.05)
+        else:
+            fig = plt.gcf()
+            gs = GridSpecFromSubplotSpec(
+                nplots, 2, subplot_spec, width_ratios=[0.8, 0.2], wspace=0.05
+            )
 
         # Actual plotting
         ax_histy_list = []
         histy_list = []
         for i in range(nplots):
             # Draw scatter plot
-            ax_scatter = axs[i][0]
+            ax_scatter = fig.add_subplot(gs[i, 0])
             ax_scatter.grid(color="lightgray", linestyle="dotted")
             yvalues = df[parnames[i]]
             ax_scatter.plot(xvalues, yvalues, "o")
@@ -638,7 +710,7 @@ class ExplorationDiagnostics:
 
             # Draw top evaluations
             if df_top is not None:
-                for df_t in df_top:
+                for key, df_t in df_top.items():
                     if xname is not None:
                         xvalues_top = df_t[xname]
                     else:
@@ -647,16 +719,36 @@ class ExplorationDiagnostics:
                     label = "top %i" % top
                     ax_scatter.plot(xvalues_top, yvalues_top, "o", label=label)
 
+                    # Add evaluation indices to plot
+                    if show_top_evaluation_indices:
+                        sim_id_top = df_t["sim_id"]
+                        obj = self._get_objective(key)
+                        if obj.minimize:
+                            va = "bottom"
+                            xytext = (2, 2)
+                        else:
+                            va = "top"
+                            xytext = (2, -2)
+                        for x, y, id in zip(
+                            xvalues_top, yvalues_top, sim_id_top
+                        ):
+                            ax_scatter.annotate(
+                                str(id),
+                                (x, y),
+                                xytext,
+                                fontsize="xx-small",
+                                va=va,
+                                textcoords="offset points",
+                            )
+
             # Draw the trace only for `objective` parameters
             if (
                 (parnames[i] in objective_names)
                 and (not sort)
                 and (xname is None)
             ):
-                for o in self.objectives:
-                    if o.name == parnames[i]:
-                        minimize = o.minimize
-                if minimize:
+                obj = self._get_objective(parnames[i])
+                if obj.minimize:
                     cum = df[parnames[i]].cummin().values
                 else:
                     cum = df[parnames[i]].cummax().values
@@ -665,7 +757,7 @@ class ExplorationDiagnostics:
                 )
 
             # Draw projected histogram
-            ax_histy = axs[i][1]
+            ax_histy = fig.add_subplot(gs[i, 1])
             ax_histy.grid(color="lightgray", linestyle="dotted")
             ymin, ymax = ax_scatter.get_ylim()
             nbins = 25
@@ -691,7 +783,7 @@ class ExplorationDiagnostics:
 
             # Draw top evaluations
             if df_top is not None:
-                for df_t in df_top:
+                for key, df_t in df_top.items():
                     yvalues_top = df_t[parnames[i]]
                     label = "top %i" % top
                     ax_histy.hist(
@@ -762,14 +854,85 @@ class ExplorationDiagnostics:
                 )
             for i, objective in enumerate(objectives):
                 if isinstance(objective, str):
-                    objective_names = [obj.name for obj in self.objectives]
-                    if objective in objective_names:
-                        objectives[i] = self.objectives[
-                            objective_names.index(objective)
-                        ]
-                    else:
-                        raise ValueError(
-                            f"Objective {objective} not found. "
-                            f"Available objectives are {objective_names}."
-                        )
+                    objectives[i] = self._get_objective(objective)
         return objectives
+
+    def print_evaluation(self, trial_index: int) -> None:
+        """Print the parameters of the given evaluation.
+
+        Parameters
+        ----------
+        trial_index : int
+            Index of an evaluated trial.
+        """
+        h = self.history.loc[trial_index]
+        print("Evaluation %i: " % (trial_index))
+        print("%20s = %s" % ("sim_id", h["sim_id"]))
+
+        try:
+            sim_path = self.get_evaluation_dir_path(trial_index)
+            print(
+                "%20s = %s"
+                % ("dir_path", self.get_evaluation_dir_path(trial_index))
+            )
+        except ValueError:
+            sim_path = None
+            print("%20s = None" % ("dir_path"))
+
+        print("objectives:")
+        objective_names = [obj.name for obj in self.objectives]
+        for name in objective_names:
+            print("%20s = %10.5f" % (name, h[name]))
+
+        print("varying parameters:")
+        varpar_names = [var.name for var in self.varying_parameters]
+        for name in varpar_names:
+            print("%20s = %10.5f" % (name, h[name]))
+
+        if len(self.analyzed_parameters) > 0:
+            anapar_names = [var.name for var in self.analyzed_parameters]
+            print("analyzed parameters:")
+            for name in anapar_names:
+                print("%20s = %10.5f" % (name, h[name]))
+
+        print()
+
+    def print_best_evaluations(
+        self,
+        top: Optional[int] = 3,
+        objective: Optional[Union[str, Objective]] = None,
+    ) -> None:
+        """Print top evaluations according to the given objective.
+
+        Parameters
+        ----------
+        top : int, optional
+            Number of top evaluations to consider (3 by default).
+            e.g. top = 3 means that the three best evaluations will be shown.
+        objective : str, optional
+            Objective, or name of the objective to plot. If `None`, the first
+            objective of the exploration is shown.
+        """
+        if objective is None:
+            objective = self.objectives[0]
+        if isinstance(objective, str):
+            objective = self._get_objective(objective)
+        top_indices = list(
+            self.history.sort_values(
+                by=objective.name, ascending=objective.minimize
+            ).index
+        )[:top]
+        objective_names = [obj.name for obj in self.objectives]
+        varpar_names = [var.name for var in self.varying_parameters]
+        anapar_names = [var.name for var in self.analyzed_parameters]
+        print(
+            "Top %i evaluations in metric %s (minimize = %s): "
+            % (top, objective.name, objective.minimize),
+            top_indices,
+        )
+        print()
+        print(
+            self.history.loc[top_indices][
+                objective_names + varpar_names + anapar_names
+            ]
+        )

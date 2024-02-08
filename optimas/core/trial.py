@@ -107,8 +107,16 @@ class Trial:
 
     @property
     def objective_evaluations(self) -> List[Evaluation]:
-        """Get the list of evaluations (one evaluation per objective)."""
+        """Get list of evaluations (one evaluation per objective)."""
         return [self._mapped_evaluations[obj.name] for obj in self._objectives]
+
+    @property
+    def parameter_evaluations(self) -> List[Evaluation]:
+        """Get list of evaluations (one evaluation per analyzed parameter)."""
+        return [
+            self._mapped_evaluations[par.name]
+            for par in self._analyzed_parameters
+        ]
 
     @property
     def index(self) -> int:

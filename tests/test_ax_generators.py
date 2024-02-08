@@ -12,7 +12,7 @@ from optimas.generators import (
     AxClientGenerator,
 )
 from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
-from optimas.core import VaryingParameter, Objective, Task
+from optimas.core import VaryingParameter, Objective, Task, Parameter
 
 
 # Some tests will use threading (instead of multiprocessing) to be able to
@@ -37,6 +37,8 @@ def eval_func_sf(input_params, output_params):
         result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
         if trial_count - 1 not in trials_to_fail:
             output_params["f"] = result
+            if "p1" in output_params.dtype.names:
+                output_params["p1"] = x0**2
 
 
 def eval_func_sf_moo(input_params, output_params):
@@ -76,6 +78,8 @@ def eval_func_mf(input_params, output_params):
         )
         if trial_count - 1 not in trials_to_fail:
             output_params["f"] = result
+            if "p1" in output_params.dtype.names:
+                output_params["p1"] = x0**2
 
 
 def eval_func_ax_client(input_params, output_params):
@@ -141,9 +145,14 @@ def test_ax_single_fidelity():
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
+    p1 = Parameter("p1")
 
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
+        varying_parameters=[var1, var2],
+        objectives=[obj],
+        analyzed_parameters=[p1],
+        parameter_constraints=["x0 + x1 <= 10"],
+        outcome_constraints=["p1 <= 30"],
     )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
@@ -166,6 +175,13 @@ def test_ax_single_fidelity():
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail) + 1)
+
+    # Check constraints.
+    history = exploration.history
+    assert all(history["x0"] + history["x1"] <= 10.0 + 1e-3)
+    ocs = gen._ax_client.experiment.optimization_config.outcome_constraints
+    assert len(ocs) == 1
+    assert ocs[0].metric.name == p1.name
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
@@ -408,9 +424,13 @@ def test_ax_multi_fidelity():
         "res", 1.0, 8.0, is_fidelity=True, fidelity_target_value=8.0
     )
     obj = Objective("f", minimize=False)
+    p1 = Parameter("p1")
 
     gen = AxMultiFidelityGenerator(
-        varying_parameters=[var1, var2, var3], objectives=[obj]
+        varying_parameters=[var1, var2, var3],
+        objectives=[obj],
+        analyzed_parameters=[p1],
+        outcome_constraints=["p1 <= 30"],
     )
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
@@ -428,6 +448,11 @@ def test_ax_multi_fidelity():
 
     # Run exploration.
     exploration.run()
+
+    # Check constraints.
+    ocs = gen._ax_client.experiment.optimization_config.outcome_constraints
+    assert len(ocs) == 1
+    assert ocs[0].metric.name == p1.name
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
@@ -551,9 +576,12 @@ def test_ax_single_fidelity_with_history():
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
+    p1 = Parameter("p1")
 
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
+        varying_parameters=[var1, var2],
+        objectives=[obj],
+        analyzed_parameters=[p1],
     )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
@@ -591,9 +619,12 @@ def test_ax_multi_fidelity_with_history():
         "res", 1.0, 8.0, is_fidelity=True, fidelity_target_value=8.0
     )
     obj = Objective("f", minimize=False)
+    p1 = Parameter("p1")
 
     gen = AxMultiFidelityGenerator(
-        varying_parameters=[var1, var2, var3], objectives=[obj]
+        varying_parameters=[var1, var2, var3],
+        objectives=[obj],
+        analyzed_parameters=[p1],
     )
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
@@ -739,7 +770,7 @@ def test_ax_service_init():
 
 if __name__ == "__main__":
     test_ax_single_fidelity()
-    # test_ax_single_fidelity_int()
+    test_ax_single_fidelity_int()
     test_ax_single_fidelity_moo()
     test_ax_single_fidelity_fb()
     test_ax_single_fidelity_moo_fb()

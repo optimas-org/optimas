@@ -42,6 +42,15 @@ class AxServiceGenerator(AxGenerator):
     analyzed_parameters : list of Parameter, optional
         List of parameters to analyze at each trial, but which are not
         optimization objectives. By default ``None``.
+    parameter_constraints : list of str, optional
+        List of string representation of parameter
+        constraints, such as ``"x3 >= x4"`` or ``"-x3 + 2*x4 - 3.5*x5 >= 2"``.
+        For the latter constraints, any number of arguments is accepted, and
+        acceptable operators are ``<=`` and ``>=``.
+    outcome_constraints : list of str, optional
+        List of string representation of outcome constraints (i.e., constraints
+        on any of the ``analyzed_parameters``) of form
+        ``"metric_name >= bound"``, like ``"m1 <= 3."``.
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. If external data is attached to the exploration, the
@@ -84,6 +93,8 @@ class AxServiceGenerator(AxGenerator):
         varying_parameters: List[VaryingParameter],
         objectives: List[Objective],
         analyzed_parameters: Optional[List[Parameter]] = None,
+        parameter_constraints: Optional[List[str]] = None,
+        outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
         abandon_failed_trials: Optional[bool] = True,
@@ -113,6 +124,8 @@ class AxServiceGenerator(AxGenerator):
         self._abandon_failed_trials = abandon_failed_trials
         self._fit_out_of_design = fit_out_of_design
         self._fixed_features = None
+        self._parameter_constraints = parameter_constraints
+        self._outcome_constraints = outcome_constraints
         self._ax_client = self._create_ax_client()
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
@@ -168,11 +181,23 @@ class AxServiceGenerator(AxGenerator):
                         gs.current_step.num_trials -= 1
             finally:
                 if trial.completed:
-                    objective_eval = {}
+                    outcome_evals = {}
+                    # Add objective evaluations.
                     for ev in trial.objective_evaluations:
-                        objective_eval[ev.parameter.name] = (ev.value, ev.sem)
+                        outcome_evals[ev.parameter.name] = (ev.value, ev.sem)
+                    # Add outcome constraints evaluations.
+                    ax_config = self._ax_client.experiment.optimization_config
+                    if ax_config.outcome_constraints:
+                        ocs = [
+                            oc.metric.name
+                            for oc in ax_config.outcome_constraints
+                        ]
+                        for ev in trial.parameter_evaluations:
+                            par_name = ev.parameter.name
+                            if par_name in ocs:
+                                outcome_evals[par_name] = (ev.value, ev.sem)
                     self._ax_client.complete_trial(
-                        trial_index=trial_id, raw_data=objective_eval
+                        trial_index=trial_id, raw_data=outcome_evals
                     )
                 elif trial.failed:
                     if self._abandon_failed_trials:
@@ -196,6 +221,8 @@ class AxServiceGenerator(AxGenerator):
         ax_client.create_experiment(
             parameters=self._create_ax_parameters(),
             objectives=self._create_ax_objectives(),
+            outcome_constraints=self._outcome_constraints,
+            parameter_constraints=self._parameter_constraints,
         )
         return ax_client
 
