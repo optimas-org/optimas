@@ -31,7 +31,6 @@ class AxModelManager(object):
             If ``AxClient``, it uses the model in there.
             If ``str``, it should contain the path to an ``AxClient`` json file.
         """
-
         if isinstance(source, AxClient):
             self.ax_client = source
         elif isinstance(source, str):
@@ -53,8 +52,8 @@ class AxModelManager(object):
 
     def build_model(
         self, 
+        objname: str,
         parnames: List[str], 
-        objname: str, 
         minimize: Optional[bool] = True
     ) -> None:
         """Initialize the AxClient using the given data, 
@@ -119,8 +118,8 @@ class AxModelManager(object):
 
         Returns
         -------
-        f_array, sd_array : Two numpy arrays containing the evaluation of the model
-            value and its uncertainty, respectively.
+        m_array, sem_array : Two numpy arrays containing the mean of the model
+            and the standard error of the mean (sem), respectively.
         """
         if self.model is None:
             raise RuntimeError("Model not present. Run ``build_model`` first.")
@@ -154,7 +153,9 @@ class AxModelManager(object):
             # check if labels of the dataframe match the parnames
             for col in sample.columns:
                 if col not in parnames:
-                    raise RuntimeError("Column %s does not match any of the parameter names" % col)
+                    raise RuntimeError(
+                        "Column %s does not match any of the parameter names" % col
+                    )
             for i in range(sample.shape[0]):
                 predf = deepcopy(obsf_0)
                 for col in sample.columns:
@@ -164,12 +165,22 @@ class AxModelManager(object):
             # check if the keys of the dictionary match the parnames
             for key in sample.keys():
                 if key not in parnames:
-                    raise RuntimeError("Key %s does not match any of the parameter names" % col)
-            for i in range(sample[list(sample.keys())[0]].shape[0]):
+                    raise RuntimeError(
+                        "Key %s does not match any of the parameter names" % col
+                    )
+            element = sample[list(sample.keys())[0]]
+            if hasattr(element, "__len__"):
+                for i in range(len(element)):
+                    predf = deepcopy(obsf_0)
+                    for key in sample.keys():
+                        predf.parameters[key] = sample[key][i]
+                    obsf_list.append(predf)
+            else:
                 predf = deepcopy(obsf_0)
                 for key in sample.keys():
-                    predf.parameters[key] = sample[key][i]
+                    predf.parameters[key] = sample[key]
                 obsf_list.append(predf)
+
         elif sample is None:
             predf = deepcopy(obsf_0)
             obsf_list.append(predf)
@@ -178,10 +189,9 @@ class AxModelManager(object):
 
         mu, cov = self.model.predict(obsf_list)
         metric_name = list(self.ax_client.experiment.metrics.keys())[0]
-        f_array = np.asarray(mu[metric_name])
-        sd_array = np.sqrt(cov[metric_name][metric_name])
-
-        return f_array, sd_array
+        m_array = np.asarray(mu[metric_name])
+        sem_array = np.sqrt(cov[metric_name][metric_name])
+        return m_array, sem_array
 
     def plot_model(
         self, 
@@ -191,7 +201,7 @@ class AxModelManager(object):
         npoints: Optional[int] = 200,
         xrange: Optional[List[float]] = None, 
         yrange: Optional[List[float]] = None, 
-        mode: Optional[Literal["value", "error", "both"]] = "value",
+        mode: Optional[Literal["mean", "sem", "both"]] = "mean",
         clabel: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
         gridspec_kw: Dict[str, Any] = None,
@@ -211,8 +221,8 @@ class AxModelManager(object):
         npoints: int, optional
             Number of points in each axis.
         mode: string, optional.
-            ``value`` plots the model value, ``error`` its standard deviation,
-            ``both`` both.
+            ``mean`` plots the model mean, ``sem`` the standard error of the mean,
+            ``both`` plots both.
         clabel: bool,
             when true labels are shown along the contour lines.
         gridspec_kw : dict, optional
@@ -229,7 +239,6 @@ class AxModelManager(object):
             Either a single `~matplotlib.axes.Axes` object or a list of Axes
             objects if more than one subplot was created.
         """
-
         if self.ax_client is None:
             raise RuntimeError("AxClient not present. Run `build_model_ax` first.")
 
@@ -287,12 +296,12 @@ class AxModelManager(object):
 
         f_plots = []
         labels = []
-        if mode in ["value", "both"]: 
+        if mode in ["mean", "both"]: 
             f_plots.append(f_plt)
-            labels.append(metric_name)
-        if mode in ["error", "both"]: 
+            labels.append(metric_name + ", mean")
+        if mode in ["sem", "both"]: 
             f_plots.append(sd_plt)
-            labels.append(metric_name + ", error")
+            labels.append(metric_name + ", sem")
 
         nplots = len(f_plots)
         gridspec_kw = dict(gridspec_kw or {})
@@ -320,6 +329,9 @@ class AxModelManager(object):
             ax.scatter(xtrials, ytrials, s=2, c="black", marker="o")
             ax.set_xlim(xrange)
             ax.set_ylim(yrange)
+            if i > 0:
+                ax.set_ylabel('')
+                ax.set_yticklabels([])
             axs.append(ax)
 
         if nplots == 1:
@@ -337,7 +349,6 @@ class AxModelManager(object):
         ----------
         arm_name: string, optional.
             Name of the arm. If not given, the best arm is selected.
-
         """
         if arm_name is None:
             best_arm, best_point_predictions = self.model.model_best_point()
