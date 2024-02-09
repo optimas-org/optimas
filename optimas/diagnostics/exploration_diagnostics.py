@@ -903,8 +903,8 @@ class ExplorationDiagnostics:
         self,
         objective: Optional[Union[str, Objective]] = None,
         top: Optional[int] = 3,
-        ) -> List[int]:
-        """Get a list with the indices of the best evaluations 
+    ) -> List[int]:
+        """Get a list with the indices of the best evaluations
             according to the given objective.
 
         Parameters
@@ -915,7 +915,7 @@ class ExplorationDiagnostics:
         top : int, optional
             Number of top evaluations to consider (3 by default).
             e.g. top = 3 means that the three best evaluations will be shown.
-        
+
         Returns
         -------
         top_indices : List with the indices of the best evaluations.
@@ -951,7 +951,9 @@ class ExplorationDiagnostics:
             objective = self.objectives[0]
         elif isinstance(objective, str):
             objective = self._get_objective(objective)
-        top_indices = self.get_best_evaluations_index(top=top, objective=objective)
+        top_indices = self.get_best_evaluations_index(
+            top=top, objective=objective
+        )
         objective_names = [obj.name for obj in self.objectives]
         varpar_names = [var.name for var in self.varying_parameters]
         anapar_names = [var.name for var in self.analyzed_parameters]
@@ -968,30 +970,30 @@ class ExplorationDiagnostics:
         )
 
     def get_model_manager_from_ax_client(
-            self,
-            source: Union[AxClient, str],
-    ) ->  AxModelManager:
+        self,
+        source: Union[AxClient, str],
+    ) -> AxModelManager:
         """Initialize AxModelManager from an existing ``AxClient``.
-            
+
         Parameter:
         ----------
         source: AxClient or str,
             Source of data from where to obtain the model.
             It can be an existing ``AxClient`` or the path to
             a json file.
-        
+
         Returns:
         --------
-        An instance of AxModelManager            
+        An instance of AxModelManager
         """
         self.model_manager = AxModelManager(source)
         return self.model_manager
 
     def build_model(
-            self, 
-            objname: Optional[str] = '', 
-            parnames: Optional[List[str]] = [], 
-            minimize: Optional[bool] = True
+        self,
+        objname: Optional[str] = "",
+        parnames: Optional[List[str]] = [],
+        minimize: Optional[bool] = True,
     ) -> AxModelManager:
         """Initialize AxModelManager and builds a GP model.
 
@@ -1017,7 +1019,7 @@ class ExplorationDiagnostics:
 
         if len(parnames) == 0:
             parnames = varpar_names
-        if objname == '':
+        if objname == "":
             objname = objective_names[0]
 
         if objname in objective_names:
@@ -1026,15 +1028,14 @@ class ExplorationDiagnostics:
         # Copy the history DataFrame
         df = self.history.copy()
         self.model_manager = AxModelManager(df)
-        self.model_manager.build_model(parnames=parnames, 
-                                       objname=objname, 
-                                       minimize=minimize)
+        self.model_manager.build_model(
+            parnames=parnames, objname=objname, minimize=minimize
+        )
 
         return self.model_manager
 
     def get_model_manager(self):
-        """Get the associated AxModelManager or build from scratch.
-        """
+        """Get the associated AxModelManager or build from scratch."""
         if self.model_manager is None:
             return self.build_model()
         else:

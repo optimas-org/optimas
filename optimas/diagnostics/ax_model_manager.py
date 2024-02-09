@@ -11,7 +11,9 @@ from matplotlib.axes import Axes
 # Ax utilities for model building
 from ax.service.ax_client import AxClient
 from ax.modelbridge.generation_strategy import (
-    GenerationStep, GenerationStrategy)
+    GenerationStep,
+    GenerationStrategy,
+)
 from ax.modelbridge.registry import Models
 from ax.modelbridge.factory import get_GPEI
 from ax.modelbridge.torch import TorchModelBridge
@@ -51,12 +53,9 @@ class AxModelManager(object):
         return self.ax_client.generation_strategy.model
 
     def build_model(
-        self, 
-        objname: str,
-        parnames: List[str], 
-        minimize: Optional[bool] = True
+        self, objname: str, parnames: List[str], minimize: Optional[bool] = True
     ) -> None:
-        """Initialize the AxClient using the given data, 
+        """Initialize the AxClient using the given data,
             the model parameters and the metric.
             Then it fits a Gaussian Process model to the data.
 
@@ -70,14 +69,20 @@ class AxModelManager(object):
             Whether to minimize or maximize the objective.
             Only relevant to establish the best point.
         """
-        parameters = [{"name": p_name,
-                       "type": "range",
-                       "bounds": [self.df[p_name].min(), self.df[p_name].max()],
-                       "value_type": "float"
-                       } for p_name in parnames]
+        parameters = [
+            {
+                "name": p_name,
+                "type": "range",
+                "bounds": [self.df[p_name].min(), self.df[p_name].max()],
+                "value_type": "float",
+            }
+            for p_name in parnames
+        ]
 
         # create Ax client
-        gs = GenerationStrategy([GenerationStep(model=Models.GPEI, num_trials=-1)])
+        gs = GenerationStrategy(
+            [GenerationStep(model=Models.GPEI, num_trials=-1)]
+        )
         self.ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         self.ax_client.create_experiment(
             name="optimas_data",
@@ -91,15 +96,16 @@ class AxModelManager(object):
         for index, row in self.df.iterrows():
             params = {p_name: row[p_name] for p_name in parnames}
             _, trial_id = self.ax_client.attach_trial(params)
-            self.ax_client.complete_trial(trial_id, 
-                                          {metric_name: (row[metric_name], np.nan)})
+            self.ax_client.complete_trial(
+                trial_id, {metric_name: (row[metric_name], np.nan)}
+            )
 
         # fit GP model
         self.ax_client.generation_strategy._fit_current_model(data=None)
 
     def evaluate_model(
-        self, 
-        sample: Union[pd.DataFrame, Dict, np.ndarray] = None, 
+        self,
+        sample: Union[pd.DataFrame, Dict, np.ndarray] = None,
         p0: Dict = None,
     ) -> Tuple[np.ndarray]:
         """Evaluate the model over the specified sample.
@@ -113,7 +119,7 @@ class AxModelManager(object):
             The rest of parameters would be set to the model best point,
             unless they are further specified using ``p0``.
         p0: dictionary
-            Particular values of parameters to be fixed for the evaluation 
+            Particular values of parameters to be fixed for the evaluation
             over the givensample.
 
         Returns
@@ -123,7 +129,7 @@ class AxModelManager(object):
         """
         if self.model is None:
             raise RuntimeError("Model not present. Run ``build_model`` first.")
-        
+
         # Get optimum
         best_arm, best_point_predictions = self.model.model_best_point()
         parameters = best_arm.parameters
@@ -141,9 +147,9 @@ class AxModelManager(object):
             # check the shape of the array
             if sample.shape[1] != len(parnames):
                 raise RuntimeError(
-                    "Second dimension of the sample array should match " 
+                    "Second dimension of the sample array should match "
                     "the number of parameters of the model."
-                    )
+                )
             for i in range(sample.shape[0]):
                 predf = deepcopy(obsf_0)
                 for j, parname in enumerate(parameters.keys()):
@@ -154,7 +160,8 @@ class AxModelManager(object):
             for col in sample.columns:
                 if col not in parnames:
                     raise RuntimeError(
-                        "Column %s does not match any of the parameter names" % col
+                        "Column %s does not match any of the parameter names"
+                        % col
                     )
             for i in range(sample.shape[0]):
                 predf = deepcopy(obsf_0)
@@ -194,13 +201,13 @@ class AxModelManager(object):
         return m_array, sem_array
 
     def plot_model(
-        self, 
-        xname: Optional[str] = None, 
-        yname: Optional[str] = None, 
-        p0: Optional[Dict] = None, 
+        self,
+        xname: Optional[str] = None,
+        yname: Optional[str] = None,
+        p0: Optional[Dict] = None,
         npoints: Optional[int] = 200,
-        xrange: Optional[List[float]] = None, 
-        yrange: Optional[List[float]] = None, 
+        xrange: Optional[List[float]] = None,
+        yrange: Optional[List[float]] = None,
         mode: Optional[Literal["mean", "sem", "both"]] = "mean",
         clabel: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
@@ -235,12 +242,14 @@ class AxModelManager(object):
 
         Returns
         -------
-        `~.axes.Axes` or array of Axes 
+        `~.axes.Axes` or array of Axes
             Either a single `~matplotlib.axes.Axes` object or a list of Axes
             objects if more than one subplot was created.
         """
         if self.ax_client is None:
-            raise RuntimeError("AxClient not present. Run `build_model_ax` first.")
+            raise RuntimeError(
+                "AxClient not present. Run `build_model_ax` first."
+            )
 
         if self.model is None:
             raise RuntimeError("Model not present. Run `build_model_ax` first.")
@@ -252,13 +261,13 @@ class AxModelManager(object):
 
         if len(parnames) < 2:
             raise RuntimeError(
-                "Insufficient number of parameters in data for this plot " 
+                "Insufficient number of parameters in data for this plot "
                 "(minimum 2)."
             )
 
         # Make a parameter scan in two of the input dimensions
         if xname is None:
-            xname = parnames[0]        
+            xname = parnames[0]
         if yname is None:
             yname = parnames[1]
 
@@ -286,7 +295,7 @@ class AxModelManager(object):
         sample = pd.DataFrame({xname: xarray, yname: yarray})
         f_plt, sd_plt = self.evaluate_model(sample, p0=p0)
         metric_name = list(self.ax_client.experiment.metrics.keys())[0]
-        
+
         # get numpy arrays with experiment parameters
         xtrials = np.zeros(experiment.num_trials)
         ytrials = np.zeros(experiment.num_trials)
@@ -296,10 +305,10 @@ class AxModelManager(object):
 
         f_plots = []
         labels = []
-        if mode in ["mean", "both"]: 
+        if mode in ["mean", "both"]:
             f_plots.append(f_plt)
             labels.append(metric_name + ", mean")
-        if mode in ["sem", "both"]: 
+        if mode in ["sem", "both"]:
             f_plots.append(sd_plt)
             labels.append(metric_name + ", sem")
 
@@ -316,21 +325,33 @@ class AxModelManager(object):
         for i, f in enumerate(f_plots):
             ax = plt.subplot(gs[i])
             pcolormesh_kw = dict(pcolormesh_kw or {})
-            im = ax.pcolormesh(xaxis, yaxis, f.reshape(X.shape), 
-                               shading="auto", **pcolormesh_kw)
+            im = ax.pcolormesh(
+                xaxis,
+                yaxis,
+                f.reshape(X.shape),
+                shading="auto",
+                **pcolormesh_kw,
+            )
             cbar = plt.colorbar(im, ax=ax)
             cbar.set_label(labels[i])
             ax.set(xlabel=xname, ylabel=yname)
             # adding contour lines
-            cset = ax.contour(X, Y, f.reshape(X.shape), levels=20,
-                       linewidths=0.5, colors="black", linestyles="solid")
+            cset = ax.contour(
+                X,
+                Y,
+                f.reshape(X.shape),
+                levels=20,
+                linewidths=0.5,
+                colors="black",
+                linestyles="solid",
+            )
             if clabel:
                 plt.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
             ax.scatter(xtrials, ytrials, s=2, c="black", marker="o")
             ax.set_xlim(xrange)
             ax.set_ylim(yrange)
             if i > 0:
-                ax.set_ylabel('')
+                ax.set_ylabel("")
                 ax.set_yticklabels([])
             axs.append(ax)
 
@@ -340,11 +361,11 @@ class AxModelManager(object):
             return axs
 
     def get_arm_index(
-        self, 
+        self,
         arm_name: Optional[str] = None,
     ) -> int:
         """Get the index of the arm by its name.
-        
+
         Parameter:
         ----------
         arm_name: string, optional.
