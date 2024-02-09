@@ -18,6 +18,8 @@ from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.explorations import Exploration
 from optimas.utils.other import get_df_with_selection
+from optimas.diagnostics.ax_model_manager import AxModelManager
+from ax.service.ax_client import AxClient
 
 
 class ExplorationDiagnostics:
@@ -595,7 +597,7 @@ class ExplorationDiagnostics:
 
     def plot_history(
         self,
-        parnames: Optional[list] = None,
+        parnames: Optional[List] = None,
         xname: Optional[str] = None,
         select: Optional[Dict] = None,
         sort: Optional[Dict] = None,
@@ -897,31 +899,59 @@ class ExplorationDiagnostics:
 
         print()
 
-    def print_best_evaluations(
+    def get_best_evaluations_index(
         self,
-        top: Optional[int] = 3,
         objective: Optional[Union[str, Objective]] = None,
-    ) -> None:
-        """Print top evaluations according to the given objective.
+        top: Optional[int] = 3,
+        ) -> List[int]:
+        """Get a list with the indices of the best evaluations 
+            according to the given objective.
 
         Parameters
         ----------
+        objective : Objective or str, optional
+            Objective, or name of the objective to plot. If `None`, the first
+            objective of the exploration is shown.
         top : int, optional
             Number of top evaluations to consider (3 by default).
             e.g. top = 3 means that the three best evaluations will be shown.
-        objective : str, optional
-            Objective, or name of the objective to plot. If `None`, the first
-            objective of the exploration is shown.
+        
+        Returns
+        -------
+        top_indices : List with the indices of the best evaluations.
         """
         if objective is None:
             objective = self.objectives[0]
-        if isinstance(objective, str):
+        elif isinstance(objective, str):
             objective = self._get_objective(objective)
         top_indices = list(
             self.history.sort_values(
                 by=objective.name, ascending=objective.minimize
             ).index
         )[:top]
+        return top_indices
+
+    def print_best_evaluations(
+        self,
+        objective: Optional[Union[str, Objective]] = None,
+        top: Optional[int] = 3,
+    ) -> None:
+        """Print top evaluations according to the given objective.
+
+        Parameters
+        ----------
+        objective : Objective or str, optional
+            Objective, or name of the objective to plot. If `None`, the first
+            objective of the exploration is shown.
+        top : int, optional
+            Number of top evaluations to consider (3 by default).
+            e.g. top = 3 means that the three best evaluations will be shown.
+        """
+        if objective is None:
+            objective = self.objectives[0]
+        elif isinstance(objective, str):
+            objective = self._get_objective(objective)
+        top_indices = self.get_best_evaluations_index(top=top, objective=objective)
         objective_names = [obj.name for obj in self.objectives]
         varpar_names = [var.name for var in self.varying_parameters]
         anapar_names = [var.name for var in self.analyzed_parameters]
@@ -936,3 +966,76 @@ class ExplorationDiagnostics:
                 objective_names + varpar_names + anapar_names
             ]
         )
+
+    def get_model_manager_from_ax_client(
+            self,
+            source: Union[AxClient, str],
+    ) ->  AxModelManager:
+        """Initialize AxModelManager from an existing ``AxClient``.
+            
+        Parameter:
+        ----------
+        source: AxClient or str,
+            Source of data from where to obtain the model.
+            It can be an existing ``AxClient`` or the path to
+            a json file.
+        
+        Returns:
+        --------
+        An instance of AxModelManager            
+        """
+        self.model_manager = AxModelManager(source)
+        return self.model_manager
+
+    def build_model(
+            self, 
+            objname: Optional[str] = '', 
+            parnames: Optional[List[str]] = [], 
+            minimize: Optional[bool] = True
+    ) -> AxModelManager:
+        """Initialize AxModelManager and builds a GP model.
+
+        Parameter:
+        ----------
+        objname: string, optional
+            Name of the objective (or metric).
+            If not given, it takes the first of the objectives.
+        parnames: list of string, optional
+            List with the names of the parameters of the model.
+            If not given, it assumes the varying parameters.
+        minimize: bool, optional
+            Whether to minimize or maximize the objective.
+            Only relevant to establish the best point of the model,
+            but not to build the model.
+
+        Returns:
+        --------
+        An instance of AxModelManager
+        """
+        varpar_names = [var.name for var in self.varying_parameters]
+        objective_names = [obj.name for obj in self.objectives]
+
+        if len(parnames) == 0:
+            parnames = varpar_names
+        if objname == '':
+            objname = objective_names[0]
+
+        if objname in objective_names:
+            minimize = self._get_objective(objname).minimize
+
+        # Copy the history DataFrame
+        df = self.history.copy()
+        self.model_manager = AxModelManager(df)
+        self.model_manager.build_model(parnames=parnames, 
+                                       objname=objname, 
+                                       minimize=minimize)
+
+        return self.model_manager
+
+    def get_model_manager(self):
+        """Get the associated AxModelManager or build from scratch.
+        """
+        if self.model_manager is None:
+            return self.build_model()
+        else:
+            return self.model_manager
