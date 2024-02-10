@@ -904,8 +904,7 @@ class ExplorationDiagnostics:
         objective: Optional[Union[str, Objective]] = None,
         top: Optional[int] = 3,
     ) -> List[int]:
-        """Get a list with the indices of the best evaluations
-            according to the given objective.
+        """Get a list with the indices of the best evaluations.
 
         Parameters
         ----------
@@ -975,16 +974,16 @@ class ExplorationDiagnostics:
     ) -> AxModelManager:
         """Initialize AxModelManager from an existing ``AxClient``.
 
-        Parameter:
+        Parameters
         ----------
         source: AxClient or str,
             Source of data from where to obtain the model.
             It can be an existing ``AxClient`` or the path to
             a json file.
 
-        Returns:
-        --------
-        An instance of AxModelManager
+        Returns
+        -------
+        An instance of AxModelManager.
         """
         self.model_manager = AxModelManager(source)
         return self.model_manager
@@ -997,7 +996,7 @@ class ExplorationDiagnostics:
     ) -> AxModelManager:
         """Initialize AxModelManager and builds a GP model.
 
-        Parameter:
+        Parameters
         ----------
         objname: string, optional
             Name of the objective (or metric).
@@ -1010,8 +1009,8 @@ class ExplorationDiagnostics:
             Only relevant to establish the best point of the model,
             but not to build the model.
 
-        Returns:
-        --------
+        Returns
+        -------
         An instance of AxModelManager
         """
         varpar_names = [var.name for var in self.varying_parameters]

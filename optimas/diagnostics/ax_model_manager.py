@@ -2,6 +2,7 @@
 
 from typing import Optional, Union, List, Tuple, Dict, Any, Literal
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from copy import deepcopy
 import matplotlib.pyplot as plt
@@ -21,18 +22,18 @@ from ax.core.observation import ObservationFeatures
 
 
 class AxModelManager(object):
+    """Utilities for building and exploring surrogate models using ``Ax``.
+
+    Parameters
+    ----------
+    source: AxClient, str or DataFrame
+        Source data for the model.
+        If ``DataFrame``, the model has to be build using ``build_model``.
+        If ``AxClient``, it uses the data in there to build a model.
+        If ``str``, it should be the path to an ``AxClient`` json file.
+    """
 
     def __init__(self, source: Union[AxClient, str, pd.DataFrame]) -> None:
-        """Utilities for building and exploring surrogate models using ``Ax``.
-
-        Parameter:
-        ----------
-        source: AxClient, str or DataFrame
-            Source of data from where to obtain the model.
-            If ``DataFrame``, the model has to be build using ``build_model``.
-            If ``AxClient``, it uses the model in there.
-            If ``str``, it should contain the path to an ``AxClient`` json file.
-        """
         if isinstance(source, AxClient):
             self.ax_client = source
         elif isinstance(source, str):
@@ -44,8 +45,8 @@ class AxModelManager(object):
             raise RuntimeError("Wrong source.")
 
         if self.ax_client:
-            # fit GP model
-            self.ax_client.generation_strategy._fit_current_model(data=None)
+            if self.ax_client.generation_strategy.model is None:
+                self.ax_client.generation_strategy._fit_current_model(data=None)
 
     @property
     def model(self) -> TorchModelBridge:
@@ -55,16 +56,14 @@ class AxModelManager(object):
     def build_model(
         self, objname: str, parnames: List[str], minimize: Optional[bool] = True
     ) -> None:
-        """Initialize the AxClient using the given data,
-            the model parameters and the metric.
-            Then it fits a Gaussian Process model to the data.
+        """Initialize the AxClient and the model using the given data.
 
-        Parameter:
+        Parameters
         ----------
         parnames: list of string
-            List with the names of the parameters of the model
+            List with the names of the parameters of the model.
         objname: string
-            Name of the objective
+            Name of the objective.
         minimize: bool
             Whether to minimize or maximize the objective.
             Only relevant to establish the best point.
@@ -105,9 +104,9 @@ class AxModelManager(object):
 
     def evaluate_model(
         self,
-        sample: Union[pd.DataFrame, Dict, np.ndarray] = None,
+        sample: Union[pd.DataFrame, Dict, npt.NDArray] = None,
         p0: Dict = None,
-    ) -> Tuple[np.ndarray]:
+    ) -> Tuple[npt.NDArray]:
         """Evaluate the model over the specified sample.
 
         Parameter:
@@ -130,7 +129,7 @@ class AxModelManager(object):
         if self.model is None:
             raise RuntimeError("Model not present. Run ``build_model`` first.")
 
-        # Get optimum
+        # get optimum
         best_arm, best_point_predictions = self.model.model_best_point()
         parameters = best_arm.parameters
         parnames = list(parameters.keys())
@@ -230,7 +229,7 @@ class AxModelManager(object):
         mode: string, optional.
             ``mean`` plots the model mean, ``sem`` the standard error of the mean,
             ``both`` plots both.
-        clabel: bool,
+        clabel: bool
             when true labels are shown along the contour lines.
         gridspec_kw : dict, optional
             Dict with keywords passed to the `GridSpec`.
@@ -265,13 +264,13 @@ class AxModelManager(object):
                 "(minimum 2)."
             )
 
-        # Make a parameter scan in two of the input dimensions
+        # select the input variables
         if xname is None:
             xname = parnames[0]
         if yname is None:
             yname = parnames[1]
 
-        # Set the plotting range
+        # set the plotting range
         if xrange is None:
             xrange = [None, None]
         if yrange is None:
@@ -285,16 +284,14 @@ class AxModelManager(object):
         if yrange[1] is None:
             yrange[1] = experiment.parameters[yname].upper
 
-        # Get grid sample of points where to evalutate the model
+        # get grid sample of points where to evalutate the model
         xaxis = np.linspace(xrange[0], xrange[1], npoints)
         yaxis = np.linspace(yrange[0], yrange[1], npoints)
         X, Y = np.meshgrid(xaxis, yaxis)
         xarray = X.flatten()
         yarray = Y.flatten()
-
         sample = pd.DataFrame({xname: xarray, yname: yarray})
         f_plt, sd_plt = self.evaluate_model(sample, p0=p0)
-        metric_name = list(self.ax_client.experiment.metrics.keys())[0]
 
         # get numpy arrays with experiment parameters
         xtrials = np.zeros(experiment.num_trials)
@@ -303,8 +300,10 @@ class AxModelManager(object):
             xtrials[i] = experiment.trials[i].arm.parameters[xname]
             ytrials[i] = experiment.trials[i].arm.parameters[yname]
 
+        # select quantities to plot and set the labels
         f_plots = []
         labels = []
+        metric_name = list(experiment.metrics.keys())[0]
         if mode in ["mean", "both"]:
             f_plots.append(f_plt)
             labels.append(metric_name + ", mean")
@@ -312,6 +311,7 @@ class AxModelManager(object):
             f_plots.append(sd_plt)
             labels.append(metric_name + ", sem")
 
+        # create figure
         nplots = len(f_plots)
         gridspec_kw = dict(gridspec_kw or {})
         if subplot_spec is None:
@@ -321,9 +321,11 @@ class AxModelManager(object):
             fig = plt.gcf()
             gs = GridSpecFromSubplotSpec(1, nplots, subplot_spec, **gridspec_kw)
 
+        # draw plots
         axs = []
         for i, f in enumerate(f_plots):
             ax = plt.subplot(gs[i])
+            # colormesh
             pcolormesh_kw = dict(pcolormesh_kw or {})
             im = ax.pcolormesh(
                 xaxis,
@@ -332,10 +334,10 @@ class AxModelManager(object):
                 shading="auto",
                 **pcolormesh_kw,
             )
-            cbar = plt.colorbar(im, ax=ax)
+            cbar = plt.colorbar(im, ax=ax, location='top')
             cbar.set_label(labels[i])
             ax.set(xlabel=xname, ylabel=yname)
-            # adding contour lines
+            # contour lines
             cset = ax.contour(
                 X,
                 Y,
@@ -347,12 +349,10 @@ class AxModelManager(object):
             )
             if clabel:
                 plt.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
+            # Draw trials
             ax.scatter(xtrials, ytrials, s=2, c="black", marker="o")
             ax.set_xlim(xrange)
             ax.set_ylim(yrange)
-            if i > 0:
-                ax.set_ylabel("")
-                ax.set_yticklabels([])
             axs.append(ax)
 
         if nplots == 1:
@@ -366,14 +366,20 @@ class AxModelManager(object):
     ) -> int:
         """Get the index of the arm by its name.
 
-        Parameter:
+        Parameters
         ----------
         arm_name: string, optional.
             Name of the arm. If not given, the best arm is selected.
+
+        Returns
+        -------
+        index: int
+            Trial index of the arm.
         """
         if arm_name is None:
             best_arm, best_point_predictions = self.model.model_best_point()
             arm_name = best_arm.name
 
         df = self.ax_client.experiment.fetch_data().df
-        return df.loc[df["arm_name"] == arm_name, "trial_index"].iloc[0]
+        index = df.loc[df["arm_name"] == arm_name, "trial_index"].iloc[0]
+        return index
