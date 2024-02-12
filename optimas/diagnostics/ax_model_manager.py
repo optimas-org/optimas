@@ -377,7 +377,7 @@ class AxModelManager(object):
                 shading="auto",
                 **pcolormesh_kw,
             )
-            cbar = plt.colorbar(im, ax=ax, location='top')
+            cbar = plt.colorbar(im, ax=ax, location="top")
             cbar.set_label(labels[i])
             ax.set(xlabel=xname, ylabel=yname)
             # contour lines
