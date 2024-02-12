@@ -6,6 +6,7 @@ import numpy as np
 from libensemble.executors.executor import Executor
 from libensemble.message_numbers import WORKER_DONE, TASK_FAILED
 
+from optimas.core.trial import TrialStatus
 from optimas.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -30,10 +31,9 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         input_values[name] = value
 
     # Prepare the array that is returned to libE
-    # Automatically include the input parameters
     libE_output = np.zeros(1, dtype=sim_specs["out"])
-    for name in H.dtype.names:
-        libE_output[name] = H[name][0]
+    for name in libE_output.dtype.names:
+        libE_output[name].fill(np.nan)
 
     # Get user specs.
     if "task" in H.dtype.names:
@@ -68,6 +68,19 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         # If a step has failed, do not continue with next steps.
         if calc_status != WORKER_DONE:
             break
+
+    # If required, fail when the objectives are NaN.
+    if user_specs["fail_on_nan"]:
+        for obj in user_specs["objectives"]:
+            if np.isnan(libE_output[obj]):
+                calc_status = TASK_FAILED
+                break
+
+    # Set trial status.
+    if calc_status == WORKER_DONE:
+        libE_output["trial_status"] = TrialStatus.COMPLETED.name
+    else:
+        libE_output["trial_status"] = TrialStatus.FAILED.name
 
     return libE_output, persis_info, calc_status
 
@@ -124,9 +137,6 @@ def execute_and_analyze_simulation(
 
 def run_function(H, persis_info, sim_specs, libE_info):
     """Run an evaluation defined with a `FunctionEvaluator`."""
-    # By default, indicate that task failed
-    calc_status = TASK_FAILED
-
     input_values = {}
     for name in H.dtype.names:
         value = H[name][0]
@@ -143,11 +153,24 @@ def run_function(H, persis_info, sim_specs, libE_info):
     evaluation_func = user_specs["evaluation_func"]
 
     # Prepare the array that is returned to libE
-    # Automatically include the input parameters
     libE_output = np.zeros(1, dtype=sim_specs["out"])
-    for name in H.dtype.names:
-        libE_output[name] = H[name][0]
+    for name in libE_output.dtype.names:
+        libE_output[name].fill(np.nan)
 
+    # Run evaluation.
     evaluation_func(input_values, libE_output[0])
+    calc_status = WORKER_DONE
+
+    # If required, fail when the objectives are NaN.
+    if user_specs["fail_on_nan"]:
+        for obj in user_specs["objectives"]:
+            if np.isnan(libE_output[obj]):
+                calc_status = TASK_FAILED
+
+    # Set trial status.
+    if calc_status == WORKER_DONE:
+        libE_output["trial_status"] = TrialStatus.COMPLETED.name
+    else:
+        libE_output["trial_status"] = TrialStatus.FAILED.name
 
     return libE_output, persis_info, calc_status

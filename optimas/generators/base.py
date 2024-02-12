@@ -18,6 +18,7 @@ from optimas.core import (
     VaryingParameter,
     Parameter,
     TrialParameter,
+    TrialStatus,
 )
 
 logger = get_logger(__name__)
@@ -99,7 +100,7 @@ class Generator:
         self._save_model = save_model
         self._model_save_period = model_save_period
         self._model_history_dir = model_history_dir
-        self._n_completed_trials_last_saved = 0
+        self._n_evaluated_trials_last_saved = 0
         self._use_cuda = use_cuda
         self._gpu_id = gpu_id
         self._dedicated_resources = dedicated_resources
@@ -161,12 +162,30 @@ class Generator:
 
     @property
     def n_completed_trials(self) -> int:
-        """Get the number of completed (evaluated) trials."""
+        """Get the number of successfully evaluated trials."""
         n_completed = 0
         for trial in self._given_trials:
-            if trial.completed():
+            if trial.completed:
                 n_completed += 1
         return n_completed
+
+    @property
+    def n_failed_trials(self) -> int:
+        """Get the number of unsuccessfully evaluated trials."""
+        n_failed = 0
+        for trial in self._given_trials:
+            if trial.failed:
+                n_failed += 1
+        return n_failed
+
+    @property
+    def n_evaluated_trials(self) -> int:
+        """Get the number of evaluated trials."""
+        n_evaluated = 0
+        for trial in self._given_trials:
+            if trial.evaluated:
+                n_evaluated += 1
+        return n_evaluated
 
     def ask(self, n_trials: int) -> List[Trial]:
         """Ask the generator to suggest the next ``n_trials`` to evaluate.
@@ -236,13 +255,16 @@ class Generator:
                 self._add_external_evaluated_trial(trial)
         self._tell(trials)
         for trial in trials:
-            log_msg = "Completed trial {} with objective(s) {}".format(
-                trial.index, trial.objectives_as_dict()
-            )
-            if trial.analyzed_parameters:
-                log_msg += " and analyzed parameter(s) {}".format(
-                    trial.analyzed_parameters_as_dict()
+            if not trial.failed:
+                log_msg = "Completed trial {} with objective(s) {}".format(
+                    trial.index, trial.objectives_as_dict()
                 )
+                if trial.analyzed_parameters:
+                    log_msg += " and analyzed parameter(s) {}".format(
+                        trial.analyzed_parameters_as_dict()
+                    )
+            else:
+                log_msg = f"Failed to evaluate trial {trial.index}."
             logger.info(log_msg)
         if allow_saving_model and self._save_model:
             self.save_model_to_file()
@@ -306,6 +328,32 @@ class Generator:
         for trial in self._given_trials + self._queued_trials:
             if trial.index == trial_index:
                 return trial
+
+    def mark_trial_as_failed(self, trial_index: int):
+        """Mark an already evaluated trial as failed.
+
+        Parameters
+        ----------
+        trial_index : int
+            The index of the trial.
+        """
+        trial = self.get_trial(trial_index)
+        if trial.failed:
+            return
+        elif trial.completed:
+            self._mark_trial_as_failed(trial)
+            trial.mark_as(TrialStatus.FAILED)
+        else:
+            raise ValueError(
+                "Cannot mark trial as failed because it has not yet been "
+                "evaluated."
+            )
+
+    def _mark_trial_as_failed(self, trial: Trial):
+        raise NotImplementedError(
+            f"The trials of a {self.__class__.__name__} cannot be "
+            "marked as failed after completion."
+        )
 
     def update_parameter(self, parameter: VaryingParameter):
         """Update a varying parameter of the generator.
@@ -400,6 +448,8 @@ class Generator:
             )
         required_fields = [p.name for p in required_parameters]
         required_fields += [p.save_name for p in self._custom_trial_parameters]
+        if include_evaluations:
+            required_fields += ["trial_status"]
         missing_fields = [f for f in required_fields if f not in given_fields]
         if missing_fields:
             raise ValueError(
@@ -432,27 +482,30 @@ class Generator:
             for par in self._custom_trial_parameters:
                 setattr(trial, par.name, trial_data[par.save_name][i])
             if include_evaluations:
-                for par in self._objectives + self._analyzed_parameters:
-                    ev = Evaluation(
-                        parameter=par, value=trial_data[par.name][i]
-                    )
-                    trial.complete_evaluation(ev)
+                if trial_data["trial_status"][i] == TrialStatus.FAILED.name:
+                    trial.mark_as(TrialStatus.FAILED)
+                else:
+                    for par in self._objectives + self._analyzed_parameters:
+                        ev = Evaluation(
+                            parameter=par, value=trial_data[par.name][i]
+                        )
+                        trial.complete_evaluation(ev)
             trials.append(trial)
         return trials
 
     def save_model_to_file(self) -> None:
         """Save model to file."""
         # Get number of completed trials since last model was saved.
-        n_new = self.n_completed_trials - self._n_completed_trials_last_saved
+        n_new = self.n_evaluated_trials - self._n_evaluated_trials_last_saved
         # Save model only if save period is reached.
         if n_new >= self._model_save_period:
-            self._n_completed_trials_last_saved = self.n_completed_trials
+            self._n_evaluated_trials_last_saved = self.n_evaluated_trials
             if not os.path.exists(self._model_history_dir):
                 os.mkdir(self._model_history_dir)
             self._save_model_to_file()
             logger.info(
-                "Saved model to file after {} completed trials.".format(
-                    self.n_completed_trials
+                "Saved model to file after {} evaluated trials.".format(
+                    self.n_evaluated_trials
                 )
             )
 
@@ -479,7 +532,7 @@ class Generator:
             # Generator input. This is a RNG, no need for inputs.
             "in": ["sim_id"],
             "persis_in": (
-                ["sim_id", "trial_index"]
+                ["sim_id", "trial_index", "trial_status"]
                 + [obj.name for obj in self._objectives]
                 + [par.name for par in self._analyzed_parameters]
             ),
