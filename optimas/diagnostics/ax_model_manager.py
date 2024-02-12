@@ -16,7 +16,6 @@ from ax.modelbridge.generation_strategy import (
     GenerationStrategy,
 )
 from ax.modelbridge.registry import Models
-from ax.modelbridge.factory import get_GPEI
 from ax.modelbridge.torch import TorchModelBridge
 from ax.core.observation import ObservationFeatures
 
@@ -105,6 +104,7 @@ class AxModelManager(object):
     def evaluate_model(
         self,
         sample: Union[DataFrame, Dict, NDArray] = None,
+        metric_name: Optional[str] = None, 
         p0: Dict = None,
     ) -> Tuple[NDArray]:
         """Evaluate the model over the specified sample.
@@ -117,6 +117,9 @@ class AxModelManager(object):
             If DataFrame or dict, it can contain only those parameters to vary.
             The rest of parameters would be set to the model best point,
             unless they are further specified using ``p0``.
+        metric_name: str.
+            Name of the metric to evaluate.
+            If not specified, it will take the first of the list.
         p0: dictionary
             Particular values of parameters to be fixed for the evaluation
             over the givensample.
@@ -129,9 +132,35 @@ class AxModelManager(object):
         if self.model is None:
             raise RuntimeError("Model not present. Run ``build_model`` first.")
 
+        if metric_name is None:
+            metric_name = list(self.ax_client.experiment.metrics.keys())[0]
+        else:
+            if metric_name not in list(self.ax_client.experiment.metrics.keys()):
+                raise RuntimeError(
+                    "Metric name %s does not match any of the metrics" % metric_name
+                )
+
         # get optimum
-        best_arm, best_point_predictions = self.model.model_best_point()
-        parameters = best_arm.parameters
+        if len(self.ax_client.experiment.metrics) > 1:
+            minimize = None
+            for obj in self.ax_client.objective.objectives:
+                if obj.metric_names[0] == metric_name:
+                    minimize = obj.minimize
+                    break
+            pp = self.ax_client.get_pareto_optimal_parameters()
+            obj_vals = [
+                objs[metric_name] for i, (vals, (objs, covs)) in pp.items()
+            ]
+            param_vals = [vals for i, (vals, (objs, covs)) in pp.items()]
+            if minimize:
+                best_obj_i = np.argmin(obj_vals)
+            else:
+                best_obj_i = np.argmax(obj_vals)
+            best_pars = param_vals[best_obj_i]
+        else:
+            best_pars = self.ax_client.get_best_parameters()[0]
+
+        parameters = best_pars
         parnames = list(parameters.keys())
 
         # user specific point
@@ -140,6 +169,7 @@ class AxModelManager(object):
                 if key in parameters.keys():
                     parameters[key] = p0[key]
 
+        # make list of `ObservationFeatures`
         obsf_list = []
         obsf_0 = ObservationFeatures(parameters=parameters)
         if isinstance(sample, np.ndarray):
@@ -194,7 +224,6 @@ class AxModelManager(object):
             raise RuntimeError("Wrong data type")
 
         mu, cov = self.model.predict(obsf_list)
-        metric_name = list(self.ax_client.experiment.metrics.keys())[0]
         m_array = np.asarray(mu[metric_name])
         sem_array = np.sqrt(cov[metric_name][metric_name])
         return m_array, sem_array
@@ -203,7 +232,9 @@ class AxModelManager(object):
         self,
         xname: Optional[str] = None,
         yname: Optional[str] = None,
+        mname: Optional[str] = None,
         p0: Optional[Dict] = None,
+        new: Optional[bool] = False,
         npoints: Optional[int] = 200,
         xrange: Optional[List[float]] = None,
         yrange: Optional[List[float]] = None,
@@ -222,6 +253,9 @@ class AxModelManager(object):
             Name of the variable to plot in x axis.
         yname: string
             Name of the variable to plot in y axis.
+        mname: string, optional.
+            Name of the metric to plot.
+            If not specified, it will take the first of the list in the ``AxClient``.
         p0: dictionary
             Particular values of parameters to be fixed for the evaluation over the sample.
         npoints: int, optional
@@ -291,7 +325,17 @@ class AxModelManager(object):
         xarray = X.flatten()
         yarray = Y.flatten()
         sample = DataFrame({xname: xarray, yname: yarray})
-        f_plt, sd_plt = self.evaluate_model(sample, p0=p0)
+
+        # metric name
+        if mname is None:
+            mname = list(experiment.metrics.keys())[0]
+
+        # evaluate the model
+        f_plt, sd_plt = self.evaluate_model(
+            sample=sample, 
+            metric_name=mname, 
+            p0=p0,
+        )
 
         # get numpy arrays with experiment parameters
         xtrials = np.zeros(experiment.num_trials)
@@ -303,13 +347,12 @@ class AxModelManager(object):
         # select quantities to plot and set the labels
         f_plots = []
         labels = []
-        metric_name = list(experiment.metrics.keys())[0]
         if mode in ["mean", "both"]:
             f_plots.append(f_plt)
-            labels.append(metric_name + ", mean")
+            labels.append(mname + ", mean")
         if mode in ["sem", "both"]:
             f_plots.append(sd_plt)
-            labels.append(metric_name + ", sem")
+            labels.append(mname + ", sem")
 
         # create figure
         nplots = len(f_plots)
