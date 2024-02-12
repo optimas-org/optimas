@@ -104,7 +104,7 @@ class AxModelManager(object):
     def evaluate_model(
         self,
         sample: Union[DataFrame, Dict, NDArray] = None,
-        metric_name: Optional[str] = None, 
+        metric_name: Optional[str] = None,
         p0: Dict = None,
     ) -> Tuple[NDArray]:
         """Evaluate the model over the specified sample.
@@ -135,9 +135,12 @@ class AxModelManager(object):
         if metric_name is None:
             metric_name = list(self.ax_client.experiment.metrics.keys())[0]
         else:
-            if metric_name not in list(self.ax_client.experiment.metrics.keys()):
+            if metric_name not in list(
+                self.ax_client.experiment.metrics.keys()
+            ):
                 raise RuntimeError(
-                    "Metric name %s does not match any of the metrics" % metric_name
+                    "Metric name %s does not match any of the metrics"
+                    % metric_name
                 )
 
         # get optimum
@@ -280,9 +283,7 @@ class AxModelManager(object):
             objects if more than one subplot was created.
         """
         if self.ax_client is None:
-            raise RuntimeError(
-                "AxClient not present. Run `build_model` first."
-            )
+            raise RuntimeError("AxClient not present. Run `build_model` first.")
 
         if self.model is None:
             raise RuntimeError("Model not present. Run `build_model` first.")
@@ -332,8 +333,8 @@ class AxModelManager(object):
 
         # evaluate the model
         f_plt, sd_plt = self.evaluate_model(
-            sample=sample, 
-            metric_name=mname, 
+            sample=sample,
+            metric_name=mname,
             p0=p0,
         )
 
