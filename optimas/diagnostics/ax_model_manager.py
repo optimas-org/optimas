@@ -2,8 +2,8 @@
 
 from typing import Optional, Union, List, Tuple, Dict, Any, Literal
 import numpy as np
-import numpy.typing as npt
-import pandas as pd
+from numpy.typing import NDArray
+from pandas import DataFrame
 from copy import deepcopy
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
@@ -33,12 +33,12 @@ class AxModelManager(object):
         If ``str``, it should be the path to an ``AxClient`` json file.
     """
 
-    def __init__(self, source: Union[AxClient, str, pd.DataFrame]) -> None:
+    def __init__(self, source: Union[AxClient, str, DataFrame]) -> None:
         if isinstance(source, AxClient):
             self.ax_client = source
         elif isinstance(source, str):
             self.ax_client = AxClient.load_from_json_file(filepath=source)
-        elif isinstance(source, pd.DataFrame):
+        elif isinstance(source, DataFrame):
             self.df = source
             self.ax_client = None
         else:
@@ -46,7 +46,7 @@ class AxModelManager(object):
 
         if self.ax_client:
             if self.ax_client.generation_strategy.model is None:
-                self.ax_client.generation_strategy._fit_current_model(data=None)
+                self.ax_client.fit_model()
 
     @property
     def model(self) -> TorchModelBridge:
@@ -100,13 +100,13 @@ class AxModelManager(object):
             )
 
         # fit GP model
-        self.ax_client.generation_strategy._fit_current_model(data=None)
+        self.ax_client.fit_model()
 
     def evaluate_model(
         self,
-        sample: Union[pd.DataFrame, Dict, npt.NDArray] = None,
+        sample: Union[DataFrame, Dict, NDArray] = None,
         p0: Dict = None,
-    ) -> Tuple[npt.NDArray]:
+    ) -> Tuple[NDArray]:
         """Evaluate the model over the specified sample.
 
         Parameter:
@@ -154,7 +154,7 @@ class AxModelManager(object):
                 for j, parname in enumerate(parameters.keys()):
                     predf.parameters[parname] = sample[i][j]
                 obsf_list.append(predf)
-        elif isinstance(sample, pd.DataFrame):
+        elif isinstance(sample, DataFrame):
             # check if labels of the dataframe match the parnames
             for col in sample.columns:
                 if col not in parnames:
@@ -247,11 +247,11 @@ class AxModelManager(object):
         """
         if self.ax_client is None:
             raise RuntimeError(
-                "AxClient not present. Run `build_model_ax` first."
+                "AxClient not present. Run `build_model` first."
             )
 
         if self.model is None:
-            raise RuntimeError("Model not present. Run `build_model_ax` first.")
+            raise RuntimeError("Model not present. Run `build_model` first.")
 
         # get experiment info
         experiment = self.ax_client.experiment
@@ -290,7 +290,7 @@ class AxModelManager(object):
         X, Y = np.meshgrid(xaxis, yaxis)
         xarray = X.flatten()
         yarray = Y.flatten()
-        sample = pd.DataFrame({xname: xarray, yname: yarray})
+        sample = DataFrame({xname: xarray, yname: yarray})
         f_plt, sd_plt = self.evaluate_model(sample, p0=p0)
 
         # get numpy arrays with experiment parameters
@@ -349,7 +349,7 @@ class AxModelManager(object):
             )
             if clabel:
                 plt.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
-            # Draw trials
+            # draw trials
             ax.scatter(xtrials, ytrials, s=2, c="black", marker="o")
             ax.set_xlim(xrange)
             ax.set_ylim(yrange)
