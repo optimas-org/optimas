@@ -104,7 +104,7 @@ class AxModelManager(object):
     def evaluate_model(
         self,
         sample: Union[DataFrame, Dict, NDArray] = None,
-        metric_name: Optional[str] = None, 
+        metric_name: Optional[str] = None,
         p0: Optional[Dict] = None,
     ) -> Tuple[NDArray]:
         """Evaluate the model over the specified sample.
