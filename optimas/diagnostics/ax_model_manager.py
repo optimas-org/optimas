@@ -54,9 +54,9 @@ class AxModelManager(object):
         return self.ax_client.generation_strategy.model
 
     def build_model(
-        self, 
-        parnames: Optional[List[str]] = None, 
-        objname: Optional[str] = None, 
+        self,
+        parnames: Optional[List[str]] = None,
+        objname: Optional[str] = None,
         minimize: Optional[bool] = True,
         parameters: Optional[List[VaryingParameter]] = None,
         objectives: Optional[List[Objective]] = None,
@@ -92,18 +92,22 @@ class AxModelManager(object):
                 }
                 for p_name in parnames
             ]
-        else:  
-            parnames = [par['name'] for par in parameters]
-    
+        else:
+            parnames = [par["name"] for par in parameters]
+
         if objectives is not None:
             objectives_dict = {}
             for obj in objectives:
-                objectives_dict[obj.name] = ObjectiveProperties(minimize=obj.minimize)
+                objectives_dict[obj.name] = ObjectiveProperties(
+                    minimize=obj.minimize
+                )
             # create Ax client
             gs = GenerationStrategy(
                 [GenerationStep(model=Models.MOO, num_trials=-1)]
             )
-            self.ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
+            self.ax_client = AxClient(
+                generation_strategy=gs, verbose_logging=False
+            )
             self.ax_client.create_experiment(
                 name="optimas_data",
                 parameters=parameters,
@@ -114,7 +118,9 @@ class AxModelManager(object):
             gs = GenerationStrategy(
                 [GenerationStep(model=Models.GPEI, num_trials=-1)]
             )
-            self.ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
+            self.ax_client = AxClient(
+                generation_strategy=gs, verbose_logging=False
+            )
             self.ax_client.create_experiment(
                 name="optimas_data",
                 parameters=parameters,
@@ -133,9 +139,7 @@ class AxModelManager(object):
             data = {}
             for mname in list(self.ax_client.experiment.metrics.keys()):
                 data[mname] = (row[mname], np.nan)
-            self.ax_client.complete_trial(
-                trial_id, raw_data=data
-            )
+            self.ax_client.complete_trial(trial_id, raw_data=data)
 
         # fit GP model
         self.ax_client.fit_model()
