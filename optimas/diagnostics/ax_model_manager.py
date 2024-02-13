@@ -55,7 +55,6 @@ class AxModelManager(object):
         self, objname: str, parnames: List[str], minimize: Optional[bool] = True
     ) -> None:
         """Initialize the AxClient and the model using the given data.
-            This method only works with one objective.
 
         Parameters
         ----------
