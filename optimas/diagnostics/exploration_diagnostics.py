@@ -1032,10 +1032,3 @@ class ExplorationDiagnostics:
         )
 
         return self.model_manager
-
-    def get_model_manager(self):
-        """Get the associated AxModelManager or build from scratch."""
-        if self.model_manager is None:
-            return self.build_model()
-        else:
-            return self.model_manager

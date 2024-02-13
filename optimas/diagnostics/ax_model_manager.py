@@ -44,8 +44,7 @@ class AxModelManager(object):
             raise RuntimeError("Wrong source.")
 
         if self.ax_client:
-            if self.ax_client.generation_strategy.model is None:
-                self.ax_client.fit_model()
+            self.ax_client.fit_model()
 
     @property
     def model(self) -> TorchModelBridge:
@@ -56,6 +55,7 @@ class AxModelManager(object):
         self, objname: str, parnames: List[str], minimize: Optional[bool] = True
     ) -> None:
         """Initialize the AxClient and the model using the given data.
+            This method only works with one objective.
 
         Parameters
         ----------
@@ -105,7 +105,7 @@ class AxModelManager(object):
         self,
         sample: Union[DataFrame, Dict, NDArray] = None,
         metric_name: Optional[str] = None, 
-        p0: Dict = None,
+        p0: Optional[Dict] = None,
     ) -> Tuple[NDArray]:
         """Evaluate the model over the specified sample.
 
@@ -117,12 +117,11 @@ class AxModelManager(object):
             If DataFrame or dict, it can contain only those parameters to vary.
             The rest of parameters would be set to the model best point,
             unless they are further specified using ``p0``.
-        metric_name: str.
+        metric_name: str, optional.
             Name of the metric to evaluate.
-            If not specified, it will take the first of the list.
-        p0: dictionary
-            Particular values of parameters to be fixed for the evaluation
-            over the givensample.
+            If not specified, it will take the first first objective in ``self.ax_client``.
+        p0: dictionary, optional.
+            Particular values of parameters to be fixed for the evaluation.
 
         Returns
         -------
@@ -133,18 +132,21 @@ class AxModelManager(object):
             raise RuntimeError("Model not present. Run ``build_model`` first.")
 
         if metric_name is None:
-            metric_name = list(self.ax_client.experiment.metrics.keys())[0]
+            metric_name = self.ax_client.objective_names[0]
         else:
-            if metric_name not in list(self.ax_client.experiment.metrics.keys()):
+            metric_names = list(self.ax_client.experiment.metrics.keys())
+            if metric_name not in metric_names:
                 raise RuntimeError(
-                    "Metric name %s does not match any of the metrics" % metric_name
+                    f"Metric name {metric_name} does not match any of the metrics. "
+                    f"Available metrics are: {metric_names}."
                 )
 
         # get optimum
-        if len(self.ax_client.experiment.metrics) > 1:
+        try:
+            objectives = self.ax_client.objective.objectives
             minimize = None
-            for obj in self.ax_client.objective.objectives:
-                if obj.metric_names[0] == metric_name:
+            for obj in objectives:
+                if metric_name == obj.metric_names[0]:
                     minimize = obj.minimize
                     break
             pp = self.ax_client.get_pareto_optimal_parameters()
@@ -157,7 +159,7 @@ class AxModelManager(object):
             else:
                 best_obj_i = np.argmax(obj_vals)
             best_pars = param_vals[best_obj_i]
-        else:
+        except AttributeError:
             best_pars = self.ax_client.get_best_parameters()[0]
 
         parameters = best_pars
@@ -234,7 +236,6 @@ class AxModelManager(object):
         yname: Optional[str] = None,
         mname: Optional[str] = None,
         p0: Optional[Dict] = None,
-        new: Optional[bool] = False,
         npoints: Optional[int] = 200,
         xrange: Optional[List[float]] = None,
         yrange: Optional[List[float]] = None,
@@ -255,7 +256,7 @@ class AxModelManager(object):
             Name of the variable to plot in y axis.
         mname: string, optional.
             Name of the metric to plot.
-            If not specified, it will take the first of the list in the ``AxClient``.
+            If not specified, it will take the first objective in ``self.ax_client``.
         p0: dictionary
             Particular values of parameters to be fixed for the evaluation over the sample.
         npoints: int, optional
@@ -328,7 +329,7 @@ class AxModelManager(object):
 
         # metric name
         if mname is None:
-            mname = list(experiment.metrics.keys())[0]
+            mname = self.ax_client.objective_names[0]
 
         # evaluate the model
         f_plt, sd_plt = self.evaluate_model(
