@@ -8,6 +8,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
 from matplotlib.axes import Axes
+from optimas.core import VaryingParameter, Objective
 
 # Ax utilities for model building
 from ax.service.ax_client import AxClient
@@ -18,6 +19,7 @@ from ax.modelbridge.generation_strategy import (
 from ax.modelbridge.registry import Models
 from ax.modelbridge.torch import TorchModelBridge
 from ax.core.observation import ObservationFeatures
+from ax.service.utils.instantiation import ObjectiveProperties
 
 
 class AxModelManager(object):
@@ -52,7 +54,12 @@ class AxModelManager(object):
         return self.ax_client.generation_strategy.model
 
     def build_model(
-        self, objname: str, parnames: List[str], minimize: Optional[bool] = True
+        self, 
+        parnames: Optional[List[str]] = None, 
+        objname: Optional[str] = None, 
+        minimize: Optional[bool] = True,
+        parameters: Optional[List[VaryingParameter]] = None,
+        objectives: Optional[List[Objective]] = None,
     ) -> None:
         """Initialize the AxClient and the model using the given data.
 
@@ -60,41 +67,74 @@ class AxModelManager(object):
         ----------
         parnames: list of string
             List with the names of the parameters of the model.
-        objname: string
+        objname: string, optional.
             Name of the objective.
-        minimize: bool
+        minimize: bool, optional.
             Whether to minimize or maximize the objective.
             Only relevant to establish the best point.
+        objectives: list of `Objective`.
+            This is the way to build multi-objective models.
+            Useful to initialize from `ExplorationDiagnostics`.
+        parameters: list of `VaryingParameter`.
+            Useful to initialize from `ExplorationDiagnostics`.
         """
-        parameters = [
-            {
-                "name": p_name,
-                "type": "range",
-                "bounds": [self.df[p_name].min(), self.df[p_name].max()],
-                "value_type": "float",
-            }
-            for p_name in parnames
-        ]
-
-        # create Ax client
-        gs = GenerationStrategy(
-            [GenerationStep(model=Models.GPEI, num_trials=-1)]
-        )
-        self.ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
-        self.ax_client.create_experiment(
-            name="optimas_data",
-            parameters=parameters,
-            objective_name=objname,
-            minimize=minimize,
-        )
+        if parameters is None:
+            if parnames is None:
+                raise RuntimeError(
+                    "Either `parameters` or `parnames` should be provided."
+                )
+            parameters = [
+                {
+                    "name": p_name,
+                    "type": "range",
+                    "bounds": [self.df[p_name].min(), self.df[p_name].max()],
+                    "value_type": "float",
+                }
+                for p_name in parnames
+            ]
+        else:  
+            parnames = [par['name'] for par in parameters]
+    
+        if objectives is not None:
+            objectives_dict = {}
+            for obj in objectives:
+                objectives_dict[obj.name] = ObjectiveProperties(minimize=obj.minimize)
+            # create Ax client
+            gs = GenerationStrategy(
+                [GenerationStep(model=Models.MOO, num_trials=-1)]
+            )
+            self.ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
+            self.ax_client.create_experiment(
+                name="optimas_data",
+                parameters=parameters,
+                objectives=objectives_dict,
+            )
+        elif objname is not None:
+            # create Ax client
+            gs = GenerationStrategy(
+                [GenerationStep(model=Models.GPEI, num_trials=-1)]
+            )
+            self.ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
+            self.ax_client.create_experiment(
+                name="optimas_data",
+                parameters=parameters,
+                objective_name=objname,
+                minimize=minimize,
+            )
+        else:
+            raise RuntimeError(
+                "Either `objectives` or `objname` should be provided."
+            )
 
         # adds data
-        metric_name = list(self.ax_client.experiment.metrics.keys())[0]
         for index, row in self.df.iterrows():
             params = {p_name: row[p_name] for p_name in parnames}
             _, trial_id = self.ax_client.attach_trial(params)
+            data = {}
+            for mname in list(self.ax_client.experiment.metrics.keys()):
+                data[mname] = (row[mname], np.nan)
             self.ax_client.complete_trial(
-                trial_id, {metric_name: (row[metric_name], np.nan)}
+                trial_id, raw_data=data
             )
 
         # fit GP model

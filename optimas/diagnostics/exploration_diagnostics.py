@@ -20,6 +20,7 @@ from optimas.explorations import Exploration
 from optimas.utils.other import get_df_with_selection
 from optimas.diagnostics.ax_model_manager import AxModelManager
 from ax.service.ax_client import AxClient
+from ax.service.utils.instantiation import ObjectiveProperties
 
 
 class ExplorationDiagnostics:
@@ -990,8 +991,7 @@ class ExplorationDiagnostics:
 
     def build_model(
         self,
-        objname: Optional[str] = "",
-        parnames: Optional[List[str]] = [],
+        objname: Optional[str] = None,
         minimize: Optional[bool] = True,
     ) -> AxModelManager:
         """Initialize AxModelManager and builds a GP model.
@@ -1000,35 +1000,45 @@ class ExplorationDiagnostics:
         ----------
         objname: string, optional
             Name of the objective (or metric).
-            If not given, it takes the first of the objectives.
-        parnames: list of string, optional
-            List with the names of the parameters of the model.
-            If not given, it assumes the varying parameters.
+            If not given, it takes the list of objectives.
         minimize: bool, optional
             Whether to minimize or maximize the objective.
-            Only relevant to establish the best point of the model,
-            but not to build the model.
+            It is only used when `objname` is given.
+            Only relevant to establish the best point of the model.
 
         Returns
         -------
         An instance of AxModelManager
         """
-        varpar_names = [var.name for var in self.varying_parameters]
-        objective_names = [obj.name for obj in self.objectives]
-
-        if len(parnames) == 0:
-            parnames = varpar_names
-        if objname == "":
-            objname = objective_names[0]
-
-        if objname in objective_names:
-            minimize = self._get_objective(objname).minimize
-
-        # Copy the history DataFrame
+        # Initialize `AxModelManager` with history data
         df = self.history.copy()
         self.model_manager = AxModelManager(df)
-        self.model_manager.build_model(
-            parnames=parnames, objname=objname, minimize=minimize
-        )
+
+        # Get parameters for the model
+        parameters = []
+        for var in self.varying_parameters:
+            parameters.append(
+                {
+                    "name": var.name,
+                    "type": "range",
+                    "bounds": [var.lower_bound, var.upper_bound],
+                    "is_fidelity": var.is_fidelity,
+                    "target_value": var.fidelity_target_value,
+                    "value_type": "float",
+                }
+            )
+
+        # Get objectives
+        objective_names = [obj.name for obj in self.objectives]
+        if objname is not None:
+            if objname in objective_names:
+                minimize = self._get_objective(objname).minimize
+            self.model_manager.build_model(
+                parameters=parameters, objname=objname, minimize=minimize
+            )
+        else:
+            self.model_manager.build_model(
+                parameters=parameters, objectives=self.objectives
+            )
 
         return self.model_manager
