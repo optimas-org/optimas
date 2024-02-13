@@ -281,9 +281,7 @@ class AxModelManager(object):
             objects if more than one subplot was created.
         """
         if self.ax_client is None:
-            raise RuntimeError(
-                "AxClient not present. Run `build_model` first."
-            )
+            raise RuntimeError("AxClient not present. Run `build_model` first.")
 
         if self.model is None:
             raise RuntimeError("Model not present. Run `build_model` first.")
@@ -333,8 +331,8 @@ class AxModelManager(object):
 
         # evaluate the model
         f_plt, sd_plt = self.evaluate_model(
-            sample=sample, 
-            metric_name=mname, 
+            sample=sample,
+            metric_name=mname,
             p0=p0,
         )
 
