@@ -1014,9 +1014,21 @@ class ExplorationDiagnostics:
         df = self.history.copy()
         self.model_manager = AxModelManager(df)
 
-        # Get parameters for the model
+        # Get parameters for AxClient.
         parameters = []
         for var in self.varying_parameters:
+            # Determine parameter type.
+            value_dtype = np.dtype(var.dtype)
+            if value_dtype.kind == "f":
+                value_type = "float"
+            elif value_dtype.kind == "i":
+                value_type = "int"
+            else:
+                raise ValueError(
+                    "Ax range parameter can only be of type 'float'ot 'int', "
+                    "not {var.dtype}."
+                )
+            # Create parameter dict and append to list.
             parameters.append(
                 {
                     "name": var.name,
@@ -1024,7 +1036,7 @@ class ExplorationDiagnostics:
                     "bounds": [var.lower_bound, var.upper_bound],
                     "is_fidelity": var.is_fidelity,
                     "target_value": var.fidelity_target_value,
-                    "value_type": "float",
+                    "value_type": value_type,
                 }
             )
 
