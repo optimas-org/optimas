@@ -78,6 +78,7 @@ class AxModelManager(object):
         parameters: list of `VaryingParameter`.
             Useful to initialize from `ExplorationDiagnostics`.
         """
+        # Define parameters
         if parameters is None:
             if parnames is None:
                 raise RuntimeError(
@@ -95,26 +96,13 @@ class AxModelManager(object):
         else:
             parnames = [par["name"] for par in parameters]
 
-        if objectives is not None:
-            objectives_dict = {}
-            for obj in objectives:
-                objectives_dict[obj.name] = ObjectiveProperties(
-                    minimize=obj.minimize
+        # Define objectives
+        if objectives is None:
+            if objname is None:
+                raise RuntimeError(
+                    "Either `objectives` or `objname` should be provided."
                 )
-            # create Ax client
-            gs = GenerationStrategy(
-                [GenerationStep(model=Models.MOO, num_trials=-1)]
-            )
-            self.ax_client = AxClient(
-                generation_strategy=gs, verbose_logging=False
-            )
-            self.ax_client.create_experiment(
-                name="optimas_data",
-                parameters=parameters,
-                objectives=objectives_dict,
-            )
-        elif objname is not None:
-            # create Ax client
+            # Create single objective AxClient
             gs = GenerationStrategy(
                 [GenerationStep(model=Models.GPEI, num_trials=-1)]
             )
@@ -128,11 +116,25 @@ class AxModelManager(object):
                 minimize=minimize,
             )
         else:
-            raise RuntimeError(
-                "Either `objectives` or `objname` should be provided."
+            # Create multi-objective Axclient
+            objectives_dict = {}
+            for obj in objectives:
+                objectives_dict[obj.name] = ObjectiveProperties(
+                    minimize=obj.minimize
+                )
+            gs = GenerationStrategy(
+                [GenerationStep(model=Models.MOO, num_trials=-1)]
+            )
+            self.ax_client = AxClient(
+                generation_strategy=gs, verbose_logging=False
+            )
+            self.ax_client.create_experiment(
+                name="optimas_data",
+                parameters=parameters,
+                objectives=objectives_dict,
             )
 
-        # adds data
+        # Add trials from DataFrame
         for index, row in self.df.iterrows():
             params = {p_name: row[p_name] for p_name in parnames}
             _, trial_id = self.ax_client.attach_trial(params)
