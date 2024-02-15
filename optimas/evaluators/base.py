@@ -21,6 +21,9 @@ class Evaluator:
     n_gpus : int, optional
         The number of GPUs that will be made available for each evaluation. By
         default, 0.
+    fail_on_nan : bool, optional
+        Whether to mark an evaluation as failed if the value of any of the
+        objectives is NaN. By default, ``True``.
 
     """
 
@@ -29,6 +32,7 @@ class Evaluator:
         sim_function: Callable,
         n_procs: Optional[int] = None,
         n_gpus: Optional[int] = None,
+        fail_on_nan: Optional[bool] = True,
     ) -> None:
         self.sim_function = sim_function
         # If no resources are specified, use 1 CPU an 0 GPUs.
@@ -44,6 +48,7 @@ class Evaluator:
             n_gpus = 0
         self._n_procs = n_procs
         self._n_gpus = n_gpus
+        self._fail_on_nan = fail_on_nan
         self._initialized = False
 
     def get_sim_specs(
@@ -68,14 +73,14 @@ class Evaluator:
             "in": [var.name for var in varying_parameters],
             "out": (
                 [(obj.name, obj.dtype) for obj in objectives]
-                # f is the single float output that LibEnsemble minimizes.
                 + [(par.name, par.dtype) for par in analyzed_parameters]
-                # input parameters
-                + [(var.name, var.dtype) for var in varying_parameters]
+                + [("trial_status", str, 10)]
             ),
             "user": {
                 "n_procs": self._n_procs,
                 "n_gpus": self._n_gpus,
+                "fail_on_nan": self._fail_on_nan,
+                "objectives": [obj.name for obj in objectives],
             },
         }
         return sim_specs

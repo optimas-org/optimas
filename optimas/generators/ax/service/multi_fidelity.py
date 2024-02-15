@@ -33,6 +33,9 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
+    abandon_failed_trials : bool, optional
+        Whether failed trials should be abandoned (i.e., not suggested again).
+        By default, ``True``.
     fit_out_of_design : bool, optional
         Whether to fit the surrogate model taking into account evaluations
         outside of the range of the varying parameters. This can be useful
@@ -71,6 +74,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
+        abandon_failed_trials: Optional[bool] = True,
         fit_out_of_design: Optional[bool] = False,
         fidel_cost_intercept: Optional[float] = 1.0,
         use_cuda: Optional[bool] = False,
@@ -88,6 +92,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             outcome_constraints=outcome_constraints,
             n_init=n_init,
             enforce_n_init=enforce_n_init,
+            abandon_failed_trials=abandon_failed_trials,
             fit_out_of_design=fit_out_of_design,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
