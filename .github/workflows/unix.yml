@@ -1,7 +1,6 @@
 name: Unix
 
 on:
-  push:
   pull_request:
   # Run daily at midnight (UTC).
   schedule:
