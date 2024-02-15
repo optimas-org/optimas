@@ -4,11 +4,11 @@ from typing import Optional, Union, List, Tuple, Dict, Any, Literal
 import numpy as np
 from numpy.typing import NDArray
 from pandas import DataFrame
-from copy import deepcopy
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
 from matplotlib.axes import Axes
 from optimas.core import VaryingParameter, Objective
+from optimas.utils.other import convert_to_dataframe
 
 # Ax utilities for model building
 from ax.service.ax_client import AxClient
@@ -150,7 +150,6 @@ class AxModelManager(object):
         self,
         sample: Union[DataFrame, Dict, NDArray] = None,
         metric_name: Optional[str] = None,
-        p0: Optional[Dict] = None,
     ) -> Tuple[NDArray]:
         """Evaluate the model over the specified sample.
 
@@ -165,8 +164,6 @@ class AxModelManager(object):
         metric_name: str, optional.
             Name of the metric to evaluate.
             If not specified, it will take the first first objective in ``self.ax_client``.
-        p0: dictionary, optional.
-            Particular values of parameters to be fixed for the evaluation.
 
         Returns
         -------
@@ -186,89 +183,21 @@ class AxModelManager(object):
                     f"Available metrics are: {metric_names}."
                 )
 
-        # get optimum
-        try:
-            objectives = self.ax_client.objective.objectives
-            minimize = None
-            for obj in objectives:
-                if metric_name == obj.metric_names[0]:
-                    minimize = obj.minimize
-                    break
-            pp = self.ax_client.get_pareto_optimal_parameters()
-            obj_vals = [
-                objs[metric_name] for i, (vals, (objs, covs)) in pp.items()
-            ]
-            param_vals = [vals for i, (vals, (objs, covs)) in pp.items()]
-            if minimize:
-                best_obj_i = np.argmin(obj_vals)
-            else:
-                best_obj_i = np.argmax(obj_vals)
-            best_pars = param_vals[best_obj_i]
-        except AttributeError:
-            best_pars = self.ax_client.get_best_parameters()[0]
+        parnames = list(self.ax_client.experiment.parameters.keys())
 
-        parameters = best_pars
-        parnames = list(parameters.keys())
+        sample = convert_to_dataframe(sample)
 
-        # user specific point
-        if p0 is not None:
-            for key in p0.keys():
-                if key in parameters.keys():
-                    parameters[key] = p0[key]
-
+        # check if labels of the dataframe match the parnames
+        for name in parnames:
+            if name not in sample.columns.values:
+                raise ValueError(f"Data for {name} is missing in the sample.")
         # make list of `ObservationFeatures`
         obsf_list = []
-        obsf_0 = ObservationFeatures(parameters=parameters)
-        if isinstance(sample, np.ndarray):
-            # check the shape of the array
-            if sample.shape[1] != len(parnames):
-                raise RuntimeError(
-                    "Second dimension of the sample array should match "
-                    "the number of parameters of the model."
-                )
-            for i in range(sample.shape[0]):
-                predf = deepcopy(obsf_0)
-                for j, parname in enumerate(parameters.keys()):
-                    predf.parameters[parname] = sample[i][j]
-                obsf_list.append(predf)
-        elif isinstance(sample, DataFrame):
-            # check if labels of the dataframe match the parnames
-            for col in sample.columns:
-                if col not in parnames:
-                    raise RuntimeError(
-                        "Column %s does not match any of the parameter names"
-                        % col
-                    )
-            for i in range(sample.shape[0]):
-                predf = deepcopy(obsf_0)
-                for col in sample.columns:
-                    predf.parameters[col] = sample[col].iloc[i]
-                obsf_list.append(predf)
-        elif isinstance(sample, dict):
-            # check if the keys of the dictionary match the parnames
-            for key in sample.keys():
-                if key not in parnames:
-                    raise RuntimeError(
-                        "Key %s does not match any of the parameter names" % col
-                    )
-            element = sample[list(sample.keys())[0]]
-            if hasattr(element, "__len__"):
-                for i in range(len(element)):
-                    predf = deepcopy(obsf_0)
-                    for key in sample.keys():
-                        predf.parameters[key] = sample[key][i]
-                    obsf_list.append(predf)
-            else:
-                predf = deepcopy(obsf_0)
-                for key in sample.keys():
-                    predf.parameters[key] = sample[key]
-                obsf_list.append(predf)
-
-        elif sample is None:
-            predf = deepcopy(obsf_0)
-            obsf_list.append(predf)
-        else:
-            raise RuntimeError("Wrong data type")
+        for i in range(sample.shape[0]):
+            parameters = {}
+            for name in parnames:
+                parameters[name] = sample[name].iloc[i]
+            obsf_list.append(ObservationFeatures(parameters=parameters))
 
         mu, cov = self.model.predict(obsf_list)
         m_array = np.asarray(mu[metric_name])
@@ -287,8 +216,8 @@ class AxModelManager(object):
         mode: Optional[Literal["mean", "sem", "both"]] = "mean",
         clabel: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
-        gridspec_kw: Dict[str, Any] = None,
-        pcolormesh_kw: Dict[str, Any] = None,
+        gridspec_kw: Optional[Dict[str, Any]] = None,
+        pcolormesh_kw: Optional[Dict[str, Any]] = None,
         **figure_kw,
     ) -> Union[Axes, List[Axes]]:
         """Plot model in the two selected variables, while others are fixed to the optimum.
@@ -334,7 +263,6 @@ class AxModelManager(object):
         # get experiment info
         experiment = self.ax_client.experiment
         parnames = list(experiment.parameters.keys())
-        # minimize = experiment.optimization_config.objective.minimize
 
         if len(parnames) < 2:
             raise RuntimeError(
@@ -347,6 +275,10 @@ class AxModelManager(object):
             xname = parnames[0]
         if yname is None:
             yname = parnames[1]
+
+        # metric name
+        if mname is None:
+            mname = self.ax_client.objective_names[0]
 
         # set the plotting range
         if xrange is None:
@@ -366,36 +298,44 @@ class AxModelManager(object):
         xaxis = np.linspace(xrange[0], xrange[1], npoints)
         yaxis = np.linspace(yrange[0], yrange[1], npoints)
         X, Y = np.meshgrid(xaxis, yaxis)
-        xarray = X.flatten()
-        yarray = Y.flatten()
-        sample = DataFrame({xname: xarray, yname: yarray})
+        sample = {xname: X.flatten(), yname: Y.flatten()}
 
-        # metric name
-        if mname is None:
-            mname = self.ax_client.objective_names[0]
+        if p0 is None:
+            # get optimum
+            if len(self.ax_client.objective_names) > 1:
+                minimize = None
+                for obj in self.ax_client.objective.objectives:
+                    if mname == obj.metric_names[0]:
+                        minimize = obj.minimize
+                        break
+                pp = self.ax_client.get_pareto_optimal_parameters()
+                obj_vals = [
+                    objs[mname] for i, (vals, (objs, covs)) in pp.items()
+                ]
+                param_vals = [vals for i, (vals, (objs, covs)) in pp.items()]
+                if minimize:
+                    best_obj_i = np.argmin(obj_vals)
+                else:
+                    best_obj_i = np.argmax(obj_vals)
+                p0 = param_vals[best_obj_i]
+            else:
+                p0 = self.ax_client.get_best_parameters()[0]
+
+        for name, val in p0.items():
+            if name not in [xname, yname]:
+                sample[name] = np.ones(npoints**2) * val
 
         # evaluate the model
-        f_plt, sd_plt = self.evaluate_model(
-            sample=sample,
-            metric_name=mname,
-            p0=p0,
-        )
-
-        # get numpy arrays with experiment parameters
-        xtrials = np.zeros(experiment.num_trials)
-        ytrials = np.zeros(experiment.num_trials)
-        for i in range(experiment.num_trials):
-            xtrials[i] = experiment.trials[i].arm.parameters[xname]
-            ytrials[i] = experiment.trials[i].arm.parameters[yname]
+        f_plt, sd_plt = self.evaluate_model(sample=sample, metric_name=mname)
 
         # select quantities to plot and set the labels
         f_plots = []
         labels = []
         if mode in ["mean", "both"]:
-            f_plots.append(f_plt)
+            f_plots.append(f_plt.reshape(X.shape))
             labels.append(mname + ", mean")
         if mode in ["sem", "both"]:
-            f_plots.append(sd_plt)
+            f_plots.append(sd_plt.reshape(X.shape))
             labels.append(mname + ", sem")
 
         # create figure
@@ -409,18 +349,13 @@ class AxModelManager(object):
             gs = GridSpecFromSubplotSpec(1, nplots, subplot_spec, **gridspec_kw)
 
         # draw plots
+        trials = self.ax_client.get_trials_data_frame()
         axs = []
         for i, f in enumerate(f_plots):
             ax = plt.subplot(gs[i])
             # colormesh
             pcolormesh_kw = dict(pcolormesh_kw or {})
-            im = ax.pcolormesh(
-                xaxis,
-                yaxis,
-                f.reshape(X.shape),
-                shading="auto",
-                **pcolormesh_kw,
-            )
+            im = ax.pcolormesh(xaxis, yaxis, f, shading="auto", **pcolormesh_kw)
             cbar = plt.colorbar(im, ax=ax, location="top")
             cbar.set_label(labels[i])
             ax.set(xlabel=xname, ylabel=yname)
@@ -428,7 +363,7 @@ class AxModelManager(object):
             cset = ax.contour(
                 X,
                 Y,
-                f.reshape(X.shape),
+                f,
                 levels=20,
                 linewidths=0.5,
                 colors="black",
@@ -437,7 +372,7 @@ class AxModelManager(object):
             if clabel:
                 plt.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
             # draw trials
-            ax.scatter(xtrials, ytrials, s=2, c="black", marker="o")
+            ax.scatter(trials[xname], trials[yname], s=2, c="black", marker="o")
             ax.set_xlim(xrange)
             ax.set_ylim(yrange)
             axs.append(ax)
