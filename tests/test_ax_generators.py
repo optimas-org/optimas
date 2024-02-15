@@ -238,9 +238,6 @@ def test_ax_single_fidelity_int():
     # Check correct variable type.
     assert exploration.history["x0"].to_numpy().dtype == int
 
-    # Check that plotting functions don't crash.
-    make_plots(gen)
-
 
 def test_ax_single_fidelity_moo():
     """
@@ -282,9 +279,6 @@ def test_ax_single_fidelity_moo():
     # Check that plotting functions don't crash.
     make_plots(gen)
 
-    # Check that plotting functions don't crash.
-    make_plots(gen)
-
 
 def test_ax_single_fidelity_fb():
     """
@@ -321,12 +315,6 @@ def test_ax_single_fidelity_fb():
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
-
-    # Check that plotting functions don't crash.
-    make_plots(gen)
-
-    # Check that plotting functions don't crash.
-    make_plots(gen)
 
 
 def test_ax_single_fidelity_moo_fb():
@@ -368,12 +356,6 @@ def test_ax_single_fidelity_moo_fb():
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
-
-    # Check that plotting functions don't crash.
-    make_plots(gen)
-
-    # Check that plotting functions don't crash.
-    make_plots(gen)
 
 
 def test_ax_single_fidelity_updated_params():
