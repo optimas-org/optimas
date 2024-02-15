@@ -30,11 +30,12 @@ def test_ax_model_manager():
 
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
+    var3 = VaryingParameter("x2", -5.0, 15.0)
     obj = Objective("f", minimize=True)
     obj2 = Objective("f2", minimize=False)
 
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj, obj2]
+        varying_parameters=[var1, var2, var3], objectives=[obj, obj2]
     )
     ev = FunctionEvaluator(function=eval_func_sf_moo)
     exploration = Exploration(
@@ -81,9 +82,8 @@ def test_ax_model_manager():
     print(df)
 
     # Check that different model initializations match within a 1% tolerance.
-    assert np.allclose(mean_axcl, mean_json, rtol=1e-2) and np.allclose(
-        mean_axcl, mean_diag, rtol=1e-2
-    )
+    assert np.allclose(mean_axcl, mean_json, rtol=1e-2)
+    assert np.allclose(mean_axcl, mean_diag, rtol=1e-2)
 
     # Make example figure with two models in 2D.
     fig = plt.figure(figsize=(10, 4.8))
@@ -111,17 +111,16 @@ def test_ax_model_manager():
     plt.savefig(os.path.join(exploration_dir_path, "models.png"))
 
     # Make example figure of the models in 1D with errors.
-    parx0 = mm_axcl.ax_client.experiment.parameters["x0"]
-    parx1 = mm_axcl.ax_client.experiment.parameters["x1"]
-    x1_mid = 0.5 * (parx1.lower + parx1.upper)
-    x0 = np.linspace(parx0.lower, parx0.upper, 100)
+    x1 = np.ones(100) * 0.5 * (var2.lower_bound + var2.upper_bound)
+    x2 = np.ones(100) * 0.5 * (var3.lower_bound + var3.upper_bound)
+    x0 = np.linspace(var1.lower_bound, var1.upper_bound, 100)
     metric_names = mm_axcl.ax_client.objective_names
     fig, axs = plt.subplots(len(metric_names), 1, sharex=True)
     for i, (ax, metric_name) in enumerate(zip(axs, metric_names)):
         mean, sed = mm_axcl.evaluate_model(
-            sample={"x0": x0}, p0={"x1": x1_mid}, metric_name=metric_name
+            sample={"x0": x0, "x1": x1, "x2": x2}, metric_name=metric_name
         )
-        ax.plot(x0, mean, color=f"C{i}", label=f"x1 = {x1_mid}")
+        ax.plot(x0, mean, color=f"C{i}", label=f"x1 = {x1[0]}")
         ax.fill_between(
             x0, mean - sed, mean + sed, color="lightgray", alpha=0.5
         )
