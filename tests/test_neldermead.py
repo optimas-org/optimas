@@ -41,8 +41,8 @@ def test_neldermead():
         generator=gen,
         evaluator=ev,
         max_evals=n_evals,
-        sim_workers=2,
-        exploration_dir_path="./tests_output/test_grid_sampling",
+        sim_workers=1,
+        exploration_dir_path="./tests_output/test_neldermead",
     )
     exploration.run()
 
