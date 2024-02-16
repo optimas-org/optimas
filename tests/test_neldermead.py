@@ -33,9 +33,7 @@ def test_neldermead():
     obj = Objective("f", minimize=False)
 
     # Create generator and run exploration.
-    gen = NelderMeadGenerator(
-        varying_parameters=vars, objectives=[obj]
-    )
+    gen = NelderMeadGenerator(varying_parameters=vars, objectives=[obj])
     ev = FunctionEvaluator(function=eval_func)
     exploration = Exploration(
         generator=gen,
