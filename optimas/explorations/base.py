@@ -227,6 +227,8 @@ class Exploration:
         # Update generator with the one received from libE.
         if self.libe_comms != "threads":
             self.generator._update(persis_info[1]["generator"])
+            # Restore logger (had to be removed when sending back to manager.)
+            self.generator._set_logger(self._logger)
 
         # Update number of evaluation in this exploration.
         n_evals_final = self.generator.n_evaluated_trials
