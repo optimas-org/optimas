@@ -118,7 +118,8 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             number_of_gen_points = 0
 
     # Add updated generator to `persis_info`.
-    generator._prepare_to_send()
+    if persis_info["comms"] != "threads":
+        generator._prepare_to_send_back()
     persis_info["generator"] = generator
 
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG

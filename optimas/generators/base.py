@@ -3,7 +3,7 @@
 from __future__ import annotations
 import os
 from copy import deepcopy
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -20,6 +20,8 @@ from optimas.core import (
     TrialParameter,
     TrialStatus,
 )
+if TYPE_CHECKING:
+    from optimas.loggers.base import Logger
 
 logger = get_logger(__name__)
 
@@ -114,6 +116,7 @@ class Generator:
         self._queued_trials = []  # Trials queued to be given for evaluation.
         self._trial_count = 0
         self._check_parameters(self._varying_parameters)
+        self._logger = None
 
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
@@ -149,6 +152,11 @@ class Generator:
     def dedicated_resources(self) -> bool:
         """Get whether the generator has dedicated resources allocated."""
         return self._dedicated_resources
+
+    @property
+    def completed_trials(self) -> List[Trial]:
+        """Get list of completed trials."""
+        return [trial for trial in self._given_trials if trial.completed]
 
     @property
     def n_queued_trials(self) -> int:
@@ -266,6 +274,8 @@ class Generator:
             else:
                 log_msg = f"Failed to evaluate trial {trial.index}."
             logger.info(log_msg)
+            if self._logger is not None:
+                self._logger.log_trial(trial, self)
         if allow_saving_model and self._save_model:
             self.save_model_to_file()
 
@@ -510,7 +520,11 @@ class Generator:
             )
 
     def get_gen_specs(
-        self, sim_workers: int, run_params: Dict, max_evals: int
+        self,
+        sim_workers: int,
+        run_params: Dict,
+        max_evals: int,
+        libe_comms: str,
     ) -> Dict:
         """Get the libEnsemble gen_specs.
 
@@ -523,9 +537,14 @@ class Generator:
             required.
         max_evals : int
             Maximum number of evaluations to generate.
+        libe_comms : {'local', 'threads', 'mpi'}, optional.
+            The communication mode for libEnseble. Used to determine whether
+            the generator is running on a thread (and therefore in shared
+            memory).
 
         """
-        self._prepare_to_send()
+        if libe_comms != "threads":
+            self._prepare_to_send()
         gen_specs = {
             # Generator function.
             "gen_f": self._gen_function,
@@ -582,6 +601,14 @@ class Generator:
         It must be implemented by the subclasses, if needed.
         """
         pass
+
+    def _prepare_to_send_back(self) -> None:
+        """Prepare generator to send it back from the gen_f to the manager."""
+        # Removing the logger prevents the WandB error:
+        # "RuntimeError: attach in the same process is not supported currently"
+        # when using multiprocessing.
+        self._logger = None
+        self._prepare_to_send()
 
     def _update(self, new_generator: Generator) -> None:
         """Update generator with the attributes of a newer one.
@@ -646,3 +673,7 @@ class Generator:
                         f"{self.__class__.__name__} does not support fixing "
                         "the value of a VaryingParameter."
                     )
+
+    def _set_logger(self, logger: Logger) -> None:
+        """Set the generator logger."""
+        self._logger = logger

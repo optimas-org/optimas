@@ -136,11 +136,17 @@ class AxMultitaskGenerator(AxGenerator):
         self._experiment = self._create_experiment()
 
     def get_gen_specs(
-        self, sim_workers: int, run_params: Dict, sim_max: int
+        self,
+        sim_workers: int,
+        run_params: Dict,
+        max_evals: int,
+        libe_comms: str,
     ) -> Dict:
         """Get the libEnsemble gen_specs."""
         # Get base specs.
-        gen_specs = super().get_gen_specs(sim_workers, run_params, sim_max)
+        gen_specs = super().get_gen_specs(
+            sim_workers, run_params, max_evals, libe_comms
+        )
         # Add task to output parameters.
         max_length = max([len(self.lofi_task.name), len(self.hifi_task.name)])
         gen_specs["out"].append(("task", str, max_length))
