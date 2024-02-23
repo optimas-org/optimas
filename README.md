@@ -1,4 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/optimas)](https://pypi.org/project/optimas/)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/optimas.svg)](https://anaconda.org/conda-forge/optimas)
 [![tests badge](https://github.com/optimas-org/optimas/actions/workflows/unix.yml/badge.svg)](https://github.com/optimas-org/optimas/actions)
 [![Documentation Status](https://readthedocs.org/projects/optimas/badge/?version=latest)](https://optimas.readthedocs.io/en/latest/?badge=latest)
 [![DOI](https://zenodo.org/badge/287560975.svg)](https://zenodo.org/badge/latestdoi/287560975)
@@ -39,11 +40,15 @@ Optimas is a Python library designed for highly scalable optimization, from lapt
 
 
 ## Installation
-You can install Optimas from PyPI:
+You can install Optimas from PyPI (recommended):
 ```sh
 pip install optimas
 ```
-Or directly from GitHub:
+from conda-forge:
+```sh
+conda install optimas --channel conda-forge
+```
+or directly from GitHub:
 ```sh
 pip install git+https://github.com/optimas-org/optimas.git
 ```

@@ -22,7 +22,7 @@ See table below for a summary.
 
    * - Generator
      - ``pip install optimas``
-     - ``pip install optimas[all]``
+     - ``pip install 'optimas[all]'``
    * - :class:`~optimas.generators.LineSamplingGenerator`
      - ✅
      - ✅
