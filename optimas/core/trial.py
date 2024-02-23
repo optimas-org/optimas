@@ -152,6 +152,21 @@ class Trial:
         """Determine whether the trial has been evaluated."""
         return self.completed or self.failed
 
+    @property
+    def data(self) -> Dict:
+        """Get a dictionary with all the trial data."""
+        vp_dict = self.parameters_as_dict()
+        ap_dict = self.analyzed_parameters_as_dict()
+        ob_dict = self.objectives_as_dict()
+        # Do not report uncertainty. We haven't yet decided about how to
+        # report it in the history.
+        for key, val in ob_dict.items():
+            ob_dict[key] = val[0]
+        for key, val in ap_dict.items():
+            ap_dict[key] = val[0]
+        data = {**vp_dict, **ob_dict, **ap_dict}
+        return data
+
     def mark_as(self, status) -> None:
         """Set trial status.
 
