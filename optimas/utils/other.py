@@ -57,6 +57,12 @@ def convert_to_dataframe(
     elif isinstance(data, pd.DataFrame):
         return data
     elif isinstance(data, dict):
+        # Check whether the elements in the dictionary are arrays or not.
+        # If they are not, covert to 1-element arrays for DataFrame initialization.
+        element = data[list(data.keys())[0]]
+        if not hasattr(element, "__len__"):
+            for key, value in data.items():
+                data[key] = np.ones(1, dtype=type(value)) * value 
         return pd.DataFrame(data)
     elif isinstance(data, list):
         fields = list(data[0].keys())
