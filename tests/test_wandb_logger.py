@@ -1,4 +1,3 @@
-import os
 # os.environ['WANDB_START_METHOD'] = 'thread'
 # os.environ['WANDB_DISABLE_SERVICE'] = "1"
 # API_KEY = "4b810c5f384e91c204b67371249db1a6b1e1aca4"
@@ -22,7 +21,7 @@ def eval_func(input_params, output_params):
     result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
     output_params["f"] = result
     output_params["p0"] = np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
-    
+
     plt.figure()
     plt.plot(output_params["p0"][0], output_params["p0"][1])
     output_params["fig"] = deepcopy(plt.gcf())
@@ -31,7 +30,7 @@ def eval_func(input_params, output_params):
     output_params["p1"] = deepcopy(plt.gcf())
 
 
-def user_function(last_trial, generator: RandomSamplingGenerator):    
+def user_function(last_trial, generator: RandomSamplingGenerator):
     all_trials = generator.completed_trials
     n_trials = len(all_trials)
     shape_1 = np.array(all_trials[0].data["p0"]).shape[1]
@@ -87,7 +86,7 @@ def test_wandb_logger():
         {
             "x0": [1.0],
             "x1": [2.0],
-            "f": [0.],
+            "f": [0.0],
             "p0": [np.array([[1, 2, 3, 4], [2, 6, 7, 4]])],
             "p1": [plt.figure()],
             "fig": [plt.figure()],

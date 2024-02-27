@@ -20,6 +20,7 @@ from optimas.core import (
     TrialParameter,
     TrialStatus,
 )
+
 if TYPE_CHECKING:
     from optimas.loggers.base import Logger
 
