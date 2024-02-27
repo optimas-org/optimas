@@ -62,7 +62,7 @@ def convert_to_dataframe(
         element = data[list(data.keys())[0]]
         if not hasattr(element, "__len__"):
             for key, value in data.items():
-                data[key] = np.ones(1, dtype=type(value)) * value 
+                data[key] = np.ones(1, dtype=type(value)) * value
         return pd.DataFrame(data)
     elif isinstance(data, list):
         fields = list(data[0].keys())

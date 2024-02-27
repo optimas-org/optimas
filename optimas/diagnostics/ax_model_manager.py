@@ -205,7 +205,7 @@ class AxModelManager(object):
         return m_array, sem_array
 
     def get_best_point(
-        self, 
+        self,
         metric_name: Optional[str] = None,
         use_model_predictions: Optional[bool] = True,
     ) -> Tuple[NDArray]:
@@ -217,13 +217,13 @@ class AxModelManager(object):
             Name of the metric to evaluate.
             If not specified, it will take the first first objective in ``self.ax_client``.
         use_model_predictions: bool, optional.
-            Whether to extract the best point using model predictions 
-            or directly observed values.    
+            Whether to extract the best point using model predictions
+            or directly observed values.
 
         Returns
         -------
         best_point : dict
-            A dictionary with the parameters of the best point.       
+            A dictionary with the parameters of the best point.
         """
         # metric name
         if metric_name is None:
@@ -236,8 +236,12 @@ class AxModelManager(object):
                 if metric_name == obj.metric_names[0]:
                     minimize = obj.minimize
                     break
-            pp = self.ax_client.get_pareto_optimal_parameters(use_model_predictions=use_model_predictions)
-            obj_vals = [objs[metric_name] for index, (vals, (objs, covs)) in pp.items()]
+            pp = self.ax_client.get_pareto_optimal_parameters(
+                use_model_predictions=use_model_predictions
+            )
+            obj_vals = [
+                objs[metric_name] for index, (vals, (objs, covs)) in pp.items()
+            ]
             param_vals = [vals for index, (vals, (objs, covs)) in pp.items()]
             if minimize:
                 best_obj_i = np.argmin(obj_vals)
@@ -251,7 +255,9 @@ class AxModelManager(object):
             else:
                 # AxClient.get_best_parameters seems to always return the best point
                 # from the observed values, independently of the value of `use_model_predictions`.
-                best_point = self.ax_client.get_best_parameters(use_model_predictions=use_model_predictions)[0]
+                best_point = self.ax_client.get_best_parameters(
+                    use_model_predictions=use_model_predictions
+                )[0]
 
         return best_point
 
@@ -353,7 +359,9 @@ class AxModelManager(object):
 
         if p0 is None:
             # get best point
-            p0 = self.get_best_point(metric_name=mname, use_model_predictions=True)
+            p0 = self.get_best_point(
+                metric_name=mname, use_model_predictions=True
+            )
 
         for name, val in p0.items():
             if name not in [xname, yname]:
