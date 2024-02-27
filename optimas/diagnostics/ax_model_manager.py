@@ -204,6 +204,57 @@ class AxModelManager(object):
         sem_array = np.sqrt(cov[metric_name][metric_name])
         return m_array, sem_array
 
+    def get_best_point(
+        self, 
+        metric_name: Optional[str] = None,
+        use_model_predictions: Optional[bool] = True,
+    ) -> Tuple[NDArray]:
+        """Get the best scoring point in the sample.
+
+         Parameter:
+        ----------
+        metric_name: str, optional.
+            Name of the metric to evaluate.
+            If not specified, it will take the first first objective in ``self.ax_client``.
+        use_model_predictions: bool, optional.
+            Whether to extract the best point using model predictions 
+            or directly observed values.    
+
+        Returns
+        -------
+        best_point : dict
+            A dictionary with the parameters of the best point.       
+        """
+        # metric name
+        if metric_name is None:
+            metric_name = self.ax_client.objective_names[0]
+
+        # get optimum
+        if len(self.ax_client.objective_names) > 1:
+            minimize = None
+            for obj in self.ax_client.objective.objectives:
+                if metric_name == obj.metric_names[0]:
+                    minimize = obj.minimize
+                    break
+            pp = self.ax_client.get_pareto_optimal_parameters(use_model_predictions=use_model_predictions)
+            obj_vals = [objs[metric_name] for index, (vals, (objs, covs)) in pp.items()]
+            param_vals = [vals for index, (vals, (objs, covs)) in pp.items()]
+            if minimize:
+                best_obj_i = np.argmin(obj_vals)
+            else:
+                best_obj_i = np.argmax(obj_vals)
+            best_point = param_vals[best_obj_i]
+        else:
+            if use_model_predictions is True:
+                best_arm, best_point_predictions = self.model.model_best_point()
+                best_point = best_arm.parameters
+            else:
+                # AxClient.get_best_parameters seems to always return the best point
+                # from the observed values, independently of the value of `use_model_predictions`.
+                best_point = self.ax_client.get_best_parameters(use_model_predictions=use_model_predictions)[0]
+
+        return best_point
+
     def plot_model(
         self,
         xname: Optional[str] = None,
@@ -301,25 +352,8 @@ class AxModelManager(object):
         sample = {xname: X.flatten(), yname: Y.flatten()}
 
         if p0 is None:
-            # get optimum
-            if len(self.ax_client.objective_names) > 1:
-                minimize = None
-                for obj in self.ax_client.objective.objectives:
-                    if mname == obj.metric_names[0]:
-                        minimize = obj.minimize
-                        break
-                pp = self.ax_client.get_pareto_optimal_parameters()
-                obj_vals = [
-                    objs[mname] for i, (vals, (objs, covs)) in pp.items()
-                ]
-                param_vals = [vals for i, (vals, (objs, covs)) in pp.items()]
-                if minimize:
-                    best_obj_i = np.argmin(obj_vals)
-                else:
-                    best_obj_i = np.argmax(obj_vals)
-                p0 = param_vals[best_obj_i]
-            else:
-                p0 = self.ax_client.get_best_parameters()[0]
+            # get best point
+            p0 = self.get_best_point(metric_name=mname, use_model_predictions=True)
 
         for name, val in p0.items():
             if name not in [xname, yname]:
@@ -384,13 +418,13 @@ class AxModelManager(object):
 
     def get_arm_index(
         self,
-        arm_name: Optional[str] = None,
+        arm_name: str,
     ) -> int:
         """Get the index of the arm by its name.
 
         Parameters
         ----------
-        arm_name: string, optional.
+        arm_name: string.
             Name of the arm. If not given, the best arm is selected.
 
         Returns
@@ -398,10 +432,6 @@ class AxModelManager(object):
         index: int
             Trial index of the arm.
         """
-        if arm_name is None:
-            best_arm, best_point_predictions = self.model.model_best_point()
-            arm_name = best_arm.name
-
-        df = self.ax_client.experiment.fetch_data().df
+        df = self.ax_client.get_trials_data_frame()
         index = df.loc[df["arm_name"] == arm_name, "trial_index"].iloc[0]
         return index
