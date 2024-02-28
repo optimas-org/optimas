@@ -78,13 +78,13 @@ class AxModelManager(object):
         parameters: list of `VaryingParameter`.
             Useful to initialize from `ExplorationDiagnostics`.
         """
-        # Define parameters
+        # Define parameters for AxClient
         if parameters is None:
             if parnames is None:
                 raise RuntimeError(
                     "Either `parameters` or `parnames` should be provided."
                 )
-            parameters = [
+            axparameters = [
                 {
                     "name": p_name,
                     "type": "range",
@@ -94,9 +94,33 @@ class AxModelManager(object):
                 for p_name in parnames
             ]
         else:
-            parnames = [par["name"] for par in parameters]
+            parnames = [par.name for par in parameters]
+            axparameters = []
+            for par in parameters:
+                # Determine parameter type.
+                value_dtype = np.dtype(par.dtype)
+                if value_dtype.kind == "f":
+                    value_type = "float"
+                elif value_dtype.kind == "i":
+                    value_type = "int"
+                else:
+                    raise ValueError(
+                        "Ax range parameter can only be of type 'float'ot 'int', "
+                        "not {var.dtype}."
+                    )
+                # Create parameter dict and append to list.
+                axparameters.append(
+                    {
+                        "name": par.name,
+                        "type": "range",
+                        "bounds": [par.lower_bound, par.upper_bound],
+                        "is_fidelity": par.is_fidelity,
+                        "target_value": par.fidelity_target_value,
+                        "value_type": value_type,
+                    }
+                )
 
-        # Define objectives
+        # Define objectives for AxClient
         if objectives is None:
             if objname is None:
                 raise RuntimeError(
@@ -111,15 +135,15 @@ class AxModelManager(object):
             )
             self.ax_client.create_experiment(
                 name="optimas_data",
-                parameters=parameters,
+                parameters=axparameters,
                 objective_name=objname,
                 minimize=minimize,
             )
         else:
             # Create multi-objective Axclient
-            objectives_dict = {}
+            axobjectives = {}
             for obj in objectives:
-                objectives_dict[obj.name] = ObjectiveProperties(
+                axobjectives[obj.name] = ObjectiveProperties(
                     minimize=obj.minimize
                 )
             gs = GenerationStrategy(
@@ -130,8 +154,8 @@ class AxModelManager(object):
             )
             self.ax_client.create_experiment(
                 name="optimas_data",
-                parameters=parameters,
-                objectives=objectives_dict,
+                parameters=axparameters,
+                objectives=axobjectives,
             )
 
         # Add trials from DataFrame
@@ -414,7 +438,7 @@ class AxModelManager(object):
             if clabel:
                 plt.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
             # draw trials
-            ax.scatter(trials[xname], trials[yname], s=2, c="black", marker="o")
+            ax.scatter(trials[xname], trials[yname], s=8, c="black", marker="o")
             ax.set_xlim(xrange)
             ax.set_ylim(yrange)
             axs.append(ax)

@@ -1000,7 +1000,8 @@ class ExplorationDiagnostics:
         ----------
         objname: string, optional
             Name of the objective (or metric).
-            If not given, it takes the list of objectives.
+            If not given, it takes the list of objectives
+            in the diagnostics.
         minimize: bool, optional
             Whether to minimize or maximize the objective.
             It is only used when `objname` is given.
@@ -1010,47 +1011,21 @@ class ExplorationDiagnostics:
         -------
         An instance of AxModelManager
         """
-        # Initialize `AxModelManager` with history data
+        # Initialize `AxModelManager` with history dataframe.
         df = self.history.copy()
         self.model_manager = AxModelManager(df)
 
-        # Get parameters for AxClient.
-        parameters = []
-        for var in self.varying_parameters:
-            # Determine parameter type.
-            value_dtype = np.dtype(var.dtype)
-            if value_dtype.kind == "f":
-                value_type = "float"
-            elif value_dtype.kind == "i":
-                value_type = "int"
-            else:
-                raise ValueError(
-                    "Ax range parameter can only be of type 'float'ot 'int', "
-                    "not {var.dtype}."
-                )
-            # Create parameter dict and append to list.
-            parameters.append(
-                {
-                    "name": var.name,
-                    "type": "range",
-                    "bounds": [var.lower_bound, var.upper_bound],
-                    "is_fidelity": var.is_fidelity,
-                    "target_value": var.fidelity_target_value,
-                    "value_type": value_type,
-                }
-            )
-
-        # Get objectives
-        objective_names = [obj.name for obj in self.objectives]
+        # Select objective.
         if objname is not None:
+            objective_names = [obj.name for obj in self.objectives]
             if objname in objective_names:
                 minimize = self._get_objective(objname).minimize
             self.model_manager.build_model(
-                parameters=parameters, objname=objname, minimize=minimize
-            )
+                parameters=self.varying_parameters, objname=objname, minimize=minimize
+            )   
         else:
             self.model_manager.build_model(
-                parameters=parameters, objectives=self.objectives
+                parameters=self.varying_parameters, objectives=self.objectives
             )
 
         return self.model_manager
