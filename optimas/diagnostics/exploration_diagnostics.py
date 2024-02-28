@@ -1021,8 +1021,10 @@ class ExplorationDiagnostics:
             if objname in objective_names:
                 minimize = self._get_objective(objname).minimize
             self.model_manager.build_model(
-                parameters=self.varying_parameters, objname=objname, minimize=minimize
-            )   
+                parameters=self.varying_parameters,
+                objname=objname,
+                minimize=minimize,
+            )
         else:
             self.model_manager.build_model(
                 parameters=self.varying_parameters, objectives=self.objectives
