@@ -92,11 +92,13 @@ def test_ax_model_manager():
     # center coordinates
     x1_c = 0.5 * (var2.lower_bound + var2.upper_bound)
     x2_c = 0.5 * (var3.lower_bound + var3.upper_bound)
- 
+
     # plot model for `f`
     ax1 = mm_axcl.plot_model(
-        mname="f", p0={'x2': x2_c},
-        pcolormesh_kw={"cmap": "GnBu"}, subplot_spec=gs[0, 0]
+        mname="f",
+        p0={"x2": x2_c},
+        pcolormesh_kw={"cmap": "GnBu"},
+        subplot_spec=gs[0, 0],
     )
 
     # Get and draw top 3 evaluations for `f`
@@ -106,8 +108,10 @@ def test_ax_model_manager():
 
     # plot model for `f2`
     ax2 = mm_axcl.plot_model(
-        mname="f2", p0={'x2': x2_c},
-        pcolormesh_kw={"cmap": "OrRd"}, subplot_spec=gs[0, 1]
+        mname="f2",
+        p0={"x2": x2_c},
+        pcolormesh_kw={"cmap": "OrRd"},
+        subplot_spec=gs[0, 1],
     )
 
     # Get and draw top 3 evaluations for `f2`
