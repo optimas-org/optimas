@@ -232,7 +232,7 @@ class AxModelManager(object):
         self,
         metric_name: Optional[str] = None,
         use_model_predictions: Optional[bool] = True,
-    ) -> Tuple[NDArray]:
+    ) -> Dict:
         """Get the best scoring point in the sample.
 
          Parameter:
@@ -285,6 +285,22 @@ class AxModelManager(object):
 
         return best_point
 
+    def get_mid_point(
+        self,
+    ) -> Dict:
+        """Get the middle point of the space of parameters.
+
+        Returns
+        -------
+        mid_point : dict
+            A dictionary with the parameters of the mid point.
+        """
+        mid_point = {}
+        for key, par in self.ax_client.experiment.parameters.items():
+            mid_point[key] = 0.5 * (par.lower + par.upper)
+
+        return mid_point
+
     def plot_model(
         self,
         xname: Optional[str] = None,
@@ -312,8 +328,10 @@ class AxModelManager(object):
         mname: string, optional.
             Name of the metric to plot.
             If not specified, it will take the first objective in ``self.ax_client``.
-        p0: dictionary
-            Particular values of parameters to be fixed for the evaluation over the sample.
+        p0: dictionary, optional.
+            A dictionary ``{name: val}`` for the fixed values of the other
+            parameters. If not provided, then the values of the best predicted
+            parametrization will be used.
         npoints: int, optional
             Number of points in each axis.
         mode: string, optional.
