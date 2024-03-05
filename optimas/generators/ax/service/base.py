@@ -170,7 +170,6 @@ class AxServiceGenerator(AxGenerator):
                     gs = self._ax_client.generation_strategy
                     cs = gs.current_step
                     if version.parse(ax_version) >= version.parse("0.3.5"):
-                        cs = gs.current_step
                         # Reduce only if there are still Sobol trials left.
                         if gs.current_step.model == Models.SOBOL:
                             cs.num_trials -= 1
