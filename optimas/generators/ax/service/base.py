@@ -168,17 +168,19 @@ class AxServiceGenerator(AxGenerator):
                     and not self._enforce_n_init
                 ):
                     gs = self._ax_client.generation_strategy
+                    cs = gs.current_step
                     if version.parse(ax_version) >= version.parse("0.3.5"):
                         cs = gs.current_step
-                        ngen, _ = cs.num_trials_to_gen_and_complete()
+                        # Reduce only if there are still Sobol trials left.
+                        if gs.current_step.model == Models.SOBOL:
+                            cs.num_trials -= 1
+                            cs.transition_criteria[0].threshold -= 1
+                            gs._maybe_move_to_next_step()
                     else:
-                        (
-                            ngen,
-                            _,
-                        ) = gs._num_trials_to_gen_and_complete_in_curr_step()
-                    # Reduce only if there are still Sobol trials to generate.
-                    if gs.current_step.model == Models.SOBOL and ngen > 0:
-                        gs.current_step.num_trials -= 1
+                        # Reduce only if there are still Sobol trials left.
+                        if gs.current_step.model == Models.SOBOL:
+                            gs.current_step.num_trials -= 1
+                            gs._maybe_move_to_next_step()
             finally:
                 if trial.completed:
                     outcome_evals = {}
