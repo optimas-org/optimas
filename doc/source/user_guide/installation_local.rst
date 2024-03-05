@@ -45,10 +45,17 @@ Installing with **all** dependencies:
 
 .. code::
 
-    pip install optimas[all]
+    pip install 'optimas[all]'
 
 Use this option if you plan to do Bayesian optimization
 (see :ref:`dependencies` for more details).
+
+Install from conda-forge
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+    conda install optimas --channel conda-forge
 
 Install from GitHub
 ~~~~~~~~~~~~~~~~~~~
