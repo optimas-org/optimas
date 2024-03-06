@@ -182,10 +182,10 @@ class AxModelManager:
         parnames = list(self.ax_client.experiment.parameters.keys())
 
         sample = convert_to_dataframe(sample)
-    
+
         if fixed_point is not None:
             for key, val in fixed_point.items():
-                sample[key] = val 
+                sample[key] = val
 
         # check if labels of the dataframe match the parnames
         for name in parnames:
@@ -260,7 +260,7 @@ class AxModelManager:
                 )
 
         return index, best_point
-    
+
     def get_best_point(self, metric_name: Optional[str] = None) -> Dict:
         """Get the best scoring point in the sample.
 
@@ -275,8 +275,9 @@ class AxModelManager:
         best_point : dict
             A dictionary with the parameters of the best point.
         """
-        _, best_point = self.get_best_evaluation(metric_name=metric_name,
-                                                 use_model_predictions=True)
+        _, best_point = self.get_best_evaluation(
+            metric_name=metric_name, use_model_predictions=True
+        )
         return best_point
 
     def get_mid_point(self) -> Dict:
@@ -298,7 +299,7 @@ class AxModelManager:
         xname: Optional[str] = None,
         yname: Optional[str] = None,
         mname: Optional[str] = None,
-        p0: Optional[Union[Dict, Literal['best', 'mid']]] = None,
+        p0: Optional[Union[Dict, Literal["best", "mid"]]] = None,
         npoints: Optional[int] = 200,
         xrange: Optional[List[float]] = None,
         yrange: Optional[List[float]] = None,
@@ -385,10 +386,10 @@ class AxModelManager:
         X, Y = np.meshgrid(xaxis, yaxis)
         sample = {xname: X.flatten(), yname: Y.flatten()}
 
-        if (p0 is None) or (p0 == 'mid'):
+        if (p0 is None) or (p0 == "mid"):
             # Get mid point
             p0 = self.get_mid_point()
-        elif p0 == 'best':
+        elif p0 == "best":
             # get best point
             p0 = self.get_best_point(metric_name=mname)
 
@@ -398,9 +399,9 @@ class AxModelManager:
                 fixed_point[name] = p0[name]
 
         # evaluate the model
-        f_plt, sd_plt = self.evaluate_model(sample=sample, 
-                                            metric_name=mname, 
-                                            fixed_point=fixed_point)
+        f_plt, sd_plt = self.evaluate_model(
+            sample=sample, metric_name=mname, fixed_point=fixed_point
+        )
 
         # select quantities to plot and set the labels
         f_plots = []
