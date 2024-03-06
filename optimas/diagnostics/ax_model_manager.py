@@ -127,7 +127,7 @@ class AxModelManager:
         # should work.
         ax_client = AxClient(
             generation_strategy=GenerationStrategy(
-                [GenerationStep(model=Models.GPEI, num_trials=-1)]
+                [GenerationStep(model=Models.GPEI if len(objectives) == 1 else Models.MOO, num_trials=-1)]
             ),
             verbose_logging=False,
         )
@@ -243,18 +243,16 @@ class AxModelManager:
                 best_obj_i = np.argmax(obj_vals)
             best_point = param_vals[best_obj_i]
         else:
-            # Somehow `use_model_predictions` does not seem to make any
-            # difference when calling `get_best_trial`. We should check that.
-            # if use_model_predictions is True:
-            #     best_arm, _ = self._model.model_best_point()
-            #     best_point = best_arm.parameters
-            #     index = self.get_arm_index(best_arm.name)
-            # else:
+            if use_model_predictions is True:
+                best_arm, _ = self._model.model_best_point()
+                best_point = best_arm.parameters
+                index = self.get_arm_index(best_arm.name)
+            else:
             # AxClient.get_best_parameters seems to always return the best point
             # from the observed values, independently of the value of `use_model_predictions`.
-            index, best_point, _ = self.ax_client.get_best_trial(
-                use_model_predictions=use_model_predictions
-            )
+                index, best_point, _ = self.ax_client.get_best_trial(
+                    use_model_predictions=use_model_predictions
+                )
 
         return best_point
 
