@@ -200,7 +200,7 @@ class AxModelManager:
         self,
         metric_name: Optional[str] = None,
         use_model_predictions: Optional[bool] = True,
-    ) -> Dict:
+    ) -> Tuple[int, Dict]:
         """Get the best scoring point in the sample.
 
          Parameter:
@@ -231,15 +231,14 @@ class AxModelManager:
             pp = self.ax_client.get_pareto_optimal_parameters(
                 use_model_predictions=use_model_predictions
             )
-            obj_vals = [
-                objs[metric_name] for index, (vals, (objs, covs)) in pp.items()
-            ]
-            param_vals = [vals for index, (vals, (objs, covs)) in pp.items()]
-            if minimize:
-                best_obj_i = np.argmin(obj_vals)
-            else:
-                best_obj_i = np.argmax(obj_vals)
-            best_point = param_vals[best_obj_i]
+            obj_vals, param_vals, trial_indices = [], [], []
+            for index, (vals, (objs, covs)) in pp.items():
+                trial_indices.append(index)
+                param_vals.append(vals)
+                obj_vals.append(objs[metric_name])
+            i_best = np.argmin(obj_vals) if minimize else np.argmax(obj_vals)
+            best_point = param_vals[i_best]
+            index = trial_indices[i_best]
         else:
             if use_model_predictions is True:
                 best_arm, _ = self._model.model_best_point()
@@ -252,7 +251,7 @@ class AxModelManager:
                     use_model_predictions=use_model_predictions
                 )
 
-        return best_point
+        return index, best_point
 
     def get_mid_point(
         self,
