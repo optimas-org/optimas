@@ -1,4 +1,4 @@
-name: Unix-MPICH
+name: Unix-OpenMPI
 
 on:
   pull_request:
@@ -29,9 +29,9 @@ jobs:
       name: Install dependencies
       run: |
         conda install numpy pandas pytorch cpuonly -c pytorch
-        conda install -c conda-forge mpi4py mpich
+        conda install -c conda-forge mpi4py openmpi
         pip install .[test]
     - shell: bash -l {0}
-      name: Run unit tests with MPICH
+      name: Run unit tests with openMPI
       run: |
         python -m pytest tests/

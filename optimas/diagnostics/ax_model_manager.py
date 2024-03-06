@@ -123,14 +123,12 @@ class AxModelManager:
         # Create Ax client.
         # We need to explicitly define a generation strategy because otherwise
         # a random sampling step will be set up by Ax, and this step does not
-        # allow calling `model.predict`. Any strategy that uses a GP surrogate
-        # should work.
-        ax_client = AxClient(
-            generation_strategy=GenerationStrategy(
-                [GenerationStep(model=Models.GPEI if len(objectives) == 1 else Models.MOO, num_trials=-1)]
-            ),
-            verbose_logging=False,
-        )
+        # allow calling `model.predict`. Using MOO for multiobjective is
+        # needed because otherwise calls to `get_pareto_optimal_parameters`
+        # would fail.
+        model = Models.GPEI if len(objectives) == 1 else Models.MOO
+        gs = GenerationStrategy([GenerationStep(model=model, num_trials=-1)])
+        ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         ax_client.create_experiment(
             parameters=axparameters, objectives=axobjectives
         )
@@ -210,7 +208,7 @@ class AxModelManager:
         self,
         metric_name: Optional[str] = None,
         use_model_predictions: Optional[bool] = True,
-    ) -> Dict:
+    ) -> Tuple[int, Dict]:
         """Get the best scoring point in the sample.
 
          Parameter:
@@ -241,28 +239,27 @@ class AxModelManager:
             pp = self.ax_client.get_pareto_optimal_parameters(
                 use_model_predictions=use_model_predictions
             )
-            obj_vals = [
-                objs[metric_name] for index, (vals, (objs, covs)) in pp.items()
-            ]
-            param_vals = [vals for index, (vals, (objs, covs)) in pp.items()]
-            if minimize:
-                best_obj_i = np.argmin(obj_vals)
-            else:
-                best_obj_i = np.argmax(obj_vals)
-            best_point = param_vals[best_obj_i]
+            obj_vals, param_vals, trial_indices = [], [], []
+            for index, (vals, (objs, covs)) in pp.items():
+                trial_indices.append(index)
+                param_vals.append(vals)
+                obj_vals.append(objs[metric_name])
+            i_best = np.argmin(obj_vals) if minimize else np.argmax(obj_vals)
+            best_point = param_vals[i_best]
+            index = trial_indices[i_best]
         else:
             if use_model_predictions is True:
                 best_arm, _ = self._model.model_best_point()
                 best_point = best_arm.parameters
                 index = self.get_arm_index(best_arm.name)
             else:
-            # AxClient.get_best_parameters seems to always return the best point
-            # from the observed values, independently of the value of `use_model_predictions`.
+                # AxClient.get_best_parameters seems to always return the best point
+                # from the observed values, independently of the value of `use_model_predictions`.
                 index, best_point, _ = self.ax_client.get_best_trial(
                     use_model_predictions=use_model_predictions
                 )
 
-        return best_point
+        return index, best_point
     
     def get_best_point(self, metric_name: Optional[str] = None) -> Dict:
         """Get the best scoring point in the sample.
