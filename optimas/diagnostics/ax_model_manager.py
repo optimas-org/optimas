@@ -400,7 +400,7 @@ class AxModelManager:
         # evaluate the model
         f_plt, sd_plt = self.evaluate_model(sample=sample, 
                                             metric_name=mname, 
-                                            fixed_point=p0)
+                                            fixed_point=fixed_point)
 
         # select quantities to plot and set the labels
         f_plots = []
