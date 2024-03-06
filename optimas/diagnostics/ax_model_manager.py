@@ -127,7 +127,14 @@ class AxModelManager:
         # should work.
         ax_client = AxClient(
             generation_strategy=GenerationStrategy(
-                [GenerationStep(model=Models.GPEI if len(objectives) == 1 else Models.MOO, num_trials=-1)]
+                [
+                    GenerationStep(
+                        model=(
+                            Models.GPEI if len(objectives) == 1 else Models.MOO
+                        ),
+                        num_trials=-1,
+                    )
+                ]
             ),
             verbose_logging=False,
         )
@@ -248,8 +255,8 @@ class AxModelManager:
                 best_point = best_arm.parameters
                 index = self.get_arm_index(best_arm.name)
             else:
-            # AxClient.get_best_parameters seems to always return the best point
-            # from the observed values, independently of the value of `use_model_predictions`.
+                # AxClient.get_best_parameters seems to always return the best point
+                # from the observed values, independently of the value of `use_model_predictions`.
                 index, best_point, _ = self.ax_client.get_best_trial(
                     use_model_predictions=use_model_predictions
                 )
