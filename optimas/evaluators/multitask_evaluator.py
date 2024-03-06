@@ -56,10 +56,8 @@ class MultitaskEvaluator(Evaluator):
             self.tasks[0].name: sim_specs_1["user"],
             self.tasks[1].name: sim_specs_2["user"],
         }
-        # Add task name to sim_specs in and out.
-        task_len = max([len(self.tasks[0].name), len(self.tasks[1].name)])
+        # Add task name to sim_specs in.
         sim_specs["in"].append("task")
-        sim_specs["out"].append(("task", str, task_len))
         return sim_specs
 
     def get_libe_specs(self) -> Dict:

@@ -1,11 +1,21 @@
 """Contains the definition of the Trial class."""
 
 from typing import List, Dict, Optional
+from enum import Enum
 
 import numpy as np
 
 from .parameter import VaryingParameter, Objective, Parameter, TrialParameter
 from .evaluation import Evaluation
+
+
+class TrialStatus(int, Enum):
+    """Enum of trial status, based on the Ax implementation."""
+
+    CANDIDATE = 0
+    RUNNING = 1
+    COMPLETED = 2
+    FAILED = 3
 
 
 class Trial:
@@ -67,6 +77,7 @@ class Trial:
             self._mapped_evaluations[par.name] = None
         for ev in evaluations:
             self._mapped_evaluations[ev.parameter.name] = ev
+        self.mark_as(TrialStatus.CANDIDATE)
 
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
@@ -121,6 +132,36 @@ class Trial:
         """Get the list of custom trial parameters."""
         return self._custom_parameters
 
+    @property
+    def status(self) -> TrialStatus:
+        """Get current trial status."""
+        return self._status
+
+    @property
+    def completed(self) -> bool:
+        """Determine whether the trial has been successfully evaluated."""
+        return self._status == TrialStatus.COMPLETED
+
+    @property
+    def failed(self) -> bool:
+        """Determine whether the trial evaluation has failed."""
+        return self._status == TrialStatus.FAILED
+
+    @property
+    def evaluated(self) -> bool:
+        """Determine whether the trial has been evaluated."""
+        return self.completed or self.failed
+
+    def mark_as(self, status) -> None:
+        """Set trial status.
+
+        Parameters
+        ----------
+        status : int
+            A valid trial status (use ``TrialStatus`` enum).
+        """
+        self._status = status
+
     def complete_evaluation(self, evaluation: Evaluation) -> None:
         """Complete the evaluation of an objective or analyzed parameter.
 
@@ -134,6 +175,7 @@ class Trial:
         assert evaluated_parameter in self._mapped_evaluations
         if self._mapped_evaluations[evaluated_parameter] is None:
             self._mapped_evaluations[evaluated_parameter] = evaluation
+        self.mark_as(TrialStatus.COMPLETED)
 
     def parameters_as_dict(self) -> Dict:
         """Get a mapping between names and values of the varying parameters."""
@@ -165,10 +207,3 @@ class Trial:
             ev = self._mapped_evaluations[par.name]
             params[par.name] = (ev.value, ev.sem)
         return params
-
-    def completed(self) -> bool:
-        """Determine whether the trial has been completed."""
-        for par, ev in self._mapped_evaluations.items():
-            if ev is None:
-                return False
-        return True

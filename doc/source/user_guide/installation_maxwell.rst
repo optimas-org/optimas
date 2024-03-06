@@ -56,7 +56,7 @@ Install ``optimas`` with all dependencies if you plan to do Bayesian optimizatio
 
 .. code::
 
-    pip install optimas[all]
+    pip install 'optimas[all]'
 
 
 Installing FBPIC and Wake-T (optional)

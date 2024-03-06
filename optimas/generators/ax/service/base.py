@@ -18,7 +18,13 @@ from ax.modelbridge.generation_strategy import (
 )
 
 from optimas.utils.other import update_object
-from optimas.core import Objective, Trial, VaryingParameter, Parameter
+from optimas.core import (
+    Objective,
+    Trial,
+    VaryingParameter,
+    Parameter,
+    TrialStatus,
+)
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
 from .custom_ax import CustomAxClient as AxClient
@@ -53,6 +59,9 @@ class AxServiceGenerator(AxGenerator):
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
+    abandon_failed_trials : bool, optional
+        Whether failed trials should be abandoned (i.e., not suggested again).
+        By default, ``True``.
     fit_out_of_design : bool, optional
         Whether to fit the surrogate model taking into account evaluations
         outside of the range of the varying parameters. This can be useful
@@ -88,6 +97,7 @@ class AxServiceGenerator(AxGenerator):
         outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
+        abandon_failed_trials: Optional[bool] = True,
         fit_out_of_design: Optional[bool] = False,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
@@ -111,6 +121,7 @@ class AxServiceGenerator(AxGenerator):
         )
         self._n_init = n_init
         self._enforce_n_init = enforce_n_init
+        self._abandon_failed_trials = abandon_failed_trials
         self._fit_out_of_design = fit_out_of_design
         self._fixed_features = None
         self._parameter_constraints = parameter_constraints
@@ -138,21 +149,9 @@ class AxServiceGenerator(AxGenerator):
     def _tell(self, trials: List[Trial]) -> None:
         """Incorporate evaluated trials into Ax client."""
         for trial in trials:
-            outcome_evals = {}
-            # Add objective evaluations.
-            for ev in trial.objective_evaluations:
-                outcome_evals[ev.parameter.name] = (ev.value, ev.sem)
-            ax_config = self._ax_client.experiment.optimization_config
-            # Add outcome constraints evaluations.
-            if ax_config.outcome_constraints:
-                ocs = [oc.metric.name for oc in ax_config.outcome_constraints]
-                for ev in trial.parameter_evaluations:
-                    if ev.parameter.name in ocs:
-                        outcome_evals[ev.parameter.name] = (ev.value, ev.sem)
             try:
-                self._ax_client.complete_trial(
-                    trial_index=trial.ax_trial_id, raw_data=outcome_evals
-                )
+                trial_id = trial.ax_trial_id
+                ax_trial = self._ax_client.get_trial(trial_id)
             except AttributeError:
                 params = {}
                 for var, value in zip(
@@ -160,23 +159,47 @@ class AxServiceGenerator(AxGenerator):
                 ):
                     params[var.name] = value
                 _, trial_id = self._ax_client.attach_trial(params)
-                self._ax_client.complete_trial(trial_id, outcome_evals)
+                ax_trial = self._ax_client.get_trial(trial_id)
 
                 # Since data was given externally, reduce number of
-                # initialization trials.
-                if not self._enforce_n_init:
-                    gs = self._ax_client.generation_strategy
-                    if version.parse(ax_version) >= version.parse("0.3.5"):
-                        cs = gs.current_step
-                        ngen, _ = cs.num_trials_to_gen_and_complete()
+                # initialization trials, but only if they have not failed.
+                if (
+                    trial.status != TrialStatus.FAILED
+                    and not self._enforce_n_init
+                ):
+                    generation_strategy = self._ax_client.generation_strategy
+                    current_step = generation_strategy.current_step
+                    # Reduce only if there are still Sobol trials left.
+                    if current_step.model == Models.SOBOL:
+                        current_step.num_trials -= 1
+                        if version.parse(ax_version) >= version.parse("0.3.5"):
+                            current_step.transition_criteria[0].threshold -= 1
+                        generation_strategy._maybe_move_to_next_step()
+            finally:
+                if trial.completed:
+                    outcome_evals = {}
+                    # Add objective evaluations.
+                    for ev in trial.objective_evaluations:
+                        outcome_evals[ev.parameter.name] = (ev.value, ev.sem)
+                    # Add outcome constraints evaluations.
+                    ax_config = self._ax_client.experiment.optimization_config
+                    if ax_config.outcome_constraints:
+                        ocs = [
+                            oc.metric.name
+                            for oc in ax_config.outcome_constraints
+                        ]
+                        for ev in trial.parameter_evaluations:
+                            par_name = ev.parameter.name
+                            if par_name in ocs:
+                                outcome_evals[par_name] = (ev.value, ev.sem)
+                    self._ax_client.complete_trial(
+                        trial_index=trial_id, raw_data=outcome_evals
+                    )
+                elif trial.failed:
+                    if self._abandon_failed_trials:
+                        ax_trial.mark_abandoned()
                     else:
-                        (
-                            ngen,
-                            _,
-                        ) = gs._num_trials_to_gen_and_complete_in_curr_step()
-                    # Reduce only if there are still Sobol trials to generate.
-                    if gs.current_step.model == Models.SOBOL and ngen > 0:
-                        gs.current_step.num_trials -= 1
+                        ax_trial.mark_failed()
 
     def _create_ax_client(self) -> AxClient:
         """Create Ax client."""
@@ -238,7 +261,7 @@ class AxServiceGenerator(AxGenerator):
         file_path = os.path.join(
             self._model_history_dir,
             "ax_client_at_eval_{}.json".format(
-                self._n_completed_trials_last_saved
+                self._n_evaluated_trials_last_saved
             ),
         )
         self._ax_client.save_to_json_file(file_path)
@@ -280,3 +303,11 @@ class AxServiceGenerator(AxGenerator):
         self._ax_client.experiment.search_space.update_parameter(
             new_search_space.parameters[parameter.name]
         )
+
+    def _mark_trial_as_failed(self, trial: Trial):
+        """Mark a trial as failed so that is not used for fitting the model."""
+        ax_trial = self._ax_client.get_trial(trial.ax_trial_id)
+        if self._abandon_failed_trials:
+            ax_trial.mark_abandoned(unsafe=True)
+        else:
+            ax_trial.mark_failed(unsafe=True)
