@@ -156,7 +156,7 @@ class AxModelManager:
             If numpy array, it must contain the values of all the model parameres.
             If DataFrame or dict, it can contain only those parameters to vary.
             The rest of parameters would be set to the model best point,
-            unless they are further specified using ``p0``.
+            unless they are further specified using ``fixed_point``.
         metric_name: str, optional.
             Name of the metric to evaluate.
             If not specified, it will take the first first objective in ``self.ax_client``.
