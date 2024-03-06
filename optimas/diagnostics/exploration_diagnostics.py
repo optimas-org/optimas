@@ -19,8 +19,6 @@ from optimas.evaluators.base import Evaluator
 from optimas.explorations import Exploration
 from optimas.utils.other import get_df_with_selection
 from optimas.diagnostics.ax_model_manager import AxModelManager
-from ax.service.ax_client import AxClient
-from ax.service.utils.instantiation import ObjectiveProperties
 
 
 class ExplorationDiagnostics:
@@ -368,16 +366,7 @@ class ExplorationDiagnostics:
             Objective to consider for determining the best evaluation. Only.
             needed if there is more than one objective. By default ``None``.
         """
-        if objective is None:
-            objective = self.objectives[0]
-        elif isinstance(objective, str):
-            objective = self._get_objective(objective)
-        history = self.history[self.history.sim_ended]
-        if objective.minimize:
-            i_best = np.argmin(history[objective.name])
-        else:
-            i_best = np.argmax(history[objective.name])
-        return history.iloc[[i_best]]
+        return self.get_best_evaluations(objective, top=1)
 
     def get_pareto_front_evaluations(
         self,
@@ -900,12 +889,12 @@ class ExplorationDiagnostics:
 
         print()
 
-    def get_best_evaluations_index(
+    def get_best_evaluations(
         self,
         objective: Optional[Union[str, Objective]] = None,
         top: Optional[int] = 3,
-    ) -> List[int]:
-        """Get a list with the indices of the best evaluations.
+    ) -> pd.DataFrame:
+        """Get a list with the best evaluations.
 
         Parameters
         ----------
@@ -924,12 +913,9 @@ class ExplorationDiagnostics:
             objective = self.objectives[0]
         elif isinstance(objective, str):
             objective = self._get_objective(objective)
-        top_indices = list(
-            self.history.sort_values(
+        return self.history.sort_values(
                 by=objective.name, ascending=objective.minimize
-            ).index
-        )[:top]
-        return top_indices
+            ).iloc[:top]
 
     def print_best_evaluations(
         self,
@@ -951,83 +937,64 @@ class ExplorationDiagnostics:
             objective = self.objectives[0]
         elif isinstance(objective, str):
             objective = self._get_objective(objective)
-        top_indices = self.get_best_evaluations_index(
-            top=top, objective=objective
-        )
+        best_evals = self.get_best_evaluations(top=top, objective=objective)
         objective_names = [obj.name for obj in self.objectives]
         varpar_names = [var.name for var in self.varying_parameters]
         anapar_names = [var.name for var in self.analyzed_parameters]
         print(
             "Top %i evaluations in metric %s (minimize = %s): "
             % (top, objective.name, objective.minimize),
-            top_indices,
+            best_evals.index.to_list(),
         )
         print()
-        print(
-            self.history.loc[top_indices][
-                objective_names + varpar_names + anapar_names
-            ]
-        )
+        print(best_evals[objective_names + varpar_names + anapar_names])
 
-    def get_model_manager_from_ax_client(
-        self,
-        source: Union[AxClient, str],
+    def build_gp_model(
+        self, parameter: str, minimize: Optional[bool] = None
     ) -> AxModelManager:
-        """Initialize AxModelManager from an existing ``AxClient``.
+        """Build a GP model of the specified parameter.
 
         Parameters
         ----------
-        source: AxClient or str,
-            Source of data from where to obtain the model.
-            It can be an existing ``AxClient`` or the path to
-            a json file.
-
-        Returns
-        -------
-        An instance of AxModelManager.
-        """
-        self.model_manager = AxModelManager(source)
-        return self.model_manager
-
-    def build_model(
-        self,
-        objname: Optional[str] = None,
-        minimize: Optional[bool] = True,
-    ) -> AxModelManager:
-        """Initialize AxModelManager and builds a GP model.
-
-        Parameters
-        ----------
-        objname: string, optional
-            Name of the objective (or metric).
-            If not given, it takes the list of objectives
-            in the diagnostics.
+        parameter: str
+            Name of an objective or analyzed parameter for which the model
+            will be built.
         minimize: bool, optional
-            Whether to minimize or maximize the objective.
-            It is only used when `objname` is given.
-            Only relevant to establish the best point of the model.
+            Required only if `parameter` is not an objective.
+            Use it to indicate whether lower or higher values of the parameter
+            are better. This is relevant, e.g. to determine the best point of
+            the model.
 
         Returns
         -------
-        An instance of AxModelManager
+        AxModelManager
         """
-        # Initialize `AxModelManager` with history dataframe.
-        df = self.history.copy()
-        self.model_manager = AxModelManager(df)
-
         # Select objective.
-        if objname is not None:
-            objective_names = [obj.name for obj in self.objectives]
-            if objname in objective_names:
-                minimize = self._get_objective(objname).minimize
-            self.model_manager.build_model(
-                parameters=self.varying_parameters,
-                objname=objname,
+        try:
+            objective = self._get_objective(parameter)
+        except ValueError:
+            try:
+                analyzed_parameter = self._get_analyzed_parameter(parameter)
+            except ValueError:
+                raise ValueError(
+                    f"Parameter {parameter} not found. "
+                    "It is not an objective nor an analyzed parameter of the "
+                    "Exploration."
+                )
+            if minimize is None:
+                raise ValueError(
+                    f"Please specify whether the parameter {parameter} should "
+                    "be minimized."
+                )
+            objective = Objective(
+                analyzed_parameter.name,
                 minimize=minimize,
-            )
-        else:
-            self.model_manager.build_model(
-                parameters=self.varying_parameters, objectives=self.objectives
+                dtype=analyzed_parameter.dtype,
             )
 
-        return self.model_manager
+        # Initialize `AxModelManager` with history dataframe.
+        return AxModelManager(
+            source=self.history,
+            varying_parameters=self.varying_parameters,
+            objectives=[objective],
+        )

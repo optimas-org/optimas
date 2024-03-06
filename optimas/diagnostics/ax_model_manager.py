@@ -3,7 +3,7 @@
 from typing import Optional, Union, List, Tuple, Dict, Any, Literal
 import numpy as np
 from numpy.typing import NDArray
-from pandas import DataFrame
+import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
 from matplotlib.axes import Axes
@@ -22,8 +22,8 @@ from ax.core.observation import ObservationFeatures
 from ax.service.utils.instantiation import ObjectiveProperties
 
 
-class AxModelManager(object):
-    """Utilities for building and exploring surrogate models using ``Ax``.
+class AxModelManager:
+    """Manager for building and exploring GP surrogate models using ``Ax``.
 
     Parameters
     ----------
@@ -32,147 +32,120 @@ class AxModelManager(object):
         If ``DataFrame``, the model has to be build using ``build_model``.
         If ``AxClient``, it uses the data in there to build a model.
         If ``str``, it should be the path to an ``AxClient`` json file.
+    objectives: list of `Objective`, optional
+        Only needed if ``source`` is a pandas ``DataFrame``. List of
+        objectives for which a GP model should be built. The names and data of
+        these objectives must be contained in the source ``DataFrame``.
+    varying_parameters: list of `VaryingParameter`, optional
+        Only needed if ``source`` is a pandas ``DataFrame``. List of
+        parameters that were varied to scan the value of the objectives.
+        The names and data of these parameters must be contained in the
+        source ``DataFrame``.
     """
 
-    def __init__(self, source: Union[AxClient, str, DataFrame]) -> None:
+    def __init__(
+        self,
+        source: Union[AxClient, str, pd.DataFrame],
+        varying_parameters: Optional[List[VaryingParameter]] = None,
+        objectives: Optional[List[Objective]] = None,
+    ) -> None:
         if isinstance(source, AxClient):
             self.ax_client = source
         elif isinstance(source, str):
             self.ax_client = AxClient.load_from_json_file(filepath=source)
-        elif isinstance(source, DataFrame):
-            self.df = source
-            self.ax_client = None
+        elif isinstance(source, pd.DataFrame):
+            self.ax_client = self._build_ax_client_from_dataframe(
+                source, varying_parameters, objectives
+            )
         else:
-            raise RuntimeError("Wrong source.")
-
-        if self.ax_client:
-            self.ax_client.fit_model()
+            raise ValueError(
+                f"Wrong source type: {type(source)}. "
+                "The source must be an `AxClient`, a path to an AxClient json "
+                "file, or a pandas `DataFrame`."
+            )
+        self.ax_client.fit_model()
 
     @property
-    def model(self) -> TorchModelBridge:
+    def _model(self) -> TorchModelBridge:
         """Get the model from the AxClient instance."""
         return self.ax_client.generation_strategy.model
 
-    def build_model(
+    def _build_ax_client_from_dataframe(
         self,
-        parnames: Optional[List[str]] = None,
-        objname: Optional[str] = None,
-        minimize: Optional[bool] = True,
-        parameters: Optional[List[VaryingParameter]] = None,
-        objectives: Optional[List[Objective]] = None,
-    ) -> None:
+        df: pd.DataFrame,
+        varying_parameters: List[VaryingParameter],
+        objectives: List[Objective],
+    ) -> AxClient:
         """Initialize the AxClient and the model using the given data.
 
         Parameters
         ----------
-        parnames: list of string
-            List with the names of the parameters of the model.
-        objname: string, optional.
-            Name of the objective.
-        minimize: bool, optional.
-            Whether to minimize or maximize the objective.
-            Only relevant to establish the best point.
+        df : DataFrame
+            The source pandas ``DataFrame``.
         objectives: list of `Objective`.
-            This is the way to build multi-objective models.
-            Useful to initialize from `ExplorationDiagnostics`.
-        parameters: list of `VaryingParameter`.
-            Useful to initialize from `ExplorationDiagnostics`.
+            List of objectives for which a GP model should be built.
+        varying_parameters: list of `VaryingParameter`.
+            List of parameters that were varied to scan the value of the
+            objectives.
         """
         # Define parameters for AxClient
-        if parameters is None:
-            if parnames is None:
-                raise RuntimeError(
-                    "Either `parameters` or `parnames` should be provided."
+        axparameters = []
+        for par in varying_parameters:
+            # Determine parameter type.
+            value_dtype = np.dtype(par.dtype)
+            if value_dtype.kind == "f":
+                value_type = "float"
+            elif value_dtype.kind == "i":
+                value_type = "int"
+            else:
+                raise ValueError(
+                    "Ax range parameter can only be of type 'float'ot 'int', "
+                    "not {var.dtype}."
                 )
-            axparameters = [
+            # Create parameter dict and append to list.
+            axparameters.append(
                 {
-                    "name": p_name,
+                    "name": par.name,
                     "type": "range",
-                    "bounds": [self.df[p_name].min(), self.df[p_name].max()],
-                    "value_type": "float",
+                    "bounds": [par.lower_bound, par.upper_bound],
+                    "is_fidelity": par.is_fidelity,
+                    "target_value": par.fidelity_target_value,
+                    "value_type": value_type,
                 }
-                for p_name in parnames
-            ]
-        else:
-            parnames = [par.name for par in parameters]
-            axparameters = []
-            for par in parameters:
-                # Determine parameter type.
-                value_dtype = np.dtype(par.dtype)
-                if value_dtype.kind == "f":
-                    value_type = "float"
-                elif value_dtype.kind == "i":
-                    value_type = "int"
-                else:
-                    raise ValueError(
-                        "Ax range parameter can only be of type 'float'ot 'int', "
-                        "not {var.dtype}."
-                    )
-                # Create parameter dict and append to list.
-                axparameters.append(
-                    {
-                        "name": par.name,
-                        "type": "range",
-                        "bounds": [par.lower_bound, par.upper_bound],
-                        "is_fidelity": par.is_fidelity,
-                        "target_value": par.fidelity_target_value,
-                        "value_type": value_type,
-                    }
-                )
+            )
 
         # Define objectives for AxClient
-        if objectives is None:
-            if objname is None:
-                raise RuntimeError(
-                    "Either `objectives` or `objname` should be provided."
-                )
-            # Create single objective AxClient
-            gs = GenerationStrategy(
+        axobjectives = {
+            obj.name: ObjectiveProperties(minimize=obj.minimize)
+            for obj in objectives
+        }
+
+        # Create Ax client.
+        # We need to explicitly define a generation strategy because otherwise
+        # a random sampling step will be set up by Ax, and this step does not
+        # allow calling `model.predict`. Any strategy that uses a GP surrogate
+        # should work.
+        ax_client = AxClient(
+            generation_strategy=GenerationStrategy(
                 [GenerationStep(model=Models.GPEI, num_trials=-1)]
-            )
-            self.ax_client = AxClient(
-                generation_strategy=gs, verbose_logging=False
-            )
-            self.ax_client.create_experiment(
-                name="optimas_data",
-                parameters=axparameters,
-                objective_name=objname,
-                minimize=minimize,
-            )
-        else:
-            # Create multi-objective Axclient
-            axobjectives = {}
-            for obj in objectives:
-                axobjectives[obj.name] = ObjectiveProperties(
-                    minimize=obj.minimize
-                )
-            gs = GenerationStrategy(
-                [GenerationStep(model=Models.MOO, num_trials=-1)]
-            )
-            self.ax_client = AxClient(
-                generation_strategy=gs, verbose_logging=False
-            )
-            self.ax_client.create_experiment(
-                name="optimas_data",
-                parameters=axparameters,
-                objectives=axobjectives,
-            )
+            ),
+            verbose_logging=False,
+        )
+        ax_client.create_experiment(
+            parameters=axparameters, objectives=axobjectives
+        )
 
         # Add trials from DataFrame
-        for index, row in self.df.iterrows():
-            params = {p_name: row[p_name] for p_name in parnames}
-            _, trial_id = self.ax_client.attach_trial(params)
-            data = {}
-            for mname in list(self.ax_client.experiment.metrics.keys()):
-                data[mname] = (row[mname], np.nan)
-            self.ax_client.complete_trial(trial_id, raw_data=data)
-
-        # fit GP model
-        self.ax_client.fit_model()
+        for _, row in df.iterrows():
+            params = {vp.name: row[vp.name] for vp in varying_parameters}
+            _, trial_id = ax_client.attach_trial(params)
+            data = {obj.name: (row[obj.name], np.nan) for obj in objectives}
+            ax_client.complete_trial(trial_id, raw_data=data)
+        return ax_client
 
     def evaluate_model(
         self,
-        sample: Union[DataFrame, Dict, NDArray] = None,
+        sample: Union[pd.DataFrame, Dict, NDArray] = None,
         metric_name: Optional[str] = None,
     ) -> Tuple[NDArray]:
         """Evaluate the model over the specified sample.
@@ -194,9 +167,6 @@ class AxModelManager(object):
         m_array, sem_array : Two numpy arrays containing the mean of the model
             and the standard error of the mean (sem), respectively.
         """
-        if self.model is None:
-            raise RuntimeError("Model not present. Run ``build_model`` first.")
-
         if metric_name is None:
             metric_name = self.ax_client.objective_names[0]
         else:
@@ -223,7 +193,7 @@ class AxModelManager(object):
                 parameters[name] = sample[name].iloc[i]
             obsf_list.append(ObservationFeatures(parameters=parameters))
 
-        mu, cov = self.model.predict(obsf_list)
+        mu, cov = self._model.predict(obsf_list)
         m_array = np.asarray(mu[metric_name])
         sem_array = np.sqrt(cov[metric_name][metric_name])
         return m_array, sem_array
@@ -273,15 +243,18 @@ class AxModelManager(object):
                 best_obj_i = np.argmax(obj_vals)
             best_point = param_vals[best_obj_i]
         else:
-            if use_model_predictions is True:
-                best_arm, best_point_predictions = self.model.model_best_point()
-                best_point = best_arm.parameters
-            else:
+            # Somehow `use_model_predictions` does not seem to make any
+            # difference when calling `get_best_trial`. We should check that.
+            # if use_model_predictions is True:
+            #     best_arm, _ = self._model.model_best_point()
+            #     best_point = best_arm.parameters
+            #     index = self.get_arm_index(best_arm.name)
+            # else:
                 # AxClient.get_best_parameters seems to always return the best point
                 # from the observed values, independently of the value of `use_model_predictions`.
-                best_point = self.ax_client.get_best_parameters(
-                    use_model_predictions=use_model_predictions
-                )[0]
+            index, best_point, _ = self.ax_client.get_best_trial(
+                use_model_predictions=use_model_predictions
+            )
 
         return best_point
 
@@ -353,12 +326,6 @@ class AxModelManager(object):
             Either a single `~matplotlib.axes.Axes` object or a list of Axes
             objects if more than one subplot was created.
         """
-        if self.ax_client is None:
-            raise RuntimeError("AxClient not present. Run `build_model` first.")
-
-        if self.model is None:
-            raise RuntimeError("Model not present. Run `build_model` first.")
-
         # get experiment info
         experiment = self.ax_client.experiment
         parnames = list(experiment.parameters.keys())
