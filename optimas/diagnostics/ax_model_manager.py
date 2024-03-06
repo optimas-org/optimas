@@ -123,8 +123,9 @@ class AxModelManager:
         # Create Ax client.
         # We need to explicitly define a generation strategy because otherwise
         # a random sampling step will be set up by Ax, and this step does not
-        # allow calling `model.predict`. Any strategy that uses a GP surrogate
-        # should work.
+        # allow calling `model.predict`. Using MOO for multiobjective is
+        # needed because otherwise calls to `get_pareto_optimal_parameters`
+        # would fail.
         model = Models.GPEI if len(objectives) == 1 else Models.MOO
         gs = GenerationStrategy([GenerationStep(model=model, num_trials=-1)])
         ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
