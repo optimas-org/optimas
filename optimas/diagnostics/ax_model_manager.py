@@ -125,19 +125,9 @@ class AxModelManager:
         # a random sampling step will be set up by Ax, and this step does not
         # allow calling `model.predict`. Any strategy that uses a GP surrogate
         # should work.
-        ax_client = AxClient(
-            generation_strategy=GenerationStrategy(
-                [
-                    GenerationStep(
-                        model=(
-                            Models.GPEI if len(objectives) == 1 else Models.MOO
-                        ),
-                        num_trials=-1,
-                    )
-                ]
-            ),
-            verbose_logging=False,
-        )
+        model = Models.GPEI if len(objectives) == 1 else Models.MOO
+        gs = GenerationStrategy([GenerationStep(model=model, num_trials=-1)])
+        ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         ax_client.create_experiment(
             parameters=axparameters, objectives=axobjectives
         )
