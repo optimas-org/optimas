@@ -914,8 +914,8 @@ class ExplorationDiagnostics:
         elif isinstance(objective, str):
             objective = self._get_objective(objective)
         return self.history.sort_values(
-                by=objective.name, ascending=objective.minimize
-            ).iloc[:top]
+            by=objective.name, ascending=objective.minimize
+        ).iloc[:top]
 
     def print_best_evaluations(
         self,
