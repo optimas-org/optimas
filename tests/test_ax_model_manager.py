@@ -2,13 +2,10 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
-import pytest
 
 from optimas.explorations import Exploration
 from optimas.core import VaryingParameter, Objective
-from optimas.generators import (
-    AxSingleFidelityGenerator,
-)
+from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import FunctionEvaluator
 from optimas.diagnostics import ExplorationDiagnostics, AxModelManager
 
