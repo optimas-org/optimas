@@ -137,6 +137,16 @@ class AxServiceGenerator(AxGenerator, AxModelManager):
     @property
     def ax_client(self) -> AxClient:
         """Get the underlying AxClient."""
+        # Try to return an Ax client with a fitted model. This is useful for
+        # enabling the use of the methods inherited from `AxModelManager`,
+        # which will fail if the model is not fitted.
+        # This is particularly critical when running optimas with
+        # multiprocessing, because the fitted model is deleted when the
+        # exploration run finishes.
+        try:
+            self._ax_client.fit_model()
+        except ValueError:
+            pass
         return self._ax_client
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
