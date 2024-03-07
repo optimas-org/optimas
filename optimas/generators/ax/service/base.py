@@ -7,7 +7,6 @@ import numpy as np
 import torch
 from packaging import version
 from ax.version import version as ax_version
-from ax.core.types import TParameterization
 from ax.core.observation import ObservationFeatures
 from ax.service.utils.instantiation import (
     InstantiationBase,
@@ -18,12 +17,6 @@ from ax.modelbridge.generation_strategy import (
     GenerationStep,
     GenerationStrategy,
 )
-from ax.utils.notebook.plotting import render
-from ax.plot.contour import plot_contour
-from ax.plot.diagnostic import interact_cross_validation
-from ax.plot.slice import plot_slice
-from ax.plot.feature_importances import plot_feature_importance_by_feature
-from ax.modelbridge.cross_validation import cross_validate
 
 
 from optimas.utils.logger import get_logger
@@ -37,12 +30,13 @@ from optimas.core import (
 )
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
+from optimas.utils.ax import AxModelManager
 from .custom_ax import CustomAxClient as AxClient
 
 logger = get_logger(__name__)
 
 
-class AxServiceGenerator(AxGenerator):
+class AxServiceGenerator(AxGenerator, AxModelManager):
     """Base class for all Ax generators using the service API.
 
     Parameters
@@ -340,152 +334,3 @@ class AxServiceGenerator(AxGenerator):
             ax_trial.mark_abandoned(unsafe=True)
         else:
             ax_trial.mark_failed(unsafe=True)
-
-    def _get_best_values(self, objective: str) -> Optional[TParameterization]:
-        """Get the values of the best predicted parametrization."""
-        objective_names = [obj.name for obj in self.objectives]
-        if objective in objective_names:
-            objective = self.objectives[objective_names.index(objective)]
-        else:
-            raise ValueError(
-                f"Objective {objective} not found. Available objectives "
-                f"are {objective_names}."
-            )
-
-        if len(self.objectives) > 1:
-            pp = self._ax_client.get_pareto_optimal_parameters()
-            obj_vals = [
-                objs[objective.name] for i, (vals, (objs, covs)) in pp.items()
-            ]
-            param_vals = [vals for i, (vals, (objs, covs)) in pp.items()]
-            if objective.minimize:
-                best_obj_i = np.argmin(obj_vals)
-            else:
-                best_obj_i = np.argmax(obj_vals)
-            slice_values = param_vals[best_obj_i]
-
-        else:
-            result = self._ax_client.get_best_parameters()
-            if result is not None:
-                slice_values, _ = result
-            else:
-                slice_values = None
-        return slice_values
-
-    def plot_contour(
-        self,
-        param_x: Optional[str] = None,
-        param_y: Optional[str] = None,
-        objective: Optional[str] = None,
-        slice_values: Optional[Dict] = None,
-    ) -> None:
-        """Plot a 2D slice of the surrogate model.
-
-        Parameters
-        ----------
-        param_x : str, optional
-            Name of the varying parameter sliced on the x axis. If not given,
-            the first varying parameter will used. By default ``None``.
-        param_y : str, optional
-            Name of the varying parameter sliced on the y axis. If not given,
-            the second varying parameter will used. By default ``None``.
-        objective : str, optional
-            Name of the objective to plot. If not given, the first objective
-            will be shown. By default ``None``.
-        slice_values : Optional[Dict], optional
-            A dictionary ``{name: val}`` for the fixed values of the other
-            parameters. If not provided, then the values of the best predicted
-            parametrization will be used. By default ``None``.
-        """
-        if len(self.varying_parameters) < 2:
-            raise ValueError(
-                "Cannot plot contour because there are less than 2 varying "
-                "parameters."
-            )
-        if param_x is None:
-            param_x = self.varying_parameters[0].name
-        if param_y is None:
-            param_y = self.varying_parameters[1].name
-        if objective is None:
-            objective = self.objectives[0].name
-        self._ax_client.fit_model()
-        if slice_values is None:
-            slice_values = self._get_best_values(objective)
-        if slice_values is None:
-            logger.info(
-                "Could not determine best parameters. The 2D countour will be "
-                "a slice along the mean of the range of the varying parameters."
-            )
-        render(
-            plot_contour(
-                model=self._ax_client.generation_strategy.model,
-                param_x=param_x,
-                param_y=param_y,
-                metric_name=objective,
-                slice_values=slice_values,
-            )
-        )
-
-    def plot_cross_validation(self) -> None:
-        """Show an interactive cross-validation plot."""
-        self._ax_client.fit_model()
-        render(
-            interact_cross_validation(
-                cross_validate(model=self._ax_client.generation_strategy.model)
-            )
-        )
-
-    def plot_feature_importance(self) -> None:
-        """Plot the importance of the input parameters.
-
-        The feature importance score represents how useful each parameter
-        is for predicting the model outcome.
-        """
-        self._ax_client.fit_model()
-        render(
-            plot_feature_importance_by_feature(
-                model=self._ax_client.generation_strategy.model
-            )
-        )
-
-    def plot_slice(
-        self,
-        param: Optional[str] = None,
-        objective: Optional[str] = None,
-        slice_values: Optional[Dict] = None,
-    ) -> None:
-        """Plot a 1D slide of the surrogate model.
-
-        Parameters
-        ----------
-        param : str, optional
-            Name of the varying parameter sliced on the x axis. If not given,
-            the first varying parameter will used. By default ``None``.
-        objective : str, optional
-            Name of the objective to plot. If not given, the first objective
-            will be shown. By default ``None``.
-        slice_values : dict, optional
-            A dictionary ``{name: val}`` for the fixed values of the other
-            parameters. If not provided, then the values of the best predicted
-            parametrization will be used. By default ``None``.
-        """
-        if param is None:
-            param = self.varying_parameters[0].name
-        if objective is None:
-            objective = self.objectives[0].name
-        self._ax_client.fit_model()
-        if slice_values is None:
-            slice_values = self._get_best_values(objective)
-        if slice_values is None:
-            logger.info(
-                "Could not determine best parameters. The model will be "
-                "sliced along the mean of the range of the varying parameters."
-            )
-        render(
-            plot_slice(
-                model=self._ax_client.generation_strategy.model,
-                param_name=param,
-                metric_name=objective,
-                slice_values=slice_values,
-            )
-        )
