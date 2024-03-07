@@ -21,6 +21,7 @@ try:
     from ax.modelbridge.torch import TorchModelBridge
     from ax.core.observation import ObservationFeatures
     from ax.service.utils.instantiation import ObjectiveProperties
+
     ax_installed = True
 except ImportError:
     ax_installed = False
@@ -648,7 +649,7 @@ class AxModelManager:
             ax.legend(frameon=False)
 
         return fig, ax
-    
+
     def plot_cross_validation(
         self,
         metric_name: Optional[str] = None,
@@ -698,11 +699,7 @@ class AxModelManager:
 
         # Get errorbar kwargs.
         errorbar_kw = dict(errorbar_kw or {})
-        default_errorbar_kw = {
-            "fmt": "o",
-            "ms": 4,
-            "label": "Data"
-        }
+        default_errorbar_kw = {"fmt": "o", "ms": 4, "label": "Data"}
         errorbar_kw = {**default_errorbar_kw, **errorbar_kw}
 
         # Make plot.
@@ -711,7 +708,13 @@ class AxModelManager:
         xlim = ax.get_xlim()
         ylim = ax.get_ylim()
         square_lims = [min(ylim[0], ylim[0]), max(xlim[1], ylim[1])]
-        ax.plot(square_lims, square_lims, color="k", ls="--", label="Ideal correlation")
+        ax.plot(
+            square_lims,
+            square_lims,
+            color="k",
+            ls="--",
+            label="Ideal correlation",
+        )
         ax.set_xlim(square_lims)
         ax.set_ylim(square_lims)
         ax.set_xlabel("Observations")
