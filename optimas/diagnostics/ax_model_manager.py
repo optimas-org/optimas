@@ -218,7 +218,7 @@ class AxModelManager:
 
         Parameters
         ----------
-        sample : DataFrame, dict of arrays or numpy array,
+        sample : DataFrame, dict of NDArray or NDArray
             containing the data sample where to evaluate the model.
             If numpy array, it must contain the values of all the model
             parameters.
@@ -237,7 +237,8 @@ class AxModelManager:
 
         Returns
         -------
-        m_array, sem_array : Two numpy arrays containing the mean of the model
+        NDArray, NDArray
+            Two numpy arrays containing the mean of the model
             and the standard error of the mean (sem), respectively.
         """
         if metric_name is None:
@@ -381,20 +382,20 @@ class AxModelManager:
         show_contour_labels : bool
             when true labels are shown along the contour lines.
         subplot_spec : SubplotSpec, optional
-            A matplotlib SubplotSpec in which to draw the axis.
+            A matplotlib ``SubplotSpec`` in which to draw the axis.
         gridspec_kw : dict, optional
-            Dict with keywords passed to the `GridSpec`.
+            Dict with keywords passed to the ``GridSpec``.
         pcolormesh_kw : dict, optional
-            Dict with keywords passed to `pcolormesh`.
+            Dict with keywords passed to ``ax.pcolormesh``.
         **figure_kw
-            Additional keyword arguments to pass to `pyplot.figure`. Only used
-            if no ``subplot_spec`` is given.
+            Additional keyword arguments to pass to ``pyplot.figure``.
+            Only used if no ``subplot_spec`` is given.
 
         Returns
         -------
         Figure, Axes or list of Axes
-            A matplotb figure and either a single `Axes` or a list of `Axes`
-            if `mode="both"`.
+            A matplotb figure and either a single ``Axes`` or a list of ``Axes``
+            if ``mode="both"``.
         """
         # get experiment info
         experiment = self.ax_client.experiment
@@ -546,14 +547,14 @@ class AxModelManager:
             Range of the x axis. It not given, the lower and upper boundary
             of the x parameter will be used.
         subplot_spec : SubplotSpec, optional
-            A matplotlib SubplotSpec in which to draw the axis.
+            A matplotlib ``SubplotSpec`` in which to draw the axis.
         gridspec_kw : dict, optional
-            Dict with keywords passed to the `GridSpec`.
+            Dict with keywords passed to the ``GridSpec``.
         plot_kw : dict, optional
-            Dict with keywords passed to `ax.plot`.
+            Dict with keywords passed to ``ax.plot``.
         **figure_kw
-            Additional keyword arguments to pass to `pyplot.figure`. Only used
-            if no ``subplot_spec`` is given.
+            Additional keyword arguments to pass to ``pyplot.figure``. Only
+            used if no ``subplot_spec`` is given.
 
         Returns
         -------
