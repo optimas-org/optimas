@@ -154,5 +154,6 @@ def test_ax_model_manager():
     )
     fig.savefig(os.path.join(exploration_dir_path, "models_1d.png"))
 
+
 if __name__ == "__main__":
     test_ax_model_manager()
