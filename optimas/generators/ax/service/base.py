@@ -167,18 +167,14 @@ class AxServiceGenerator(AxGenerator):
                     trial.status != TrialStatus.FAILED
                     and not self._enforce_n_init
                 ):
-                    gs = self._ax_client.generation_strategy
-                    if version.parse(ax_version) >= version.parse("0.3.5"):
-                        cs = gs.current_step
-                        ngen, _ = cs.num_trials_to_gen_and_complete()
-                    else:
-                        (
-                            ngen,
-                            _,
-                        ) = gs._num_trials_to_gen_and_complete_in_curr_step()
-                    # Reduce only if there are still Sobol trials to generate.
-                    if gs.current_step.model == Models.SOBOL and ngen > 0:
-                        gs.current_step.num_trials -= 1
+                    generation_strategy = self._ax_client.generation_strategy
+                    current_step = generation_strategy.current_step
+                    # Reduce only if there are still Sobol trials left.
+                    if current_step.model == Models.SOBOL:
+                        current_step.num_trials -= 1
+                        if version.parse(ax_version) >= version.parse("0.3.5"):
+                            current_step.transition_criteria[0].threshold -= 1
+                        generation_strategy._maybe_move_to_next_step()
             finally:
                 if trial.completed:
                     outcome_evals = {}

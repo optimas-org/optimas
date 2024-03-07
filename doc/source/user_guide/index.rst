@@ -23,6 +23,12 @@ User guide
    basic_usage/exploration_diagnostics
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Advanced usage
+
+   advanced_usage/build_gp_surrogates
+
+.. toctree::
    :maxdepth: 1
    :caption: Citation
 
