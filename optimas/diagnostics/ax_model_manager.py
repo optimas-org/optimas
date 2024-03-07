@@ -337,13 +337,13 @@ class AxModelManager:
 
     def plot_contour(
         self,
-        x_param: Optional[str] = None,
-        y_param: Optional[str] = None,
+        param_x: Optional[str] = None,
+        param_y: Optional[str] = None,
         metric_name: Optional[str] = None,
         slice_values: Optional[Union[Dict, Literal["best", "mid"]]] = "mid",
         n_points: Optional[int] = 200,
-        x_range: Optional[List[float]] = None,
-        y_range: Optional[List[float]] = None,
+        range_x: Optional[List[float]] = None,
+        range_y: Optional[List[float]] = None,
         mode: Optional[Literal["mean", "sem", "both"]] = "mean",
         show_contour_labels: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
@@ -355,9 +355,9 @@ class AxModelManager:
 
         Parameters
         ----------
-        x_param : str
+        param_x : str
             Name of the parameter to plot in x axis.
-        y_param : str
+        param_y : str
             Name of the parameter to plot in y axis.
         metric_name : str, optional.
             Name of the metric to plot.
@@ -372,7 +372,7 @@ class AxModelManager:
             parameter. By default, ``"mid"``.
         n_points : int, optional
             Number of points in each axis.
-        x_range, y_range : list of float, optional
+        range_x, range_y : list of float, optional
             Range of each axis. It not given, the lower and upper boundary
             of each parameter will be used.
         mode : str, optional.
@@ -407,34 +407,34 @@ class AxModelManager:
             )
 
         # select the input variables
-        if x_param is None:
-            x_param = parnames[0]
-        if y_param is None:
-            y_param = parnames[1]
+        if param_x is None:
+            param_x = parnames[0]
+        if param_y is None:
+            param_y = parnames[1]
 
         # metric name
         if metric_name is None:
             metric_name = self.ax_client.objective_names[0]
 
         # set the plotting range
-        if x_range is None:
-            x_range = [None, None]
-        if y_range is None:
-            y_range = [None, None]
-        if x_range[0] is None:
-            x_range[0] = experiment.parameters[x_param].lower
-        if x_range[1] is None:
-            x_range[1] = experiment.parameters[x_param].upper
-        if y_range[0] is None:
-            y_range[0] = experiment.parameters[y_param].lower
-        if y_range[1] is None:
-            y_range[1] = experiment.parameters[y_param].upper
+        if range_x is None:
+            range_x = [None, None]
+        if range_y is None:
+            range_y = [None, None]
+        if range_x[0] is None:
+            range_x[0] = experiment.parameters[param_x].lower
+        if range_x[1] is None:
+            range_x[1] = experiment.parameters[param_x].upper
+        if range_y[0] is None:
+            range_y[0] = experiment.parameters[param_y].lower
+        if range_y[1] is None:
+            range_y[1] = experiment.parameters[param_y].upper
 
         # get grid sample of points where to evalutate the model
-        xaxis = np.linspace(x_range[0], x_range[1], n_points)
-        yaxis = np.linspace(y_range[0], y_range[1], n_points)
+        xaxis = np.linspace(range_x[0], range_x[1], n_points)
+        yaxis = np.linspace(range_y[0], range_y[1], n_points)
         X, Y = np.meshgrid(xaxis, yaxis)
-        sample = {x_param: X.flatten(), y_param: Y.flatten()}
+        sample = {param_x: X.flatten(), param_y: Y.flatten()}
 
         if slice_values == "mid":
             # Get mid point
@@ -445,7 +445,7 @@ class AxModelManager:
 
         fixed_parameters = {}
         for name, val in slice_values.items():
-            if name not in [x_param, y_param]:
+            if name not in [param_x, param_y]:
                 fixed_parameters[name] = slice_values[name]
 
         # evaluate the model
@@ -485,7 +485,7 @@ class AxModelManager:
             im = ax.pcolormesh(xaxis, yaxis, f, shading="auto", **pcolormesh_kw)
             cbar = plt.colorbar(im, ax=ax, location="top")
             cbar.set_label(labels[i])
-            ax.set(xlabel=x_param, ylabel=y_param)
+            ax.set(xlabel=param_x, ylabel=param_y)
             # contour lines
             cset = ax.contour(
                 X,
@@ -500,10 +500,10 @@ class AxModelManager:
                 ax.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
             # draw trials
             ax.scatter(
-                trials[x_param], trials[y_param], s=8, c="black", marker="o"
+                trials[param_x], trials[param_y], s=8, c="black", marker="o"
             )
-            ax.set_xlim(x_range)
-            ax.set_ylim(y_range)
+            ax.set_xlim(range_x)
+            ax.set_ylim(range_y)
             axs.append(ax)
 
         if nplots == 1:
@@ -513,7 +513,7 @@ class AxModelManager:
 
     def plot_slice(
         self,
-        param: Optional[str] = None,
+        range_name: Optional[str] = None,
         metric_name: Optional[str] = None,
         slice_values: Optional[Union[Dict, Literal["best", "mid"]]] = "mid",
         n_points: Optional[int] = 200,
@@ -527,7 +527,7 @@ class AxModelManager:
 
         Parameters
         ----------
-        param : str
+        range_name : str
             Name of the parameter to plot in x axis.
         metric_name : str, optional.
             Name of the metric to plot.
@@ -564,8 +564,8 @@ class AxModelManager:
         parnames = list(experiment.parameters.keys())
 
         # select the input variables
-        if param is None:
-            param = parnames[0]
+        if range_name is None:
+            range_name = parnames[0]
 
         # metric name
         if metric_name is None:
@@ -575,12 +575,12 @@ class AxModelManager:
         if range is None:
             range = [None, None]
         if range[0] is None:
-            range[0] = experiment.parameters[param].lower
+            range[0] = experiment.parameters[range_name].lower
         if range[1] is None:
-            range[1] = experiment.parameters[param].upper
+            range[1] = experiment.parameters[range_name].upper
 
         # get sample of points where to evalutate the model
-        sample = {param: np.linspace(range[0], range[1], n_points)}
+        sample = {range_name: np.linspace(range[0], range[1], n_points)}
 
         if slice_values == "mid":
             # Get mid point
@@ -591,7 +591,7 @@ class AxModelManager:
 
         fixed_parameters = {}
         for name, val in slice_values.items():
-            if name not in [param]:
+            if name not in [range_name]:
                 fixed_parameters[name] = slice_values[name]
 
         # evaluate the model
@@ -618,11 +618,15 @@ class AxModelManager:
                 label += ", "
             label += f"{par} = {val}"
         ax = fig.add_subplot(gs[0])
-        ax.plot(sample[param], mean, label=label, **plot_kw)
+        ax.plot(sample[range_name], mean, label=label, **plot_kw)
         ax.fill_between(
-            sample[param], mean - sem, mean + sem, color="lightgray", alpha=0.5
+            x=sample[range_name],
+            y1=mean - sem,
+            y2=mean + sem,
+            color="lightgray",
+            alpha=0.5,
         )
-        ax.set_xlabel(param)
+        ax.set_xlabel(range_name)
         ax.set_ylabel(metric_name)
         ax.legend(frameon=False)
 
