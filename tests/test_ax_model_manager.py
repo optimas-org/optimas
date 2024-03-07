@@ -152,6 +152,12 @@ def test_ax_model_manager():
     )
     fig.savefig(os.path.join(exploration_dir_path, "models_1d.png"))
 
+    fig, ax = mm_axcl.plot_cross_validation()
+    fig.savefig(os.path.join(exploration_dir_path, "cross_validation.png"))
+
+    fig, ax = mm_axcl.plot_feature_importance()
+    fig.savefig(os.path.join(exploration_dir_path, "feature_importance.png"))
+
 
 if __name__ == "__main__":
     test_ax_model_manager()
