@@ -1,42 +1,50 @@
 """Contains the definition of the ExplorationDiagnostics class."""
 
 from typing import Optional, Union, List, Tuple, Dict, Any, Literal
+
 import numpy as np
 from numpy.typing import NDArray
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
 from matplotlib.axes import Axes
+
+# Ax utilities for model building
+try:
+    from ax.service.ax_client import AxClient
+    from ax.modelbridge.generation_strategy import (
+        GenerationStep,
+        GenerationStrategy,
+    )
+    from ax.modelbridge.registry import Models
+    from ax.modelbridge.torch import TorchModelBridge
+    from ax.core.observation import ObservationFeatures
+    from ax.service.utils.instantiation import ObjectiveProperties
+
+    ax_installed = True
+except ImportError:
+    ax_installed = False
+
 from optimas.core import VaryingParameter, Objective
 from optimas.utils.other import convert_to_dataframe
 
-# Ax utilities for model building
-from ax.service.ax_client import AxClient
-from ax.modelbridge.generation_strategy import (
-    GenerationStep,
-    GenerationStrategy,
-)
-from ax.modelbridge.registry import Models
-from ax.modelbridge.torch import TorchModelBridge
-from ax.core.observation import ObservationFeatures
-from ax.service.utils.instantiation import ObjectiveProperties
-
 
 class AxModelManager:
-    """Manager for building and exploring GP surrogate models using ``Ax``.
+    """Class for building and exploring GP models using an ``AxClient``.
 
     Parameters
     ----------
-    source: AxClient, str or DataFrame
+    source : AxClient, str or DataFrame
         Source data for the model.
         If ``DataFrame``, the model has to be build using ``build_model``.
         If ``AxClient``, it uses the data in there to build a model.
         If ``str``, it should be the path to an ``AxClient`` json file.
-    objectives: list of `Objective`, optional
+    objectives : list of `Objective`, optional
         Only needed if ``source`` is a pandas ``DataFrame``. List of
         objectives for which a GP model should be built. The names and data of
         these objectives must be contained in the source ``DataFrame``.
-    varying_parameters: list of `VaryingParameter`, optional
+    varying_parameters : list of `VaryingParameter`, optional
         Only needed if ``source`` is a pandas ``DataFrame``. List of
         parameters that were varied to scan the value of the objectives.
         The names and data of these parameters must be contained in the
@@ -49,6 +57,11 @@ class AxModelManager:
         varying_parameters: Optional[List[VaryingParameter]] = None,
         objectives: Optional[List[Objective]] = None,
     ) -> None:
+        if not ax_installed:
+            raise ImportError(
+                "`AxModelManager` requires Ax to be installed. "
+                "You can do so by running `pip install ax-platform`."
+            )
         if isinstance(source, AxClient):
             self.ax_client = source
         elif isinstance(source, str):
@@ -82,9 +95,9 @@ class AxModelManager:
         ----------
         df : DataFrame
             The source pandas ``DataFrame``.
-        objectives: list of `Objective`.
+        objectives : list of `Objective`.
             List of objectives for which a GP model should be built.
-        varying_parameters: list of `VaryingParameter`.
+        varying_parameters : list of `VaryingParameter`.
             List of parameters that were varied to scan the value of the
             objectives.
         """
@@ -141,28 +154,86 @@ class AxModelManager:
             ax_client.complete_trial(trial_id, raw_data=data)
         return ax_client
 
+    def _get_best_point(self, metric_name: Optional[str] = None) -> Dict:
+        """Get the best point with the best predicted model value.
+
+        Parameters
+        ----------
+        metric_name: str, optional.
+            Name of the metric to evaluate.
+            If not specified, it will take the first first objective in
+            ``self.ax_client``.
+
+        Returns
+        -------
+        best_point : dict
+            A dictionary with the parameters of the best point.
+        """
+        _, best_point = self.get_best_evaluation(
+            metric_name=metric_name, use_model_predictions=True
+        )
+        return best_point
+
+    def _get_mid_point(self) -> Dict:
+        """Get the middle point of the space of parameters.
+
+        Returns
+        -------
+        mid_point : dict
+            A dictionary with the parameters of the mid point.
+        """
+        mid_point = {}
+        for key, par in self.ax_client.experiment.parameters.items():
+            mid_point[key] = 0.5 * (par.lower + par.upper)
+
+        return mid_point
+
+    def _get_arm_index(
+        self,
+        arm_name: str,
+    ) -> int:
+        """Get the index of the arm by its name.
+
+        Parameters
+        ----------
+        arm_name : str
+            Name of the arm. If not given, the best arm is selected.
+
+        Returns
+        -------
+        index : int
+            Trial index of the arm.
+        """
+        df = self.ax_client.get_trials_data_frame()
+        index = df.loc[df["arm_name"] == arm_name, "trial_index"].iloc[0]
+        return index
+
     def evaluate_model(
         self,
         sample: Union[pd.DataFrame, Dict, NDArray] = None,
         metric_name: Optional[str] = None,
-        fixed_point: Optional[Dict] = None,
+        fixed_parameters: Optional[Dict] = None,
     ) -> Tuple[NDArray]:
         """Evaluate the model over the specified sample.
 
-        Parameter:
+        Parameters
         ----------
-        sample: DataFrame, dict of arrays or numpy array,
+        sample : DataFrame, dict of arrays or numpy array,
             containing the data sample where to evaluate the model.
-            If numpy array, it must contain the values of all the model parameres.
+            If numpy array, it must contain the values of all the model
+            parameters.
             If DataFrame or dict, it can contain only those parameters to vary.
             The rest of parameters would be set to the model best point,
-            unless they are further specified using ``fixed_point``.
-        metric_name: str, optional.
+            unless they are further specified using ``fixed_parameters``.
+        metric_name : str, optional.
             Name of the metric to evaluate.
-            If not specified, it will take the first first objective in ``self.ax_client``.
-        fixed_point: dict, optional.
-            A dictionary ``{name: val}`` with the values of the parameters
-            to be fixed in the evaluation.
+            If not specified, it will take the first first objective in
+            ``self.ax_client``.
+        fixed_parameters : dict, optional.
+            A dictionary with structure ``{param_name: param_val}`` with the
+            values of the parameters to be fixed in the evaluation. If a given
+            parameter also exists in the ``sample``, the values in the
+            ``sample`` will be overwritten by the fixed value.
 
         Returns
         -------
@@ -174,17 +245,17 @@ class AxModelManager:
         else:
             metric_names = list(self.ax_client.experiment.metrics.keys())
             if metric_name not in metric_names:
-                raise RuntimeError(
-                    f"Metric name {metric_name} does not match any of the metrics. "
-                    f"Available metrics are: {metric_names}."
+                raise ValueError(
+                    f"Metric name {metric_name} does not match any of the "
+                    f"metrics. Available metrics are: {metric_names}."
                 )
 
         parnames = list(self.ax_client.experiment.parameters.keys())
 
         sample = convert_to_dataframe(sample)
 
-        if fixed_point is not None:
-            for key, val in fixed_point.items():
+        if fixed_parameters is not None:
+            for key, val in fixed_parameters.items():
                 sample[key] = val
 
         # check if labels of the dataframe match the parnames
@@ -211,19 +282,21 @@ class AxModelManager:
     ) -> Tuple[int, Dict]:
         """Get the best scoring point in the sample.
 
-         Parameter:
+        Parameters
         ----------
-        metric_name: str, optional.
+        metric_name : str, optional.
             Name of the metric to evaluate.
-            If not specified, it will take the first first objective in ``self.ax_client``.
-        use_model_predictions: bool, optional.
+            If not specified, it will take the first first objective in
+            ``self.ax_client``.
+        use_model_predictions : bool, optional.
             Whether to extract the best point using model predictions
             or directly observed values.
 
         Returns
         -------
-        best_point : dict
-            A dictionary with the parameters of the best point.
+        int, dict
+            The index of the best evaluation and a dictionary with its
+            parameters.
         """
         # metric name
         if metric_name is None:
@@ -251,87 +324,64 @@ class AxModelManager:
             if use_model_predictions is True:
                 best_arm, _ = self._model.model_best_point()
                 best_point = best_arm.parameters
-                index = self.get_arm_index(best_arm.name)
+                index = self._get_arm_index(best_arm.name)
             else:
-                # AxClient.get_best_parameters seems to always return the best point
-                # from the observed values, independently of the value of `use_model_predictions`.
+                # AxClient.get_best_parameters seems to always return the best
+                # point from the observed values, independently of the value
+                # of `use_model_predictions`.
                 index, best_point, _ = self.ax_client.get_best_trial(
                     use_model_predictions=use_model_predictions
                 )
 
         return index, best_point
 
-    def get_best_point(self, metric_name: Optional[str] = None) -> Dict:
-        """Get the best scoring point in the sample.
-
-         Parameter:
-        ----------
-        metric_name: str, optional.
-            Name of the metric to evaluate.
-            If not specified, it will take the first first objective in ``self.ax_client``.
-
-        Returns
-        -------
-        best_point : dict
-            A dictionary with the parameters of the best point.
-        """
-        _, best_point = self.get_best_evaluation(
-            metric_name=metric_name, use_model_predictions=True
-        )
-        return best_point
-
-    def get_mid_point(self) -> Dict:
-        """Get the middle point of the space of parameters.
-
-        Returns
-        -------
-        mid_point : dict
-            A dictionary with the parameters of the mid point.
-        """
-        mid_point = {}
-        for key, par in self.ax_client.experiment.parameters.items():
-            mid_point[key] = 0.5 * (par.lower + par.upper)
-
-        return mid_point
-
-    def plot_model(
+    def plot_contour(
         self,
-        xname: Optional[str] = None,
-        yname: Optional[str] = None,
-        mname: Optional[str] = None,
-        p0: Optional[Union[Dict, Literal["best", "mid"]]] = None,
-        npoints: Optional[int] = 200,
-        xrange: Optional[List[float]] = None,
-        yrange: Optional[List[float]] = None,
+        x_param: Optional[str] = None,
+        y_param: Optional[str] = None,
+        metric_name: Optional[str] = None,
+        slice_values: Optional[Union[Dict, Literal["best", "mid"]]] = "mid",
+        n_points: Optional[int] = 200,
+        x_range: Optional[List[float]] = None,
+        y_range: Optional[List[float]] = None,
         mode: Optional[Literal["mean", "sem", "both"]] = "mean",
-        clabel: Optional[bool] = False,
+        show_contour_labels: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
         gridspec_kw: Optional[Dict[str, Any]] = None,
         pcolormesh_kw: Optional[Dict[str, Any]] = None,
         **figure_kw,
-    ) -> Union[Axes, List[Axes]]:
-        """Plot model in the two selected variables, while others are fixed to the optimum.
+    ) -> Tuple[Figure, Union[Axes, List[Axes]]]:
+        """Plot a 2D slice of the surrogate model.
 
-        Parameter:
+        Parameters
         ----------
-        xname: string
-            Name of the variable to plot in x axis.
-        yname: string
-            Name of the variable to plot in y axis.
-        mname: string, optional.
+        x_param : str
+            Name of the parameter to plot in x axis.
+        y_param : str
+            Name of the parameter to plot in y axis.
+        metric_name : str, optional.
             Name of the metric to plot.
-            If not specified, it will take the first objective in ``self.ax_client``.
-        p0: dictionary, optional.
-            A dictionary ``{name: val}`` for the fixed values of the other
-            parameters. If not provided, then the values of the best predicted
-            parametrization will be used.
-        npoints: int, optional
+            If not specified, it will take the first objective in
+            ``self.ax_client``.
+        slice_values : dict or str, optional.
+            The values along which to slice the model, if the model has more
+            than two dimensions. Possible values are: ``"best"`` (slice along
+            the best predicted point), ``"mid"`` (slice along the middle
+            point of the varying parameters), or a dictionary with structure
+            ``{param_name: param_val}`` that contains the slice values of each
+            parameter. By default, ``"mid"``.
+        n_points : int, optional
             Number of points in each axis.
-        mode: string, optional.
-            ``mean`` plots the model mean, ``sem`` the standard error of the mean,
-            ``both`` plots both.
-        clabel: bool
+        x_range, y_range : list of float, optional
+            Range of each axis. It not given, the lower and upper boundary
+            of each parameter will be used.
+        mode : str, optional.
+            Whether to plot the ``"mean"`` of the model, the standard error of
+            the mean ``"sem"``, or ``"both"``.
+        show_contour_labels : bool
             when true labels are shown along the contour lines.
+        subplot_spec : SubplotSpec, optional
+            A matplotlib SubplotSpec in which to draw the axis.
         gridspec_kw : dict, optional
             Dict with keywords passed to the `GridSpec`.
         pcolormesh_kw : dict, optional
@@ -342,9 +392,9 @@ class AxModelManager:
 
         Returns
         -------
-        `~.axes.Axes` or array of Axes
-            Either a single `~matplotlib.axes.Axes` object or a list of Axes
-            objects if more than one subplot was created.
+        Figure, Axes or list of Axes
+            A matplotb figure and either a single `Axes` or a list of `Axes`
+            if `mode="both"`.
         """
         # get experiment info
         experiment = self.ax_client.experiment
@@ -357,50 +407,52 @@ class AxModelManager:
             )
 
         # select the input variables
-        if xname is None:
-            xname = parnames[0]
-        if yname is None:
-            yname = parnames[1]
+        if x_param is None:
+            x_param = parnames[0]
+        if y_param is None:
+            y_param = parnames[1]
 
         # metric name
-        if mname is None:
-            mname = self.ax_client.objective_names[0]
+        if metric_name is None:
+            metric_name = self.ax_client.objective_names[0]
 
         # set the plotting range
-        if xrange is None:
-            xrange = [None, None]
-        if yrange is None:
-            yrange = [None, None]
-        if xrange[0] is None:
-            xrange[0] = experiment.parameters[xname].lower
-        if xrange[1] is None:
-            xrange[1] = experiment.parameters[xname].upper
-        if yrange[0] is None:
-            yrange[0] = experiment.parameters[yname].lower
-        if yrange[1] is None:
-            yrange[1] = experiment.parameters[yname].upper
+        if x_range is None:
+            x_range = [None, None]
+        if y_range is None:
+            y_range = [None, None]
+        if x_range[0] is None:
+            x_range[0] = experiment.parameters[x_param].lower
+        if x_range[1] is None:
+            x_range[1] = experiment.parameters[x_param].upper
+        if y_range[0] is None:
+            y_range[0] = experiment.parameters[y_param].lower
+        if y_range[1] is None:
+            y_range[1] = experiment.parameters[y_param].upper
 
         # get grid sample of points where to evalutate the model
-        xaxis = np.linspace(xrange[0], xrange[1], npoints)
-        yaxis = np.linspace(yrange[0], yrange[1], npoints)
+        xaxis = np.linspace(x_range[0], x_range[1], n_points)
+        yaxis = np.linspace(y_range[0], y_range[1], n_points)
         X, Y = np.meshgrid(xaxis, yaxis)
-        sample = {xname: X.flatten(), yname: Y.flatten()}
+        sample = {x_param: X.flatten(), y_param: Y.flatten()}
 
-        if (p0 is None) or (p0 == "mid"):
+        if slice_values == "mid":
             # Get mid point
-            p0 = self.get_mid_point()
-        elif p0 == "best":
+            slice_values = self._get_mid_point()
+        elif slice_values == "best":
             # get best point
-            p0 = self.get_best_point(metric_name=mname)
+            slice_values = self._get_best_point(metric_name=metric_name)
 
-        fixed_point = {}
-        for name, val in p0.items():
-            if name not in [xname, yname]:
-                fixed_point[name] = p0[name]
+        fixed_parameters = {}
+        for name, val in slice_values.items():
+            if name not in [x_param, y_param]:
+                fixed_parameters[name] = slice_values[name]
 
         # evaluate the model
         f_plt, sd_plt = self.evaluate_model(
-            sample=sample, metric_name=mname, fixed_point=fixed_point
+            sample=sample,
+            metric_name=metric_name,
+            fixed_parameters=fixed_parameters,
         )
 
         # select quantities to plot and set the labels
@@ -408,10 +460,10 @@ class AxModelManager:
         labels = []
         if mode in ["mean", "both"]:
             f_plots.append(f_plt.reshape(X.shape))
-            labels.append(mname + ", mean")
+            labels.append(metric_name + ", mean")
         if mode in ["sem", "both"]:
             f_plots.append(sd_plt.reshape(X.shape))
-            labels.append(mname + ", sem")
+            labels.append(metric_name + ", sem")
 
         # create figure
         nplots = len(f_plots)
@@ -433,7 +485,7 @@ class AxModelManager:
             im = ax.pcolormesh(xaxis, yaxis, f, shading="auto", **pcolormesh_kw)
             cbar = plt.colorbar(im, ax=ax, location="top")
             cbar.set_label(labels[i])
-            ax.set(xlabel=xname, ylabel=yname)
+            ax.set(xlabel=x_param, ylabel=y_param)
             # contour lines
             cset = ax.contour(
                 X,
@@ -444,35 +496,134 @@ class AxModelManager:
                 colors="black",
                 linestyles="solid",
             )
-            if clabel:
-                plt.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
+            if show_contour_labels:
+                ax.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
             # draw trials
-            ax.scatter(trials[xname], trials[yname], s=8, c="black", marker="o")
-            ax.set_xlim(xrange)
-            ax.set_ylim(yrange)
+            ax.scatter(
+                trials[x_param], trials[y_param], s=8, c="black", marker="o"
+            )
+            ax.set_xlim(x_range)
+            ax.set_ylim(y_range)
             axs.append(ax)
 
         if nplots == 1:
-            return axs[0]
+            return fig, axs[0]
         else:
-            return axs
+            return fig, axs
 
-    def get_arm_index(
+    def plot_slice(
         self,
-        arm_name: str,
-    ) -> int:
-        """Get the index of the arm by its name.
+        param: Optional[str] = None,
+        metric_name: Optional[str] = None,
+        slice_values: Optional[Union[Dict, Literal["best", "mid"]]] = "mid",
+        n_points: Optional[int] = 200,
+        range: Optional[List[float]] = None,
+        subplot_spec: Optional[SubplotSpec] = None,
+        gridspec_kw: Optional[Dict[str, Any]] = None,
+        plot_kw: Optional[Dict[str, Any]] = None,
+        **figure_kw,
+    ) -> Tuple[Figure, Axes]:
+        """Plot a 1D slice of the surrogate model.
 
         Parameters
         ----------
-        arm_name: string.
-            Name of the arm. If not given, the best arm is selected.
+        param : str
+            Name of the parameter to plot in x axis.
+        metric_name : str, optional.
+            Name of the metric to plot.
+            If not specified, it will take the first objective in
+            ``self.ax_client``.
+        slice_values : dict or str, optional.
+            The values along which to slice the model, if the model has more
+            than one dimensions. Possible values are: ``"best"`` (slice along
+            the best predicted point), ``"mid"`` (slice along the middle
+            point of the varying parameters), or a dictionary with structure
+            ``{param_name: param_val}`` that contains the slice values of each
+            parameter. By default, ``"mid"``.
+        n_points : int, optional
+            Number of points along the x axis.
+        range : list of float, optional
+            Range of the x axis. It not given, the lower and upper boundary
+            of the x parameter will be used.
+        subplot_spec : SubplotSpec, optional
+            A matplotlib SubplotSpec in which to draw the axis.
+        gridspec_kw : dict, optional
+            Dict with keywords passed to the `GridSpec`.
+        plot_kw : dict, optional
+            Dict with keywords passed to `ax.plot`.
+        **figure_kw
+            Additional keyword arguments to pass to `pyplot.figure`. Only used
+            if no ``subplot_spec`` is given.
 
         Returns
         -------
-        index: int
-            Trial index of the arm.
+        Figure, Axes
         """
-        df = self.ax_client.get_trials_data_frame()
-        index = df.loc[df["arm_name"] == arm_name, "trial_index"].iloc[0]
-        return index
+        # get experiment info
+        experiment = self.ax_client.experiment
+        parnames = list(experiment.parameters.keys())
+
+        # select the input variables
+        if param is None:
+            param = parnames[0]
+
+        # metric name
+        if metric_name is None:
+            metric_name = self.ax_client.objective_names[0]
+
+        # set the plotting range
+        if range is None:
+            range = [None, None]
+        if range[0] is None:
+            range[0] = experiment.parameters[param].lower
+        if range[1] is None:
+            range[1] = experiment.parameters[param].upper
+
+        # get sample of points where to evalutate the model
+        sample = {param: np.linspace(range[0], range[1], n_points)}
+
+        if slice_values == "mid":
+            # Get mid point
+            slice_values = self._get_mid_point()
+        elif slice_values == "best":
+            # get best point
+            slice_values = self._get_best_point(metric_name=metric_name)
+
+        fixed_parameters = {}
+        for name, val in slice_values.items():
+            if name not in [param]:
+                fixed_parameters[name] = slice_values[name]
+
+        # evaluate the model
+        mean, sem = self.evaluate_model(
+            sample=sample,
+            metric_name=metric_name,
+            fixed_parameters=fixed_parameters,
+        )
+
+        # create figure
+        gridspec_kw = dict(gridspec_kw or {})
+        if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
+            gs = GridSpec(1, 1, **gridspec_kw)
+        else:
+            fig = plt.gcf()
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec, **gridspec_kw)
+
+        # Make plot
+        plot_kw = dict(plot_kw or {})
+        label = ""
+        for par, val in fixed_parameters.items():
+            if label:
+                label += ", "
+            label += f"{par} = {val}"
+        ax = fig.add_subplot(gs[0])
+        ax.plot(sample[param], mean, label=label, **plot_kw)
+        ax.fill_between(
+            sample[param], mean - sem, mean + sem, color="lightgray", alpha=0.5
+        )
+        ax.set_xlabel(param)
+        ax.set_ylabel(metric_name)
+        ax.legend(frameon=False)
+
+        return fig, ax
