@@ -506,7 +506,9 @@ class AxModelManager:
                     linestyles="solid",
                 )
                 if show_contour_labels:
-                    ax.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
+                    ax.clabel(
+                        cset, inline=True, fmt="%1.1f", fontsize="xx-small"
+                    )
             if show_trials:
                 ax.scatter(
                     trials[param_x], trials[param_y], s=8, c="black", marker="o"
@@ -556,7 +558,7 @@ class AxModelManager:
             Range of the x axis. It not given, the lower and upper boundary
             of the x parameter will be used.
         show_legend : bool
-            when true a legend is shown with the slice values is shown. 
+            when true a legend is shown with the slice values is shown.
         subplot_spec : SubplotSpec, optional
             A matplotlib ``SubplotSpec`` in which to draw the axis.
         gridspec_kw : dict, optional
