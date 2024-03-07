@@ -31,6 +31,10 @@ from optimas.core import (
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
 from optimas.utils.ax import AxModelManager
+from optimas.utils.ax.other import (
+    convert_optimas_to_ax_parameters,
+    convert_optimas_to_ax_objectives,
+)
 from .custom_ax import CustomAxClient as AxClient
 
 logger = get_logger(__name__)
@@ -245,31 +249,9 @@ class AxServiceGenerator(AxGenerator, AxModelManager):
 
     def _create_ax_parameters(self) -> List:
         """Create list of parameters to pass to an Ax."""
-        parameters = []
+        parameters = convert_optimas_to_ax_parameters(self.varying_parameters)
         fixed_parameters = {}
         for var in self._varying_parameters:
-            # Determine parameter type.
-            value_dtype = np.dtype(var.dtype)
-            if value_dtype.kind == "f":
-                value_type = "float"
-            elif value_dtype.kind == "i":
-                value_type = "int"
-            else:
-                raise ValueError(
-                    "Ax range parameter can only be of type 'float'ot 'int', "
-                    "not {var.dtype}."
-                )
-            # Create parameter dict and append to list.
-            parameters.append(
-                {
-                    "name": var.name,
-                    "type": "range",
-                    "bounds": [var.lower_bound, var.upper_bound],
-                    "is_fidelity": var.is_fidelity,
-                    "target_value": var.fidelity_target_value,
-                    "value_type": value_type,
-                }
-            )
             if var.is_fixed:
                 fixed_parameters[var.name] = var.default_value
         # Store fixed parameters as fixed features.
@@ -278,10 +260,7 @@ class AxServiceGenerator(AxGenerator, AxModelManager):
 
     def _create_ax_objectives(self) -> Dict[str, ObjectiveProperties]:
         """Create list of objectives to pass to an Ax."""
-        objectives = {}
-        for obj in self.objectives:
-            objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
-        return objectives
+        return convert_optimas_to_ax_objectives(self.objectives)
 
     def _create_generation_steps(
         self, bo_model_kwargs: Dict

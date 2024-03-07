@@ -1,4 +1,4 @@
-"""Contains the definition of the ExplorationDiagnostics class."""
+"""Contains the definition of the AxModelManager class."""
 
 from typing import Optional, Union, List, Tuple, Dict, Any, Literal
 
@@ -20,8 +20,10 @@ try:
     from ax.modelbridge.registry import Models
     from ax.modelbridge.torch import TorchModelBridge
     from ax.core.observation import ObservationFeatures
-    from ax.service.utils.instantiation import ObjectiveProperties
-
+    from .other import (
+        convert_optimas_to_ax_parameters,
+        convert_optimas_to_ax_objectives,
+    )
     ax_installed = True
 except ImportError:
     ax_installed = False
@@ -103,36 +105,10 @@ class AxModelManager:
             objectives.
         """
         # Define parameters for AxClient
-        axparameters = []
-        for par in varying_parameters:
-            # Determine parameter type.
-            value_dtype = np.dtype(par.dtype)
-            if value_dtype.kind == "f":
-                value_type = "float"
-            elif value_dtype.kind == "i":
-                value_type = "int"
-            else:
-                raise ValueError(
-                    "Ax range parameter can only be of type 'float'ot 'int', "
-                    "not {var.dtype}."
-                )
-            # Create parameter dict and append to list.
-            axparameters.append(
-                {
-                    "name": par.name,
-                    "type": "range",
-                    "bounds": [par.lower_bound, par.upper_bound],
-                    "is_fidelity": par.is_fidelity,
-                    "target_value": par.fidelity_target_value,
-                    "value_type": value_type,
-                }
-            )
+        axparameters = convert_optimas_to_ax_parameters(varying_parameters)
 
         # Define objectives for AxClient
-        axobjectives = {
-            obj.name: ObjectiveProperties(minimize=obj.minimize)
-            for obj in objectives
-        }
+        axobjectives = convert_optimas_to_ax_objectives(objectives)
 
         # Create Ax client.
         # We need to explicitly define a generation strategy because otherwise
