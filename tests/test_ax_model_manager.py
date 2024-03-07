@@ -86,17 +86,17 @@ def test_ax_model_manager():
     assert np.allclose(mean_axcl, mean_diag, rtol=1e-2)
 
     # Make example figure with two models in 2D.
-    fig = plt.figure(figsize=(10, 4.8))
-    gs = GridSpec(1, 2, wspace=0.2, hspace=0.3)
+    fig = plt.figure(figsize=(8, 8))
+    gs = GridSpec(2, 2, wspace=0.2, hspace=0.3)
 
     # center coordinates
     x1_c = 0.5 * (var2.lower_bound + var2.upper_bound)
     x2_c = 0.5 * (var3.lower_bound + var3.upper_bound)
 
-    # plot model for `f`
-    ax1 = mm_axcl.plot_model(
-        mname="f",
-        p0={"x2": x2_c},
+    # plot model for `f` with custom slice value
+    fig, ax1 = mm_axcl.plot_contour(
+        metric_name="f",
+        slice_values={"x2": x2_c},
         pcolormesh_kw={"cmap": "GnBu"},
         subplot_spec=gs[0, 0],
     )
@@ -105,12 +105,26 @@ def test_ax_model_manager():
     df_top = diags.get_best_evaluations(top=3, objective="f")
     ax1.scatter(df_top["x0"], df_top["x1"], c="red", marker="x")
 
-    # plot model for `f2`
-    ax2 = mm_axcl.plot_model(
-        mname="f2",
-        p0={"x2": x2_c},
-        pcolormesh_kw={"cmap": "OrRd"},
+    # plot model for `f` with default settings (mid point)
+    fig, ax1 = mm_axcl.plot_contour(
+        metric_name="f",
         subplot_spec=gs[0, 1],
+    )
+
+    # plot model for `f2` with custom slice value
+    fig, ax2 = mm_axcl.plot_contour(
+        metric_name="f2",
+        slice_values={"x2": x2_c},
+        pcolormesh_kw={"cmap": "OrRd"},
+        subplot_spec=gs[1, 0],
+    )
+
+    # plot model for `f2` along best slice
+    fig, ax2 = mm_axcl.plot_contour(
+        metric_name="f2",
+        slice_values="best",
+        pcolormesh_kw={"cmap": "OrRd"},
+        subplot_spec=gs[1, 1],
     )
 
     # Get and draw top 3 evaluations for `f2`
@@ -118,25 +132,27 @@ def test_ax_model_manager():
     ax2.scatter(df2_top["x0"], df2_top["x1"], c="blue", marker="x")
     plt.savefig(os.path.join(exploration_dir_path, "models_2d.png"))
 
-    # Make example figure of the models in 1D with errors.
-    x0 = np.linspace(var1.lower_bound, var1.upper_bound, 100)
-    x1 = np.ones_like(x0) * x1_c
-    x2 = np.ones_like(x0) * x2_c
-    metric_names = mm_axcl.ax_client.objective_names
-    fig, axs = plt.subplots(len(metric_names), 1, sharex=True)
-    for i, (ax, metric_name) in enumerate(zip(axs, metric_names)):
-        mean, sed = mm_axcl.evaluate_model(
-            sample={"x0": x0, "x1": x1, "x2": x2}, metric_name=metric_name
-        )
-        ax.plot(x0, mean, color=f"C{i}", label=f"x1 = {x1_c}, x2 = {x2_c}")
-        ax.fill_between(
-            x0, mean - sed, mean + sed, color="lightgray", alpha=0.5
-        )
-        ax.set_ylabel(metric_name)
-        ax.legend(frameon=False)
-    plt.xlabel("x0")
-    plt.savefig(os.path.join(exploration_dir_path, "models_1d.png"))
+    fig, axs = mm_axcl.plot_contour(mode="both", figsize=(8, 4))
+    fig.savefig("models_2d_both.png")
 
+    # Make figure of the models in 1D with errors.
+    fig = plt.figure()
+    gs = GridSpec(2, 1, hspace=0.3)
+    fig, ax = mm_axcl.plot_slice(
+        "x0",
+        metric_name="f",
+        slice_values={"x1": x1_c, "x2": x2_c},
+        subplot_spec=gs[0],
+        plot_kw={"color": "C0"},
+    )
+    fig, ax = mm_axcl.plot_slice(
+        "x0",
+        metric_name="f2",
+        slice_values={"x1": x1_c, "x2": x2_c},
+        subplot_spec=gs[1],
+        plot_kw={"color": "C1"},
+    )
+    fig.savefig(os.path.join(exploration_dir_path, "models_1d.png"))
 
 if __name__ == "__main__":
     test_ax_model_manager()
