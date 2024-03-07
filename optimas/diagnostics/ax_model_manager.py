@@ -525,7 +525,7 @@ class AxModelManager:
 
     def plot_slice(
         self,
-        range_name: Optional[str] = None,
+        param_name: Optional[str] = None,
         metric_name: Optional[str] = None,
         slice_values: Optional[Union[Dict, Literal["best", "mid"]]] = "mid",
         n_points: Optional[int] = 200,
@@ -540,7 +540,7 @@ class AxModelManager:
 
         Parameters
         ----------
-        range_name : str
+        param_name : str
             Name of the parameter to plot in x axis.
         metric_name : str, optional.
             Name of the metric to plot.
@@ -580,8 +580,8 @@ class AxModelManager:
         parnames = list(experiment.parameters.keys())
 
         # select the input variables
-        if range_name is None:
-            range_name = parnames[0]
+        if param_name is None:
+            param_name = parnames[0]
 
         # metric name
         if metric_name is None:
@@ -591,12 +591,12 @@ class AxModelManager:
         if range is None:
             range = [None, None]
         if range[0] is None:
-            range[0] = experiment.parameters[range_name].lower
+            range[0] = experiment.parameters[param_name].lower
         if range[1] is None:
-            range[1] = experiment.parameters[range_name].upper
+            range[1] = experiment.parameters[param_name].upper
 
         # get sample of points where to evalutate the model
-        sample = {range_name: np.linspace(range[0], range[1], n_points)}
+        sample = {param_name: np.linspace(range[0], range[1], n_points)}
 
         if slice_values == "mid":
             # Get mid point
@@ -607,7 +607,7 @@ class AxModelManager:
 
         fixed_parameters = {}
         for name, val in slice_values.items():
-            if name not in [range_name]:
+            if name not in [param_name]:
                 fixed_parameters[name] = slice_values[name]
 
         # evaluate the model
@@ -634,15 +634,15 @@ class AxModelManager:
                 label += ", "
             label += f"{par} = {val}"
         ax = fig.add_subplot(gs[0])
-        ax.plot(sample[range_name], mean, label=label, **plot_kw)
+        ax.plot(sample[param_name], mean, label=label, **plot_kw)
         ax.fill_between(
-            x=sample[range_name],
+            x=sample[param_name],
             y1=mean - sem,
             y2=mean + sem,
             color="lightgray",
             alpha=0.5,
         )
-        ax.set_xlabel(range_name)
+        ax.set_xlabel(param_name)
         ax.set_ylabel(metric_name)
         if show_legend:
             ax.legend(frameon=False)
