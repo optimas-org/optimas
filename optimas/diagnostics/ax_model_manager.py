@@ -36,10 +36,11 @@ class AxModelManager:
     Parameters
     ----------
     source : AxClient, str or DataFrame
-        Source data for the model.
-        If ``DataFrame``, the model has to be build using ``build_model``.
-        If ``AxClient``, it uses the data in there to build a model.
-        If ``str``, it should be the path to an ``AxClient`` json file.
+        Source data for the model. It can be either an existing ``AxClient``
+        with a GP model, a string with the path to a ``json`` file with a
+        serialized ``AxClient``, or a pandas ``DataFrame``.
+        When using a ``DataFrame``, a list of objectives and varying parameters
+        should also be provided.
     objectives : list of `Objective`, optional
         Only needed if ``source`` is a pandas ``DataFrame``. List of
         objectives for which a GP model should be built. The names and data of
@@ -394,8 +395,8 @@ class AxModelManager:
         Returns
         -------
         Figure, Axes or list of Axes
-            A matplotb figure and either a single ``Axes`` or a list of ``Axes``
-            if ``mode="both"``.
+            A matplotlib figure and either a single ``Axes`` or a list of
+            ``Axes`` if ``mode="both"``.
         """
         # get experiment info
         experiment = self.ax_client.experiment
