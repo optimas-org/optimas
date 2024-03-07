@@ -375,19 +375,20 @@ class AxModelManager:
             ``{param_name: param_val}`` that contains the slice values of each
             parameter. By default, ``"mid"``.
         n_points : int, optional
-            Number of points in each axis.
+            Number of points in each axis. By default, ``200``.
         range_x, range_y : list of float, optional
             Range of each axis. It not given, the lower and upper boundary
             of each parameter will be used.
         mode : str, optional.
             Whether to plot the ``"mean"`` of the model, the standard error of
-            the mean ``"sem"``, or ``"both"``.
+            the mean ``"sem"``, or ``"both"``. By default, ``"mean"``.
         show_trials : bool
-            whether to show the trials used to build the model or not.
+            Whether to show the trials used to build the model. By default,
+            ``True``.
         show_contour : bool
-            whether to show the contour or not.
+            Whether to show the contour lines. By default, ``True``.
         show_contour_labels : bool
-            when true labels are shown along the contour lines.
+            Whether to add labels to the contour lines. By default, ``False``.
         subplot_spec : SubplotSpec, optional
             A matplotlib ``SubplotSpec`` in which to draw the axis.
         gridspec_kw : dict, optional
@@ -553,12 +554,13 @@ class AxModelManager:
             ``{param_name: param_val}`` that contains the slice values of each
             parameter. By default, ``"mid"``.
         n_points : int, optional
-            Number of points along the x axis.
+            Number of points along the x axis. By default, ``200``.
         range : list of float, optional
             Range of the x axis. It not given, the lower and upper boundary
             of the x parameter will be used.
         show_legend : bool
-            when true a legend is shown with the fixed slice values.
+            Whether to show a legend with the fixed slice values. By default,
+            ``False``.
         subplot_spec : SubplotSpec, optional
             A matplotlib ``SubplotSpec`` in which to draw the axis.
         gridspec_kw : dict, optional
