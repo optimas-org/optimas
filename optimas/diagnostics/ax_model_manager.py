@@ -347,6 +347,8 @@ class AxModelManager:
         range_x: Optional[List[float]] = None,
         range_y: Optional[List[float]] = None,
         mode: Optional[Literal["mean", "sem", "both"]] = "mean",
+        show_trials: Optional[bool] = True,
+        show_contour: Optional[bool] = True,
         show_contour_labels: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
         gridspec_kw: Optional[Dict[str, Any]] = None,
@@ -380,6 +382,10 @@ class AxModelManager:
         mode : str, optional.
             Whether to plot the ``"mean"`` of the model, the standard error of
             the mean ``"sem"``, or ``"both"``.
+        show_trials : bool
+            whether to show the trials used to build the model or not.
+        show_contour : bool
+            whether to show the contour or not.
         show_contour_labels : bool
             when true labels are shown along the contour lines.
         subplot_spec : SubplotSpec, optional
@@ -488,22 +494,23 @@ class AxModelManager:
             cbar = plt.colorbar(im, ax=ax, location="top")
             cbar.set_label(labels[i])
             ax.set(xlabel=param_x, ylabel=param_y)
-            # contour lines
-            cset = ax.contour(
-                X,
-                Y,
-                f,
-                levels=20,
-                linewidths=0.5,
-                colors="black",
-                linestyles="solid",
-            )
-            if show_contour_labels:
-                ax.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
-            # draw trials
-            ax.scatter(
-                trials[param_x], trials[param_y], s=8, c="black", marker="o"
-            )
+            # contour
+            if show_contour:
+                cset = ax.contour(
+                    X,
+                    Y,
+                    f,
+                    levels=20,
+                    linewidths=0.5,
+                    colors="black",
+                    linestyles="solid",
+                )
+                if show_contour_labels:
+                    ax.clabel(cset, inline=True, fmt="%1.1f", fontsize="xx-small")
+            if show_trials:
+                ax.scatter(
+                    trials[param_x], trials[param_y], s=8, c="black", marker="o"
+                )
             ax.set_xlim(range_x)
             ax.set_ylim(range_y)
             axs.append(ax)
@@ -520,6 +527,7 @@ class AxModelManager:
         slice_values: Optional[Union[Dict, Literal["best", "mid"]]] = "mid",
         n_points: Optional[int] = 200,
         range: Optional[List[float]] = None,
+        show_legend: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
         gridspec_kw: Optional[Dict[str, Any]] = None,
         plot_kw: Optional[Dict[str, Any]] = None,
@@ -547,6 +555,8 @@ class AxModelManager:
         range : list of float, optional
             Range of the x axis. It not given, the lower and upper boundary
             of the x parameter will be used.
+        show_legend : bool
+            when true a legend is shown with the slice values is shown. 
         subplot_spec : SubplotSpec, optional
             A matplotlib ``SubplotSpec`` in which to draw the axis.
         gridspec_kw : dict, optional
@@ -630,6 +640,7 @@ class AxModelManager:
         )
         ax.set_xlabel(range_name)
         ax.set_ylabel(metric_name)
-        ax.legend(frameon=False)
+        if show_legend:
+            ax.legend(frameon=False)
 
         return fig, ax
