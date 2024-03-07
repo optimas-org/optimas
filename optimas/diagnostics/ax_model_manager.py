@@ -558,7 +558,7 @@ class AxModelManager:
             Range of the x axis. It not given, the lower and upper boundary
             of the x parameter will be used.
         show_legend : bool
-            when true a legend is shown with the slice values is shown.
+            when true a legend is shown with the fixed slice values.
         subplot_spec : SubplotSpec, optional
             A matplotlib ``SubplotSpec`` in which to draw the axis.
         gridspec_kw : dict, optional
