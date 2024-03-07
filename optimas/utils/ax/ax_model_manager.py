@@ -21,7 +21,6 @@ try:
     from ax.modelbridge.torch import TorchModelBridge
     from ax.core.observation import ObservationFeatures
     from ax.service.utils.instantiation import ObjectiveProperties
-
     ax_installed = True
 except ImportError:
     ax_installed = False
@@ -648,4 +647,127 @@ class AxModelManager:
         if show_legend:
             ax.legend(frameon=False)
 
+        return fig, ax
+    
+    def plot_cross_validation(
+        self,
+        metric_name: Optional[str] = None,
+        subplot_spec: Optional[SubplotSpec] = None,
+        gridspec_kw: Optional[Dict[str, Any]] = None,
+        errorbar_kw: Optional[Dict[str, Any]] = None,
+        **figure_kw,
+    ) -> Tuple[Figure, Axes]:
+        """Make a cross-validation plot for the given metric.
+
+        Parameters
+        ----------
+        metric_name : str, optional.
+            Name of the metric to plot.
+            If not specified, it will take the first objective in
+            ``self.ax_client``.
+        subplot_spec : SubplotSpec, optional
+            A matplotlib ``SubplotSpec`` in which to draw the axis.
+        gridspec_kw : dict, optional
+            Dict with keywords passed to the ``GridSpec``.
+        errorbar_kw : dict, optional
+            Dict with keywords passed to ``ax.errorbar_kw``.
+        **figure_kw
+            Additional keyword arguments to pass to ``pyplot.figure``. Only
+            used if no ``subplot_spec`` is given.
+
+        Returns
+        -------
+        Figure, Axes
+        """
+        # Get metric name.
+        if metric_name is None:
+            metric_name = self.ax_client.objective_names[0]
+
+        # Evaluate model for each point in the history.
+        trials = self.ax_client.get_trials_data_frame()
+        mean, sem = self.evaluate_model(trials)
+
+        # Create figure.
+        gridspec_kw = dict(gridspec_kw or {})
+        if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
+            gs = GridSpec(1, 1, **gridspec_kw)
+        else:
+            fig = plt.gcf()
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec, **gridspec_kw)
+
+        # Get errorbar kwargs.
+        errorbar_kw = dict(errorbar_kw or {})
+        default_errorbar_kw = {
+            "fmt": "o",
+            "ms": 4,
+            "label": "Data"
+        }
+        errorbar_kw = {**default_errorbar_kw, **errorbar_kw}
+
+        # Make plot.
+        ax = fig.add_subplot(gs[0])
+        ax.errorbar(trials[metric_name], mean, yerr=sem, **errorbar_kw)
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        square_lims = [min(ylim[0], ylim[0]), max(xlim[1], ylim[1])]
+        ax.plot(square_lims, square_lims, color="k", ls="--", label="Ideal correlation")
+        ax.set_xlim(square_lims)
+        ax.set_ylim(square_lims)
+        ax.set_xlabel("Observations")
+        ax.set_ylabel("Model predictions")
+        ax.legend(frameon=False)
+        return fig, ax
+
+    def plot_feature_importance(
+        self,
+        metric_name: Optional[str] = None,
+        subplot_spec: Optional[SubplotSpec] = None,
+        gridspec_kw: Optional[Dict[str, Any]] = None,
+        bar_kw: Optional[Dict[str, Any]] = None,
+        **figure_kw,
+    ) -> Tuple[Figure, Axes]:
+        """Plot the importance of each varying parameter for the given metric.
+
+        Parameters
+        ----------
+        metric_name : str, optional.
+            Name of the metric for which to determine the importances.
+            If not specified, it will take the first objective in
+            ``self.ax_client``.
+        subplot_spec : SubplotSpec, optional
+            A matplotlib ``SubplotSpec`` in which to draw the axis.
+        gridspec_kw : dict, optional
+            Dict with keywords passed to the ``GridSpec``.
+        bar_kw : dict, optional
+            Dict with keywords passed to ``ax.bar``.
+        **figure_kw
+            Additional keyword arguments to pass to ``pyplot.figure``. Only
+            used if no ``subplot_spec`` is given.
+
+        Returns
+        -------
+        Figure, Axes
+        """
+        # Get metric name.
+        if metric_name is None:
+            metric_name = self.ax_client.objective_names[0]
+
+        # Get feature importances.
+        importances = self._model.feature_importances(metric_name)
+
+        # Create figure.
+        gridspec_kw = dict(gridspec_kw or {})
+        if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
+            gs = GridSpec(1, 1, **gridspec_kw)
+        else:
+            fig = plt.gcf()
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec, **gridspec_kw)
+        bar_kw = dict(bar_kw or {})
+
+        # Make plot.
+        ax = fig.add_subplot(gs[0])
+        ax.bar(importances.keys(), importances.values(), **bar_kw)
+        ax.set_ylabel(f"Importance for metric {metric_name}")
         return fig, ax
