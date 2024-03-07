@@ -541,7 +541,8 @@ class AxModelManager:
         Parameters
         ----------
         param_name : str
-            Name of the parameter to plot in x axis.
+            Name of the parameter to plot in x axis. If not given, the first
+            varying parameter will be used.
         metric_name : str, optional.
             Name of the metric to plot.
             If not specified, it will take the first objective in
