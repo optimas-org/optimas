@@ -24,6 +24,7 @@ try:
         convert_optimas_to_ax_parameters,
         convert_optimas_to_ax_objectives,
     )
+
     ax_installed = True
 except ImportError:
     ax_installed = False
