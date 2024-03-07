@@ -7,7 +7,8 @@ from optimas.explorations import Exploration
 from optimas.core import VaryingParameter, Objective
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import FunctionEvaluator
-from optimas.diagnostics import ExplorationDiagnostics, AxModelManager
+from optimas.diagnostics import ExplorationDiagnostics
+from optimas.utils.ax import AxModelManager
 
 
 def eval_func_sf_moo(input_params, output_params):
