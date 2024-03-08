@@ -45,11 +45,13 @@ below:
     from optimas.loggers import WandBLogger
     from optimas.core import VaryingParameter, Objective
 
+
     # Define the function to be optimized
     def objective_function(inputs, outputs):
         x = inputs["x"]
         y = inputs["y"]
         outputs["result"] = x**2 + y**2
+
 
     # Define the evaluator
     evaluator = FunctionEvaluator(objective_function)
@@ -58,11 +60,9 @@ below:
     generator = RandomSamplingGenerator(
         parameters=[
             VaryingParameter(name="x", lower_bound=-10, upper_bound=10),
-            VaryingParameter(name="y", lower_bound=-10, upper_bound=10)
+            VaryingParameter(name="y", lower_bound=-10, upper_bound=10),
         ],
-        objectives=[
-            Objective(name="result", minimize=True)
-        ]
+        objectives=[Objective(name="result", minimize=True)],
     )
 
     # Instantiate the WandBLogger
@@ -74,9 +74,7 @@ below:
 
     # Create the Exploration and pass the logger and evaluator
     exploration = Exploration(
-        generator=generator,
-        evaluator=evaluator,
-        logger=logger
+        generator=generator, evaluator=evaluator, logger=logger
     )
 
     # Run the exploration
@@ -104,7 +102,7 @@ first one as an image, and the second as a histogram:
 
     data_types = {
         "parameter_1": {"type": wandb.Image, "type_kwargs": {}},
-        "parameter_2": {"type": wandb.Histogram, "type_kwargs": {}}
+        "parameter_2": {"type": wandb.Histogram, "type_kwargs": {}},
     }
 
     logger = WandBLogger(
@@ -147,6 +145,7 @@ Here's an example of how to define a ``custom_logs`` function:
             elif score < best_score:
                 best_score = score
         return {"Best Score": best_score}
+
 
     logger = WandBLogger(
         api_key="your_wandb_api_key",
