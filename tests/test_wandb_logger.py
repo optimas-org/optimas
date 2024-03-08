@@ -1,6 +1,4 @@
-# os.environ['WANDB_START_METHOD'] = 'thread'
-# os.environ['WANDB_DISABLE_SERVICE'] = "1"
-# API_KEY = "4b810c5f384e91c204b67371249db1a6b1e1aca4"
+import os
 
 import wandb
 import numpy as np
@@ -70,11 +68,10 @@ def test_wandb_logger():
         max_evals=10,
         sim_workers=1,
         exploration_dir_path="./tests_output/test_wandb_logger",
-        # libe_comms="threads",
         logger=WandBLogger(
-            api_key="API_KEY",
-            project="project_name",
-            run_name="run_01",
+            api_key=os.getenv("WANDB_API_KEY"),
+            project="GitHub actions",
+            run_name="WandB test",
             data_types={
                 "p0": {"type": wandb.Histogram, "type_kwargs": {}},
             },
@@ -96,22 +93,6 @@ def test_wandb_logger():
     # Run exploration.
     exploration.run(3)
     exploration.run()
-
-    # Check that the multidimensional analyzed parameters worked as expected.
-    # for p0_data in exploration.history["p0"]:
-    #     np.testing.assert_array_equal(
-    #         np.array(p0_data), np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
-    #     )
-    # for p1_data in exploration.history["p1"]:
-    #     np.testing.assert_array_equal(
-    #         np.array(p1_data), np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
-    #     )
-    # for i, fig in enumerate(exploration.history["fig"]):
-    #     print(threading.current_thread().name)
-    #     fig = deepcopy(fig)
-    #     fig.savefig(
-    #         os.path.join(exploration.exploration_dir_path, f"test_fig_{i}.png")
-    #     )
 
 
 if __name__ == "__main__":
