@@ -31,7 +31,7 @@ custom logs. For example:
     logger = WandBLogger(
         api_key="your_wandb_api_key",
         project="your_project_name",
-        run_name="example_run",  # optional
+        run="example_run",  # optional
     )
 
 This logger can then be passed to an ``Exploration``, such as in the example
@@ -69,7 +69,7 @@ below:
     logger = WandBLogger(
         api_key="your_wandb_api_key",
         project="your_project_name",
-        run_name="example_run",
+        run="example_run",
     )
 
     # Create the Exploration and pass the logger and evaluator
@@ -121,16 +121,17 @@ Defining custom logs
 By default, the ``WandBLogger`` will log the varying parameters, objectives
 and analyzed parameters of the ``Exploration``.
 If you want to include your own custom logs, you can provide a
-`user_function` that generates them.
+`custom_logs` function that generates them.
 This function will be called every time a trial evaluation finishes.
 
-The `user_function` should take two arguments, which correspond to the most
+The `custom_logs` function should take two arguments, which correspond to the
+most
 recently evaluated `Trial` and the currently active `Generator`.
 You do not need to use them, but they are there for convenience.
 The function must then
 return a dictionary with the appropriate shape to be given to `wandb.log`.
 
-Here's an example of how to define a `user_function` for custom logs:
+Here's an example of how to define a `custom_logs` function:
 
 .. code-block:: python
 
@@ -149,6 +150,6 @@ Here's an example of how to define a `user_function` for custom logs:
     logger = WandBLogger(
         api_key="your_wandb_api_key",
         project="your_project_name",
-        user_function=custom_logs,
+        custom_logs=custom_logs,
         # Other parameters...
     )

@@ -28,7 +28,7 @@ def eval_func(input_params, output_params):
     output_params["p1"] = deepcopy(plt.gcf())
 
 
-def user_function(last_trial, generator: RandomSamplingGenerator):
+def custom_logs(last_trial, generator: RandomSamplingGenerator):
     all_trials = generator.completed_trials
     n_trials = len(all_trials)
     shape_1 = np.array(all_trials[0].data["p0"]).shape[1]
@@ -71,11 +71,11 @@ def test_wandb_logger():
         logger=WandBLogger(
             api_key=os.getenv("WANDB_API_KEY"),
             project="GitHub actions",
-            run_name="WandB test",
+            run="WandB test",
             data_types={
                 "p0": {"type": wandb.Histogram, "type_kwargs": {}},
             },
-            user_function=user_function,
+            custom_logs=custom_logs,
         ),
     )
 

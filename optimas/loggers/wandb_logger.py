@@ -24,12 +24,12 @@ class WandBLogger(Logger):
         The API key used to log into Weight and Biases.
     project : str
         Project name.
-    run_name : str, optional
+    run : str, optional
         Run name. If not given, a random name will be assigned by W&B.
     run_id : str, optional
         A unique ID for this run, used for resuming. It must
         be unique in the project, and if you delete a run you can't reuse
-        the ID. Use the ``run_name`` field for a short descriptive name, or
+        the ID. Use the ``run`` field for a short descriptive name, or
         `config` (passed in the ``init_kwargs``)
         for saving hyperparameters to compare across runs. The ID cannot
         contain the following special characters: ``/\#?%:``.
@@ -44,7 +44,7 @@ class WandBLogger(Logger):
         data type.
         If provided, the given parameters will be converted to the specified
         data types when logging.
-    user_function : Callable, optional
+    custom_logs : Callable, optional
         A user-defined function for creating custom logs. This function must
         be of the shape `custom_logs(trial, generator)`, where ``trial`` is
         the most recently evaluated trial and ``generator`` is the currently
@@ -59,19 +59,19 @@ class WandBLogger(Logger):
         self,
         api_key: str,
         project: str,
-        run_name: Optional[str] = None,
+        run: Optional[str] = None,
         run_id: Optional[str] = None,
         data_types: Optional[Dict] = None,
-        user_function: Optional[Callable] = None,
+        custom_logs: Optional[Callable] = None,
         login_kwargs: Optional[Dict] = None,
         init_kwargs: Optional[Dict] = None,
     ) -> None:
         self._api_key = api_key
         self._project = project
-        self._run_name = run_name
+        self._run_name = run
         self._run_id = run_id
         self._data_types = {} if data_types is None else data_types
-        self._user_function = user_function
+        self._user_function = custom_logs
         self._login_kwargs = {} if login_kwargs is None else login_kwargs
         self._init_kwargs = {} if init_kwargs is None else init_kwargs
         self._run = None
