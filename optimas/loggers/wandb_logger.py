@@ -5,7 +5,11 @@ import pathlib
 from typing import TYPE_CHECKING, Optional, Callable, Dict
 
 from matplotlib.figure import Figure
-import wandb
+try:
+    import wandb
+    wandb_installed = True
+except ImportError:
+    wandb_installed = False
 
 from .base import Logger
 
@@ -67,6 +71,12 @@ class WandBLogger(Logger):
         login_kwargs: Optional[Dict] = None,
         init_kwargs: Optional[Dict] = None,
     ) -> None:
+        if not wandb_installed:
+            raise ImportError(
+                "Logging to Weights and Biases requires `wandb` to be "
+                "installed. Please install it by running "
+                "`pip install wandb`."
+            )
         self._api_key = api_key
         self._project = project
         self._run_name = run
