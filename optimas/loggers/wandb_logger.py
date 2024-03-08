@@ -5,8 +5,10 @@ import pathlib
 from typing import TYPE_CHECKING, Optional, Callable, Dict
 
 from matplotlib.figure import Figure
+
 try:
     import wandb
+
     wandb_installed = True
 except ImportError:
     wandb_installed = False
