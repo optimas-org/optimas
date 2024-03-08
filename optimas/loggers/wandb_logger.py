@@ -55,6 +55,7 @@ class WandBLogger(Logger):
     init_kwargs : Dict, optional
         Additional arguments to pass to ``wandb.init``.
     """
+
     def __init__(
         self,
         api_key: str,
