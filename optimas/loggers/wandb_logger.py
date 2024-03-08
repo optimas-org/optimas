@@ -1,4 +1,4 @@
-"""This module defines the class for logging to Weights and Biases."""
+"""Contains the definition of the class for logging to Weights and Biases."""
 
 from __future__ import annotations
 import pathlib

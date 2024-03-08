@@ -1,4 +1,4 @@
-"""This module defines the base Logger class."""
+"""Contains the definition of the base Logger class."""
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
