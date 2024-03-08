@@ -33,13 +33,13 @@ class WandBLogger(Logger):
         `config` (passed in the ``init_kwargs``)
         for saving hyperparameters to compare across runs. The ID cannot
         contain the following special characters: ``/\#?%:``.
-        See the [W&B guide to resuming runs](https://docs.wandb.com/guides/runs/resuming).
+        See the `W&B guide to resuming runs <https://docs.wandb.com/guides/runs/resuming>`_.
     data_types : Dict, optional
         A dictionary of the shape
         ``{"name": {"type": DataType, "type_kwargs": {}}``,
         where ``name`` is the
         name of a varying parameter, objective or other analyzed parameter,
-        ``DataType`` is a W&B [DataType](https://docs.wandb.ai/ref/python/data-types/)
+        ``DataType`` is a W&B `DataType <https://docs.wandb.ai/ref/python/data-types/>`_
         and ``type_kwargs`` can include additional arguments to pass to the
         data type.
         If provided, the given parameters will be converted to the specified

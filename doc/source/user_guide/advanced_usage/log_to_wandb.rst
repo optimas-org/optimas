@@ -1,7 +1,7 @@
 Log an ``Exploration`` to Weights and Biases
 ============================================
 
-[Weights and Biases](https://wandb.ai/site) (W&B) is a powerful tool for
+`Weights and Biases <https://wandb.ai/site>`_ (W&B) is a powerful tool for
 tracking and visualizing
 machine learning experiments. Optimas has built-in support for logging to W&B,
 allowing users to easily track and compare the performance of different
@@ -86,13 +86,13 @@ below:
 Customizing the data type of the logger arguments
 -------------------------------------------------
 
-The `data_types` argument allows you to specify the W&B
-[DataType](https://docs.wandb.ai/ref/python/data-types/) for specific
+The ``data_types`` argument allows you to specify the W&B
+`data type <https://docs.wandb.ai/ref/python/data-types/>`_ for specific
 parameters when logging to Weights and Biases. This is useful for ensuring
-that your data is logged in the desired format. The `data_types` should be
+that your data is logged in the desired format. The ``data_types`` should be
 a dictionary where the keys are the names of the parameters you wish to
-log, and the values are dictionaries containing the `type` and
-`type_kwargs` for each parameter.
+log, and the values are dictionaries containing the ``type`` and
+``type_kwargs`` for each parameter.
 
 For example, if you have defined two analyzed parameters called
 ``"parameter_1"`` and ``"parameter_2"`` that at each evaluation store
@@ -121,17 +121,18 @@ Defining custom logs
 By default, the ``WandBLogger`` will log the varying parameters, objectives
 and analyzed parameters of the ``Exploration``.
 If you want to include your own custom logs, you can provide a
-`custom_logs` function that generates them.
+``custom_logs`` function that generates them.
 This function will be called every time a trial evaluation finishes.
 
-The `custom_logs` function should take two arguments, which correspond to the
+The ``custom_logs`` function should take two arguments, which correspond to the
 most
-recently evaluated `Trial` and the currently active `Generator`.
+recently evaluated :class:`~optimas.core.Trial` and the currently active
+``Generator``.
 You do not need to use them, but they are there for convenience.
 The function must then
-return a dictionary with the appropriate shape to be given to `wandb.log`.
+return a dictionary with the appropriate shape to be given to ``wandb.log``.
 
-Here's an example of how to define a `custom_logs` function:
+Here's an example of how to define a ``custom_logs`` function:
 
 .. code-block:: python
 
