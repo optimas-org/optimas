@@ -36,6 +36,7 @@ test = [
     'pytest',
     'ax-platform >= 0.3.4',
     'matplotlib',
+    'wandb',
 ]
 all = [
     'ax-platform >= 0.3.4',
