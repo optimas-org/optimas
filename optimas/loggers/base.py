@@ -17,7 +17,7 @@ class Logger(ABC):
     def initialize(self, exploration: Exploration):
         """Initialize logger.
 
-        This method is called in `Exploration.__init__`.
+        Called in `Exploration.__init__`.
 
         Parameters
         ----------
@@ -30,7 +30,7 @@ class Logger(ABC):
     def log_trial(self, trial: Trial, generator: Generator):
         """Log a trial.
 
-        This method is called every time an evaluated trial is given back
+        Called every time an evaluated trial is given back
         to the generator.
 
         Parameters
@@ -45,6 +45,6 @@ class Logger(ABC):
     def finish(self):
         """Finish logging.
 
-        This method is meant to be called then the exploration is finished.
+        Meant to be called when the exploration is finished.
         """
         pass

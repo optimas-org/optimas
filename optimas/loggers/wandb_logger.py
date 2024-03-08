@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class WandBLogger(Logger):
-    """Weights and Biases logger class.
+    r"""Weights and Biases logger class.
 
     Parameters
     ----------
@@ -156,6 +156,6 @@ class WandBLogger(Logger):
     def finish(self):
         """Finish logging.
 
-        This method is meant to be called then the exploration is finished.
+        Call this method to finish the current run on W&B.
         """
         self._run.finish()
