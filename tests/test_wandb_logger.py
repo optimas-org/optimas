@@ -29,6 +29,7 @@ def eval_func(input_params, output_params):
 
 
 def custom_logs(last_trial, generator: RandomSamplingGenerator):
+    """Make and log a cumulative plot of all trials."""
     all_trials = generator.completed_trials
     n_trials = len(all_trials)
     shape_1 = np.array(all_trials[0].data["p0"]).shape[1]
@@ -41,7 +42,12 @@ def custom_logs(last_trial, generator: RandomSamplingGenerator):
 
 
 def test_wandb_logger():
-    """Test that an exploration with a Weights and Biases logger."""
+    """Test an exploration with a Weights and Biases logger.
+    
+    In addition to the varying parameters and objectives, three analyzed
+    parameters of different type are added: an array and two objects. One
+    of the objects will store a matplotlib figure.
+    """
     # Define variables and objectives.
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
@@ -79,6 +85,8 @@ def test_wandb_logger():
         ),
     )
 
+    # Test also more exotic use cases where the first step is to attach
+    # manual evaluations.
     exploration.attach_evaluations(
         {
             "x0": [1.0],
@@ -90,7 +98,7 @@ def test_wandb_logger():
         }
     )
 
-    # Run exploration.
+    # Run exploration in two steps.
     exploration.run(3)
     exploration.run()
 
