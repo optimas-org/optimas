@@ -27,6 +27,7 @@ User guide
    :caption: Advanced usage
 
    advanced_usage/build_gp_surrogates
+   advanced_usage/log_to_wandb
 
 .. toctree::
    :maxdepth: 1
