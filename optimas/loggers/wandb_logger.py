@@ -1,3 +1,5 @@
+"""This module defines the class for logging to Weights and Biases."""
+
 from __future__ import annotations
 import pathlib
 from typing import TYPE_CHECKING, Optional, Callable, Dict
@@ -14,11 +16,46 @@ if TYPE_CHECKING:
 
 
 class WandBLogger(Logger):
+    """Weights and Biases logger class.
+
+    Parameters
+    ----------
+    api_key : str
+        The API key used to log into Weight and Biases.
+    project : str
+        Project name.
+    run_name : str, optional
+        Run name. If not given, a random name will be assigned by W&B.
+    run_id : str, optional
+        A unique ID for this run, used for resuming. It must
+        be unique in the project, and if you delete a run you can't reuse
+        the ID. Use the ``run_name`` field for a short descriptive name, or
+        `config` (passed in the ``init_kwargs``)
+        for saving hyperparameters to compare across runs. The ID cannot
+        contain the following special characters: ``/\#?%:``.
+        See the [W&B guide to resuming runs](https://docs.wandb.com/guides/runs/resuming).
+    data_types : Dict, optional
+        A dictionary of the shape ``{name: DataType}``, where ``name`` is the
+        name of a varying parameter, objective or other analyzed parameter and
+        ``DataType`` is a W&B [DataType](https://docs.wandb.ai/ref/python/data-types/).
+        If provided, the given parameters will be converted to the specified
+        data types when logging.
+    user_function : Callable, optional
+        A user-defined function for creating custom logs. This function must
+        be of the shape `custom_logs(trial, generator)`, where ``trial`` is
+        the most recently evaluated trial and ``generator`` is the currently
+        active generator. The function must return a dictionary with the
+        appropriate shape to that it can be given to `wandb.log`.
+    login_kwargs : Dict, optional
+        Additional arguments to pass to ``wandb.login``.
+    init_kwargs : Dict, optional
+        Additional arguments to pass to ``wandb.init``.
+    """
     def __init__(
         self,
         api_key: str,
         project: str,
-        run_name: str,
+        run_name: Optional[str] = None,
         run_id: Optional[str] = None,
         data_types: Optional[Dict] = None,
         user_function: Optional[Callable] = None,
