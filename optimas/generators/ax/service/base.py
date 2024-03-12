@@ -16,6 +16,7 @@ from ax.modelbridge.generation_strategy import (
     GenerationStep,
     GenerationStrategy,
 )
+from ax import Arm
 
 from optimas.utils.other import update_object
 from optimas.core import (
@@ -158,7 +159,13 @@ class AxServiceGenerator(AxGenerator):
                     trial.varying_parameters, trial.parameter_values
                 ):
                     params[var.name] = value
-                _, trial_id = self._ax_client.attach_trial(params)
+                try:
+                    _, trial_id = self._ax_client.attach_trial(params)
+                except ValueError:
+                    trial = self._ax_client.experiment.new_trial()
+                    trial.add_arm(Arm(parameters=params))
+                    trial.mark_running(no_runner_required=True)
+                    trial_id = trial.index
                 ax_trial = self._ax_client.get_trial(trial_id)
 
                 # Since data was given externally, reduce number of
