@@ -161,11 +161,19 @@ class AxServiceGenerator(AxGenerator):
                     params[var.name] = value
                 try:
                     _, trial_id = self._ax_client.attach_trial(params)
-                except ValueError:
-                    trial = self._ax_client.experiment.new_trial()
-                    trial.add_arm(Arm(parameters=params))
-                    trial.mark_running(no_runner_required=True)
-                    trial_id = trial.index
+                except ValueError as error:
+                    # Bypass checks from AxClient and manually add a trial
+                    # outside of the search space.
+                    if (
+                        "not a valid value" in str(error)
+                        and self._fit_out_of_design
+                    ):
+                        ax_trial = self._ax_client.experiment.new_trial()
+                        ax_trial.add_arm(Arm(parameters=params))
+                        ax_trial.mark_running(no_runner_required=True)
+                        trial_id = ax_trial.index
+                    else:
+                        raise error
                 ax_trial = self._ax_client.get_trial(trial_id)
 
                 # Since data was given externally, reduce number of
