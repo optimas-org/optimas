@@ -43,7 +43,7 @@ def custom_logs(last_trial, generator: RandomSamplingGenerator):
 
 def test_wandb_logger():
     """Test an exploration with a Weights and Biases logger.
-    
+
     In addition to the varying parameters and objectives, three analyzed
     parameters of different type are added: an array and two objects. One
     of the objects will store a matplotlib figure.
