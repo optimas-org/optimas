@@ -791,12 +791,7 @@ class ExplorationDiagnostics:
             ax_histy.set_ylim(ax_scatter.get_ylim())
 
             # Tuning axes and labels
-            ax_scatter.set_title(
-                parnames[i].replace("_", " "),
-                fontdict={"fontsize": "x-small"},
-                loc="right",
-                pad=2,
-            )
+            ax_scatter.set_ylabel(parnames[i].replace("_", " "))
 
             if i != nplots - 1:
                 ax_scatter.tick_params(labelbottom=False)
