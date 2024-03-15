@@ -17,9 +17,12 @@ class FunctionEvaluator(Evaluator):
 
     """
 
-    def __init__(self, function: Callable) -> None:
+    def __init__(
+        self, function: Callable, create_evaluation_dirs: bool = False
+    ) -> None:
         super().__init__(sim_function=run_function)
         self.function = function
+        self._create_evaluation_dirs = create_evaluation_dirs
 
     def get_sim_specs(
         self,
@@ -35,3 +38,11 @@ class FunctionEvaluator(Evaluator):
         # Add evaluation function to sim_specs.
         sim_specs["user"]["evaluation_func"] = self.function
         return sim_specs
+
+    def get_libe_specs(self) -> Dict:
+        """Get the `libE_specs` for `libEnsemble`."""
+        libE_specs = super().get_libe_specs()
+        # Force libEnsemble to create a directory for each simulation
+        # default value, if not defined
+        libE_specs["sim_dirs_make"] = self._create_evaluation_dirs
+        return libE_specs
