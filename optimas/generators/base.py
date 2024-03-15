@@ -254,7 +254,7 @@ class Generator:
         for trial in trials:
             if trial not in self._given_trials:
                 self._add_external_evaluated_trial(trial)
-            
+
             if trial.ignored:
                 # Check first if ignored, because it can be ignored
                 # and completed at the same time.

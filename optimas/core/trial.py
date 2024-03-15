@@ -133,7 +133,7 @@ class Trial:
     def ignored(self) -> bool:
         """Get whether the trial is ignored by the generator."""
         return self._ignored
-    
+
     @property
     def ignored_reason(self) -> str:
         """Get the reason why the trial is ignored by the generator."""
@@ -166,7 +166,7 @@ class Trial:
 
     def ignore(self, reason: str):
         """Set trial as ignored.
-        
+
         Parameters
         ----------
         reason : str
