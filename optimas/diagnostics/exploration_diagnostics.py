@@ -791,12 +791,7 @@ class ExplorationDiagnostics:
             ax_histy.set_ylim(ax_scatter.get_ylim())
 
             # Tuning axes and labels
-            ax_scatter.set_title(
-                parnames[i].replace("_", " "),
-                fontdict={"fontsize": "x-small"},
-                loc="right",
-                pad=2,
-            )
+            ax_scatter.set_ylabel(parnames[i])
 
             if i != nplots - 1:
                 ax_scatter.tick_params(labelbottom=False)
@@ -804,7 +799,7 @@ class ExplorationDiagnostics:
             else:
                 ax_scatter.set_xlabel("Evaluation number")
                 if xname is not None:
-                    ax_scatter.set_xlabel(xname.replace("_", " "))
+                    ax_scatter.set_xlabel(xname)
                 ax_histy.set_xlabel("%")
                 ax_histy.tick_params(labelbottom=True, labelleft=False)
                 if show_legend:
