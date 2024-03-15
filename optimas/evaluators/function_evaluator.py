@@ -14,6 +14,12 @@ class FunctionEvaluator(Evaluator):
     ----------
     function : callable
         The function to be evaluated.
+    create_evaluation_dirs : bool
+        Whether to create a directory for each evaluation. The directories will
+        be located in `./evaluations` and be named `sim{trial_index}`. When
+        using this option, the current working directory inside the ``function``
+        will be changed to the corresponding evaluation directory.
+        By default, ``False``.
 
     """
 
