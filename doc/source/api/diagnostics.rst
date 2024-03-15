@@ -7,4 +7,3 @@ Diagnostics
     :toctree: _autosummary
 
     ExplorationDiagnostics
-    AxModelManager

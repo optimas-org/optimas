@@ -3,6 +3,7 @@
 from typing import List, Optional, Dict
 import os
 
+import numpy as np
 import torch
 from packaging import version
 from ax.version import version as ax_version
@@ -17,6 +18,8 @@ from ax.modelbridge.generation_strategy import (
     GenerationStrategy,
 )
 
+
+from optimas.utils.logger import get_logger
 from optimas.utils.other import update_object
 from optimas.core import (
     Objective,
@@ -27,10 +30,17 @@ from optimas.core import (
 )
 from optimas.generators.ax.base import AxGenerator
 from optimas.generators.base import Generator
+from optimas.utils.ax import AxModelManager
+from optimas.utils.ax.other import (
+    convert_optimas_to_ax_parameters,
+    convert_optimas_to_ax_objectives,
+)
 from .custom_ax import CustomAxClient as AxClient
 
+logger = get_logger(__name__)
 
-class AxServiceGenerator(AxGenerator):
+
+class AxServiceGenerator(AxGenerator, AxModelManager):
     """Base class for all Ax generators using the service API.
 
     Parameters
@@ -128,6 +138,21 @@ class AxServiceGenerator(AxGenerator):
         self._outcome_constraints = outcome_constraints
         self._ax_client = self._create_ax_client()
 
+    @property
+    def ax_client(self) -> AxClient:
+        """Get the underlying AxClient."""
+        # Try to return an Ax client with a fitted model. This is useful for
+        # enabling the use of the methods inherited from `AxModelManager`,
+        # which will fail if the model is not fitted.
+        # This is particularly critical when running optimas with
+        # multiprocessing, because the fitted model is deleted when the
+        # exploration run finishes.
+        try:
+            self._ax_client.fit_model()
+        except ValueError:
+            pass
+        return self._ax_client
+
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
@@ -224,19 +249,9 @@ class AxServiceGenerator(AxGenerator):
 
     def _create_ax_parameters(self) -> List:
         """Create list of parameters to pass to an Ax."""
-        parameters = []
+        parameters = convert_optimas_to_ax_parameters(self.varying_parameters)
         fixed_parameters = {}
         for var in self._varying_parameters:
-            parameters.append(
-                {
-                    "name": var.name,
-                    "type": "range",
-                    "bounds": [var.lower_bound, var.upper_bound],
-                    "is_fidelity": var.is_fidelity,
-                    "target_value": var.fidelity_target_value,
-                    "value_type": var.dtype.__name__,
-                }
-            )
             if var.is_fixed:
                 fixed_parameters[var.name] = var.default_value
         # Store fixed parameters as fixed features.
@@ -245,10 +260,7 @@ class AxServiceGenerator(AxGenerator):
 
     def _create_ax_objectives(self) -> Dict[str, ObjectiveProperties]:
         """Create list of objectives to pass to an Ax."""
-        objectives = {}
-        for obj in self.objectives:
-            objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
-        return objectives
+        return convert_optimas_to_ax_objectives(self.objectives)
 
     def _create_generation_steps(
         self, bo_model_kwargs: Dict
@@ -296,7 +308,7 @@ class AxServiceGenerator(AxGenerator):
         update_object(original_ax_client, new_generator._ax_client)
         self._ax_client = original_ax_client
 
-    def _update_parameter(self, parameter):
+    def _update_parameter(self, parameter: VaryingParameter) -> None:
         """Update a parameter from the search space."""
         parameters = self._create_ax_parameters()
         new_search_space = InstantiationBase.make_search_space(parameters, None)
