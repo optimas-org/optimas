@@ -272,6 +272,10 @@ class AxServiceGenerator(AxGenerator):
         Delete the fitted model from the generation strategy. It can contain
         pytorch tensors that prevent serialization.
         """
+        self._delete_model()
+
+    def _delete_model(self) -> None:
+        """Delete the fitted model from the generation strategy."""
         generation_strategy = self._ax_client.generation_strategy
         if generation_strategy._model is not None:
             del generation_strategy._curr.model_spec._fitted_model
@@ -298,6 +302,7 @@ class AxServiceGenerator(AxGenerator):
 
     def _update_parameter(self, parameter):
         """Update a parameter from the search space."""
+        self._delete_model()
         parameters = self._create_ax_parameters()
         new_search_space = InstantiationBase.make_search_space(parameters, None)
         self._ax_client.experiment.search_space.update_parameter(
