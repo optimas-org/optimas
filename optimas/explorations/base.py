@@ -130,6 +130,9 @@ class Exploration:
         """Get the exploration history."""
         history = convert_to_dataframe(self._libe_history.H)
         ordered_columns = ["trial_index", "trial_status"]
+        # For backward compatibility, add trial_ignored only if available.
+        if "trial_ignored" in history.columns.values.tolist():
+            ordered_columns += ["trial_ignored"]
         ordered_columns += [p.name for p in self.generator.varying_parameters]
         ordered_columns += [p.name for p in self.generator.objectives]
         ordered_columns += [p.name for p in self.generator.analyzed_parameters]

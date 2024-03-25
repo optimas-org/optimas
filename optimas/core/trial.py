@@ -66,6 +66,8 @@ class Trial:
         self._custom_parameters = (
             [] if custom_parameters is None else custom_parameters
         )
+        self._ignored = False
+        self._ignored_reason = None
 
         # Add custom parameters as trial attributes.
         for param in self._custom_parameters:
@@ -128,6 +130,16 @@ class Trial:
         self._index = value
 
     @property
+    def ignored(self) -> bool:
+        """Get whether the trial is ignored by the generator."""
+        return self._ignored
+
+    @property
+    def ignored_reason(self) -> str:
+        """Get the reason why the trial is ignored by the generator."""
+        return self._ignored_reason
+
+    @property
     def custom_parameters(self) -> List[TrialParameter]:
         """Get the list of custom trial parameters."""
         return self._custom_parameters
@@ -151,6 +163,26 @@ class Trial:
     def evaluated(self) -> bool:
         """Determine whether the trial has been evaluated."""
         return self.completed or self.failed
+
+    def ignore(self, reason: str):
+        """Set trial as ignored.
+
+        Parameters
+        ----------
+        reason : str
+            The reason why the trial is ignored.
+        """
+        # An alternative implementation of this would have been to add a new
+        # `IGNORED` trial status. However, this would have an issue:
+        # when adding old trials to an exploration, the original trial status
+        # could be overwritten by `IGNORED`, and this information would be lost
+        # for future explorations where this data is reused (for example,
+        # when using the `resume` option).
+        # With the current implementation, the value of `ignored` is controlled
+        # by (and only relevant for) the current exploration. It won't have
+        # any impact if the data is attached to a future exploration.
+        self._ignored = True
+        self._ignored_reason = reason
 
     def mark_as(self, status) -> None:
         """Set trial status.
