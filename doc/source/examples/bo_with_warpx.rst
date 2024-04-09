@@ -10,7 +10,7 @@ Description
 This examples shows how to perform a Bayesian optimization of a laser-plasma
 accelerator (LPA) using WarpX simulations.
 
-The LPA to be optimized is based on 
+The LPA to be optimized is based on
 
 The objective function to optimize (maximize) is defined as
 
@@ -18,11 +18,11 @@ The objective function to optimize (maximize) is defined as
    f = \epsilon_f + 100\epsilon_i \left(1.0 - \frac{Q_f}{Q_i}\right)
 
 
-where :math:`\epsilon_i` and :math:`\epsilon_f` are the initial and final beam emittances, respectively, 
+where :math:`\epsilon_i` and :math:`\epsilon_f` are the initial and final beam emittances, respectively,
 and :math:`Q_i` and :math:`Q_f` are the initial and final beam charges.
 This objective is optimized by tuning 2 parameters:
 
-- ``'adjust_factor'``: parameter in the range :math:`[0.7, 1.05]` that scales the 
+- ``'adjust_factor'``: parameter in the range :math:`[0.7, 1.05]` that scales the
   strength of the magnetic field between the first and second stage.
   The value ``adjust_factor=1`` corresponds to a focusing strength of :math:`454535.7\, \mathrm{T/m}`.
 - ``'zlen'``: the left or starting position position of the laser in millimetres, with range
