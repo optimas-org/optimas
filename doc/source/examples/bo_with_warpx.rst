@@ -25,7 +25,7 @@ This objective is optimized by tuning 2 parameters:
 - ``'adjust_factor'``: parameter in the range :math:`[0.7, 1.05]` that scales the
   strength of the magnetic field between the first and second stage.
   The value ``adjust_factor=1`` corresponds to a focusing strength of :math:`454535.7\, \mathrm{T/m}`.
-- ``'zlen'``: the left or starting position position of the laser in millimetres, with range
+- ``'lens_start'``: the position of the start (i.e. left edge) of the focusing plasma lens in millimetres, with range
   :math:`[0.32, 0.347]`.
 
 The optimization is carried out using an
