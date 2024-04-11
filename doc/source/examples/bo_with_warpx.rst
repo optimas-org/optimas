@@ -10,9 +10,7 @@ Description
 This examples shows how to perform a Bayesian optimization of a laser-plasma
 accelerator (LPA) using WarpX simulations.
 
-The LPA to be optimized is based on 
-
-The objective function to optimize (maximize) is defined as
+The objective function to optimize (minimize) is defined as
 
 .. math::
    f = \epsilon_f + 100\epsilon_i \left(1.0 - \frac{Q_f}{Q_i}\right)
