@@ -43,7 +43,6 @@ boundary.particle_hi = absorbing absorbing
 boundary.particle_lo = absorbing absorbing
 
 # diag
-diag.beam.variables = ux uy uz w
 diag.diag_type = Full
 diag.fields_to_plot = Er Et Ez rho
 diag.file_prefix = diag
@@ -180,7 +179,7 @@ my_constants.pi = 3.141592653589793
 # particles
 particles.B_ext_particle_init_style = repeated_plasma_lens
 particles.repeated_plasma_lens_period = 0.35
-particles.repeated_plasma_lens_starts = {{zlen}}
+particles.repeated_plasma_lens_starts = {{lens_start}}
 particles.repeated_plasma_lens_lengths = 0.003
 particles.repeated_plasma_lens_strengths_B = {{adjust_factor}}*1363607.21922141/3
 particles.rigid_injected_species = beam
@@ -190,7 +189,7 @@ particles.species_names = electrons1 ions1 electrons2 ions2 beam
 psatd.current_correction = 1
 psatd.nox = 16
 psatd.noz = 16
-psatd.nx_guard = 32
+psatd.nx_guard = 24
 psatd.nz_guard = 32
 psatd.update_with_rho = 1
 psatd.v_galilean = 0.0 0.0 -0.9998611014647094
@@ -199,7 +198,6 @@ psatd.v_galilean = 0.0 0.0 -0.9998611014647094
 warpx.boost_direction = z
 warpx.cfl = 0.9999
 warpx.do_moving_window = 1
-warpx.do_nodal = 0
 warpx.filter_npass_each_dir = 1 1
 warpx.gamma_boost = 60.0
 warpx.mirror_z = 0.321
