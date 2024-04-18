@@ -146,6 +146,7 @@ class AxServiceGenerator(AxGenerator):
 
     @property
     def model(self) -> AxModelManager:
+        """Get access to the underlying model using an `AxModelManager`."""
         return self._model
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
