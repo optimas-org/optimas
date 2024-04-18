@@ -80,11 +80,12 @@ class AxModelManager:
                 "The source must be an `AxClient`, a path to an AxClient json "
                 "file, or a pandas `DataFrame`."
             )
-        self.ax_client.fit_model()
 
     @property
     def _model(self) -> TorchModelBridge:
         """Get the model from the AxClient instance."""
+        # Make sure model is fitted.
+        self.ax_client.fit_model()
         return self.ax_client.generation_strategy.model
 
     def _build_ax_client_from_dataframe(

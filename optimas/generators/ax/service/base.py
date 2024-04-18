@@ -40,7 +40,7 @@ from .custom_ax import CustomAxClient as AxClient
 logger = get_logger(__name__)
 
 
-class AxServiceGenerator(AxGenerator, AxModelManager):
+class AxServiceGenerator(AxGenerator):
     """Base class for all Ax generators using the service API.
 
     Parameters
@@ -137,21 +137,16 @@ class AxServiceGenerator(AxGenerator, AxModelManager):
         self._parameter_constraints = parameter_constraints
         self._outcome_constraints = outcome_constraints
         self._ax_client = self._create_ax_client()
+        self._model = AxModelManager(self._ax_client)
 
     @property
     def ax_client(self) -> AxClient:
         """Get the underlying AxClient."""
-        # Try to return an Ax client with a fitted model. This is useful for
-        # enabling the use of the methods inherited from `AxModelManager`,
-        # which will fail if the model is not fitted.
-        # This is particularly critical when running optimas with
-        # multiprocessing, because the fitted model is deleted when the
-        # exploration run finishes.
-        try:
-            self._ax_client.fit_model()
-        except ValueError:
-            pass
         return self._ax_client
+
+    @property
+    def model(self) -> AxModelManager:
+        return self._model
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
