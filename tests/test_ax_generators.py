@@ -117,9 +117,9 @@ def eval_func_task_2(input_params, output_params):
 
 def make_plots(gen):
     """Make plots with Service API generators."""
-    gen.plot_contour()
-    gen.plot_cross_validation()
-    gen.plot_slice()
+    gen.model.plot_contour()
+    gen.model.plot_cross_validation()
+    gen.model.plot_slice()
 
 
 def check_run_ax_service(ax_client, gen, exploration, n_failed_expected):
