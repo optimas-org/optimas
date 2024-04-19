@@ -48,7 +48,5 @@ class FunctionEvaluator(Evaluator):
     def get_libe_specs(self) -> Dict:
         """Get the `libE_specs` for `libEnsemble`."""
         libE_specs = super().get_libe_specs()
-        # Force libEnsemble to create a directory for each simulation
-        # default value, if not defined
         libE_specs["sim_dirs_make"] = self._create_evaluation_dirs
         return libE_specs
