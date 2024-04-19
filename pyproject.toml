@@ -22,7 +22,7 @@ classifiers = [
     'Programming Language :: Python :: 3.11',
 ]
 dependencies = [
-    'libensemble >= 1.2',
+    'libensemble @ git+https://github.com/Libensemble/libensemble@feature/asktell_gens',
     'jinja2',
     'pandas',
     'mpi4py',
