@@ -17,7 +17,6 @@ from ax.modelbridge.generation_strategy import (
     GenerationStrategy,
 )
 
-from optimas.utils.other import update_object
 from optimas.core import (
     Objective,
     Trial,
@@ -265,36 +264,6 @@ class AxServiceGenerator(AxGenerator):
             ),
         )
         self._ax_client.save_to_json_file(file_path)
-
-    def _prepare_to_send(self) -> None:
-        """Prepare generator to send to another process.
-
-        Delete the fitted model from the generation strategy. It can contain
-        pytorch tensors that prevent serialization.
-        """
-        generation_strategy = self._ax_client.generation_strategy
-        if generation_strategy._model is not None:
-            del generation_strategy._curr.model_spec._fitted_model
-            generation_strategy._curr.model_spec._fitted_model = None
-            del generation_strategy._model
-            generation_strategy._model = None
-
-    def _update(self, new_generator: Generator) -> None:
-        """Update generator with the attributes of a newer one.
-
-        This method is overrides the base one to make sure that the original
-        AxClient is updated and not simply replaced.
-
-        Parameters
-        ----------
-        new_generator : Generator
-            The newer version of the generator returned in ``persis_info``.
-
-        """
-        original_ax_client = self._ax_client
-        super()._update(new_generator)
-        update_object(original_ax_client, new_generator._ax_client)
-        self._ax_client = original_ax_client
 
     def _update_parameter(self, parameter):
         """Update a parameter from the search space."""
