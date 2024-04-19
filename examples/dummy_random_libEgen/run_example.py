@@ -2,6 +2,7 @@
 
 from libensemble.gen_funcs.persistent_sampling import RandSample
 from optimas.core import VaryingParameter, Objective
+
 # from optimas.generators import RandomSamplingGenerator
 from optimas.generators import libEWrapper
 from optimas.evaluators import TemplateEvaluator
@@ -51,7 +52,8 @@ obj = Objective("f")
 # )
 
 gen = libEWrapper(
-    varying_parameters=[var_1, var_2], objectives=[obj],
+    varying_parameters=[var_1, var_2],
+    objectives=[obj],
     libe_gen_class=RandSample,
 )
 
