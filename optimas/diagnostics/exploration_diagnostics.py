@@ -489,7 +489,8 @@ class ExplorationDiagnostics:
             raise ValueError(
                 f"Could not find evaluation directory of trial {trial_index}."
                 "This directory is only created when using a "
-                "`TemplateEvaluator`."
+                "`TemplateEvaluator` or a `FunctionEvaluator` when setting "
+                "`create_evaluation_dirs=True`."
             )
 
     def get_best_evaluation_dir_path(
