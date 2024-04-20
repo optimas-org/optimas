@@ -352,9 +352,7 @@ class AxMultitaskGenerator(AxGenerator):
             while True:
                 model_gen_options = {
                     "optimizer_kwargs": {
-                        "options": {
-                            "init_batch_limit": self.init_batch_limit
-                        }
+                        "options": {"init_batch_limit": self.init_batch_limit}
                     }
                 }
                 try:
