@@ -34,11 +34,11 @@ dynamic = ['version']
 test = [
     'flake8',
     'pytest',
-    'ax-platform >= 0.3.4',
+    'ax-platform >= 0.3.5',
     'matplotlib',
 ]
 all = [
-    'ax-platform >= 0.3.4',
+    'ax-platform >= 0.3.5',
 ]
 
 [project.urls]
