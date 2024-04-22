@@ -439,7 +439,7 @@ class AxModelManager:
         if range_y[1] is None:
             range_y[1] = experiment.parameters[param_y].upper
 
-        # get grid sample of points where to evalutate the model
+        # get grid sample of points where to evaluate the model
         xaxis = np.linspace(range_x[0], range_x[1], n_points)
         yaxis = np.linspace(range_y[0], range_y[1], n_points)
         X, Y = np.meshgrid(xaxis, yaxis)
@@ -596,7 +596,7 @@ class AxModelManager:
         if range[1] is None:
             range[1] = experiment.parameters[param_name].upper
 
-        # get sample of points where to evalutate the model
+        # get sample of points where to evaluate the model
         sample = {param_name: np.linspace(range[0], range[1], n_points)}
 
         if slice_values == "mid":
