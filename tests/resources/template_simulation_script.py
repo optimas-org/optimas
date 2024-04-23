@@ -22,3 +22,6 @@ with open("result.txt", "w") as f:
     if test_env_var is not None:
         output.append(test_env_var)
     f.writelines(output)
+
+with open('cuda_visible_devices.txt', 'w') as f:
+    f.write(os.getenv("CUDA_VISIBLE_DEVICES"))
