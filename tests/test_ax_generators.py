@@ -348,7 +348,7 @@ def test_ax_single_fidelity_moo_fb():
 def test_ax_single_fidelity_updated_params():
     """
     Test that an exploration with a single-fidelity generator runs
-    as expected when the varing parameters are updated.
+    as expected when the varying parameters are updated.
     """
     # Prevent trials from failing in this test.
     global trial_count
