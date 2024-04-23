@@ -20,7 +20,7 @@ from analysis_script import analyze_simulation
 
 # Create varying parameters and objectives.
 var_1 = VaryingParameter("adjust_factor", 0.7, 1.05)
-var_2 = VaryingParameter("zlen", 3.0, 7.5)
+var_2 = VaryingParameter("lens_start", 0.32, 0.347)
 obj = Objective("f", minimize=True)
 
 
@@ -51,7 +51,7 @@ ev = TemplateEvaluator(
 
 # Create exploration.
 exp = Exploration(
-    generator=gen, evaluator=ev, max_evals=1000, sim_workers=2, run_async=True
+    generator=gen, evaluator=ev, max_evals=1000, sim_workers=4, run_async=True
 )
 
 

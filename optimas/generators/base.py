@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from optimas.utils.logger import get_logger
-from optimas.utils.other import update_object, convert_to_dataframe
+from optimas.utils.other import convert_to_dataframe
 from optimas.gen_functions import persistent_generator
 from optimas.core import (
     Objective,
@@ -544,8 +544,6 @@ class Generator:
             memory).
 
         """
-        if libe_comms != "threads":
-            self._prepare_to_send()
         gen_specs = {
             # Generator function.
             "gen_f": self._gen_function,
@@ -587,46 +585,6 @@ class Generator:
         libE_specs = {}
         return libE_specs
 
-    def _prepare_to_send(self) -> None:
-        """Prepare generator to send to another process.
-
-        This method is necessary because the generator, when given to
-        libEnsemble, is sent to another process (the process of the generator
-        worker) and then sent back to optimas at the end of the run. In order
-        for it to be sent, the generator must be serialized, and sometimes
-        some of the contents of the generator cannot be serialized. The
-        purpose of this method is to take care of the attributes that prevent
-        serialization, and is always called before the generator is sent
-        to/from libEnsemble.
-
-        It must be implemented by the subclasses, if needed.
-        """
-        pass
-
-    def _prepare_to_send_back(self) -> None:
-        """Prepare generator to send it back from the gen_f to the manager."""
-        # Removing the logger prevents the WandB error:
-        # "RuntimeError: attach in the same process is not supported currently"
-        # when using multiprocessing.
-        self._logger = None
-        self._prepare_to_send()
-
-    def _update(self, new_generator: Generator) -> None:
-        """Update generator with the attributes of a newer one.
-
-        This method is only intended to be used internally by an
-        ``Exploration`` after a run is completed. It is needed because the
-        ``Generator`` given to ``libEnsemble`` is passed as a copy to the
-        generator worker and is therefore not updated during the run.
-
-        Parameters
-        ----------
-        new_generator : Generator
-            The newer version of the generator returned in ``persis_info``.
-
-        """
-        update_object(self, new_generator)
-
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Ask method to be implemented by the Generator subclasses.
 
@@ -638,7 +596,7 @@ class Generator:
             These values should instead be supplied in this method.
 
         """
-        pass
+        return trials
 
     def _tell(self, trials: List[Trial]) -> None:
         """Tell method to be implemented by the Generator subclasses.

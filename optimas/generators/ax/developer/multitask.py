@@ -469,15 +469,6 @@ class AxMultitaskGenerator(AxGenerator):
             encoder_registry=self._encoder_registry,
         )
 
-    def _prepare_to_send(self) -> None:
-        """Prepare generator to send to another process.
-
-        Delete stored generator run. It can contain pytorch tensors that
-        prevent serialization.
-        """
-        del self.gr_lofi
-        self.gr_lofi = None
-
 
 def max_utility_from_GP(
     n: int, m: TorchModelBridge, gr: GeneratorRun, hifi_task: str
