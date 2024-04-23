@@ -10,6 +10,7 @@ import numpy as np
 
 test_env_var = os.getenv("LIBE_TEST_SUB_ENV_VAR")
 sleep = os.getenv("OPTIMAS_TEST_SLEEP")
+cuda_visible_devices = os.getenv("CUDA_VISIBLE_DEVICES")
 
 if sleep is not None:
     time.sleep(float(sleep))
@@ -23,5 +24,6 @@ with open("result.txt", "w") as f:
         output.append(test_env_var)
     f.writelines(output)
 
-with open("cuda_visible_devices.txt", "w") as f:
-    f.write(os.getenv("CUDA_VISIBLE_DEVICES"))
+if cuda_visible_devices:
+    with open("cuda_visible_devices.txt", "w") as f:
+        f.write(cuda_visible_devices)
