@@ -577,7 +577,7 @@ class Generator:
             These values should instead be supplied in this method.
 
         """
-        pass
+        return trials
 
     def _tell(self, trials: List[Trial]) -> None:
         """Tell method to be implemented by the Generator subclasses.
