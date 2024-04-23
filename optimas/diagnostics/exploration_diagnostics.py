@@ -615,7 +615,7 @@ class ExplorationDiagnostics:
             or descendingly (False)
             e.g. {'f': False} sort simulations according to f descendingly.
         top: int, optional
-            Highight the 'top' evaluations of every objective.
+            Highlight the 'top' evaluations of every objective.
         show_top_evaluation_indices : bool, optional
             Whether to show the indices of the top evaluations.
         show_legend : bool, optional
