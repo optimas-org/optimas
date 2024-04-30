@@ -170,9 +170,7 @@ class AxServiceGenerator(AxGenerator):
                     current_step = generation_strategy.current_step
                     # Reduce only if there are still Sobol trials left.
                     if current_step.model == Models.SOBOL:
-                        current_step.num_trials -= 1
-                        if version.parse(ax_version) >= version.parse("0.3.5"):
-                            current_step.transition_criteria[0].threshold -= 1
+                        current_step.transition_criteria[0].threshold -= 1
                         generation_strategy._maybe_move_to_next_step()
             finally:
                 if trial.completed:
