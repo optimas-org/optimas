@@ -22,7 +22,7 @@ classifiers = [
     'Programming Language :: Python :: 3.11',
 ]
 dependencies = [
-    'libensemble @ git+https://github.com/Libensemble/libensemble@develop',
+    'libensemble >= 1.3.0',
     'jinja2',
     'pandas',
     'mpi4py',
