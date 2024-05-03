@@ -624,6 +624,7 @@ class Exploration:
     def _is_manager(self, comms, libE_specs):
         if comms == "mpi":
             from mpi4py import MPI
+
             mpi_comm = libE_specs.get("mpi_comm") or MPI.COMM_WORLD
             is_manager = mpi_comm.Get_rank() == 0
         else:
