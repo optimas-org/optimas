@@ -621,7 +621,7 @@ class Exploration:
         with open(file_path, "w") as file:
             file.write(json.dumps(params))
 
-    def _is_manager(self, comms, libE_specs):
+    def _is_manager(self, comms: str, libE_specs: Dict) -> bool:
         if comms == "mpi":
             from mpi4py import MPI
 
