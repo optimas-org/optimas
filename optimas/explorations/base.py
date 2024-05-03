@@ -124,10 +124,13 @@ class Exploration:
         self._set_default_libe_specs()
         self._libe_history = self._create_libe_history()
         self._load_history(history, resume)
+        self.is_manager = self._is_manager(self.libe_comms, self.libE_specs)
 
     @property
     def history(self) -> pd.DataFrame:
         """Get the exploration history."""
+        if not self.is_manager:
+            return
         history = convert_to_dataframe(self._libe_history.H)
         ordered_columns = ["trial_index", "trial_status"]
         ordered_columns += [p.name for p in self.generator.varying_parameters]
@@ -593,6 +596,8 @@ class Exploration:
 
     def _save_exploration_parameters(self):
         """Save exploration parameters to a JSON file."""
+        if not self.is_manager:
+            return
         params = {}
         for i, param in enumerate(self.generator.varying_parameters):
             params[f"varying_parameter_{i}"] = {
@@ -615,3 +620,12 @@ class Exploration:
         file_path = os.path.join(main_dir, "exploration_parameters.json")
         with open(file_path, "w") as file:
             file.write(json.dumps(params))
+
+    def _is_manager(self, comms, libE_specs):
+        if comms == "mpi":
+            from mpi4py import MPI
+            mpi_comm = libE_specs.get("mpi_comm") or MPI.COMM_WORLD
+            is_manager = mpi_comm.Get_rank() == 0
+        else:
+            is_manager = True
+        return is_manager
