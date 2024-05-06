@@ -5,7 +5,7 @@ dependencies:
   - pip
   - pip:
     - -e ..
-    - ax-platform = 0.3.7
+    - ax-platform == 0.3.7
     - autodoc_pydantic >= 2.0.1
     - ipykernel
     - matplotlib
