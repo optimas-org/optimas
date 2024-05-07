@@ -238,7 +238,7 @@ class AxServiceGenerator(AxGenerator):
         for obj in self.objectives:
             objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
         return objectives
-    
+
     def _create_sobol_step(self) -> GenerationStep:
         """Create a Sobol generation step with `n_init` trials."""
         # Ensure that at least 1 trial is completed before moving onto the BO
