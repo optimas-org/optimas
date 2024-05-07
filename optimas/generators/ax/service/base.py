@@ -128,22 +128,13 @@ class AxServiceGenerator(AxGenerator):
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
-            try:
-                parameters, trial_id = self._ax_client.get_next_trial(
-                    fixed_features=self._fixed_features
-                )
-                trial.parameter_values = [
-                    parameters.get(var.name) for var in self._varying_parameters
-                ]
-                trial.ax_trial_id = trial_id
-            except DataRequiredError:
-                # This exception is raised when a BO model is asked to generate
-                # a trial when no data is available. This can happen, e.g., if
-                # none of the Sobol trials has not yet been completed.
-                # In this case, we simply ignore the exception to indicate that
-                # the trial could not be generated(an empty trial is returned,
-                # which will be filtered out by `Generator.ask`.
-                pass
+            parameters, trial_id = self._ax_client.get_next_trial(
+                fixed_features=self._fixed_features
+            )
+            trial.parameter_values = [
+                parameters.get(var.name) for var in self._varying_parameters
+            ]
+            trial.ax_trial_id = trial_id
         return trials
 
     def _tell(self, trials: List[Trial]) -> None:
@@ -247,6 +238,22 @@ class AxServiceGenerator(AxGenerator):
         for obj in self.objectives:
             objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
         return objectives
+    
+    def _create_sobol_step(self) -> GenerationStep:
+        """Create a Sobol generation step with `n_init` trials."""
+        # Ensure that at least 1 trial is completed before moving onto the BO
+        # step, and keep generating Sobol trials until that happens, even if
+        # the number of Sobol trials exceeds `n_init`.
+        # Otherwise, if we move to the BO step before any trial is completed,
+        # the next `ask` would fail with a `DataRequiredError`.
+        # This also allows the generator to work well when
+        # `sim_workers` > `n_init`.
+        return GenerationStep(
+            model=Models.SOBOL,
+            num_trials=self._n_init,
+            min_trials_observed=1,
+            enforce_num_trials=False,
+        )
 
     def _create_generation_steps(
         self, bo_model_kwargs: Dict
