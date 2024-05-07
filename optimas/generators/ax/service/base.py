@@ -15,6 +15,7 @@ from ax.modelbridge.generation_strategy import (
     GenerationStep,
     GenerationStrategy,
 )
+from ax.exceptions.core import DataRequiredError
 
 from optimas.core import (
     Objective,
@@ -127,13 +128,22 @@ class AxServiceGenerator(AxGenerator):
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
-            parameters, trial_id = self._ax_client.get_next_trial(
-                fixed_features=self._fixed_features
-            )
-            trial.parameter_values = [
-                parameters.get(var.name) for var in self._varying_parameters
-            ]
-            trial.ax_trial_id = trial_id
+            try:
+                parameters, trial_id = self._ax_client.get_next_trial(
+                    fixed_features=self._fixed_features
+                )
+                trial.parameter_values = [
+                    parameters.get(var.name) for var in self._varying_parameters
+                ]
+                trial.ax_trial_id = trial_id
+            except DataRequiredError:
+                # This exception is raised when a BO model is asked to generate
+                # a trial when no data is available. This can happen, e.g., if
+                # none of the Sobol trials has not yet been completed.
+                # In this case, we simply ignore the exception to indicate that
+                # the trial could not be generated(an empty trial is returned,
+                # which will be filtered out by `Generator.ask`.
+                pass
         return trials
 
     def _tell(self, trials: List[Trial]) -> None:
