@@ -124,4 +124,6 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         else:
             number_of_gen_points = 0
 
+    if hasattr(generator, "libe_gen_class"):
+        return generator.final_tell(libE_calc_in=calc_in)
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG

@@ -2,6 +2,8 @@ from copy import deepcopy
 import numpy as np
 from typing import List, Optional
 
+from libensemble.generators import LibEnsembleGenInterfacer
+
 from optimas.core import (
     Objective,
     Trial,
@@ -53,12 +55,17 @@ class libEWrapper(Generator):
         gen_specs["out"] = [("x", float, (n,))]
         gen_specs["user"]["lb"] = np.zeros(n)
         gen_specs["user"]["ub"] = np.zeros(n)
+        import ipdb; ipdb.set_trace()
         for i, vp in enumerate(self.varying_parameters):
             gen_specs["user"]["lb"][i] = vp.lower_bound
             gen_specs["user"]["ub"][i] = vp.upper_bound
+        if hasattr(self, "user_settings"):
+            gen_specs["user"] = {**gen_specs["user"], **self.user_settings}
         self.libe_gen = self.libe_gen_class(
-            H, persis_info, gen_specs, libE_info
+            gen_specs, H, persis_info, libE_info
         )
+        if issubclass(self.libe_gen_class, LibEnsembleGenInterfacer):
+            self.libe_gen.setup()  # start background thread
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
@@ -76,3 +83,6 @@ class libEWrapper(Generator):
         self, trials: List[Trial], libE_calc_in: np.typing.NDArray
     ) -> None:
         self.libe_gen.tell(libE_calc_in)
+
+    def final_tell(self, libE_calc_in: np.typing.NDArray):
+        return self.libe_gen.final_tell(libE_calc_in)
