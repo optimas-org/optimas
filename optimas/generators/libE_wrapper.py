@@ -86,7 +86,7 @@ class libEWrapper(Generator):
     def _tell(
         self, trials: List[Trial], libE_calc_in: np.typing.NDArray
     ) -> None:
-        self.libe_gen.tell(libE_calc_in)
+        self.libe_gen.tell(libE_calc_in[["sim_id", "f"]])
 
     def final_tell(self, libE_calc_in: np.typing.NDArray):
-        return self.libe_gen.final_tell(libE_calc_in)
+        return self.libe_gen.final_tell(libE_calc_in[["sim_id", "f"]])
