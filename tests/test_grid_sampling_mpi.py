@@ -45,7 +45,7 @@ def test_grid_sampling():
         max_evals=n_evals,
         sim_workers=2,
         exploration_dir_path="./tests_output/test_grid_sampling",
-        libe_comms='mpi'
+        libe_comms="mpi",
     )
 
     exploration.run()
