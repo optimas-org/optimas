@@ -4,12 +4,11 @@ from typing import List, Optional, Dict
 import os
 
 import torch
-from packaging import version
-from ax.version import version as ax_version
-from ax.core.observation import ObservationFeatures
+from ax.service.ax_client import AxClient
 from ax.service.utils.instantiation import (
     InstantiationBase,
     ObjectiveProperties,
+    FixedFeatures,
 )
 from ax.modelbridge.registry import Models
 from ax.modelbridge.generation_strategy import (
@@ -17,7 +16,6 @@ from ax.modelbridge.generation_strategy import (
     GenerationStrategy,
 )
 
-from optimas.utils.other import update_object
 from optimas.core import (
     Objective,
     Trial,
@@ -26,8 +24,6 @@ from optimas.core import (
     TrialStatus,
 )
 from optimas.generators.ax.base import AxGenerator
-from optimas.generators.base import Generator
-from .custom_ax import CustomAxClient as AxClient
 
 
 class AxServiceGenerator(AxGenerator):
@@ -131,15 +127,9 @@ class AxServiceGenerator(AxGenerator):
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
-            try:
-                parameters, trial_id = self._ax_client.get_next_trial(
-                    fixed_features=self._fixed_features
-                )
-            # Occurs when not using a CustomAxClient (i.e., when the AxClient
-            # is provided by the user using an AxClientGenerator). In that
-            # case, there is also no need to support FixedFeatures.
-            except TypeError:
-                parameters, trial_id = self._ax_client.get_next_trial()
+            parameters, trial_id = self._ax_client.get_next_trial(
+                fixed_features=self._fixed_features
+            )
             trial.parameter_values = [
                 parameters.get(var.name) for var in self._varying_parameters
             ]
@@ -171,9 +161,7 @@ class AxServiceGenerator(AxGenerator):
                     current_step = generation_strategy.current_step
                     # Reduce only if there are still Sobol trials left.
                     if current_step.model == Models.SOBOL:
-                        current_step.num_trials -= 1
-                        if version.parse(ax_version) >= version.parse("0.3.5"):
-                            current_step.transition_criteria[0].threshold -= 1
+                        current_step.transition_criteria[0].threshold -= 1
                         generation_strategy._maybe_move_to_next_step()
             finally:
                 if trial.completed:
@@ -240,7 +228,7 @@ class AxServiceGenerator(AxGenerator):
             if var.is_fixed:
                 fixed_parameters[var.name] = var.default_value
         # Store fixed parameters as fixed features.
-        self._fixed_features = ObservationFeatures(fixed_parameters)
+        self._fixed_features = FixedFeatures(fixed_parameters)
         return parameters
 
     def _create_ax_objectives(self) -> Dict[str, ObjectiveProperties]:
@@ -266,38 +254,14 @@ class AxServiceGenerator(AxGenerator):
         )
         self._ax_client.save_to_json_file(file_path)
 
-    def _prepare_to_send(self) -> None:
-        """Prepare generator to send to another process.
-
-        Delete the fitted model from the generation strategy. It can contain
-        pytorch tensors that prevent serialization.
-        """
+    def _update_parameter(self, parameter):
+        """Update a parameter from the search space."""
+        # Delete the fitted model from the generation strategy, otherwise
+        # the parameter won't be updated.
         generation_strategy = self._ax_client.generation_strategy
         if generation_strategy._model is not None:
             del generation_strategy._curr.model_spec._fitted_model
-            generation_strategy._curr.model_spec._fitted_model = None
-            del generation_strategy._model
-            generation_strategy._model = None
-
-    def _update(self, new_generator: Generator) -> None:
-        """Update generator with the attributes of a newer one.
-
-        This method is overrides the base one to make sure that the original
-        AxClient is updated and not simply replaced.
-
-        Parameters
-        ----------
-        new_generator : Generator
-            The newer version of the generator returned in ``persis_info``.
-
-        """
-        original_ax_client = self._ax_client
-        super()._update(new_generator)
-        update_object(original_ax_client, new_generator._ax_client)
-        self._ax_client = original_ax_client
-
-    def _update_parameter(self, parameter):
-        """Update a parameter from the search space."""
+        # Update parameter.
         parameters = self._create_ax_parameters()
         new_search_space = InstantiationBase.make_search_space(parameters, None)
         self._ax_client.experiment.search_space.update_parameter(

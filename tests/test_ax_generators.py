@@ -1,3 +1,4 @@
+import os
 import threading
 
 import numpy as np
@@ -347,7 +348,7 @@ def test_ax_single_fidelity_moo_fb():
 def test_ax_single_fidelity_updated_params():
     """
     Test that an exploration with a single-fidelity generator runs
-    as expected when the varing parameters are updated.
+    as expected when the varying parameters are updated.
     """
     # Prevent trials from failing in this test.
     global trial_count
@@ -728,6 +729,17 @@ def test_ax_service_init():
         for k in range(i, n_init - 1):
             assert df["generation_method"][k] == "Sobol"
         df["generation_method"][min(i, n_init)] == "GPEI"
+
+    # Try to load saved client from json. This used to fail when the SOBOL
+    # step was skipped due to n_external > n_init. It is added here to prevent
+    # the issue from coming back.
+    AxClient.load_from_json_file(
+        filepath=os.path.join(
+            exploration.exploration_dir_path,
+            "model_history",
+            "ax_client_at_eval_5.json",
+        )
+    )
 
     # Test single case with `enforce_n_init=True`
     gen = AxSingleFidelityGenerator(

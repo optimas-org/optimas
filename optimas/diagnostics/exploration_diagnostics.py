@@ -489,7 +489,8 @@ class ExplorationDiagnostics:
             raise ValueError(
                 f"Could not find evaluation directory of trial {trial_index}."
                 "This directory is only created when using a "
-                "`TemplateEvaluator`."
+                "`TemplateEvaluator` or a `FunctionEvaluator` when setting "
+                "`create_evaluation_dirs=True`."
             )
 
     def get_best_evaluation_dir_path(
@@ -615,7 +616,7 @@ class ExplorationDiagnostics:
             or descendingly (False)
             e.g. {'f': False} sort simulations according to f descendingly.
         top: int, optional
-            Highight the 'top' evaluations of every objective.
+            Highlight the 'top' evaluations of every objective.
         show_top_evaluation_indices : bool, optional
             Whether to show the indices of the top evaluations.
         show_legend : bool, optional
