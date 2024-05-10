@@ -11,7 +11,9 @@ from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration
 
 from multiprocessing import set_start_method
+
 set_start_method("fork", force=True)
+
 
 def analyze_simulation(simulation_directory, output_params):
     """Analyze the simulation output.
@@ -50,15 +52,15 @@ var_2 = VaryingParameter("x1", 3, 2.0)
 obj = Objective("f")
 
 aposmm = APOSMM(
-    initial_sample_size = 100,
-    localopt_method = "LN_BOBYQA",
-    rk_const = 0.5 * ((gamma(2) * 5) ** 0.5) / sqrt(pi),
-    xtol_abs = 1e-6,
-    ftol_abs = 1e-6,
-    dist_to_bound_multiple = 0.5,
-    max_active_runs = 4,  # refers to APOSMM's simul local optimization runs
-    lb = np.array([-3, -2]),  # potentially matches the VaryingParameters
-    ub = np.array([3, 2]),
+    initial_sample_size=100,
+    localopt_method="LN_BOBYQA",
+    rk_const=0.5 * ((gamma(2) * 5) ** 0.5) / sqrt(pi),
+    xtol_abs=1e-6,
+    ftol_abs=1e-6,
+    dist_to_bound_multiple=0.5,
+    max_active_runs=4,  # refers to APOSMM's simul local optimization runs
+    lb=np.array([-3, -2]),  # potentially matches the VaryingParameters
+    ub=np.array([3, 2]),
 )
 
 gen = libEWrapper(
@@ -84,4 +86,3 @@ exp = Exploration(
 # for some flavours of multiprocessing, namely spawn and forkserver)
 if __name__ == "__main__":
     exp.run()
-
