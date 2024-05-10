@@ -1,4 +1,5 @@
 [![PyPI](https://img.shields.io/pypi/v/optimas)](https://pypi.org/project/optimas/)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/optimas.svg)](https://anaconda.org/conda-forge/optimas)
 [![tests badge](https://github.com/optimas-org/optimas/actions/workflows/unix.yml/badge.svg)](https://github.com/optimas-org/optimas/actions)
 [![Documentation Status](https://readthedocs.org/projects/optimas/badge/?version=latest)](https://optimas.readthedocs.io/en/latest/?badge=latest)
 [![DOI](https://zenodo.org/badge/287560975.svg)](https://zenodo.org/badge/latestdoi/287560975)
@@ -39,15 +40,19 @@ Optimas is a Python library designed for highly scalable optimization, from lapt
 
 
 ## Installation
-You can install Optimas from PyPI:
+You can install Optimas from PyPI (recommended):
 ```sh
 pip install optimas
 ```
-Or directly from GitHub:
+from conda-forge:
+```sh
+conda install optimas --channel conda-forge
+```
+or directly from GitHub:
 ```sh
 pip install git+https://github.com/optimas-org/optimas.git
 ```
-Make sure `mpi4py` is available in your environment before installing optimas. Fore more details, check out the full [installation guide](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html). We have also prepared dedicated installation instructions for some HPC systems such as
+Make sure `mpi4py` is available in your environment before installing optimas. For more details, check out the full [installation guide](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html). We have also prepared dedicated installation instructions for some HPC systems such as
 [JUWELS (JSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_juwels.html),
 [Maxwell (DESY)](https://optimas.readthedocs.io/en/latest/user_guide/installation_maxwell.html) and
 [Perlmutter (NERSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_perlmutter.html).

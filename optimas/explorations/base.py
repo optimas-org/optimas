@@ -15,6 +15,7 @@ from libensemble.tools import add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
 
+from optimas.core.trial import TrialStatus
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.evaluators.function_evaluator import FunctionEvaluator
@@ -128,7 +129,7 @@ class Exploration:
     def history(self) -> pd.DataFrame:
         """Get the exploration history."""
         history = convert_to_dataframe(self._libe_history.H)
-        ordered_columns = ["trial_index"]
+        ordered_columns = ["trial_index", "trial_status"]
         ordered_columns += [p.name for p in self.generator.varying_parameters]
         ordered_columns += [p.name for p in self.generator.objectives]
         ordered_columns += [p.name for p in self.generator.analyzed_parameters]
@@ -147,6 +148,13 @@ class Exploration:
             run until the number of evaluations reaches `max_evals`.
 
         """
+        # Store current working directory. It has been observed that sometimes
+        # (especially when using `local_threading`) the working directory
+        # is changed to the exploration directory after the call to `libE`.
+        # As a workaround, the cwd is stored and then set again at the end of
+        # `run`.
+        cwd = os.getcwd()
+
         # Set exit criteria to maximum number of evaluations.
         remaining_evals = self.max_evals - self._n_evals
         if remaining_evals < 1:
@@ -162,17 +170,17 @@ class Exploration:
             exit_criteria["sim_max"] = sim_max
 
         # Get initial number of generator trials.
-        n_evals_initial = self.generator.n_completed_trials
+        n_evals_initial = self.generator.n_evaluated_trials
 
         # Create persis_info.
-        persis_info = add_unique_random_streams({}, self.sim_workers + 2)
+        persis_info = add_unique_random_streams({}, self.sim_workers + 1)
 
         # If specified, allocate dedicated resources for the generator.
         if self.generator.dedicated_resources and self.generator.use_cuda:
             persis_info["gen_resources"] = 1
             persis_info["gen_use_gpus"] = True
-        else:
-            self.libE_specs["zero_resource_workers"] = [1]
+            # Create additional resource set for generator.
+            self.libE_specs["num_resource_sets"] = self.sim_workers + 1
 
         if self._n_evals > 0:
             self.libE_specs["reuse_output_dir"] = True
@@ -205,12 +213,12 @@ class Exploration:
         # Update history.
         self._libe_history.H = history
 
-        # Update generator with the one received from libE.
-        self.generator._update(persis_info[1]["generator"])
-
         # Update number of evaluation in this exploration.
-        n_trials_final = self.generator.n_completed_trials
-        self._n_evals += n_trials_final - n_evals_initial
+        n_evals_final = self.generator.n_evaluated_trials
+        self._n_evals += n_evals_final - n_evals_initial
+
+        # Reset `cwd` to initial value before `libE` was called.
+        os.chdir(cwd)
 
     def attach_trials(
         self,
@@ -420,9 +428,23 @@ class Exploration:
                 self.generator._trial_count + n_evals,
                 dtype=int,
             )
+        if "trial_status" not in fields:
+            history_new["trial_status"] = TrialStatus.COMPLETED.name
 
         # Incorporate new history into generator.
         self.generator.incorporate_history(history_new)
+
+    def mark_evaluation_as_failed(self, trial_index):
+        """Mark an already evaluated trial as failed.
+
+        Parameters
+        ----------
+        trial_index : int
+            The index of the trial.
+        """
+        self.generator.mark_trial_as_failed(trial_index)
+        i = np.where(self._libe_history.H["trial_index"] == trial_index)[0][0]
+        self._libe_history.H[i]["trial_status"] = TrialStatus.FAILED.name
 
     def _create_executor(self) -> None:
         """Create libEnsemble executor."""
@@ -510,6 +532,8 @@ class Exploration:
     def _set_default_libe_specs(self) -> None:
         """Set default exploration libe_specs."""
         libE_specs = {}
+        # Run generator on manager to avoid copying gen to another process.
+        libE_specs["gen_on_manager"] = True
         # Save H to file every N simulation evaluations
         # default value, if not defined
         libE_specs["save_every_k_sims"] = self.history_save_period
@@ -518,7 +542,7 @@ class Exploration:
         # Set communications and corresponding number of workers.
         libE_specs["comms"] = self.libe_comms
         if self.libe_comms in ["local", "threads"]:
-            libE_specs["nworkers"] = self.sim_workers + 1
+            libE_specs["nworkers"] = self.sim_workers
         elif self.libe_comms == "mpi":
             # Warn user if openmpi is being used.
             # When running with MPI communications, openmpi cannot be used as

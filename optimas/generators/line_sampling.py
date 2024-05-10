@@ -112,3 +112,7 @@ class LineSamplingGenerator(Generator):
                     config[var.name] for var in trial.varying_parameters
                 ]
         return trials
+
+    def _mark_trial_as_failed(self, trial: Trial):
+        """No need to do anything, since there is no surrogate model."""
+        pass
