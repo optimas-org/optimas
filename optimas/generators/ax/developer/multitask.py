@@ -23,12 +23,7 @@ from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 from ax.storage.json_store.save import save_experiment
 from ax.storage.metric_registry import register_metric
-
-try:
-    from ax.modelbridge.factory import get_MTGP
-except ImportError:
-    # For Ax >= 0.3.4
-    from ax.modelbridge.factory import get_MTGP_LEGACY as get_MTGP
+from ax.modelbridge.factory import get_MTGP_LEGACY as get_MTGP
 
 from optimas.generators.ax.base import AxGenerator
 from optimas.core import (
@@ -361,20 +356,11 @@ class AxMultitaskGenerator(AxGenerator):
 
             generator_success = True
             while True:
-                if version.parse(ax_version) >= version.parse("0.3.5"):
-                    model_gen_options = {
-                        "optimizer_kwargs": {
-                            "options": {
-                                "init_batch_limit": self.init_batch_limit
-                            }
-                        }
+                model_gen_options = {
+                    "optimizer_kwargs": {
+                        "options": {"init_batch_limit": self.init_batch_limit}
                     }
-                else:
-                    model_gen_options = {
-                        "optimizer_kwargs": {
-                            "init_batch_limit": self.init_batch_limit
-                        }
-                    }
+                }
                 try:
                     # Try to generate the new points.
                     gr = m.gen(
