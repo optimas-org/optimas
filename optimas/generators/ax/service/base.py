@@ -3,14 +3,12 @@
 from typing import List, Optional, Dict
 import os
 
-import numpy as np
 import torch
-from packaging import version
-from ax.version import version as ax_version
-from ax.core.observation import ObservationFeatures
+from ax.service.ax_client import AxClient
 from ax.service.utils.instantiation import (
     InstantiationBase,
     ObjectiveProperties,
+    FixedFeatures,
 )
 from ax.modelbridge.registry import Models
 from ax.modelbridge.generation_strategy import (
@@ -18,7 +16,6 @@ from ax.modelbridge.generation_strategy import (
     GenerationStrategy,
 )
 
-from optimas.utils.logger import get_logger
 from optimas.core import (
     Objective,
     Trial,
@@ -27,15 +24,11 @@ from optimas.core import (
     TrialStatus,
 )
 from optimas.generators.ax.base import AxGenerator
-from optimas.generators.base import Generator
 from optimas.utils.ax import AxModelManager
 from optimas.utils.ax.other import (
     convert_optimas_to_ax_parameters,
     convert_optimas_to_ax_objectives,
 )
-from .custom_ax import CustomAxClient as AxClient
-
-logger = get_logger(__name__)
 
 
 class AxServiceGenerator(AxGenerator):
@@ -150,15 +143,9 @@ class AxServiceGenerator(AxGenerator):
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
-            try:
-                parameters, trial_id = self._ax_client.get_next_trial(
-                    fixed_features=self._fixed_features
-                )
-            # Occurs when not using a CustomAxClient (i.e., when the AxClient
-            # is provided by the user using an AxClientGenerator). In that
-            # case, there is also no need to support FixedFeatures.
-            except TypeError:
-                parameters, trial_id = self._ax_client.get_next_trial()
+            parameters, trial_id = self._ax_client.get_next_trial(
+                fixed_features=self._fixed_features
+            )
             trial.parameter_values = [
                 parameters.get(var.name) for var in self._varying_parameters
             ]
@@ -190,9 +177,7 @@ class AxServiceGenerator(AxGenerator):
                     current_step = generation_strategy.current_step
                     # Reduce only if there are still Sobol trials left.
                     if current_step.model == Models.SOBOL:
-                        current_step.num_trials -= 1
-                        if version.parse(ax_version) >= version.parse("0.3.5"):
-                            current_step.transition_criteria[0].threshold -= 1
+                        current_step.transition_criteria[0].threshold -= 1
                         generation_strategy._maybe_move_to_next_step()
             finally:
                 if trial.completed:
@@ -249,7 +234,7 @@ class AxServiceGenerator(AxGenerator):
             if var.is_fixed:
                 fixed_parameters[var.name] = var.default_value
         # Store fixed parameters as fixed features.
-        self._fixed_features = ObservationFeatures(fixed_parameters)
+        self._fixed_features = FixedFeatures(fixed_parameters)
         return parameters
 
     def _create_ax_objectives(self) -> Dict[str, ObjectiveProperties]:
