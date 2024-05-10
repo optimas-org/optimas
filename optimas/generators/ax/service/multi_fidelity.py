@@ -2,6 +2,10 @@
 
 from typing import List, Optional, Dict
 
+from botorch.acquisition.knowledge_gradient import (
+    qMultiFidelityKnowledgeGradient,
+)
+from ax.utils.common.constants import Keys
 from ax.modelbridge.generation_strategy import GenerationStep
 from ax.modelbridge.registry import Models
 
@@ -106,8 +110,8 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         self, bo_model_kwargs: Dict
     ) -> List[GenerationStep]:
         """Create generation steps for multifidelity optimization."""
-        # Add cost intercept to model kwargs.
-        bo_model_kwargs["cost_intercept"] = self.fidel_cost_intercept
+        # Add acquisition function to model kwargs.
+        bo_model_kwargs["botorch_acqf_class"] = qMultiFidelityKnowledgeGradient
 
         # Make generation strategy.
         steps = []
@@ -120,10 +124,17 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         # Continue indefinitely with GPKG.
         steps.append(
             GenerationStep(
-                model=Models.GPKG,
+                model=Models.BOTORCH_MODULAR,
                 num_trials=-1,
                 model_kwargs=bo_model_kwargs,
-            )
+                model_gen_kwargs={
+                    "model_gen_options": {
+                        Keys.ACQF_KWARGS: {
+                            Keys.COST_INTERCEPT: self.fidel_cost_intercept
+                        }
+                    }
+                },
+            ),
         )
 
         return steps
