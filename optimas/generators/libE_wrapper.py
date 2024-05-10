@@ -31,6 +31,7 @@ class libEWrapper(Generator):
         allow_fixed_parameters: Optional[bool] = False,
         allow_updating_parameters: Optional[bool] = False,
         libe_gen_class=None,  # Type hint - add base class for ask/tell gens
+        libe_gen_instance=None,
     ) -> None:
         super().__init__(
             varying_parameters=varying_parameters,
@@ -48,6 +49,7 @@ class libEWrapper(Generator):
             allow_updating_parameters=allow_updating_parameters,
         )
         self.libe_gen_class = libe_gen_class
+        self.libe_gen_instance = libe_gen_instance
 
     def init_libe_gen(self, H, persis_info, gen_specs_in, libE_info):
         n = len(self.varying_parameters)
@@ -55,17 +57,19 @@ class libEWrapper(Generator):
         gen_specs["out"] = [("x", float, (n,))]
         gen_specs["user"]["lb"] = np.zeros(n)
         gen_specs["user"]["ub"] = np.zeros(n)
-        import ipdb; ipdb.set_trace()
         for i, vp in enumerate(self.varying_parameters):
             gen_specs["user"]["lb"][i] = vp.lower_bound
             gen_specs["user"]["ub"][i] = vp.upper_bound
-        if hasattr(self, "user_settings"):
-            gen_specs["user"] = {**gen_specs["user"], **self.user_settings}
-        self.libe_gen = self.libe_gen_class(
-            gen_specs, H, persis_info, libE_info
-        )
-        if issubclass(self.libe_gen_class, LibEnsembleGenInterfacer):
-            self.libe_gen.setup()  # start background thread
+        if self.libe_gen_class is not None:
+            self.libe_gen = self.libe_gen_class(
+                gen_specs, H, persis_info, libE_info
+            )
+        elif self.libe_gen_instance is not None:
+            if isinstance(self.libe_gen_instance, LibEnsembleGenInterfacer):
+                self.libe_gen_instance.setup()  # start background thread
+            self.libe_gen = self.libe_gen_instance
+        else:
+            raise ValueError("libe_gen_class or libe_gen_instance must be set")
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
