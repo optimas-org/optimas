@@ -129,8 +129,6 @@ class Exploration:
     @property
     def history(self) -> pd.DataFrame:
         """Get the exploration history."""
-        if not self.is_manager:
-            return
         history = convert_to_dataframe(self._libe_history.H)
         ordered_columns = ["trial_index", "trial_status"]
         ordered_columns += [p.name for p in self.generator.varying_parameters]
