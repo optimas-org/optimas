@@ -124,7 +124,12 @@ class Exploration:
         self._set_default_libe_specs()
         self._libe_history = self._create_libe_history()
         self._load_history(history, resume)
-        self.is_manager = self._is_manager(self.libe_comms, self.libE_specs)
+        self._is_manager = self._set_manager(self.libe_comms, self.libE_specs)
+
+    @property
+    def is_manager(self):
+        """Get whether the current process is the manager"""
+        return self._is_manager
 
     @property
     def history(self) -> pd.DataFrame:
@@ -619,7 +624,7 @@ class Exploration:
         with open(file_path, "w") as file:
             file.write(json.dumps(params))
 
-    def _is_manager(self, comms: str, libE_specs: Dict) -> bool:
+    def _set_manager(self, comms: str, libE_specs: Dict) -> bool:
         if comms == "mpi":
             from mpi4py import MPI
 
