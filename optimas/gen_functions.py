@@ -115,7 +115,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                         trial.complete_evaluation(ev)
                 # Register trial with unknown SEM
                 if hasattr(generator, "libe_gen_class"):
-                    generator.tell([trial], libE_calc_in=calc_in)
+                    generator.tell([trial], libE_calc_in=calc_in[i])
                 else:
                     generator.tell([trial])
             # Set the number of points to generate to that number:

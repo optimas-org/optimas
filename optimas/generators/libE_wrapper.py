@@ -50,6 +50,7 @@ class libEWrapper(Generator):
         )
         self.libe_gen_class = libe_gen_class
         self.libe_gen_instance = libe_gen_instance
+        self.given_back_idxs = []
 
     def init_libe_gen(self, H, persis_info, gen_specs_in, libE_info):
         n = len(self.varying_parameters)
@@ -86,7 +87,15 @@ class libEWrapper(Generator):
     def _tell(
         self, trials: List[Trial], libE_calc_in: np.typing.NDArray
     ) -> None:
-        self.libe_gen.tell(libE_calc_in[["sim_id", "f"]])
+        if hasattr(self.libe_gen, "create_results_array"):
+            new_array = self.libe_gen.create_results_array()
+            new_array["f"] = libE_calc_in["f"]
+            libE_calc_in = new_array
+        if libE_calc_in["sim_id"] not in self.given_back_idxs:
+            self.libe_gen.tell(libE_calc_in)
+            self.given_back_idxs.append(libE_calc_in["sim_id"])
+        else:
+            print("Got back another array with the same ID as a previous?")
 
     def final_tell(self, libE_calc_in: np.typing.NDArray):
         return self.libe_gen.final_tell(libE_calc_in[["sim_id", "f"]])
