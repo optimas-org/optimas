@@ -104,7 +104,6 @@ class libEWrapper(Generator):
                     0
                 ]._x_metadata
                 self.new_array["local_pt"][self.temp_idx] = trials[0]._local_pt
-                print(trials[0]._local_pt)
             self.temp_idx += 1
             if (
                 self.temp_idx
