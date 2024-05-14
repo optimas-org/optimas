@@ -76,7 +76,7 @@ class libEWrapper(Generator):
         """Fill in the parameter values of the requested trials."""
         n_trials = len(trials)
         gen_out = self.libe_gen.ask(n_trials)
-        
+
         for i, trial in enumerate(trials):
             # Extract the 'x' field from gen_out[i] directly
             x_values = gen_out[i]["x"]
@@ -92,16 +92,24 @@ class libEWrapper(Generator):
     ) -> None:
         if hasattr(self.libe_gen, "create_results_array"):
             if self.temp_idx == 0:
-                self.new_array = self.libe_gen.create_results_array(self.libe_gen.gen_specs["user"]["max_active_runs"], empty=True)
+                self.new_array = self.libe_gen.create_results_array(
+                    self.libe_gen.gen_specs["user"]["max_active_runs"],
+                    empty=True,
+                )
             self.new_array["f"][self.temp_idx] = libE_calc_in["f"]
             self.new_array["x"][self.temp_idx] = trials[0].parameter_values
             self.new_array["sim_id"][self.temp_idx] = libE_calc_in["sim_id"]
             if hasattr(trials[0], "_x_metadata"):
-                self.new_array["x_on_cube"][self.temp_idx] = trials[0]._x_metadata
+                self.new_array["x_on_cube"][self.temp_idx] = trials[
+                    0
+                ]._x_metadata
                 self.new_array["local_pt"][self.temp_idx] = trials[0]._local_pt
                 print(trials[0]._local_pt)
             self.temp_idx += 1
-            if self.temp_idx == self.libe_gen.gen_specs["user"]["max_active_runs"]:
+            if (
+                self.temp_idx
+                == self.libe_gen.gen_specs["user"]["max_active_runs"]
+            ):
                 self.libe_gen.tell(self.new_array)
                 self.temp_idx = 0  # reset, create a new array next time around
         else:

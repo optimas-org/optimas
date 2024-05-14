@@ -60,16 +60,16 @@ obj = Objective("f")
 n = 2
 
 aposmm = APOSMM(
-    initial_sample_size = 100,
-    localopt_method = "LN_BOBYQA",
-    sample_points = np.round(minima, 1),
-    rk_const = 0.5 * ((gamma(1 + (n / 2)) * 5) ** (1 / n)) / sqrt(pi),
-    xtol_abs = 1e-6,
-    ftol_abs = 1e-6,
-    dist_to_bound_multiple = 0.5,
-    max_active_runs = 4,  # refers to APOSMM's simul local optimization runs
-    lb = np.array([-3, -2]),  # potentially matches the VaryingParameters
-    ub = np.array([3, 2]),
+    initial_sample_size=100,
+    localopt_method="LN_BOBYQA",
+    sample_points=np.round(minima, 1),
+    rk_const=0.5 * ((gamma(1 + (n / 2)) * 5) ** (1 / n)) / sqrt(pi),
+    xtol_abs=1e-6,
+    ftol_abs=1e-6,
+    dist_to_bound_multiple=0.5,
+    max_active_runs=4,  # refers to APOSMM's simul local optimization runs
+    lb=np.array([-3, -2]),  # potentially matches the VaryingParameters
+    ub=np.array([3, 2]),
 )
 
 gen = libEWrapper(
