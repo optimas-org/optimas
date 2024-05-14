@@ -50,7 +50,7 @@ class libEWrapper(Generator):
         )
         self.libe_gen_class = libe_gen_class
         self.libe_gen_instance = libe_gen_instance
-        self.given_back_idxs = []
+        self.temp_idx = 0
 
     def init_libe_gen(self, H, persis_info, gen_specs_in, libE_info):
         n = len(self.varying_parameters)
@@ -76,13 +76,14 @@ class libEWrapper(Generator):
         """Fill in the parameter values of the requested trials."""
         n_trials = len(trials)
         gen_out = self.libe_gen.ask(n_trials)
-
+        
         for i, trial in enumerate(trials):
             # Extract the 'x' field from gen_out[i] directly
             x_values = gen_out[i]["x"]
             trial.parameter_values = x_values
             if "x_on_cube" in gen_out.dtype.names:
                 trial._x_metadata = gen_out[i]["x_on_cube"]
+                trial._local_pt = gen_out[i]["local_pt"]
 
         return trials
 
@@ -90,18 +91,21 @@ class libEWrapper(Generator):
         self, trials: List[Trial], libE_calc_in: np.typing.NDArray
     ) -> None:
         if hasattr(self.libe_gen, "create_results_array"):
-            new_array = self.libe_gen.create_results_array(empty=True)
-            new_array["f"] = libE_calc_in["f"]
-            new_array["x"] = trials[0].parameter_values
-            new_array["sim_id"] = libE_calc_in["sim_id"]
+            if self.temp_idx == 0:
+                self.new_array = self.libe_gen.create_results_array(self.libe_gen.gen_specs["user"]["max_active_runs"], empty=True)
+            self.new_array["f"][self.temp_idx] = libE_calc_in["f"]
+            self.new_array["x"][self.temp_idx] = trials[0].parameter_values
+            self.new_array["sim_id"][self.temp_idx] = libE_calc_in["sim_id"]
             if hasattr(trials[0], "_x_metadata"):
-                new_array["x_on_cube"] = trials[0]._x_metadata
-            libE_calc_in = new_array
-        if libE_calc_in["sim_id"] not in self.given_back_idxs:
-            self.libe_gen.tell(libE_calc_in)
-            self.given_back_idxs.append(libE_calc_in["sim_id"])
+                self.new_array["x_on_cube"][self.temp_idx] = trials[0]._x_metadata
+                self.new_array["local_pt"][self.temp_idx] = trials[0]._local_pt
+                print(trials[0]._local_pt)
+            self.temp_idx += 1
+            if self.temp_idx == self.libe_gen.gen_specs["user"]["max_active_runs"]:
+                self.libe_gen.tell(self.new_array)
+                self.temp_idx = 0  # reset, create a new array next time around
         else:
-            print("Got back another array with the same ID as a previous?")
+            self.libe_gen.tell(libE_calc_in)
 
     def final_tell(self, libE_calc_in: np.typing.NDArray):
         return self.libe_gen.final_tell(libE_calc_in[["sim_id", "f"]])
