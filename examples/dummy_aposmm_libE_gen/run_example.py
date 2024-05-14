@@ -4,9 +4,12 @@ from math import gamma, pi, sqrt
 import numpy as np
 from libensemble.generators import APOSMM
 import libensemble.gen_funcs
+
 libensemble.gen_funcs.rc.aposmm_optimizers = "nlopt"
 from optimas.core import VaryingParameter, Objective
-from libensemble.tests.regression_tests.support import six_hump_camel_minima as minima
+from libensemble.tests.regression_tests.support import (
+    six_hump_camel_minima as minima,
+)
 
 # from optimas.generators import RandomSamplingGenerator
 from optimas.generators import libEWrapper
@@ -92,5 +95,4 @@ exp = Exploration(
 # for some flavours of multiprocessing, namely spawn and forkserver)
 if __name__ == "__main__":
     exp.run()
-    import ipdb; ipdb.set_trace()
     assert len(gen.libe_gen.all_local_minima)
