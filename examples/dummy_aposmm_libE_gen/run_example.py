@@ -14,7 +14,9 @@ from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration
 
 from multiprocessing import set_start_method
+
 set_start_method("fork", force=True)
+
 
 def analyze_simulation(simulation_directory, output_params):
     """Analyze the simulation output.
