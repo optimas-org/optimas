@@ -81,6 +81,8 @@ class libEWrapper(Generator):
             # Extract the 'x' field from gen_out[i] directly
             x_values = gen_out[i]["x"]
             trial.parameter_values = x_values
+            if "x_on_cube" in gen_out.dtype.names:
+                trial._x_metadata = gen_out[i]["x_on_cube"]
 
         return trials
 
@@ -88,8 +90,12 @@ class libEWrapper(Generator):
         self, trials: List[Trial], libE_calc_in: np.typing.NDArray
     ) -> None:
         if hasattr(self.libe_gen, "create_results_array"):
-            new_array = self.libe_gen.create_results_array()
+            new_array = self.libe_gen.create_results_array(empty=True)
             new_array["f"] = libE_calc_in["f"]
+            new_array["x"] = trials[0].parameter_values
+            new_array["sim_id"] = libE_calc_in["sim_id"]
+            if hasattr(trials[0], "_x_metadata"):
+                new_array["x_on_cube"] = trials[0]._x_metadata
             libE_calc_in = new_array
         if libE_calc_in["sim_id"] not in self.given_back_idxs:
             self.libe_gen.tell(libE_calc_in)

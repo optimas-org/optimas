@@ -3,7 +3,10 @@
 from math import gamma, pi, sqrt
 import numpy as np
 from libensemble.generators import APOSMM
+import libensemble.gen_funcs
+libensemble.gen_funcs.rc.aposmm_optimizers = "nlopt"
 from optimas.core import VaryingParameter, Objective
+from libensemble.tests.regression_tests.support import six_hump_camel_minima as minima
 
 # from optimas.generators import RandomSamplingGenerator
 from optimas.generators import libEWrapper
@@ -49,10 +52,13 @@ var_1 = VaryingParameter("x0", -3.0, -2.0)
 var_2 = VaryingParameter("x1", 3.0, 2.0)
 obj = Objective("f")
 
+n = 2
+
 aposmm = APOSMM(
     initial_sample_size = 100,
     localopt_method = "LN_BOBYQA",
-    rk_const = 0.5 * ((gamma(2) * 5) ** 0.5) / sqrt(pi),
+    sample_points = np.round(minima, 1),
+    rk_const = 0.5 * ((gamma(1 + (n / 2)) * 5) ** (1 / n)) / sqrt(pi),
     xtol_abs = 1e-6,
     ftol_abs = 1e-6,
     dist_to_bound_multiple = 0.5,
@@ -76,7 +82,7 @@ ev = TemplateEvaluator(
 
 # Create exploration.
 exp = Exploration(
-    generator=gen, evaluator=ev, max_evals=500, sim_workers=4, run_async=True
+    generator=gen, evaluator=ev, max_evals=300, sim_workers=4, run_async=True
 )
 
 
@@ -84,4 +90,4 @@ exp = Exploration(
 # for some flavours of multiprocessing, namely spawn and forkserver)
 if __name__ == "__main__":
     exp.run()
-
+    assert len(gen.libe_gen.all_local_minima)
