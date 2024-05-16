@@ -98,20 +98,30 @@ class libEWrapper(Generator):
 
     def _get_array_size(self):
         user = self.libe_gen.gen_specs["user"]
-        return user["initial_sample_size"] if not self.told_initial_sample else user["max_active_runs"]
-    
+        return (
+            user["initial_sample_size"]
+            if not self.told_initial_sample
+            else user["max_active_runs"]
+        )
+
     def _got_enough_initial_sample(self):
-        return self.num_evals > int(0.9*self.libe_gen.gen_specs["user"]["initial_sample_size"])
-    
+        return self.num_evals > int(
+            0.9 * self.libe_gen.gen_specs["user"]["initial_sample_size"]
+        )
+
     def _got_enough_subsequent_points(self):
-        return self.num_evals >= self.libe_gen.gen_specs["user"]["max_active_runs"]
+        return (
+            self.num_evals >= self.libe_gen.gen_specs["user"]["max_active_runs"]
+        )
 
     def _tell(
         self, trials: List[Trial], libE_calc_in: np.typing.NDArray
     ) -> None:
         if hasattr(self.libe_gen, "create_results_array"):
             if self.num_evals == 0:
-                self.new_array = self.libe_gen.create_results_array(self._get_array_size(), empty=True)
+                self.new_array = self.libe_gen.create_results_array(
+                    self._get_array_size(), empty=True
+                )
             self._slot_in_data(libE_calc_in, trials[0])
             self.num_evals += 1
             if not self.told_initial_sample:
