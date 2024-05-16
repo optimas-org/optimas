@@ -50,7 +50,8 @@ class libEWrapper(Generator):
         )
         self.libe_gen_class = libe_gen_class
         self.libe_gen_instance = libe_gen_instance
-        self.temp_idx = 0
+        self.num_evals = 0
+        self.told_initial_sample = False
 
     def init_libe_gen(self, H, persis_info, gen_specs_in, libE_info):
         n = len(self.varying_parameters)
@@ -87,30 +88,41 @@ class libEWrapper(Generator):
 
         return trials
 
+    def _slot_in_data(self, libE_calc_in, trial):
+        self.new_array["f"][self.num_evals] = libE_calc_in["f"]
+        self.new_array["x"][self.num_evals] = trial.parameter_values
+        self.new_array["sim_id"][self.num_evals] = libE_calc_in["sim_id"]
+        if hasattr(trial, "_x_metadata"):
+            self.new_array["x_on_cube"][self.num_evals] = trial._x_metadata
+            self.new_array["local_pt"][self.num_evals] = trial._local_pt
+
+    def _get_array_size(self):
+        user = self.libe_gen.gen_specs["user"]
+        return user["initial_sample_size"] if not self.told_initial_sample else user["max_active_runs"]
+    
+    def _got_enough_initial_sample(self):
+        return self.num_evals > int(0.9*self.libe_gen.gen_specs["user"]["initial_sample_size"])
+    
+    def _got_enough_subsequent_points(self):
+        return self.num_evals >= self.libe_gen.gen_specs["user"]["max_active_runs"]
+
     def _tell(
         self, trials: List[Trial], libE_calc_in: np.typing.NDArray
     ) -> None:
         if hasattr(self.libe_gen, "create_results_array"):
-            if self.temp_idx == 0:
-                self.new_array = self.libe_gen.create_results_array(
-                    self.libe_gen.gen_specs["user"]["max_active_runs"],
-                    empty=True,
-                )
-            self.new_array["f"][self.temp_idx] = libE_calc_in["f"]
-            self.new_array["x"][self.temp_idx] = trials[0].parameter_values
-            self.new_array["sim_id"][self.temp_idx] = libE_calc_in["sim_id"]
-            if hasattr(trials[0], "_x_metadata"):
-                self.new_array["x_on_cube"][self.temp_idx] = trials[
-                    0
-                ]._x_metadata
-                self.new_array["local_pt"][self.temp_idx] = trials[0]._local_pt
-            self.temp_idx += 1
-            if (
-                self.temp_idx
-                == self.libe_gen.gen_specs["user"]["max_active_runs"]
-            ):
+            if self.num_evals == 0:
+                self.new_array = self.libe_gen.create_results_array(self._get_array_size(), empty=True)
+            self._slot_in_data(libE_calc_in, trials[0])
+            self.num_evals += 1
+            if not self.told_initial_sample:
+                # Optimas seems to have trouble completing exactly the initial sample before trying to ask. We're probably okay with 90% :)
+                if self._got_enough_initial_sample():
+                    self.libe_gen.tell(self.new_array)
+                    self.told_initial_sample = True
+                    self.num_evals = 0
+            elif self._got_enough_subsequent_points():
                 self.libe_gen.tell(self.new_array)
-                self.temp_idx = 0  # reset, create a new array next time around
+                self.num_evals = 0  # reset, create a new array next time around
         else:
             self.libe_gen.tell(libE_calc_in)
 
