@@ -128,7 +128,7 @@ class Exploration:
 
     @property
     def is_manager(self):
-        """Get whether the current process is the manager"""
+        """Get whether the current process is the manager."""
         return self._is_manager
 
     @property
@@ -625,6 +625,11 @@ class Exploration:
             file.write(json.dumps(params))
 
     def _set_manager(self, comms: str, libE_specs: Dict) -> bool:
+        """Return whether this is the manager process.
+
+        This function is useful when running with mpi4py communications
+        to ensure that code is only executed by the manager process.
+        """
         if comms == "mpi":
             from mpi4py import MPI
 
