@@ -75,7 +75,7 @@ aposmm = APOSMM(
 gen = libEWrapper(
     varying_parameters=[var_1, var_2],
     objectives=[obj],
-    libe_gen_instance=aposmm,
+    libe_gen=aposmm,
 )
 
 # Create evaluator.

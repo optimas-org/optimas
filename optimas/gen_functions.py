@@ -49,7 +49,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
     # Get generator, objectives, and parameters to analyze.
     generator = gen_specs["user"]["generator"]
 
-    if hasattr(generator, "libe_gen_class"):
+    if hasattr(generator, "libe_gen"):
         generator.init_libe_gen(H, persis_info, gen_specs, libE_info)
 
     objectives = generator.objectives
@@ -114,7 +114,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                         ev = Evaluation(parameter=par, value=y)
                         trial.complete_evaluation(ev)
                 # Register trial with unknown SEM
-                if hasattr(generator, "libe_gen_class"):
+                if hasattr(generator, "libe_gen"):
                     generator.tell([trial], libE_calc_in=calc_in[i])
                 else:
                     generator.tell([trial])
@@ -124,6 +124,9 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         else:
             number_of_gen_points = 0
 
-    if hasattr(generator, "libe_gen_class"):
-        return generator.final_tell(libE_calc_in=calc_in)
+    if hasattr(generator, "libe_gen"):
+        if hasattr(generator.libe_gen, "final_tell"):
+            out = generator.final_tell(libE_calc_in=calc_in)
+            if out is not None:
+                return out
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG

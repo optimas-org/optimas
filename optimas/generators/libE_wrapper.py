@@ -1,6 +1,7 @@
 from copy import deepcopy
 import numpy as np
 from typing import List, Optional
+import inspect
 
 from libensemble.generators import LibEnsembleGenInterfacer
 
@@ -30,8 +31,7 @@ class libEWrapper(Generator):
         custom_trial_parameters: Optional[List[TrialParameter]] = None,
         allow_fixed_parameters: Optional[bool] = False,
         allow_updating_parameters: Optional[bool] = False,
-        libe_gen_class=None,  # Type hint - add base class for ask/tell gens
-        libe_gen_instance=None,
+        libe_gen = None,
     ) -> None:
         super().__init__(
             varying_parameters=varying_parameters,
@@ -48,8 +48,7 @@ class libEWrapper(Generator):
             allow_fixed_parameters=allow_fixed_parameters,
             allow_updating_parameters=allow_updating_parameters,
         )
-        self.libe_gen_class = libe_gen_class
-        self.libe_gen_instance = libe_gen_instance
+        self.libe_gen = libe_gen
         self.num_evals = 0
         self.told_initial_sample = False
 
@@ -62,16 +61,16 @@ class libEWrapper(Generator):
         for i, vp in enumerate(self.varying_parameters):
             gen_specs["user"]["lb"][i] = vp.lower_bound
             gen_specs["user"]["ub"][i] = vp.upper_bound
-        if self.libe_gen_class is not None:
-            self.libe_gen = self.libe_gen_class(
-                gen_specs, H, persis_info, libE_info
-            )
-        elif self.libe_gen_instance is not None:
-            if isinstance(self.libe_gen_instance, LibEnsembleGenInterfacer):
-                self.libe_gen_instance.setup()  # start background thread
-            self.libe_gen = self.libe_gen_instance
+        if self.libe_gen is not None:
+            if inspect.isclass(self.libe_gen):
+                self.libe_gen = self.libe_gen(  # replace self.libe_gen with initialized instance
+                    gen_specs, H, persis_info, libE_info
+                )
+            else:
+                if isinstance(self.libe_gen, LibEnsembleGenInterfacer):  # no initialization needed except setup()
+                    self.libe_gen.setup()  # start background thread
         else:
-            raise ValueError("libe_gen_class or libe_gen_instance must be set")
+            raise ValueError("libe_gen must be set")
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""

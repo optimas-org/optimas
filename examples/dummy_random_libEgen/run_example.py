@@ -54,7 +54,7 @@ obj = Objective("f")
 gen = libEWrapper(
     varying_parameters=[var_1, var_2],
     objectives=[obj],
-    libe_gen_class=RandSample,
+    libe_gen=RandSample,
 )
 
 # Create evaluator.
