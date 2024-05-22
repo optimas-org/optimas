@@ -68,8 +68,8 @@ aposmm = APOSMM(
     ftol_abs=1e-2,
     dist_to_bound_multiple=0.5,
     max_active_runs=4,  # refers to APOSMM's simul local optimization runs
-    lb=np.array([-3, -2]),  # potentially matches the VaryingParameters
-    ub=np.array([3, 2]),
+    lb=np.array([var_1.lower_bound, var_2.lower_bound]),
+    ub=np.array([var_1.upper_bound, var_2.upper_bound]),
 )
 
 gen = libEWrapper(
