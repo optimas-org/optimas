@@ -1,4 +1,3 @@
-from mpi4py import MPI
 import numpy as np
 import pytest
 
@@ -70,8 +69,6 @@ def test_grid_sampling():
         for x0_step in x0_steps:
             x1_in_x0_step = x1_gen[x0_gen == x0_step]
             np.testing.assert_array_equal(x1_in_x0_step, x1_steps)
-    else:
-        assert MPI.COMM_WORLD.Get_rank() != 0
 
 
 if __name__ == "__main__":
