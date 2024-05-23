@@ -16,7 +16,8 @@ from .base import Generator
 
 
 class libEWrapper(Generator):
-    """ Generator class that wraps libEnsemble ask/tell generators. """
+    """Generator class that wraps libEnsemble ask/tell generators."""
+
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
@@ -101,7 +102,7 @@ class libEWrapper(Generator):
             self.new_array["local_pt"][self.num_evals] = trial._local_pt
 
     def _get_array_size(self):
-        """ Output array size must match either initial sample or N points to evaluate in parallel."""
+        """Output array size must match either initial sample or N points to evaluate in parallel."""
         user = self.libe_gen.gen_specs["user"]
         return (
             user["initial_sample_size"]
@@ -139,4 +140,3 @@ class libEWrapper(Generator):
                 self.num_evals = 0  # reset, create a new array next time around
         else:
             self.libe_gen.tell(trial.libE_calc_in)
-
