@@ -117,9 +117,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         steps = []
 
         # Add Sobol initialization with `n_init` random trials.
-        steps.append(
-            GenerationStep(model=Models.SOBOL, num_trials=self._n_init)
-        )
+        steps.append(self._create_sobol_step())
 
         # Continue indefinitely with GPKG.
         steps.append(
