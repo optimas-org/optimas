@@ -25,7 +25,7 @@ class RandomSamplingGenerator(Generator):
         from a uniform distribution within the lower :math:`l_b` and upper
         :math:`u_b` bounds of each parameter. The ``'normal'`` option draws
         samples from a normal distribution that, for each parameter, is
-        centered at :math:`c = l_b - u_b` with standard deviation
+        centered at :math:`c = (l_b + u_b)/2` with standard deviation
         :math:`\sigma = u_b - c`. By default, ``'uniform'``.
     seed : int, optional
         Seed to initialize the random generator.

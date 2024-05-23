@@ -15,6 +15,7 @@ from ax.modelbridge.generation_strategy import (
     GenerationStep,
     GenerationStrategy,
 )
+from ax.exceptions.core import DataRequiredError
 
 from optimas.core import (
     Objective,
@@ -24,6 +25,11 @@ from optimas.core import (
     TrialStatus,
 )
 from optimas.generators.ax.base import AxGenerator
+from optimas.utils.ax import AxModelManager
+from optimas.utils.ax.other import (
+    convert_optimas_to_ax_parameters,
+    convert_optimas_to_ax_objectives,
+)
 
 
 class AxServiceGenerator(AxGenerator):
@@ -123,6 +129,17 @@ class AxServiceGenerator(AxGenerator):
         self._parameter_constraints = parameter_constraints
         self._outcome_constraints = outcome_constraints
         self._ax_client = self._create_ax_client()
+        self._model = AxModelManager(self._ax_client)
+
+    @property
+    def ax_client(self) -> AxClient:
+        """Get the underlying AxClient."""
+        return self._ax_client
+
+    @property
+    def model(self) -> AxModelManager:
+        """Get access to the underlying model using an `AxModelManager`."""
+        return self._model
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
@@ -212,19 +229,9 @@ class AxServiceGenerator(AxGenerator):
 
     def _create_ax_parameters(self) -> List:
         """Create list of parameters to pass to an Ax."""
-        parameters = []
+        parameters = convert_optimas_to_ax_parameters(self.varying_parameters)
         fixed_parameters = {}
         for var in self._varying_parameters:
-            parameters.append(
-                {
-                    "name": var.name,
-                    "type": "range",
-                    "bounds": [var.lower_bound, var.upper_bound],
-                    "is_fidelity": var.is_fidelity,
-                    "target_value": var.fidelity_target_value,
-                    "value_type": var.dtype.__name__,
-                }
-            )
             if var.is_fixed:
                 fixed_parameters[var.name] = var.default_value
         # Store fixed parameters as fixed features.
@@ -233,10 +240,23 @@ class AxServiceGenerator(AxGenerator):
 
     def _create_ax_objectives(self) -> Dict[str, ObjectiveProperties]:
         """Create list of objectives to pass to an Ax."""
-        objectives = {}
-        for obj in self.objectives:
-            objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
-        return objectives
+        return convert_optimas_to_ax_objectives(self.objectives)
+
+    def _create_sobol_step(self) -> GenerationStep:
+        """Create a Sobol generation step with `n_init` trials."""
+        # Ensure that at least 1 trial is completed before moving onto the BO
+        # step, and keep generating Sobol trials until that happens, even if
+        # the number of Sobol trials exceeds `n_init`.
+        # Otherwise, if we move to the BO step before any trial is completed,
+        # the next `ask` would fail with a `DataRequiredError`.
+        # This also allows the generator to work well when
+        # `sim_workers` > `n_init`.
+        return GenerationStep(
+            model=Models.SOBOL,
+            num_trials=self._n_init,
+            min_trials_observed=1,
+            enforce_num_trials=False,
+        )
 
     def _create_generation_steps(
         self, bo_model_kwargs: Dict
@@ -261,7 +281,6 @@ class AxServiceGenerator(AxGenerator):
         generation_strategy = self._ax_client.generation_strategy
         if generation_strategy._model is not None:
             del generation_strategy._curr.model_spec._fitted_model
-        # Update parameter.
         parameters = self._create_ax_parameters()
         new_search_space = InstantiationBase.make_search_space(parameters, None)
         self._ax_client.experiment.search_space.update_parameter(

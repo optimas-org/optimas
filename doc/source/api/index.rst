@@ -12,3 +12,4 @@ This reference manual details all classes included in optimas.
     exploration
     diagnostics
     loggers
+    utils
