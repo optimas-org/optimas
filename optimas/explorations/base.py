@@ -490,7 +490,9 @@ class Exploration:
         ), "Type {} not valid for `history`".format(type(history))
         # Incorporate history into exploration.
         if history is not None:
-            self.attach_evaluations(history)
+            self.attach_evaluations(
+                history, ignore_unrecognized_parameters=True
+            )
             # When resuming an exploration, update evaluations counter.
             if resume:
                 self._n_evals = history.size
