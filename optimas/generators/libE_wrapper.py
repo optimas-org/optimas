@@ -16,6 +16,7 @@ from .base import Generator
 
 
 class libEWrapper(Generator):
+    """ Generator class that wraps libEnsemble ask/tell generators. """
     def __init__(
         self,
         varying_parameters: List[VaryingParameter],
@@ -90,6 +91,7 @@ class libEWrapper(Generator):
         return trials
 
     def _slot_in_data(self, libE_calc_in, trial):
+        """Slot in libE_calc_in and trial data into corresponding array fields."""
         self.new_array["f"][self.num_evals] = libE_calc_in["f"]
         self.new_array["x"][self.num_evals] = trial.parameter_values
         self.new_array["sim_id"][self.num_evals] = libE_calc_in["sim_id"]
@@ -98,6 +100,7 @@ class libEWrapper(Generator):
             self.new_array["local_pt"][self.num_evals] = trial._local_pt
 
     def _get_array_size(self):
+        """ Output array size must match either initial sample or N points to evaluate in parallel."""
         user = self.libe_gen.gen_specs["user"]
         return (
             user["initial_sample_size"]
