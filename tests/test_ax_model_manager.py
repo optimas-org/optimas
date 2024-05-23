@@ -7,7 +7,8 @@ from optimas.explorations import Exploration
 from optimas.core import VaryingParameter, Objective
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import FunctionEvaluator
-from optimas.diagnostics import ExplorationDiagnostics, AxModelManager
+from optimas.diagnostics import ExplorationDiagnostics
+from optimas.utils.ax import AxModelManager
 
 
 def eval_func_sf_moo(input_params, output_params):
@@ -150,6 +151,12 @@ def test_ax_model_manager():
         plot_kw={"color": "C1"},
     )
     fig.savefig(os.path.join(exploration_dir_path, "models_1d.png"))
+
+    fig, ax = mm_axcl.plot_cross_validation()
+    fig.savefig(os.path.join(exploration_dir_path, "cross_validation.png"))
+
+    fig, ax = mm_axcl.plot_feature_importance()
+    fig.savefig(os.path.join(exploration_dir_path, "feature_importance.png"))
 
 
 if __name__ == "__main__":

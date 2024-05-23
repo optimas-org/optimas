@@ -2,6 +2,7 @@ import os
 import threading
 
 import numpy as np
+
 from ax.service.ax_client import AxClient, ObjectiveProperties
 from ax.utils.measurement.synthetic_functions import hartmann6
 
@@ -115,6 +116,13 @@ def eval_func_task_2(input_params, output_params):
     output_params["f"] = result
 
 
+def make_plots(gen):
+    """Make plots with Service API generators."""
+    gen.model.plot_contour()
+    gen.model.plot_cross_validation()
+    gen.model.plot_slice()
+
+
 def check_run_ax_service(ax_client, gen, exploration, n_failed_expected):
     # Check that the generator has been updated and that the failed trials are
     # accounted.
@@ -186,6 +194,9 @@ def test_ax_single_fidelity():
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_single_fidelity_int():
@@ -265,6 +276,9 @@ def test_ax_single_fidelity_moo():
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_single_fidelity_fb():
@@ -410,6 +424,9 @@ def test_ax_single_fidelity_updated_params():
     exploration.run(n_evals=3)
     assert all(exploration.history["x0"][-3:] != -9)
 
+    # Check that plotting functions don't crash.
+    make_plots(gen)
+
 
 def test_ax_single_fidelity_resume():
     """
@@ -528,6 +545,9 @@ def test_ax_multi_fidelity():
     # Save history for later restart test
     np.save("./tests_output/ax_mf_history", exploration._libe_history.H)
 
+    # Check that plotting functions don't crash.
+    make_plots(gen)
+
 
 def test_ax_multitask():
     """Test that an exploration with a multitask generator runs"""
@@ -618,7 +638,7 @@ def test_ax_client():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=6,
+        max_evals=15,
         sim_workers=2,
         run_async=False,
         exploration_dir_path="./tests_output/test_ax_client",
@@ -629,6 +649,9 @@ def test_ax_client():
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_single_fidelity_with_history():
@@ -669,6 +692,9 @@ def test_ax_single_fidelity_with_history():
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, n_failed_expected=3)
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_multi_fidelity_with_history():
@@ -759,8 +785,8 @@ def test_ax_service_init():
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
 
-    n_init = 4
-    n_external = 6
+    n_init = 2
+    n_external = 4
 
     for i in range(n_external):
         gen = AxSingleFidelityGenerator(
@@ -771,7 +797,7 @@ def test_ax_service_init():
             generator=gen,
             evaluator=ev,
             max_evals=6,
-            sim_workers=2,
+            sim_workers=3,  # Test with sim_workers > n_init.
             exploration_dir_path=f"./tests_output/test_ax_service_init_{i}",
         )
 
@@ -820,7 +846,7 @@ def test_ax_service_init():
         generator=gen,
         evaluator=ev,
         max_evals=15,
-        sim_workers=2,
+        sim_workers=3,  # Test with sim_workers > n_init.
         exploration_dir_path="./tests_output/test_ax_service_init_enforce",
     )
 

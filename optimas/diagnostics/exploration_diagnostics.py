@@ -18,7 +18,7 @@ from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.explorations import Exploration
 from optimas.utils.other import get_df_with_selection
-from optimas.diagnostics.ax_model_manager import AxModelManager
+from optimas.utils.ax import AxModelManager
 
 
 class ExplorationDiagnostics:
