@@ -48,6 +48,7 @@ class libEWrapper(Generator):
             custom_trial_parameters=custom_trial_parameters,
             allow_fixed_parameters=allow_fixed_parameters,
             allow_updating_parameters=allow_updating_parameters,
+            _libe_gen=libe_gen,
         )
         self.libe_gen = libe_gen
         self.num_evals = 0

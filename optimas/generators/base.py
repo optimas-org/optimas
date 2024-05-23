@@ -86,6 +86,7 @@ class Generator:
         custom_trial_parameters: Optional[List[TrialParameter]] = None,
         allow_fixed_parameters: Optional[bool] = False,
         allow_updating_parameters: Optional[bool] = False,
+        _libe_gen: Optional[object] = None,
     ) -> None:
         if objectives is None:
             objectives = [Objective()]
@@ -109,6 +110,7 @@ class Generator:
         )
         self._allow_fixed_parameters = allow_fixed_parameters
         self._allow_updating_parameters = allow_updating_parameters
+        self._libe_gen = _libe_gen
         self._gen_function = persistent_generator
         self._given_trials = []  # Trials given for evaluation.
         self._queued_trials = []  # Trials queued to be given for evaluation.
