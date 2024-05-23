@@ -90,11 +90,11 @@ class libEWrapper(Generator):
 
         return trials
 
-    def _slot_in_data(self, libE_calc_in, trial):
+    def _slot_in_data(self, trial):
         """Slot in libE_calc_in and trial data into corresponding array fields."""
-        self.new_array["f"][self.num_evals] = libE_calc_in["f"]
+        self.new_array["f"][self.num_evals] = trial.libE_calc_in["f"]
         self.new_array["x"][self.num_evals] = trial.parameter_values
-        self.new_array["sim_id"][self.num_evals] = libE_calc_in["sim_id"]
+        self.new_array["sim_id"][self.num_evals] = trial.libE_calc_in["sim_id"]
         if hasattr(trial, "_x_metadata"):
             self.new_array["x_on_cube"][self.num_evals] = trial._x_metadata
             self.new_array["local_pt"][self.num_evals] = trial._local_pt
@@ -118,15 +118,14 @@ class libEWrapper(Generator):
             self.num_evals >= self.libe_gen.gen_specs["user"]["max_active_runs"]
         )
 
-    def _tell(
-        self, trials: List[Trial], libE_calc_in: np.typing.NDArray
-    ) -> None:
+    def _tell(self, trials: List[Trial]) -> None:
+        trial = trials[0]
         if hasattr(self.libe_gen, "create_results_array"):
             if self.num_evals == 0:
                 self.new_array = self.libe_gen.create_results_array(
                     self._get_array_size(), empty=True
                 )
-            self._slot_in_data(libE_calc_in, trials[0])
+            self._slot_in_data(trial)
             self.num_evals += 1
             if not self.told_initial_sample:
                 # Optimas seems to have trouble completing exactly the initial sample before trying to ask. We're probably okay with 90% :)
@@ -138,7 +137,5 @@ class libEWrapper(Generator):
                 self.libe_gen.tell(self.new_array)
                 self.num_evals = 0  # reset, create a new array next time around
         else:
-            self.libe_gen.tell(libE_calc_in)
+            self.libe_gen.tell(trial.libE_calc_in)
 
-    def final_tell(self, libE_calc_in: np.typing.NDArray):
-        return self.libe_gen.final_tell(libE_calc_in[["sim_id", "f"]])

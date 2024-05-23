@@ -113,20 +113,13 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                         y = calc_in[par.name][i]
                         ev = Evaluation(parameter=par, value=y)
                         trial.complete_evaluation(ev)
+                trial.libE_calc_in = calc_in[i]
                 # Register trial with unknown SEM
-                if hasattr(generator, "libe_gen"):
-                    generator.tell([trial], libE_calc_in=calc_in[i])
-                else:
-                    generator.tell([trial])
+                generator.tell([trial])
             # Set the number of points to generate to that number:
             number_of_gen_points = min(n + n_failed_gens, max_evals - n_gens)
             n_failed_gens = 0
         else:
             number_of_gen_points = 0
 
-    if hasattr(generator, "libe_gen"):
-        if hasattr(generator.libe_gen, "final_tell"):
-            out = generator.final_tell(libE_calc_in=calc_in)
-            if out is not None:
-                return out
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG
