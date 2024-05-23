@@ -718,8 +718,8 @@ def test_ax_service_init():
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
 
-    n_init = 4
-    n_external = 6
+    n_init = 2
+    n_external = 4
 
     for i in range(n_external):
         gen = AxSingleFidelityGenerator(
@@ -730,7 +730,7 @@ def test_ax_service_init():
             generator=gen,
             evaluator=ev,
             max_evals=6,
-            sim_workers=2,
+            sim_workers=3,  # Test with sim_workers > n_init.
             exploration_dir_path=f"./tests_output/test_ax_service_init_{i}",
         )
 
@@ -779,7 +779,7 @@ def test_ax_service_init():
         generator=gen,
         evaluator=ev,
         max_evals=15,
-        sim_workers=2,
+        sim_workers=3,  # Test with sim_workers > n_init.
         exploration_dir_path="./tests_output/test_ax_service_init_enforce",
     )
 

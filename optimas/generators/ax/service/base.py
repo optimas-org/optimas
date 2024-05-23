@@ -15,6 +15,7 @@ from ax.modelbridge.generation_strategy import (
     GenerationStep,
     GenerationStrategy,
 )
+from ax.exceptions.core import DataRequiredError
 
 from optimas.core import (
     Objective,
@@ -240,6 +241,22 @@ class AxServiceGenerator(AxGenerator):
     def _create_ax_objectives(self) -> Dict[str, ObjectiveProperties]:
         """Create list of objectives to pass to an Ax."""
         return convert_optimas_to_ax_objectives(self.objectives)
+
+    def _create_sobol_step(self) -> GenerationStep:
+        """Create a Sobol generation step with `n_init` trials."""
+        # Ensure that at least 1 trial is completed before moving onto the BO
+        # step, and keep generating Sobol trials until that happens, even if
+        # the number of Sobol trials exceeds `n_init`.
+        # Otherwise, if we move to the BO step before any trial is completed,
+        # the next `ask` would fail with a `DataRequiredError`.
+        # This also allows the generator to work well when
+        # `sim_workers` > `n_init`.
+        return GenerationStep(
+            model=Models.SOBOL,
+            num_trials=self._n_init,
+            min_trials_observed=1,
+            enforce_num_trials=False,
+        )
 
     def _create_generation_steps(
         self, bo_model_kwargs: Dict
