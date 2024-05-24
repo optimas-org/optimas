@@ -7,11 +7,11 @@ Optimization with ASTRA
 Description
 ~~~~~~~~~~~
 
-This examples shows how to perform a multi-objective Bayesian optimization of 
+This examples shows how to perform a multi-objective Bayesian optimization of
 beam parameters using `ASTRA <https://www.desy.de/~mpyflo/>`_.
 
-The setup is based on a beamline example from the ASTRA manual which can be found  
-`here <https://www.desy.de/~mpyflo/EXAMPLES/Manual_Example/>`_. 
+The setup is based on a beamline example from the ASTRA manual which can be found
+`here <https://www.desy.de/~mpyflo/EXAMPLES/Manual_Example/>`_.
 
 Two optimization parameters are used:
 - the RF phase of the cavity ``'RF_phase'``, which is varied in the range :math:`[-2.5, 2.5]`,
