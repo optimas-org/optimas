@@ -51,20 +51,39 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
 
     # Launch and analyze each simulation step.
     for step_specs in simulation_step_specs:
-        calc_status = execute_and_analyze_simulation(
+        # Create simulation input file.
+        with open(sim_template, "r") as f:
+            template = jinja2.Template(f.read(), keep_trailing_newline=True)
+        with open(sim_template, "w") as f:
+            f.write(template.render(input_values))
+
+        # If the template is a python file, no need to provide it as argument
+        # (it has already been registered by libEnsemble as such).
+        if sim_template.endswith(".py"):
+            sim_template = None
+
+        # Launch simulation.
+        task = Executor.executor.submit(
             app_name=step_specs["app_name"],
-            sim_template=step_specs["sim_template"],
-            input_values=input_values,
-            analysis_func=step_specs["analysis_func"],
-            libE_output=libE_output,
+            app_args=sim_template,
+            stdout=step_specs["stdout"],
+            stderr=step_specs["stderr"],
             num_procs=step_specs["num_procs"],
             num_gpus=step_specs["num_gpus"],
             env_script=step_specs["env_script"],
             mpi_runner_type=step_specs["env_mpi"],
-            timeout=step_specs["timeout"],
-            stdout=step_specs["stdout"],
-            stderr=step_specs["stderr"],
+            extra_args=step_specs["extra_args"],
         )
+        calc_status = Executor.executor.polling_loop(
+            task, timeout=step_specs["timeout"]
+        )
+
+        # Data analysis from the last simulation
+        if calc_status == WORKER_DONE:
+            if step_specs["analysis_func"] is not None:
+                # Extract the objective function for the current simulation,
+                # as well as a few diagnostics
+                step_specs["analysis_func"](task.workdir, libE_output[0])
         # If a step has failed, do not continue with next steps.
         if calc_status != WORKER_DONE:
             break
@@ -83,56 +102,6 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
         libE_output["trial_status"] = TrialStatus.FAILED.name
 
     return libE_output, persis_info, calc_status
-
-
-def execute_and_analyze_simulation(
-    app_name,
-    sim_template,
-    input_values,
-    analysis_func,
-    libE_output,
-    num_procs,
-    num_gpus,
-    env_script,
-    mpi_runner_type,
-    timeout,
-    stdout,
-    stderr,
-):
-    """Run simulation, handle outcome and analyze results."""
-    # Create simulation input file.
-    with open(sim_template, "r") as f:
-        template = jinja2.Template(f.read(), keep_trailing_newline=True)
-    with open(sim_template, "w") as f:
-        f.write(template.render(input_values))
-
-    # If the template is a python file, no need to provide it as argument
-    # (it has already been registered by libEnsemble as such).
-    if sim_template.endswith(".py"):
-        sim_template = None
-
-    # Launch simulation.
-    task = Executor.executor.submit(
-        app_name=app_name,
-        app_args=sim_template,
-        stdout=stdout,
-        stderr=stderr,
-        num_procs=num_procs,
-        num_gpus=num_gpus,
-        env_script=env_script,
-        mpi_runner_type=mpi_runner_type,
-    )
-
-    calc_status = Executor.executor.polling_loop(task, timeout=timeout)
-
-    # Data analysis from the last simulation
-    if calc_status == WORKER_DONE:
-        if analysis_func is not None:
-            # Extract the objective function for the current simulation,
-            # as well as a few diagnostics
-            analysis_func(task.workdir, libE_output[0])
-
-    return calc_status
 
 
 def run_function(H, persis_info, sim_specs, libE_info):
