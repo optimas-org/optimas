@@ -94,6 +94,8 @@ exp = Exploration(
 # To safely perform exploration, run it in the block below (this is needed
 # for some flavours of multiprocessing, namely spawn and forkserver)
 if __name__ == "__main__":
-    exp.run()
+    exp.run(100)
+    exp.run(200)
+    exp.finalize()
     assert len(gen.libe_gen.all_local_minima)
     print(f"Found {len(gen.libe_gen.all_local_minima)} minima!")

@@ -121,7 +121,5 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             n_failed_gens = 0
         else:
             number_of_gen_points = 0
-    if generator.libe_gen is not None and hasattr(generator.libe_gen, "final_tell"):
-        generator.libe_gen.final_tell(calc_in[["sim_id", "f"]])
 
     return H_o, persis_info, FINISHED_PERSISTENT_GEN_TAG

@@ -16,6 +16,7 @@ from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
 
 from optimas.core.trial import TrialStatus
+from optimas.generators.libE_wrapper import libEWrapper
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.evaluators.function_evaluator import FunctionEvaluator
@@ -209,7 +210,7 @@ class Exploration:
             self.libE_specs,
             H0=self._libe_history.H,
         )
-
+        
         # Update history.
         self._libe_history.H = history
 
@@ -219,6 +220,11 @@ class Exploration:
 
         # Reset `cwd` to initial value before `libE` was called.
         os.chdir(cwd)
+
+    def finalize(self) -> None:
+        """Finalize the exploration, cleanup generator."""
+        if isinstance(self.generator, libEWrapper):
+            self.generator.libe_gen.final_tell(self._libe_history.H[["sim_id", "f"]])
 
     def attach_trials(
         self,
