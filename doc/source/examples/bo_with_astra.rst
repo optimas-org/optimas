@@ -1,7 +1,7 @@
 .. _bo-with-astra:
 
-Optimization with ASTRA
-==========================
+Multi-objective optimization with ASTRA
+=======================================
 
 
 Description
