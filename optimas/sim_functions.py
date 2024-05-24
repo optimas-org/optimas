@@ -52,6 +52,7 @@ def run_template_simulation(H, persis_info, sim_specs, libE_info):
     # Launch and analyze each simulation step.
     for step_specs in simulation_step_specs:
         # Create simulation input file.
+        sim_template = step_specs["sim_template"]
         with open(sim_template, "r") as f:
             template = jinja2.Template(f.read(), keep_trailing_newline=True)
         with open(sim_template, "w") as f:
