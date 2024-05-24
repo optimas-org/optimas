@@ -16,7 +16,7 @@ The setup is based on a beamline example from the ASTRA manual which can be foun
 Two optimization parameters are used:
 
 - the RF phase of the cavity ``'RF_phase'``, which is varied in the range :math:`[-2.5, 2.5]`,
-- and the solenoid strength ``'B_sol'``which is varied in the range :math:`[0.12, 0.38]`.
+- and the solenoid strength ``'B_sol'``, which is varied in the range :math:`[0.12, 0.38]`.
 
 Two beam parameters are minimized:
 
