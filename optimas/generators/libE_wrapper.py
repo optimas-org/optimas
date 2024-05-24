@@ -71,9 +71,10 @@ class libEWrapper(Generator):
                     gen_specs, H, persis_info, libE_info
                 )
             else:
-                if isinstance(
-                    self.libe_gen, LibEnsembleGenInterfacer
-                ) and self.libe_gen.thread is None:  # no initialization needed except setup()
+                if (
+                    isinstance(self.libe_gen, LibEnsembleGenInterfacer)
+                    and self.libe_gen.thread is None
+                ):  # no initialization needed except setup()
                     self.libe_gen.setup()  # start background thread
         else:
             raise ValueError("libe_gen must be set")

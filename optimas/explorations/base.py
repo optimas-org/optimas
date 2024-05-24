@@ -210,7 +210,7 @@ class Exploration:
             self.libE_specs,
             H0=self._libe_history.H,
         )
-        
+
         # Update history.
         self._libe_history.H = history
 
@@ -224,7 +224,9 @@ class Exploration:
     def finalize(self) -> None:
         """Finalize the exploration, cleanup generator."""
         if isinstance(self.generator, libEWrapper):
-            self.generator.libe_gen.final_tell(self._libe_history.H[["sim_id", "f"]])
+            self.generator.libe_gen.final_tell(
+                self._libe_history.H[["sim_id", "f"]]
+            )
 
     def attach_trials(
         self,
