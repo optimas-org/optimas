@@ -14,12 +14,14 @@ The setup is based on a beamline example from the ASTRA manual which can be foun
 `here <https://www.desy.de/~mpyflo/EXAMPLES/Manual_Example/>`_.
 
 Two optimization parameters are used:
+
 - the RF phase of the cavity ``'RF_phase'``, which is varied in the range :math:`[-2.5, 2.5]`,
 - and the solenoid strength ``'B_sol'``which is varied in the range :math:`[0.12, 0.38]`.
 
 Two beam parameters are minimized:
+
 - the bunch_length,
-- and the transverse emittances ``'emittance'`` in :math:`\mathrm{µm}`, which are combined into one single parameter: :math:`\log{em_n_x * em_n_y}` and where the logarithm is used for better optimization.
+- and the transverse emittances ``'emittance'`` in :math:`\mathrm{µm}`, which are combined into one single parameter: :math:`\log{em_n_x * em_n_y}` and where the logarithm is used for better optimization as the emittance can span over several orders of magnitude.
 
 In addition, the transverse normalized emittances in :math:`x` and :math:`y` are stored as additional analyzed parameters ``'emittance_x'`` and ``'emittance_y'``.
 
@@ -64,7 +66,7 @@ The main scripts needed to run this example can be seen below.
    :caption: run_optimization_serial_ASTRA.py (:download:`download <../../../examples/astra/run_optimization_serial_ASTRA.py>`)
 
 .. literalinclude:: ../../../examples/astra/ASTRA_example.in
-   :language: fortran
+   :language: none
    :caption: ASTRA_example.in (:download:`download <../../../examples/astra/ASTRA_example.in>`)
 
 .. literalinclude:: ../../../examples/astra/analysis_script.py
