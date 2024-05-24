@@ -21,7 +21,7 @@ Two optimization parameters are used:
 Two beam parameters are minimized:
 
 - the bunch_length,
-- and the transverse emittances ``'emittance'`` in :math:`\mathrm{µm}`, which are combined into one single parameter: :math:`\log{em_n_x * em_n_y}` and where the logarithm is used for better optimization as the emittance can span over several orders of magnitude.
+- and the transverse emittances ``'emittance'`` in :math:`\mathrm{µm}`, which are combined into one single parameter: :math:`\log \epsilon_{n,x}  \epsilon_{n,y}` and where the logarithm is used for better optimization as the emittance can span over several orders of magnitude.
 
 In addition, the transverse normalized emittances in :math:`x` and :math:`y` are stored as additional analyzed parameters ``'emittance_x'`` and ``'emittance_y'``.
 
@@ -48,9 +48,9 @@ The files needed to run the optimization should be located in a folder
    optimization
    ├── run_optimization_serial_ASTRA.py
    ├── ASTRA_example.in
-   └── analysis_script.py
-   └── Example.ini
-   └── 3_cell_L-Band.dat
+   ├── analysis_script.py
+   ├── Example.ini
+   ├── 3_cell_L-Band.dat
    └── Solenoid.dat
 
 The optimization is started by executing:
