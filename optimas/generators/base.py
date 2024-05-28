@@ -237,7 +237,10 @@ class Generator:
         return trials
 
     def tell(
-        self, trials: List[Trial], allow_saving_model: Optional[bool] = True
+        self,
+        trials: List[Trial],
+        allow_saving_model: Optional[bool] = True,
+        libE_calc_in: Optional[np.typing.NDArray] = None,
     ) -> None:
         """Give trials back to generator once they have been evaluated.
 
@@ -253,7 +256,10 @@ class Generator:
         for trial in trials:
             if trial not in self._given_trials:
                 self._add_external_evaluated_trial(trial)
-        self._tell(trials)
+        if libE_calc_in is not None:
+            self._tell(trials, libE_calc_in)
+        else:
+            self._tell(trials)
         for trial in trials:
             if not trial.failed:
                 log_msg = "Completed trial {} with objective(s) {}".format(
