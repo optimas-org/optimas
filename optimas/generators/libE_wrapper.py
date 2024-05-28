@@ -54,7 +54,7 @@ class libEWrapper(Generator):
         self.libe_gen = libe_gen
 
     def init_libe_gen(self, H, persis_info, gen_specs_in, libE_info):
-        """ Initialize the libEnsemble generator based on gen_f local data, or starts a background thread."""
+        """Initialize the libEnsemble generator based on gen_f local data, or starts a background thread."""
         n = len(self.varying_parameters)
         gen_specs_in["user"]["generator"] = None
         gen_specs = deepcopy(gen_specs_in)
@@ -91,6 +91,6 @@ class libEWrapper(Generator):
         return trials
 
     def _tell(self, trials: List[Trial]) -> None:
-        """ Pass the raw objective values to generator."""
+        """Pass the raw objective values to generator."""
         trial = trials[0]
         self.libe_gen.tell(trial.libE_calc_in)
