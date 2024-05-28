@@ -12,7 +12,7 @@ from libensemble.tests.regression_tests.support import (
 )
 
 # from optimas.generators import RandomSamplingGenerator
-from optimas.generators import libEWrapper
+from optimas.generators import APOSMMWrapper
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration
 
@@ -72,7 +72,7 @@ aposmm = APOSMM(
     ub=np.array([var_1.upper_bound, var_2.upper_bound]),
 )
 
-gen = libEWrapper(
+gen = APOSMMWrapper(
     varying_parameters=[var_1, var_2],
     objectives=[obj],
     libe_gen=aposmm,

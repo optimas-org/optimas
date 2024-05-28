@@ -52,10 +52,9 @@ class libEWrapper(Generator):
             _libe_gen=libe_gen,
         )
         self.libe_gen = libe_gen
-        self.num_evals = 0
-        self.told_initial_sample = False
 
     def init_libe_gen(self, H, persis_info, gen_specs_in, libE_info):
+        """ Initialize the libEnsemble generator based on gen_f local data, or starts a background thread."""
         n = len(self.varying_parameters)
         gen_specs_in["user"]["generator"] = None
         gen_specs = deepcopy(gen_specs_in)
@@ -88,57 +87,10 @@ class libEWrapper(Generator):
             # Extract the 'x' field from gen_out[i] directly
             x_values = gen_out[i]["x"]
             trial.parameter_values = x_values
-            if "x_on_cube" in gen_out.dtype.names:
-                trial._x_metadata = gen_out[i]["x_on_cube"]
-                trial._local_pt = gen_out[i]["local_pt"]
 
         return trials
 
-    def _slot_in_data(self, trial):
-        """Slot in libE_calc_in and trial data into corresponding array fields."""
-        self.new_array["f"][self.num_evals] = trial.libE_calc_in["f"]
-        self.new_array["x"][self.num_evals] = trial.parameter_values
-        self.new_array["sim_id"][self.num_evals] = trial.libE_calc_in["sim_id"]
-        if hasattr(trial, "_x_metadata"):
-            self.new_array["x_on_cube"][self.num_evals] = trial._x_metadata
-            self.new_array["local_pt"][self.num_evals] = trial._local_pt
-
-    def _get_array_size(self):
-        """Output array size must match either initial sample or N points to evaluate in parallel."""
-        user = self.libe_gen.gen_specs["user"]
-        return (
-            user["initial_sample_size"]
-            if not self.told_initial_sample
-            else user["max_active_runs"]
-        )
-
-    def _got_enough_initial_sample(self):
-        return self.num_evals > int(
-            0.9 * self.libe_gen.gen_specs["user"]["initial_sample_size"]
-        )
-
-    def _got_enough_subsequent_points(self):
-        return (
-            self.num_evals >= self.libe_gen.gen_specs["user"]["max_active_runs"]
-        )
-
     def _tell(self, trials: List[Trial]) -> None:
+        """ Pass the raw objective values to generator."""
         trial = trials[0]
-        if hasattr(self.libe_gen, "create_results_array"):
-            if self.num_evals == 0:
-                self.new_array = self.libe_gen.create_results_array(
-                    self._get_array_size(), empty=True
-                )
-            self._slot_in_data(trial)
-            self.num_evals += 1
-            if not self.told_initial_sample:
-                # Optimas seems to have trouble completing exactly the initial sample before trying to ask. We're probably okay with 90% :)
-                if self._got_enough_initial_sample():
-                    self.libe_gen.tell(self.new_array)
-                    self.told_initial_sample = True
-                    self.num_evals = 0
-            elif self._got_enough_subsequent_points():
-                self.libe_gen.tell(self.new_array)
-                self.num_evals = 0  # reset, create a new array next time around
-        else:
-            self.libe_gen.tell(trial.libE_calc_in)
+        self.libe_gen.tell(trial.libE_calc_in)
