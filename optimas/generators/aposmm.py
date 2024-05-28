@@ -62,12 +62,14 @@ class APOSMMWrapper(libEWrapper):
 
     @property
     def _enough_initial_sample(self):
+        """ We're typically happy with at least 90% of the initial sample. """
         return self.num_evals > int(
             0.9 * self.libe_gen.gen_specs["user"]["initial_sample_size"]
         )
 
     @property
     def _enough_subsequent_points(self):
+        """ But we need to evaluate at least N points, for the N local-optimization processes. """
         return (
             self.num_evals >= self.libe_gen.gen_specs["user"]["max_active_runs"]
         )
@@ -85,6 +87,7 @@ class APOSMMWrapper(libEWrapper):
         return trials
 
     def _tell(self, trials: List[Trial]) -> None:
+        """ Pass objective values to generator, slotting/caching into APOSMM's expected results array."""
         trial = trials[0]
         if self.num_evals == 0:
             self.new_array = self.libe_gen.create_results_array(
