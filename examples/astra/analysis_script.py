@@ -1,4 +1,7 @@
-"""Defines the analysis function that runs after the simulation."""
+"""Defines the analysis function that runs after the simulation.
+This is an example calculation of the bunch length in µm, a combined 
+normalized transverse emittance, and the emittances in both transverse planes.
+"""
 
 import numpy as np
 
@@ -28,7 +31,6 @@ def analyze_simulation(simulation_directory, output_params):
 
     """
     try:
-        # ---- This is an example calculation of the bunch length in µm, a combined normalized transverse emittance, and the emittances in both transverse planes ----
         # Read back results from files
         s, t, x_av, x_rms, xp_rms, em_n_x, x_xp = np.loadtxt(
             simulation_directory + "/ASTRA_example.Xemit.001", unpack=True
@@ -41,7 +43,7 @@ def analyze_simulation(simulation_directory, output_params):
         )
         z[1:] = z[1:] + z[0]  # adding the position of the reference particle
 
-        output_params["bunch_length"] = np.std(z[1:]) * 1e6
+        output_params["bunch_length"] = np.std(z) * 1e6
         output_params["emittance"] = np.log10(
             em_n_x[-1] * em_n_y[-1] * 1e12
         )  # normalized emittances in µm, logarithm for better optimization
