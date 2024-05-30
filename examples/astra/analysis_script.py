@@ -1,5 +1,5 @@
 """Defines the analysis function that runs after the simulation.
-This is an example calculation of the bunch length in µm, a combined 
+This is an example calculation of the bunch length in µm, a combined
 normalized transverse emittance, and the emittances in both transverse planes.
 """
 
