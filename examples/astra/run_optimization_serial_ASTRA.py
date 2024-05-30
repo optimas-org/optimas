@@ -1,5 +1,5 @@
-"""Basic example of parallel Bayesian optimization with Ax using the serial
-ASTRA version.
+"""Example of multiobjective Bayesian optimization using the serial ASTRA version.
+
 This example uses an ASTRA example from the ASTRA webpage:
 https://www.desy.de/~mpyflo/EXAMPLES/Manual_Example/
 In order to run this example, please download the files "3_cell_L-Band.dat",
