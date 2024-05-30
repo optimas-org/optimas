@@ -1,0 +1,37 @@
+&NEWRUN
+ Head=' Example of ASTRA users manual'
+ RUN=1
+ Distribution = 'Example.ini',  Xoff=0.0,   Yoff=0.0,
+ TRACK_ALL=T,     Auto_phase=F
+
+ H_max=0.001,     H_min=0.00
+/
+
+
+&OUTPUT
+ ZSTART=0.0,    ZSTOP=2.5
+ Zemit=500,       Zphase=1
+ RefS=T
+ EmitS=T,     PhaseS=T
+/
+
+
+&CHARGE
+ LSPCH=F
+ Nrad=10, Cell_var=2.0, Nlong_in=10
+ min_grid=0.0
+ Max_Scale=0.05
+/
+
+
+&CAVITY
+ LEField=T,
+ File_Efield(1)='3_cell_L-Band.dat',  C_pos(1)=0.3
+ Nue(1)=1.3,    MaxE(1)=40.0,   Phi(1)={{RF_phase}},
+/
+
+&SOLENOID
+ LBField=T,
+ File_Bfield(1)='Solenoid.dat', S_pos(1)=1.2
+ MaxB(1)={{B_sol}}, S_smooth(1)=10
+/

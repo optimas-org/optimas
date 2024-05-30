@@ -21,3 +21,4 @@ Examples
    bo_with_hipace
    bo_multitask_fbpic_waket
    bo_with_warpx
+   bo_with_astra
