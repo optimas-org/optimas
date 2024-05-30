@@ -7,7 +7,7 @@ Multi-objective optimization with ASTRA
 Description
 ~~~~~~~~~~~
 
-This examples shows how to perform a multi-objective Bayesian optimization of
+This example shows how to perform a multi-objective Bayesian optimization of
 beam parameters using `ASTRA <https://www.desy.de/~mpyflo/>`_.
 
 The setup is based on a beamline example from the ASTRA manual which can be found

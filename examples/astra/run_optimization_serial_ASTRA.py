@@ -20,7 +20,7 @@ from analysis_script import analyze_simulation
 # upper bound of values to be explored
 var_1 = VaryingParameter("RF_phase", -2.5, 2.5)
 var_2 = VaryingParameter("B_sol", 0.12, 0.38)
-# Objective that will be minimized:
+# Objectives that will be minimized:
 obj_1 = Objective("bunch_length", minimize=True)
 obj_2 = Objective("emittance", minimize=True)
 # Additional example parameters that will be analyzed but are not used for the
@@ -29,7 +29,7 @@ em_x = Parameter("emittance_x")
 em_y = Parameter("emittance_y")
 
 # Create generator.
-# Pick the generator to be used, here Single-fidelity Bayesian optimization
+# Pick the generator to be used, here Single-fidelity Bayesian optimization.
 # The analyzed_parameters are parameters that are calculated for each
 # simulation but not used for the optimization.
 gen = AxSingleFidelityGenerator(
@@ -42,8 +42,8 @@ gen = AxSingleFidelityGenerator(
 
 # Create evaluator.
 # sim_template is the ASTRA input template, here the parameters that are going
-# to # be varied need to be changed to the name given in var_1 etc. The format
-# in the # ASTRA input is e.g. Phi(1)={{RF_phase}}.
+# to be varied need to be changed to the name given in var_1 etc. The format
+# in the ASTRA input is e.g. Phi(1)={{RF_phase}}.
 # analysis_func is the function that will analyze the output.
 # sim_files contains the path to the particle distribution and other files
 # needed for the ASTRA simulation like field maps.
@@ -62,8 +62,8 @@ ev = TemplateEvaluator(
 
 
 # Create exploration.
-# max_evals is the maximal number of evaluations
-# max_evalvs / sim_worker is the number of simulation batches that are sent
+# max_evals is the maximum number of evaluations.
+# max_evalvs / sim_worker is the number of simulation batches that are sent.
 # sim_workers is the number of simulations that are launched in parallel.
 # sim_workers should be smaller than the number of available CPU cores.
 # In case you already have some data from an optimization run but would like
