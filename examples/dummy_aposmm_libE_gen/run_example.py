@@ -8,7 +8,7 @@ import libensemble.gen_funcs
 libensemble.gen_funcs.rc.aposmm_optimizers = "nlopt"
 from optimas.core import VaryingParameter, Objective
 from libensemble.tests.regression_tests.support import (
-    six_hump_camel_minima as minima,
+    six_hump_camel_minima as known_minima,
 )
 
 # from optimas.generators import RandomSamplingGenerator
@@ -62,10 +62,10 @@ n = 2
 aposmm = APOSMM(
     initial_sample_size=100,
     localopt_method="LN_BOBYQA",
-    sample_points=np.round(minima, 1),
+    sample_points=np.round(known_minima, 1),
     rk_const=0.5 * ((gamma(1 + (n / 2)) * 5) ** (1 / n)) / sqrt(pi),
-    xtol_abs=1e-2,
-    ftol_abs=1e-2,
+    xtol_abs=1e-5,
+    ftol_abs=1e-5,
     dist_to_bound_multiple=0.5,
     max_active_runs=4,  # refers to APOSMM's simul local optimization runs
     lb=np.array([var_1.lower_bound, var_2.lower_bound]),
@@ -97,5 +97,14 @@ if __name__ == "__main__":
     exp.run(100)
     exp.run(200)
     exp.finalize()
+
     assert len(gen.libe_gen.all_local_minima)
     print(f"Found {len(gen.libe_gen.all_local_minima)} minima!")
+    found_minima = [i["x"] for i in gen.libe_gen.all_local_minima]
+    found_minima_combined = np.zeros(len(gen.libe_gen.all_local_minima), dtype=(float, 2))
+    for i in range(len(found_minima)):
+        found_minima_combined[i] = found_minima[i]
+    found_minima = found_minima_combined
+    known_minima = np.round(known_minima, 3)  # much precision lost?
+    found_minima = np.round(found_minima, 3)
+    assert any([i in known_minima for i in found_minima])

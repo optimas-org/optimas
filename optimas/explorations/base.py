@@ -222,7 +222,16 @@ class Exploration:
         os.chdir(cwd)
 
     def finalize(self) -> None:
-        """Finalize the exploration, cleanup generator."""
+        """Finalize the exploration, cleanup the generator and loggers.
+        
+        When using generators known to live in memory between `Exploration.run()` 
+        invocations (oftentimes generators from libEnsemble), call this method to
+        indicate to the generator and other background processes to close down 
+        their background threads.
+        
+        There is no guarantee that subsequent `.run()` invocations will operate
+        after calling `.finalize()`.
+        """
         if isinstance(self.generator, libEWrapper):
             self.generator.libe_gen.final_tell(
                 self._libe_history.H[["sim_id", "f"]]
