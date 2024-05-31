@@ -223,12 +223,12 @@ class Exploration:
 
     def finalize(self) -> None:
         """Finalize the exploration, cleanup the generator and loggers.
-        
-        When using generators known to live in memory between `Exploration.run()` 
+
+        When using generators known to live in memory between `Exploration.run()`
         invocations (oftentimes generators from libEnsemble), call this method to
-        indicate to the generator and other background processes to close down 
+        indicate to the generator and other background processes to close down
         their background threads.
-        
+
         There is no guarantee that subsequent `.run()` invocations will operate
         after calling `.finalize()`.
         """

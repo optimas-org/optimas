@@ -101,7 +101,9 @@ if __name__ == "__main__":
     assert len(gen.libe_gen.all_local_minima)
     print(f"Found {len(gen.libe_gen.all_local_minima)} minima!")
     found_minima = [i["x"] for i in gen.libe_gen.all_local_minima]
-    found_minima_combined = np.zeros(len(gen.libe_gen.all_local_minima), dtype=(float, 2))
+    found_minima_combined = np.zeros(
+        len(gen.libe_gen.all_local_minima), dtype=(float, 2)
+    )
     for i in range(len(found_minima)):
         found_minima_combined[i] = found_minima[i]
     found_minima = found_minima_combined
