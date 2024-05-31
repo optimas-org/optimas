@@ -1,3 +1,5 @@
+"""Contains definition for APOSMMWrapper class for translating APOSMM to Optimas-compatible format."""
+
 import numpy as np
 from typing import List
 
@@ -15,9 +17,53 @@ from .libE_wrapper import libEWrapper
 
 class APOSMMWrapper(libEWrapper):
     """
-    Wraps a live, parameterized APOSMM generator instance. Note that .tell() parameters
-    are internally cached until either the initial sample or N points (for N local-optimization processes)
-    are evaluated.
+    Wraps a live, parameterized APOSMM generator instance.
+
+    .. code-block:: python
+
+        from math import gamma, pi, sqrt
+        import numpy as np
+
+        from optimas.generators import APOSMMWrapper
+        from optimas.core import Objective, Trial, VaryingParameter
+        from libensemble.generators import APOSMM
+        import libensemble.gen_funcs
+
+        ...
+
+        # Create varying parameters and objectives.
+        var_1 = VaryingParameter("x0", -3.0, 3.0)
+        var_2 = VaryingParameter("x1", -2.0, 2.0)
+        obj = Objective("f")
+
+        n = 2
+
+        aposmm = APOSMM(
+            initial_sample_size=100,
+            localopt_method="LN_BOBYQA",
+            rk_const=0.5 * ((gamma(1 + (n / 2)) * 5) ** (1 / n)) / sqrt(pi),
+            xtol_abs=1e-5,
+            ftol_abs=1e-5,
+            dist_to_bound_multiple=0.5,
+            max_active_runs=4,  # refers to APOSMM's simul local optimization runs
+            lb=np.array([var_1.lower_bound, var_2.lower_bound]),
+            ub=np.array([var_1.upper_bound, var_2.upper_bound]),
+        )
+
+        gen = APOSMMWrapper(
+            varying_parameters=[var_1, var_2],
+            objectives=[obj],
+            libe_gen=aposmm,
+        )
+
+    Parameters
+    ----------
+    varying_parameters : list of VaryingParameter
+        List of input parameters to vary.
+    objectives : list of Objective
+        List of optimization objectives.
+    libe_gen : object
+        A live, parameterized APOSMM generator instance. Must import and provide from libEnsemble.
     """
 
     def __init__(

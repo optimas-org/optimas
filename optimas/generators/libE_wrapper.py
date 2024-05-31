@@ -1,3 +1,6 @@
+"""Contains definition for libEWrapper class for translating various libEnsemble ask/tell generators to Optimas-compatible format."""
+
+
 from copy import deepcopy
 import numpy as np
 from typing import List, Optional
