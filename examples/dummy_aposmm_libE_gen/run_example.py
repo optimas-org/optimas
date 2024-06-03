@@ -105,7 +105,7 @@ if __name__ == "__main__":
         len(gen.libe_gen.all_local_minima), dtype=(float, 2)
     )
     for i in range(len(found_minima)):
-        found_minima_combined[i] = found_minima[i]
+        found_minima_combined[i] = found_minima[i][0]
     found_minima = found_minima_combined
     known_minima = np.round(known_minima, 3)  # much precision lost?
     found_minima = np.round(found_minima, 3)
