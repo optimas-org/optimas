@@ -16,6 +16,7 @@ from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
 
 from optimas.core.trial import TrialStatus
+from optimas.generators.libE_wrapper import libEWrapper
 from optimas.generators.base import Generator
 from optimas.evaluators.base import Evaluator
 from optimas.evaluators.function_evaluator import FunctionEvaluator
@@ -225,6 +226,22 @@ class Exploration:
 
         # Reset `cwd` to initial value before `libE` was called.
         os.chdir(cwd)
+
+    def finalize(self) -> None:
+        """Finalize the exploration, cleanup the generator and loggers.
+
+        When using generators known to live in memory between `Exploration.run()`
+        invocations (oftentimes generators from libEnsemble), call this method to
+        indicate to the generator and other background processes to close down
+        their background threads.
+
+        There is no guarantee that subsequent `.run()` invocations will operate
+        after calling `.finalize()`.
+        """
+        if isinstance(self.generator, libEWrapper):
+            self.generator.libe_gen.final_tell(
+                self._libe_history.H[["sim_id", "f"]]
+            )
 
     def attach_trials(
         self,

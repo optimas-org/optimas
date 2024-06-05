@@ -22,6 +22,8 @@ except ImportError as e:
 from .grid_sampling import GridSamplingGenerator
 from .line_sampling import LineSamplingGenerator
 from .random_sampling import RandomSamplingGenerator
+from .libE_wrapper import libEWrapper
+from .aposmm import APOSMMWrapper
 
 
 __all__ = [
@@ -32,4 +34,6 @@ __all__ = [
     "GridSamplingGenerator",
     "LineSamplingGenerator",
     "RandomSamplingGenerator",
+    "libEWrapper",
+    "APOSMMWrapper",
 ]

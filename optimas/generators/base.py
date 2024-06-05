@@ -86,6 +86,7 @@ class Generator:
         custom_trial_parameters: Optional[List[TrialParameter]] = None,
         allow_fixed_parameters: Optional[bool] = False,
         allow_updating_parameters: Optional[bool] = False,
+        _libe_gen: Optional[object] = None,
     ) -> None:
         if objectives is None:
             objectives = [Objective()]
@@ -109,6 +110,7 @@ class Generator:
         )
         self._allow_fixed_parameters = allow_fixed_parameters
         self._allow_updating_parameters = allow_updating_parameters
+        self._libe_gen = _libe_gen
         self._gen_function = persistent_generator
         self._given_trials = []  # Trials given for evaluation.
         self._queued_trials = []  # Trials queued to be given for evaluation.
@@ -237,7 +239,10 @@ class Generator:
         return trials
 
     def tell(
-        self, trials: List[Trial], allow_saving_model: Optional[bool] = True
+        self,
+        trials: List[Trial],
+        allow_saving_model: Optional[bool] = True,
+        libE_calc_in: Optional[np.typing.NDArray] = None,
     ) -> None:
         """Give trials back to generator once they have been evaluated.
 
@@ -253,7 +258,10 @@ class Generator:
         for trial in trials:
             if trial not in self._given_trials:
                 self._add_external_evaluated_trial(trial)
-        self._tell(trials)
+        if libE_calc_in is not None:
+            self._tell(trials, libE_calc_in)
+        else:
+            self._tell(trials)
         for trial in trials:
             if not trial.failed:
                 log_msg = "Completed trial {} with objective(s) {}".format(
