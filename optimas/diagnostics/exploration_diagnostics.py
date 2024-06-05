@@ -676,12 +676,13 @@ class ExplorationDiagnostics:
         nplots = len(parnames)
         if subplot_spec is None:
             fig = plt.figure(**figure_kw)
-            gs = GridSpec(nplots, 2, width_ratios=[0.8, 0.2], wspace=0.05)
+            gs = GridSpec(nplots, 2, width_ratios=[0.8, 0.2],
+                          wspace=0.05, hspace=0.40)
         else:
             fig = plt.gcf()
             gs = GridSpecFromSubplotSpec(
-                nplots, 2, subplot_spec, width_ratios=[0.8, 0.2], wspace=0.05
-            )
+                nplots, 2, subplot_spec, width_ratios=[0.8, 0.2],
+                wspace=0.05, hspace=0.40)
 
         # Actual plotting
         ax_histy_list = []
@@ -792,7 +793,13 @@ class ExplorationDiagnostics:
             ax_histy.set_ylim(ax_scatter.get_ylim())
 
             # Tuning axes and labels
-            ax_scatter.set_ylabel(parnames[i])
+            ax_scatter.set_title(
+                parnames[i].replace("_", " "),
+                fontdict={"fontsize": "x-small"},
+                loc="right",
+                pad=2,
+            )
+            # ax_scatter.set_ylabel(parnames[i])
 
             if i != nplots - 1:
                 ax_scatter.tick_params(labelbottom=False)
