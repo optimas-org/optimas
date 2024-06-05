@@ -124,6 +124,12 @@ class Exploration:
         self._set_default_libe_specs()
         self._libe_history = self._create_libe_history()
         self._load_history(history, resume)
+        self._is_manager = self._set_manager(self.libe_comms, self.libE_specs)
+
+    @property
+    def is_manager(self):
+        """Get whether the current process is the manager."""
+        return self._is_manager
 
     @property
     def history(self) -> pd.DataFrame:
@@ -598,6 +604,8 @@ class Exploration:
 
     def _save_exploration_parameters(self):
         """Save exploration parameters to a JSON file."""
+        if not self.is_manager:
+            return
         params = {}
         for i, param in enumerate(self.generator.varying_parameters):
             params[f"varying_parameter_{i}"] = {
@@ -620,3 +628,18 @@ class Exploration:
         file_path = os.path.join(main_dir, "exploration_parameters.json")
         with open(file_path, "w") as file:
             file.write(json.dumps(params))
+
+    def _set_manager(self, comms: str, libE_specs: Dict) -> bool:
+        """Return whether this is the manager process.
+
+        This function is useful when running with mpi4py communications
+        to ensure that code is only executed by the manager process.
+        """
+        if comms == "mpi":
+            from mpi4py import MPI
+
+            mpi_comm = libE_specs.get("mpi_comm") or MPI.COMM_WORLD
+            is_manager = mpi_comm.Get_rank() == 0
+        else:
+            is_manager = True
+        return is_manager

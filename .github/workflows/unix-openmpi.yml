@@ -35,3 +35,4 @@ jobs:
       name: Run unit tests with openMPI
       run: |
         python -m pytest tests/
+        mpirun -np 3 --oversubscribe python -m pytest --with-mpi tests/test_grid_sampling_mpi.py

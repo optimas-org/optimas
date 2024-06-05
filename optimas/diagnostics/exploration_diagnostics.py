@@ -890,7 +890,7 @@ class ExplorationDiagnostics:
         objective: Optional[Union[str, Objective]] = None,
         top: Optional[int] = 3,
     ) -> pd.DataFrame:
-        """Get a list with the best evaluations.
+        """Get a dataframe with the best evaluations.
 
         Parameters
         ----------
@@ -903,7 +903,7 @@ class ExplorationDiagnostics:
 
         Returns
         -------
-        top_indices : List with the indices of the best evaluations.
+        df : Dataframe with the best evaluations.
         """
         if objective is None:
             objective = self.objectives[0]
