@@ -19,4 +19,4 @@ term3 = (-4 + 4 * x2**2) * x2**2
 result = term1 + term2 + term3
 
 with open("result.txt", "w") as f:
-    f.write("%f" % result)
+    f.write("{}".format(result))

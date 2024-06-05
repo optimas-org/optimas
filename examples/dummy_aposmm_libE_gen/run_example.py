@@ -64,8 +64,8 @@ aposmm = APOSMM(
     localopt_method="LN_BOBYQA",
     sample_points=np.round(known_minima, 1),
     rk_const=0.5 * ((gamma(1 + (n / 2)) * 5) ** (1 / n)) / sqrt(pi),
-    xtol_abs=1e-5,
-    ftol_abs=1e-5,
+    xtol_abs=1e-6,
+    ftol_abs=1e-6,
     dist_to_bound_multiple=0.5,
     max_active_runs=4,  # refers to APOSMM's simul local optimization runs
     lb=np.array([var_1.lower_bound, var_2.lower_bound]),
@@ -87,7 +87,7 @@ ev = TemplateEvaluator(
 
 # Create exploration.
 exp = Exploration(
-    generator=gen, evaluator=ev, max_evals=300, sim_workers=4, run_async=True
+    generator=gen, evaluator=ev, max_evals=1000, sim_workers=4, run_async=True
 )
 
 
@@ -95,7 +95,7 @@ exp = Exploration(
 # for some flavours of multiprocessing, namely spawn and forkserver)
 if __name__ == "__main__":
     exp.run(100)
-    exp.run(200)
+    exp.run()
     exp.finalize()
 
     assert len(gen.libe_gen.all_local_minima)
@@ -107,6 +107,6 @@ if __name__ == "__main__":
     for i in range(len(found_minima)):
         found_minima_combined[i] = found_minima[i][0]
     found_minima = found_minima_combined
-    known_minima = np.round(known_minima, 3)  # much precision lost?
-    found_minima = np.round(found_minima, 3)
+    known_minima = np.round(known_minima, 6)
+    found_minima = np.round(found_minima, 6)
     assert any([i in known_minima for i in found_minima])
