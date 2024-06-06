@@ -25,6 +25,7 @@ try:
         convert_optimas_to_ax_objectives,
     )
     from ax import Arm
+
     ax_installed = True
 except ImportError:
     ax_installed = False
