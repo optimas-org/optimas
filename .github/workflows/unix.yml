@@ -37,3 +37,4 @@ jobs:
         WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
       run: |
         python -m pytest tests/
+        mpirun -np 3 python -m pytest --with-mpi tests/test_grid_sampling_mpi.py

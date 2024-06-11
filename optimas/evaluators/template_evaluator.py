@@ -37,6 +37,14 @@ class TemplateEvaluator(Evaluator):
     n_gpus : int, optional
         The number of GPUs that will be made available for each evaluation. By
         default, 0.
+    precedent : str, optional
+        Any string that should directly precede the ``executable``.
+        By default, if ``precedent`` is not specified and ``sim_template`` is
+        a Python file, the ``precedent`` will be set to ``sys.executable``,
+        which is the absolute path of the executable binary for the Python
+        interpreter.
+    extra_args : str, optional
+        Additional command line arguments to supply to MPI runner.
     env_script : str, optional
         The full path of a shell script to set up the environment for the
         launched simulation. This is useful when the simulation needs to run
@@ -64,6 +72,8 @@ class TemplateEvaluator(Evaluator):
         sim_files: Optional[List[str]] = None,
         n_procs: Optional[int] = None,
         n_gpus: Optional[int] = None,
+        precedent: Optional[str] = None,
+        extra_args: Optional[str] = None,
         env_script: Optional[str] = None,
         env_mpi: Optional[str] = None,
         timeout: Optional[float] = None,
@@ -76,6 +86,8 @@ class TemplateEvaluator(Evaluator):
         self.sim_template = sim_template
         self.analysis_func = analysis_func
         self.executable = executable
+        self.precedent = precedent
+        self.extra_args = extra_args
         self.env_script = env_script
         self.env_mpi = env_mpi
         self.timeout = timeout
@@ -110,6 +122,7 @@ class TemplateEvaluator(Evaluator):
         sim_specs["user"]["app_name"] = self._app_name
         sim_specs["user"]["num_procs"] = self._n_procs
         sim_specs["user"]["num_gpus"] = self._n_gpus
+        sim_specs["user"]["extra_args"] = self.extra_args
         sim_specs["user"]["env_script"] = self.env_script
         sim_specs["user"]["env_mpi"] = self.env_mpi
         sim_specs["user"]["timeout"] = self.timeout
@@ -152,5 +165,7 @@ class TemplateEvaluator(Evaluator):
 
         # Register app.
         Executor.executor.register_app(
-            full_path=executable_path, app_name=self._app_name
+            full_path=executable_path,
+            app_name=self._app_name,
+            precedent=self.precedent,
         )
