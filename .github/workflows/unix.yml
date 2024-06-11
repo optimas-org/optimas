@@ -33,6 +33,8 @@ jobs:
         pip install .[test]
     - shell: bash -l {0}
       name: Run unit tests with MPICH
+      env:
+        WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
       run: |
         python -m pytest tests/
         mpirun -np 3 python -m pytest --with-mpi tests/test_grid_sampling_mpi.py

@@ -21,6 +21,7 @@ from optimas.evaluators.base import Evaluator
 from optimas.evaluators.function_evaluator import FunctionEvaluator
 from optimas.utils.logger import get_logger
 from optimas.utils.other import convert_to_dataframe
+from optimas.loggers.base import Logger
 
 
 logger = get_logger(__name__)
@@ -78,6 +79,10 @@ class Exploration:
         manager and ``N-1`` simulation workers. In this case, the
         ``sim_workers`` parameter is ignored. By default, ``'local'`` mode
         is used.
+    logger : Logger, optional
+        A custom logger that is informed of every completed trial and can
+        report on the results. Currently, a Weights and Biases logger is
+        available.
 
     """
 
@@ -93,6 +98,7 @@ class Exploration:
         exploration_dir_path: Optional[str] = "./exploration",
         resume: Optional[bool] = False,
         libe_comms: Optional[Literal["local", "threads", "mpi"]] = "local",
+        logger: Optional[Logger] = None,
     ) -> None:
         # For backward compatibility, check for old threading name.
         if libe_comms == "local_threading":
@@ -125,6 +131,10 @@ class Exploration:
         self._libe_history = self._create_libe_history()
         self._load_history(history, resume)
         self._is_manager = self._set_manager(self.libe_comms, self.libE_specs)
+        self._logger = logger
+        if self._logger is not None:
+            self._logger.initialize(self)
+            self.generator._set_logger(self._logger)
 
     @property
     def is_manager(self):
@@ -194,7 +204,7 @@ class Exploration:
         # Get gen_specs and sim_specs.
         run_params = self.evaluator.get_run_params()
         gen_specs = self.generator.get_gen_specs(
-            self.sim_workers, run_params, sim_max
+            self.sim_workers, run_params, sim_max, self.libe_comms
         )
         sim_specs = self.evaluator.get_sim_specs(
             self.generator.varying_parameters,
@@ -417,7 +427,10 @@ class Exploration:
         # Fill in new rows.
         for field in fields:
             if field in history_new.dtype.names:
-                history_new[field] = evaluation_data[field]
+                # Converting to list prevent the error
+                # "ValueError: setting an array element with a sequence"
+                # when the field contains an array.
+                history_new[field] = evaluation_data[field].to_list()
 
         if not is_history:
             current_time = time.time()
@@ -507,7 +520,7 @@ class Exploration:
         """Initialize an empty libEnsemble history."""
         run_params = self.evaluator.get_run_params()
         gen_specs = self.generator.get_gen_specs(
-            self.sim_workers, run_params, None
+            self.sim_workers, run_params, None, self.libe_comms
         )
         sim_specs = self.evaluator.get_sim_specs(
             self.generator.varying_parameters,
