@@ -42,7 +42,7 @@ Optimas is a Python library designed for highly scalable optimization, from lapt
 ## Installation
 You can install Optimas from PyPI (recommended):
 ```sh
-pip install optimas
+python -m pip install "optimas[all]"
 ```
 from conda-forge:
 ```sh
@@ -50,7 +50,7 @@ conda install optimas --channel conda-forge
 ```
 or directly from GitHub:
 ```sh
-pip install git+https://github.com/optimas-org/optimas.git
+python -m pip install "optimas[all] @ git+https://github.com/optimas-org/optimas.git"
 ```
 Make sure `mpi4py` is available in your environment before installing optimas. For more details, check out the full [installation guide](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html). We have also prepared dedicated installation instructions for some HPC systems such as
 [JUWELS (JSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_juwels.html),
