@@ -15,6 +15,7 @@ from ax.modelbridge.generation_strategy import (
     GenerationStep,
     GenerationStrategy,
 )
+from ax.modelbridge.transition_criterion import MaxTrials, MinTrials
 from ax import Arm
 
 from optimas.core import (
@@ -197,7 +198,13 @@ class AxServiceGenerator(AxGenerator):
                     current_step = generation_strategy.current_step
                     # Reduce only if there are still Sobol trials left.
                     if current_step.model == Models.SOBOL:
-                        current_step.transition_criteria[0].threshold -= 1
+                        for tc in current_step.transition_criteria:
+                            # Looping over all criterial makes sure we reduce
+                            # the transition thresholds due to `_n_init`
+                            # (i.e., max trials) and `min_trials_observed=1` (
+                            # i.e., min trials).
+                            if isinstance(tc, (MinTrials, MaxTrials)):
+                                tc.threshold -= 1
                         generation_strategy._maybe_move_to_next_step()
             finally:
                 if trial.ignored:
