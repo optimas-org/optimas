@@ -24,6 +24,7 @@ try:
         convert_optimas_to_ax_parameters,
         convert_optimas_to_ax_objectives,
     )
+    from ax import Arm
 
     ax_installed = True
 except ImportError:
@@ -53,6 +54,11 @@ class AxModelManager:
         parameters that were varied to scan the value of the objectives.
         The names and data of these parameters must be contained in the
         source ``DataFrame``.
+    fit_out_of_design : bool, optional
+        Whether to fit the surrogate model taking into account evaluations
+        outside of the range of the varying parameters. This can be useful
+        if the range of parameter has been reduced during the optimization.
+        By default, False.
     """
 
     def __init__(
@@ -60,6 +66,7 @@ class AxModelManager:
         source: Union[AxClient, str, pd.DataFrame],
         varying_parameters: Optional[List[VaryingParameter]] = None,
         objectives: Optional[List[Objective]] = None,
+        fit_out_of_design: Optional[bool] = False,
     ) -> None:
         if not ax_installed:
             raise ImportError(
@@ -72,7 +79,7 @@ class AxModelManager:
             self.ax_client = AxClient.load_from_json_file(filepath=source)
         elif isinstance(source, pd.DataFrame):
             self.ax_client = self._build_ax_client_from_dataframe(
-                source, varying_parameters, objectives
+                source, varying_parameters, objectives, fit_out_of_design
             )
         else:
             raise ValueError(
@@ -93,6 +100,7 @@ class AxModelManager:
         df: pd.DataFrame,
         varying_parameters: List[VaryingParameter],
         objectives: List[Objective],
+        fit_out_of_design: Optional[bool] = False,
     ) -> AxClient:
         """Initialize the AxClient and the model using the given data.
 
@@ -105,6 +113,9 @@ class AxModelManager:
         varying_parameters : list of `VaryingParameter`.
             List of parameters that were varied to scan the value of the
             objectives.
+        fit_out_of_design : bool, optional
+            Whether to fit the surrogate model taking into account evaluations
+            outside of the range of the varying parameters.
         """
         # Define parameters for AxClient
         axparameters = convert_optimas_to_ax_parameters(varying_parameters)
@@ -128,7 +139,29 @@ class AxModelManager:
         # Add trials from DataFrame
         for _, row in df.iterrows():
             params = {vp.name: row[vp.name] for vp in varying_parameters}
-            _, trial_id = ax_client.attach_trial(params)
+            try:
+                _, trial_id = ax_client.attach_trial(params)
+            except ValueError as error:
+                # Bypass checks from AxClient and manually add a trial
+                # outside of the search space.
+                # https://github.com/facebook/Ax/issues/768#issuecomment-1036515242
+                if "not a valid value" in str(error):
+                    if fit_out_of_design:
+                        ax_trial = ax_client.experiment.new_trial()
+                        ax_trial.add_arm(Arm(parameters=params))
+                        ax_trial.mark_running(no_runner_required=True)
+                        trial_id = ax_trial.index
+                    else:
+                        ignore_reason = (
+                            f"The parameters {params} are outside of the "
+                            "range of the varying parameters. "
+                            "Set `fit_out_of_design=True` if you want "
+                            "the model to use these data."
+                        )
+                        print(ignore_reason)
+                        continue
+                else:
+                    raise error
             data = {obj.name: (row[obj.name], np.nan) for obj in objectives}
             ax_client.complete_trial(trial_id, raw_data=data)
         return ax_client

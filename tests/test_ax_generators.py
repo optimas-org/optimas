@@ -428,6 +428,73 @@ def test_ax_single_fidelity_updated_params():
     make_plots(gen)
 
 
+def test_ax_single_fidelity_resume():
+    """
+    Test that an exploration with an AxService generator can resume
+    with an updated range of the varying parameters, even if some
+    old trials are out of the updated range.
+    """
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = []
+
+    fit_out_of_design_vals = [False, True]
+
+    for fit_out_of_design in fit_out_of_design_vals:
+        var1 = VaryingParameter("x0", 5.1, 6.0)
+        var2 = VaryingParameter("x1", -5.0, 15.0)
+        obj = Objective("f", minimize=False)
+        p1 = Parameter("p1")
+
+        gen = AxSingleFidelityGenerator(
+            varying_parameters=[var1, var2],
+            objectives=[obj],
+            analyzed_parameters=[p1],
+            parameter_constraints=["x0 + x1 <= 10"],
+            outcome_constraints=["p1 <= 30"],
+            fit_out_of_design=fit_out_of_design,
+        )
+        ev = FunctionEvaluator(function=eval_func_sf)
+        exploration = Exploration(
+            generator=gen,
+            evaluator=ev,
+            max_evals=20,
+            sim_workers=2,
+            exploration_dir_path="./tests_output/test_ax_single_fidelity",
+            libe_comms="local_threading",
+            resume=True,
+        )
+
+        # Get reference to original AxClient.
+        ax_client = gen._ax_client
+
+        # Run exploration.
+        exploration.run(n_evals=1)
+
+        if not fit_out_of_design:
+            # Check that no old evaluations were added
+            assert len(exploration.history) == 11
+            assert all(exploration.history.trial_ignored.to_numpy()[:-1])
+            # Check that the sobol step has not been skipped.
+            df = ax_client.get_trials_data_frame()
+            assert len(df) == 1
+            assert df["generation_method"].to_numpy()[0] == "Sobol"
+
+        else:
+            # Check that the old evaluations were added
+            assert len(exploration.history) == 12
+            assert not all(exploration.history.trial_ignored.to_numpy())
+            # Check that the sobol step has been skipped.
+            df = ax_client.get_trials_data_frame()
+            assert len(df) == 12
+            assert df["generation_method"].to_numpy()[-1] == "GPEI"
+
+            check_run_ax_service(
+                ax_client, gen, exploration, n_failed_expected=2
+            )
+
+
 def test_ax_multi_fidelity():
     """Test that an exploration with a multifidelity generator runs"""
 
@@ -808,6 +875,7 @@ def test_ax_service_init():
 
 if __name__ == "__main__":
     test_ax_single_fidelity()
+    test_ax_single_fidelity_resume()
     test_ax_single_fidelity_int()
     test_ax_single_fidelity_moo()
     test_ax_single_fidelity_fb()
