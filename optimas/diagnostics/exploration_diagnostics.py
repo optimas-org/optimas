@@ -679,19 +679,25 @@ class ExplorationDiagnostics:
         # Make figure
         nplots = len(parnames)
         if parnames_as_titles is True:
-            hspace=0.40
+            hspace = 0.40
         else:
-            hspace=None
+            hspace = None
 
         if subplot_spec is None:
             fig = plt.figure(**figure_kw)
-            gs = GridSpec(nplots, 2, width_ratios=[0.8, 0.2],
-                          wspace=0.05, hspace=hspace)
+            gs = GridSpec(
+                nplots, 2, width_ratios=[0.8, 0.2], wspace=0.05, hspace=hspace
+            )
         else:
             fig = plt.gcf()
             gs = GridSpecFromSubplotSpec(
-                nplots, 2, subplot_spec, width_ratios=[0.8, 0.2],
-                wspace=0.05, hspace=hspace)
+                nplots,
+                2,
+                subplot_spec,
+                width_ratios=[0.8, 0.2],
+                wspace=0.05,
+                hspace=hspace,
+            )
 
         # Actual plotting
         ax_histy_list = []
