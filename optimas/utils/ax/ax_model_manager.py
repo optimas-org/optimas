@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
 from matplotlib.axes import Axes
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # Ax utilities for model building
 try:
@@ -358,6 +359,7 @@ class AxModelManager:
         range_x: Optional[List[float]] = None,
         range_y: Optional[List[float]] = None,
         mode: Optional[Literal["mean", "sem", "both"]] = "mean",
+        cbar_location: Optional[Literal["top", "right"]] = "top",
         show_trials: Optional[bool] = True,
         show_contour: Optional[bool] = True,
         show_contour_labels: Optional[bool] = False,
@@ -393,6 +395,8 @@ class AxModelManager:
         mode : str, optional.
             Whether to plot the ``"mean"`` of the model, the standard error of
             the mean ``"sem"``, or ``"both"``. By default, ``"mean"``.
+        cbar_location : str, optional.
+            Set position of the colorbar. By default, ``"top"``.
         show_trials : bool
             Whether to show the trials used to build the model. By default,
             ``True``.
@@ -503,7 +507,9 @@ class AxModelManager:
             # colormesh
             pcolormesh_kw = dict(pcolormesh_kw or {})
             im = ax.pcolormesh(xaxis, yaxis, f, shading="auto", **pcolormesh_kw)
-            cbar = plt.colorbar(im, ax=ax, location="top")
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes(cbar_location, size="2.5%", pad=0.1)
+            cbar = plt.colorbar(im, cax=cax, location=cbar_location)
             cbar.set_label(labels[i])
             ax.set(xlabel=param_x, ylabel=param_y)
             # contour
