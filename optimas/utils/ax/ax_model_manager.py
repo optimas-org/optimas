@@ -524,9 +524,7 @@ class AxModelManager:
                     linestyles="solid",
                 )
                 if show_contour_labels:
-                    ax.clabel(
-                        cset, inline=True, fontsize="xx-small"
-                    )
+                    ax.clabel(cset, inline=True, fontsize="xx-small")
             if show_trials:
                 ax.scatter(
                     trials[param_x], trials[param_y], s=8, c="black", marker="o"
