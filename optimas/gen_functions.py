@@ -69,7 +69,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # Store this information in the format expected by libE
         H_o = np.zeros(number_of_gen_points, dtype=gen_specs["out"])
         for i in range(number_of_gen_points):
-            generated_trials = generator.ask(1)
+            generated_trials = generator.ask_trials(1)
             if generated_trials:
                 trial = generated_trials[0]
                 for var, val in zip(
@@ -110,7 +110,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                         ev = Evaluation(parameter=par, value=y)
                         trial.complete_evaluation(ev)
                 # Register trial with unknown SEM
-                generator.tell([trial])
+                generator.tell_trials([trial])
             # Set the number of points to generate to that number:
             number_of_gen_points = min(n + n_failed_gens, max_evals - n_gens)
             n_failed_gens = 0
