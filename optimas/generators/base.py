@@ -236,7 +236,7 @@ class Generator:
                 trials.append(trial)
         return trials
 
-    def tell(
+    def tell_trials(
         self, trials: List[Trial], allow_saving_model: Optional[bool] = True
     ) -> None:
         """Give trials back to generator once they have been evaluated.
@@ -290,7 +290,7 @@ class Generator:
         trials = self._create_trials_from_external_data(
             history_ended, ignore_unrecognized_parameters=True
         )
-        self.tell(trials, allow_saving_model=False)
+        self.tell_trials(trials, allow_saving_model=False)
         # Communicate to history array whether the trial has been ignored.
         for trial in trials:
             i = np.where(history["trial_index"] == trial.index)[0][0]
