@@ -210,15 +210,15 @@ class Generator:
             gen_trials = []
             for point in gen_points:
                 trial = Trial(
-                        varying_parameters=self._varying_parameters,
-                        parameter_values=[
-                            point[var.name] for var in self._varying_parameters
-                        ],
-                        objectives=self._objectives,
-                        analyzed_parameters=self._analyzed_parameters,
-                        custom_parameters=self._custom_trial_parameters,
-                    )
-                gen_trials.append( trial )
+                    varying_parameters=self._varying_parameters,
+                    parameter_values=[
+                        point[var.name] for var in self._varying_parameters
+                    ],
+                    objectives=self._objectives,
+                    analyzed_parameters=self._analyzed_parameters,
+                    custom_parameters=self._custom_trial_parameters,
+                )
+                gen_trials.append(trial)
             # Keep only trials that have been given data.
             for trial in gen_trials:
                 if len(trial.parameter_values) > 0:
@@ -257,9 +257,11 @@ class Generator:
         results = []
         for trial in trials:
             # Convert to dictionaries
-            point = { **trial.parameters_as_dict(),
-                      **trial.analyzed_parameters_as_dict(),
-                      **trial.objectives_as_dict() }
+            point = {
+                **trial.parameters_as_dict(),
+                **trial.analyzed_parameters_as_dict(),
+                **trial.objectives_as_dict(),
+            }
             results.append(point)
         self.tell(results)
 
