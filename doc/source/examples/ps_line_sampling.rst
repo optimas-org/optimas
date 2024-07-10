@@ -46,7 +46,7 @@ where :math:`x_0` and :math:`x_1` have a default values of :math:`5` and
 
    all_trials = []
    while True:
-       trial = gen.ask(1)
+       trial = gen.ask_trials(1)
        if trial:
            all_trials.append(trial[0])
        else:

@@ -187,7 +187,7 @@ class Generator:
                 n_evaluated += 1
         return n_evaluated
 
-    def ask(self, n_trials: int) -> List[Trial]:
+    def ask_trials(self, n_trials: int) -> List[Trial]:
         """Ask the generator to suggest the next ``n_trials`` to evaluate.
 
         Parameters
@@ -305,7 +305,7 @@ class Generator:
 
         The given trials are placed at the top of the queue of trials that
         will be proposed by the generator (that is, they will be the first
-        ones to be proposed the next time that `ask` is called).
+        ones to be proposed the next time that `ask_trials` is called).
 
         Parameters
         ----------
@@ -408,7 +408,7 @@ class Generator:
 
         By default, the trial will be appended to the end of the queue, unless
         a `queue_index` is given. Trials at the top of the queue will be the
-        first ones to be given for evaluation when `ask` is called.
+        first ones to be given for evaluation when `ask_trials` is called.
 
         Parameters
         ----------

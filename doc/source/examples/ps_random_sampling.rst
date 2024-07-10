@@ -45,7 +45,7 @@ distribution such as:
 
    all_trials = []
    while len(all_trials) <= 100:
-       trial = gen.ask(1)
+       trial = gen.ask_trials(1)
        if trial:
            all_trials.append(trial[0])
        else:
