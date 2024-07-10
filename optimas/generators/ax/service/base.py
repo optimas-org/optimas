@@ -154,7 +154,7 @@ class AxServiceGenerator(AxGenerator):
             trial.ax_trial_id = trial_id
         return trials
 
-    def _tell(self, trials: List[Trial]) -> None:
+    def tell(self, trials: List[Trial]) -> None:
         """Incorporate evaluated trials into Ax client."""
         for trial in trials:
             try:

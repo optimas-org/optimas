@@ -250,7 +250,7 @@ class Generator:
             incorporating the evaluated trials. By default ``True``.
 
         """
-        self._tell(trials)
+        self.tell(trials)
         for trial in trials:
             if trial not in self._given_trials:
                 self._add_external_evaluated_trial(trial)
@@ -591,7 +591,7 @@ class Generator:
         """
         return trials
 
-    def _tell(self, trials: List[Trial]) -> None:
+    def tell(self, trials: List[Trial]) -> None:
         """Tell method to be implemented by the Generator subclasses.
 
         Parameters
