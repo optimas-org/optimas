@@ -162,7 +162,7 @@ class AxMultitaskGenerator(AxGenerator):
             "to the number of high-fidelity trials"
         )
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
+    def ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
             next_trial = self._get_next_trial_arm()

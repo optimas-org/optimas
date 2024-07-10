@@ -142,7 +142,7 @@ class AxServiceGenerator(AxGenerator):
         """Get access to the underlying model using an `AxModelManager`."""
         return self._model
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
+    def ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
             parameters, trial_id = self._ax_client.get_next_trial(

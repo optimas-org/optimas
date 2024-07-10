@@ -103,7 +103,7 @@ class LineSamplingGenerator(Generator):
         # Store configurations.
         self._all_configs = all_configs
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
+    def ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
             if self._all_configs:

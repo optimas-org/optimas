@@ -57,7 +57,7 @@ class RandomSamplingGenerator(Generator):
         self._rng = np.random.default_rng(seed)
         self._define_generator_parameters()
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
+    def ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         n_trials = len(trials)
         configs = self._generate_sampling[self._distribution](n_trials)

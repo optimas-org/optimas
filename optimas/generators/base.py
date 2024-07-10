@@ -215,7 +215,7 @@ class Generator:
                     )
                 )
             # Ask the generator to fill them.
-            gen_trials = self._ask(gen_trials)
+            gen_trials = self.ask(gen_trials)
             # Keep only trials that have been given data.
             for trial in gen_trials:
                 if len(trial.parameter_values) > 0:
@@ -578,7 +578,7 @@ class Generator:
         libE_specs = {}
         return libE_specs
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
+    def ask(self, trials: List[Trial]) -> List[Trial]:
         """Ask method to be implemented by the Generator subclasses.
 
         Parameters
