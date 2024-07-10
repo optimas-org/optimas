@@ -253,7 +253,17 @@ class Generator:
             incorporating the evaluated trials. By default ``True``.
 
         """
-        self.tell(trials)
+        # Feed data to the generator, using the standardized API
+        results = []
+        for trial in trials:
+            # Convert to dictionaries
+            point = { **trial.parameters_as_dict(),
+                      **trial.analyzed_parameters_as_dict(),
+                      **trial.objectives_as_dict() }
+            results.append(point)
+        self.tell(results)
+
+        # Perform additional checks that rely on the trial format
         for trial in trials:
             if trial not in self._given_trials:
                 self._add_external_evaluated_trial(trial)
@@ -592,15 +602,16 @@ class Generator:
         """
         return []
 
-    def tell(self, trials: List[Trial]) -> None:
-        """Tell method to be implemented by the Generator subclasses.
+    def tell(self, results: List[dict]) -> None:
+        """
+        Send the results of evaluations to the generator.
 
         Parameters
         ----------
-        trials : list of Trial
-            A list with all evaluated trials. All evaluations included in the
-            trials should be incorporated to the generator model in this
-            method.
+        results : list of dict
+            List with the results of the evaluations.
+            All evaluations included in the results should be incorporated
+            to the generator model in this method.
 
         """
         pass
