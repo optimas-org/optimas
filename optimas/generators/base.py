@@ -204,18 +204,21 @@ class Generator:
         # Generate as many trials as needed and add them to the queue.
         if n_trials > self.n_queued_trials:
             n_gen = n_trials - self.n_queued_trials
+            # Ask generator for n_gen points, using the standardized API
+            gen_points = self.ask(n_gen)
+            # Convert the points to the Trial format
             gen_trials = []
-            for _ in range(n_gen):
-                gen_trials.append(
-                    Trial(
+            for point in gen_points:
+                trial = Trial(
                         varying_parameters=self._varying_parameters,
+                        parameter_values=[
+                            point[var.name] for var in self._varying_parameters
+                        ],
                         objectives=self._objectives,
                         analyzed_parameters=self._analyzed_parameters,
                         custom_parameters=self._custom_trial_parameters,
                     )
-                )
-            # Ask the generator to fill them.
-            gen_trials = self.ask(gen_trials)
+                gen_trials.append( trial )
             # Keep only trials that have been given data.
             for trial in gen_trials:
                 if len(trial.parameter_values) > 0:
@@ -578,18 +581,16 @@ class Generator:
         libE_specs = {}
         return libE_specs
 
-    def ask(self, trials: List[Trial]) -> List[Trial]:
-        """Ask method to be implemented by the Generator subclasses.
+    def ask(self, num_points: Optional[int]) -> List[dict]:
+        """Request the next set of points to evaluate.
 
         Parameters
         ----------
-        trials : list of Trial
-            A list with as many trials as requested to the generator. The
-            trials do not yet contain the values of the varying parameters.
-            These values should instead be supplied in this method.
+        num_points : int
+            Number of points to generate.
 
         """
-        return trials
+        return []
 
     def tell(self, trials: List[Trial]) -> None:
         """Tell method to be implemented by the Generator subclasses.
