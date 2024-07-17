@@ -1,4 +1,0 @@
-pydata-sphinx-theme
-sphinx-design
-sphinx-gallery
-numpydoc

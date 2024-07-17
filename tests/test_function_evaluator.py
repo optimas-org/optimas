@@ -1,47 +1,97 @@
+import os
+
 import numpy as np
+import matplotlib.pyplot as plt
+import pytest
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
 from optimas.evaluators import FunctionEvaluator
-from optimas.core import VaryingParameter, Objective
+from optimas.core import VaryingParameter, Objective, Parameter
+from optimas.diagnostics import ExplorationDiagnostics
 
 
 def eval_func(input_params, output_params):
     """Evaluation function used for testing"""
-    x0 = input_params['x0']
-    x1 = input_params['x1']
+    x0 = input_params["x0"]
+    x1 = input_params["x1"]
     result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
-    output_params['f'] = result
+    output_params["f"] = result
+    output_params["p0"] = np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
+    output_params["p1"] = np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
+    plt.figure()
+    plt.plot(output_params["p1"][0], output_params["p1"][1])
+    output_params["fig"] = plt.gcf()
+    plt.savefig("fig.png")
 
 
 def test_function_evaluator():
     """Test that an exploration runs successfully with a function evaluator."""
-    # Define variables and objectives.
-    var1 = VaryingParameter('x0', -50., 5.)
-    var2 = VaryingParameter('x1', -5., 15.)
-    obj = Objective('f', minimize=False)
 
-    # Create generator.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj]
-    )
+    create_dirs_options = [False, True]
 
-    # Create function evaluator.
-    ev = FunctionEvaluator(function=eval_func)
+    for create_dirs in create_dirs_options:
+        # Define variables and objectives.
+        var1 = VaryingParameter("x0", -50.0, 5.0)
+        var2 = VaryingParameter("x1", -5.0, 15.0)
+        obj = Objective("f", minimize=False)
+        # Test also more complex analyzed parameters.
+        p0 = Parameter("p0", dtype=(float, (2, 4)))
+        p1 = Parameter("p1", dtype="O")
+        p2 = Parameter("fig", dtype="O")
 
-    # Create exploration.
-    exploration = Exploration(
-        generator=gen,
-        evaluator=ev,
-        max_evals=10,
-        sim_workers=2,
-        exploration_dir_path='./tests_output/test_function_evaluator'
-    )
+        # Create generator.
+        gen = RandomSamplingGenerator(
+            varying_parameters=[var1, var2],
+            objectives=[obj],
+            analyzed_parameters=[p0, p1, p2],
+        )
 
-    # Run exploration.
-    exploration.run()
+        # Create function evaluator.
+        ev = FunctionEvaluator(
+            function=eval_func, create_evaluation_dirs=create_dirs
+        )
+
+        # Create exploration.
+        exploration = Exploration(
+            generator=gen,
+            evaluator=ev,
+            max_evals=10,
+            sim_workers=2,
+            exploration_dir_path="./tests_output/test_function_evaluator",
+        )
+
+        # Run exploration.
+        exploration.run()
+
+        # Check that the multidimensional analyzed parameters worked as expected.
+        for p0_data in exploration.history["p0"]:
+            np.testing.assert_array_equal(
+                np.array(p0_data), np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
+            )
+        for p1_data in exploration.history["p1"]:
+            np.testing.assert_array_equal(
+                np.array(p1_data), np.array([[1, 2, 3, 4], [2, 6, 7, 4]])
+            )
+        for i, fig in enumerate(exploration.history["fig"]):
+            fig.savefig(
+                os.path.join(
+                    exploration.exploration_dir_path, f"test_fig_{i}.png"
+                )
+            )
+
+        diags = ExplorationDiagnostics(exploration)
+        for trial_index in diags.history.trial_index:
+            # Check that evaluation folders were created and the data was
+            # stored in them.
+            if create_dirs:
+                trial_dir = diags.get_evaluation_dir_path(trial_index)
+                assert os.path.exists(os.path.join(trial_dir, "fig.png"))
+            # Make sure no folders were created.
+            else:
+                with pytest.raises(ValueError):
+                    diags.get_evaluation_dir_path(trial_index)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_function_evaluator()

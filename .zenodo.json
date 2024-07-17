@@ -1,0 +1,70 @@
+{
+    "upload_type": "software",
+    "creators": [
+        {
+            "affiliation": "Deutsches Elektronen-Synchrotron",
+            "name": "Ferran Pousa, Angel",
+            "orcid": "0000-0001-6705-516X"
+        },
+        {
+            "affiliation": "Deutsches Elektronen-Synchrotron",
+            "name": "Jalas, Soeren",
+            "orcid": "0000-0002-5379-7514"
+        },
+        {
+            "affiliation": "Deutsches Elektronen-Synchrotron",
+            "name": "Kirchen, Manuel",
+            "orcid": "0000-0002-1897-6656"
+        },
+        {
+            "affiliation": "Deutsches Elektronen-Synchrotron",
+            "name": "Martinez de la Ossa, Alberto",
+            "orcid": "0000-0001-8158-0980"
+        },
+        {
+            "affiliation": "Deutsches Elektronen-Synchrotron, previously LBNL",
+            "name": "Th\u00e9venet, Maxence",
+            "orcid": "0000-0001-7216-2277"
+        },
+        {
+            "affiliation": "Argonne National Laboratory",
+            "name": "Larson, Jeffrey",
+            "orcid": "0000-0001-9924-2082"
+        },
+        {
+            "affiliation": "Argonne National Laboratory",
+            "name": "Hudson, Stephen",
+            "orcid": "0000-0002-7500-6138"
+        },
+        {
+            "affiliation": "Lawrence Berkeley National Laboratory",
+            "name": "Huebl, Axel",
+            "orcid": "0000-0003-1943-7141"
+        },
+        {
+            "affiliation": "Lawrence Berkeley National Laboratory",
+            "name": "Vay, Jean-Luc",
+            "orcid": "0000-0002-0040-799X"
+        },
+        {
+            "affiliation": "Lawrence Berkeley National Laboratory",
+            "name": "Lehe, Remi",
+            "orcid": "0000-0002-3656-9659"
+        }
+    ],
+    "access_right": "open",
+    "license": {
+      "id": "BSD-3-Clause-LBNL"
+    },
+    "language": "eng",
+    "keywords": [
+        "research",
+        "scalable",
+        "optimization",
+        "bayesian",
+        "simulation",
+        "high-performance-computing",
+        "hpc",
+        "gpu"
+    ]
+}

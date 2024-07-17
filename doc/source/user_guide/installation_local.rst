@@ -1,31 +1,7 @@
 Installation on a local computer
 --------------------------------
 
-The recommended approach is to install Optimas in a ``conda`` environment.
-
-Install basic dependencies
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code::
-
-    conda install numpy pandas
-
-Install PyTorch
-~~~~~~~~~~~~~~~
-
-If your computer does not feature a CUDA-capable GPU, install PyTorch for CPU:
-
-.. code::
-
-    conda install pytorch cpuonly -c pytorch
-
-
-If you have a CUDA-capable GPU and want to take make it available to Optimas,
-install PyTorch with:
-
-.. code::
-
-    conda install pytorch pytorch-cuda=11.7 -c pytorch -c nvidia
+The recommended approach is to install optimas in a ``conda`` environment.
 
 Install ``mpi4py``
 ~~~~~~~~~~~~~~~~~~
@@ -36,7 +12,7 @@ using ``pip``:
 
     pip install mpi4py
 
-This will make sure that Optimas uses the existing MPI. The recommended
+This will make sure that optimas uses the existing MPI. The recommended
 MPI implementation is MPICH.
 
 If you don't have an existing MPI installation, the recommended approach is to
@@ -55,10 +31,36 @@ On Windows:
 
     conda install -c conda-forge mpi4py msmpi
 
-Install Optimas
-~~~~~~~~~~~~~~~
-Install the latest version directly from GitHub:
+Install optimas from PyPI (recommended)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This will install the latest stable release.
+
+Installing with only the **basic** dependencies:
 
 .. code::
 
-    pip install git+https://github.com/optimas-org/optimas.git
+    pip install optimas
+
+Installing with **all** dependencies:
+
+.. code::
+
+    pip install 'optimas[all]'
+
+Use this option if you plan to do Bayesian optimization
+(see :ref:`dependencies` for more details).
+
+Install from conda-forge
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+    conda install optimas --channel conda-forge
+
+Install from GitHub
+~~~~~~~~~~~~~~~~~~~
+This will install the latest development version with all dependencies.
+
+.. code::
+
+    pip install "optimas[all] @ git+https://github.com/optimas-org/optimas.git"
