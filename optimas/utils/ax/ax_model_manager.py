@@ -1,4 +1,4 @@
-"""Contains the definition of the ExplorationDiagnostics class."""
+"""Contains the definition of the AxModelManager class."""
 
 from typing import Optional, Union, List, Tuple, Dict, Any, Literal
 
@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
 from matplotlib.axes import Axes
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # Ax utilities for model building
 try:
@@ -20,7 +21,11 @@ try:
     from ax.modelbridge.registry import Models
     from ax.modelbridge.torch import TorchModelBridge
     from ax.core.observation import ObservationFeatures
-    from ax.service.utils.instantiation import ObjectiveProperties
+    from .other import (
+        convert_optimas_to_ax_parameters,
+        convert_optimas_to_ax_objectives,
+    )
+    from ax import Arm
 
     ax_installed = True
 except ImportError:
@@ -50,6 +55,11 @@ class AxModelManager:
         parameters that were varied to scan the value of the objectives.
         The names and data of these parameters must be contained in the
         source ``DataFrame``.
+    fit_out_of_design : bool, optional
+        Whether to fit the surrogate model taking into account evaluations
+        outside of the range of the varying parameters. This can be useful
+        if the range of parameter has been reduced during the optimization.
+        By default, False.
     """
 
     def __init__(
@@ -57,6 +67,7 @@ class AxModelManager:
         source: Union[AxClient, str, pd.DataFrame],
         varying_parameters: Optional[List[VaryingParameter]] = None,
         objectives: Optional[List[Objective]] = None,
+        fit_out_of_design: Optional[bool] = False,
     ) -> None:
         if not ax_installed:
             raise ImportError(
@@ -69,7 +80,7 @@ class AxModelManager:
             self.ax_client = AxClient.load_from_json_file(filepath=source)
         elif isinstance(source, pd.DataFrame):
             self.ax_client = self._build_ax_client_from_dataframe(
-                source, varying_parameters, objectives
+                source, varying_parameters, objectives, fit_out_of_design
             )
         else:
             raise ValueError(
@@ -77,11 +88,12 @@ class AxModelManager:
                 "The source must be an `AxClient`, a path to an AxClient json "
                 "file, or a pandas `DataFrame`."
             )
-        self.ax_client.fit_model()
 
     @property
     def _model(self) -> TorchModelBridge:
         """Get the model from the AxClient instance."""
+        # Make sure model is fitted.
+        self.ax_client.fit_model()
         return self.ax_client.generation_strategy.model
 
     def _build_ax_client_from_dataframe(
@@ -89,6 +101,7 @@ class AxModelManager:
         df: pd.DataFrame,
         varying_parameters: List[VaryingParameter],
         objectives: List[Objective],
+        fit_out_of_design: Optional[bool] = False,
     ) -> AxClient:
         """Initialize the AxClient and the model using the given data.
 
@@ -101,38 +114,15 @@ class AxModelManager:
         varying_parameters : list of `VaryingParameter`.
             List of parameters that were varied to scan the value of the
             objectives.
+        fit_out_of_design : bool, optional
+            Whether to fit the surrogate model taking into account evaluations
+            outside of the range of the varying parameters.
         """
         # Define parameters for AxClient
-        axparameters = []
-        for par in varying_parameters:
-            # Determine parameter type.
-            value_dtype = np.dtype(par.dtype)
-            if value_dtype.kind == "f":
-                value_type = "float"
-            elif value_dtype.kind == "i":
-                value_type = "int"
-            else:
-                raise ValueError(
-                    "Ax range parameter can only be of type 'float'ot 'int', "
-                    "not {var.dtype}."
-                )
-            # Create parameter dict and append to list.
-            axparameters.append(
-                {
-                    "name": par.name,
-                    "type": "range",
-                    "bounds": [par.lower_bound, par.upper_bound],
-                    "is_fidelity": par.is_fidelity,
-                    "target_value": par.fidelity_target_value,
-                    "value_type": value_type,
-                }
-            )
+        axparameters = convert_optimas_to_ax_parameters(varying_parameters)
 
         # Define objectives for AxClient
-        axobjectives = {
-            obj.name: ObjectiveProperties(minimize=obj.minimize)
-            for obj in objectives
-        }
+        axobjectives = convert_optimas_to_ax_objectives(objectives)
 
         # Create Ax client.
         # We need to explicitly define a generation strategy because otherwise
@@ -150,7 +140,29 @@ class AxModelManager:
         # Add trials from DataFrame
         for _, row in df.iterrows():
             params = {vp.name: row[vp.name] for vp in varying_parameters}
-            _, trial_id = ax_client.attach_trial(params)
+            try:
+                _, trial_id = ax_client.attach_trial(params)
+            except ValueError as error:
+                # Bypass checks from AxClient and manually add a trial
+                # outside of the search space.
+                # https://github.com/facebook/Ax/issues/768#issuecomment-1036515242
+                if "not a valid value" in str(error):
+                    if fit_out_of_design:
+                        ax_trial = ax_client.experiment.new_trial()
+                        ax_trial.add_arm(Arm(parameters=params))
+                        ax_trial.mark_running(no_runner_required=True)
+                        trial_id = ax_trial.index
+                    else:
+                        ignore_reason = (
+                            f"The parameters {params} are outside of the "
+                            "range of the varying parameters. "
+                            "Set `fit_out_of_design=True` if you want "
+                            "the model to use these data."
+                        )
+                        print(ignore_reason)
+                        continue
+                else:
+                    raise error
             data = {obj.name: (row[obj.name], np.nan) for obj in objectives}
             ax_client.complete_trial(trial_id, raw_data=data)
         return ax_client
@@ -347,6 +359,7 @@ class AxModelManager:
         range_x: Optional[List[float]] = None,
         range_y: Optional[List[float]] = None,
         mode: Optional[Literal["mean", "sem", "both"]] = "mean",
+        cbar_location: Optional[Literal["top", "right"]] = "top",
         show_trials: Optional[bool] = True,
         show_contour: Optional[bool] = True,
         show_contour_labels: Optional[bool] = False,
@@ -382,6 +395,8 @@ class AxModelManager:
         mode : str, optional.
             Whether to plot the ``"mean"`` of the model, the standard error of
             the mean ``"sem"``, or ``"both"``. By default, ``"mean"``.
+        cbar_location : str, optional.
+            Set position of the colorbar. By default, ``"top"``.
         show_trials : bool
             Whether to show the trials used to build the model. By default,
             ``True``.
@@ -492,7 +507,9 @@ class AxModelManager:
             # colormesh
             pcolormesh_kw = dict(pcolormesh_kw or {})
             im = ax.pcolormesh(xaxis, yaxis, f, shading="auto", **pcolormesh_kw)
-            cbar = plt.colorbar(im, ax=ax, location="top")
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes(cbar_location, size="2.5%", pad=0.1)
+            cbar = plt.colorbar(im, cax=cax, location=cbar_location)
             cbar.set_label(labels[i])
             ax.set(xlabel=param_x, ylabel=param_y)
             # contour
@@ -507,9 +524,7 @@ class AxModelManager:
                     linestyles="solid",
                 )
                 if show_contour_labels:
-                    ax.clabel(
-                        cset, inline=True, fmt="%1.1f", fontsize="xx-small"
-                    )
+                    ax.clabel(cset, inline=True, fontsize="xx-small")
             if show_trials:
                 ax.scatter(
                     trials[param_x], trials[param_y], s=8, c="black", marker="o"
@@ -648,4 +663,129 @@ class AxModelManager:
         if show_legend:
             ax.legend(frameon=False)
 
+        return fig, ax
+
+    def plot_cross_validation(
+        self,
+        metric_name: Optional[str] = None,
+        subplot_spec: Optional[SubplotSpec] = None,
+        gridspec_kw: Optional[Dict[str, Any]] = None,
+        errorbar_kw: Optional[Dict[str, Any]] = None,
+        **figure_kw,
+    ) -> Tuple[Figure, Axes]:
+        """Make a cross-validation plot for the given metric.
+
+        Parameters
+        ----------
+        metric_name : str, optional.
+            Name of the metric to plot.
+            If not specified, it will take the first objective in
+            ``self.ax_client``.
+        subplot_spec : SubplotSpec, optional
+            A matplotlib ``SubplotSpec`` in which to draw the axis.
+        gridspec_kw : dict, optional
+            Dict with keywords passed to the ``GridSpec``.
+        errorbar_kw : dict, optional
+            Dict with keywords passed to ``ax.errorbar_kw``.
+        **figure_kw
+            Additional keyword arguments to pass to ``pyplot.figure``. Only
+            used if no ``subplot_spec`` is given.
+
+        Returns
+        -------
+        Figure, Axes
+        """
+        # Get metric name.
+        if metric_name is None:
+            metric_name = self.ax_client.objective_names[0]
+
+        # Evaluate model for each point in the history.
+        trials = self.ax_client.get_trials_data_frame()
+        mean, sem = self.evaluate_model(trials)
+
+        # Create figure.
+        gridspec_kw = dict(gridspec_kw or {})
+        if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
+            gs = GridSpec(1, 1, **gridspec_kw)
+        else:
+            fig = plt.gcf()
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec, **gridspec_kw)
+
+        # Get errorbar kwargs.
+        errorbar_kw = dict(errorbar_kw or {})
+        default_errorbar_kw = {"fmt": "o", "ms": 4, "label": "Data"}
+        errorbar_kw = {**default_errorbar_kw, **errorbar_kw}
+
+        # Make plot.
+        ax = fig.add_subplot(gs[0])
+        ax.errorbar(trials[metric_name], mean, yerr=sem, **errorbar_kw)
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+        square_lims = [min(ylim[0], ylim[0]), max(xlim[1], ylim[1])]
+        ax.plot(
+            square_lims,
+            square_lims,
+            color="k",
+            ls="--",
+            label="Ideal correlation",
+        )
+        ax.set_xlim(square_lims)
+        ax.set_ylim(square_lims)
+        ax.set_xlabel("Observations")
+        ax.set_ylabel("Model predictions")
+        ax.legend(frameon=False)
+        return fig, ax
+
+    def plot_feature_importance(
+        self,
+        metric_name: Optional[str] = None,
+        subplot_spec: Optional[SubplotSpec] = None,
+        gridspec_kw: Optional[Dict[str, Any]] = None,
+        bar_kw: Optional[Dict[str, Any]] = None,
+        **figure_kw,
+    ) -> Tuple[Figure, Axes]:
+        """Plot the importance of each varying parameter for the given metric.
+
+        Parameters
+        ----------
+        metric_name : str, optional.
+            Name of the metric for which to determine the importances.
+            If not specified, it will take the first objective in
+            ``self.ax_client``.
+        subplot_spec : SubplotSpec, optional
+            A matplotlib ``SubplotSpec`` in which to draw the axis.
+        gridspec_kw : dict, optional
+            Dict with keywords passed to the ``GridSpec``.
+        bar_kw : dict, optional
+            Dict with keywords passed to ``ax.bar``.
+        **figure_kw
+            Additional keyword arguments to pass to ``pyplot.figure``. Only
+            used if no ``subplot_spec`` is given.
+
+        Returns
+        -------
+        Figure, Axes
+        """
+        # Get metric name.
+        if metric_name is None:
+            metric_name = self.ax_client.objective_names[0]
+
+        # Get feature importances.
+        importances = self._model.feature_importances(metric_name)
+
+        # Create figure.
+        gridspec_kw = dict(gridspec_kw or {})
+        if subplot_spec is None:
+            fig = plt.figure(**figure_kw)
+            gs = GridSpec(1, 1, **gridspec_kw)
+        else:
+            fig = plt.gcf()
+            gs = GridSpecFromSubplotSpec(1, 1, subplot_spec, **gridspec_kw)
+        bar_kw = dict(bar_kw or {})
+
+        # Make plot.
+        ax = fig.add_subplot(gs[0])
+        ax.bar(importances.keys(), importances.values(), **bar_kw)
+        ax.set_ylabel(f"Importance for metric {metric_name}")
         return fig, ax

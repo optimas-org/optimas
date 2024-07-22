@@ -15,6 +15,8 @@ from ax.modelbridge.generation_strategy import (
     GenerationStep,
     GenerationStrategy,
 )
+from ax.modelbridge.transition_criterion import MaxTrials, MinTrials
+from ax import Arm
 
 from optimas.core import (
     Objective,
@@ -24,6 +26,11 @@ from optimas.core import (
     TrialStatus,
 )
 from optimas.generators.ax.base import AxGenerator
+from optimas.utils.ax import AxModelManager
+from optimas.utils.ax.other import (
+    convert_optimas_to_ax_parameters,
+    convert_optimas_to_ax_objectives,
+)
 
 
 class AxServiceGenerator(AxGenerator):
@@ -123,6 +130,17 @@ class AxServiceGenerator(AxGenerator):
         self._parameter_constraints = parameter_constraints
         self._outcome_constraints = outcome_constraints
         self._ax_client = self._create_ax_client()
+        self._model = AxModelManager(self._ax_client)
+
+    @property
+    def ax_client(self) -> AxClient:
+        """Get the underlying AxClient."""
+        return self._ax_client
+
+    @property
+    def model(self) -> AxModelManager:
+        """Get access to the underlying model using an `AxModelManager`."""
+        return self._model
 
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
@@ -148,23 +166,50 @@ class AxServiceGenerator(AxGenerator):
                     trial.varying_parameters, trial.parameter_values
                 ):
                     params[var.name] = value
-                _, trial_id = self._ax_client.attach_trial(params)
+                try:
+                    _, trial_id = self._ax_client.attach_trial(params)
+                except ValueError as error:
+                    # Bypass checks from AxClient and manually add a trial
+                    # outside of the search space.
+                    # https://github.com/facebook/Ax/issues/768#issuecomment-1036515242
+                    if "not a valid value" in str(error):
+                        if self._fit_out_of_design:
+                            ax_trial = self._ax_client.experiment.new_trial()
+                            ax_trial.add_arm(Arm(parameters=params))
+                            ax_trial.mark_running(no_runner_required=True)
+                            trial_id = ax_trial.index
+                        else:
+                            ignore_reason = (
+                                f"The parameters {params} are outside of the "
+                                "range of the varying parameters. "
+                                "Set `fit_out_of_design=True` if you want "
+                                "the model to use these data."
+                            )
+                            trial.ignore(reason=ignore_reason)
+                            continue
+                    else:
+                        raise error
                 ax_trial = self._ax_client.get_trial(trial_id)
 
                 # Since data was given externally, reduce number of
                 # initialization trials, but only if they have not failed.
-                if (
-                    trial.status != TrialStatus.FAILED
-                    and not self._enforce_n_init
-                ):
+                if trial.completed and not self._enforce_n_init:
                     generation_strategy = self._ax_client.generation_strategy
                     current_step = generation_strategy.current_step
                     # Reduce only if there are still Sobol trials left.
                     if current_step.model == Models.SOBOL:
-                        current_step.transition_criteria[0].threshold -= 1
+                        for tc in current_step.transition_criteria:
+                            # Looping over all criterial makes sure we reduce
+                            # the transition thresholds due to `_n_init`
+                            # (i.e., max trials) and `min_trials_observed=1` (
+                            # i.e., min trials).
+                            if isinstance(tc, (MinTrials, MaxTrials)):
+                                tc.threshold -= 1
                         generation_strategy._maybe_move_to_next_step()
             finally:
-                if trial.completed:
+                if trial.ignored:
+                    continue
+                elif trial.completed:
                     outcome_evals = {}
                     # Add objective evaluations.
                     for ev in trial.objective_evaluations:
@@ -212,19 +257,9 @@ class AxServiceGenerator(AxGenerator):
 
     def _create_ax_parameters(self) -> List:
         """Create list of parameters to pass to an Ax."""
-        parameters = []
+        parameters = convert_optimas_to_ax_parameters(self.varying_parameters)
         fixed_parameters = {}
         for var in self._varying_parameters:
-            parameters.append(
-                {
-                    "name": var.name,
-                    "type": "range",
-                    "bounds": [var.lower_bound, var.upper_bound],
-                    "is_fidelity": var.is_fidelity,
-                    "target_value": var.fidelity_target_value,
-                    "value_type": var.dtype.__name__,
-                }
-            )
             if var.is_fixed:
                 fixed_parameters[var.name] = var.default_value
         # Store fixed parameters as fixed features.
@@ -233,10 +268,23 @@ class AxServiceGenerator(AxGenerator):
 
     def _create_ax_objectives(self) -> Dict[str, ObjectiveProperties]:
         """Create list of objectives to pass to an Ax."""
-        objectives = {}
-        for obj in self.objectives:
-            objectives[obj.name] = ObjectiveProperties(minimize=obj.minimize)
-        return objectives
+        return convert_optimas_to_ax_objectives(self.objectives)
+
+    def _create_sobol_step(self) -> GenerationStep:
+        """Create a Sobol generation step with `n_init` trials."""
+        # Ensure that at least 1 trial is completed before moving onto the BO
+        # step, and keep generating Sobol trials until that happens, even if
+        # the number of Sobol trials exceeds `n_init`.
+        # Otherwise, if we move to the BO step before any trial is completed,
+        # the next `ask` would fail with a `DataRequiredError`.
+        # This also allows the generator to work well when
+        # `sim_workers` > `n_init`.
+        return GenerationStep(
+            model=Models.SOBOL,
+            num_trials=self._n_init,
+            min_trials_observed=1,
+            enforce_num_trials=False,
+        )
 
     def _create_generation_steps(
         self, bo_model_kwargs: Dict
@@ -261,7 +309,6 @@ class AxServiceGenerator(AxGenerator):
         generation_strategy = self._ax_client.generation_strategy
         if generation_strategy._model is not None:
             del generation_strategy._curr.model_spec._fitted_model
-        # Update parameter.
         parameters = self._create_ax_parameters()
         new_search_space = InstantiationBase.make_search_space(parameters, None)
         self._ax_client.experiment.search_space.update_parameter(

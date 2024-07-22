@@ -2,6 +2,7 @@ import os
 import threading
 
 import numpy as np
+
 from ax.service.ax_client import AxClient, ObjectiveProperties
 from ax.utils.measurement.synthetic_functions import hartmann6
 
@@ -115,6 +116,13 @@ def eval_func_task_2(input_params, output_params):
     output_params["f"] = result
 
 
+def make_plots(gen):
+    """Make plots with Service API generators."""
+    gen.model.plot_contour()
+    gen.model.plot_cross_validation()
+    gen.model.plot_slice()
+
+
 def check_run_ax_service(ax_client, gen, exploration, n_failed_expected):
     # Check that the generator has been updated and that the failed trials are
     # accounted.
@@ -186,6 +194,9 @@ def test_ax_single_fidelity():
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_single_fidelity_int():
@@ -265,6 +276,9 @@ def test_ax_single_fidelity_moo():
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_single_fidelity_fb():
@@ -410,6 +424,76 @@ def test_ax_single_fidelity_updated_params():
     exploration.run(n_evals=3)
     assert all(exploration.history["x0"][-3:] != -9)
 
+    # Check that plotting functions don't crash.
+    make_plots(gen)
+
+
+def test_ax_single_fidelity_resume():
+    """
+    Test that an exploration with an AxService generator can resume
+    with an updated range of the varying parameters, even if some
+    old trials are out of the updated range.
+    """
+    global trial_count
+    global trials_to_fail
+    trial_count = 0
+    trials_to_fail = []
+
+    fit_out_of_design_vals = [False, True]
+
+    for fit_out_of_design in fit_out_of_design_vals:
+        var1 = VaryingParameter("x0", 5.1, 6.0)
+        var2 = VaryingParameter("x1", -5.0, 15.0)
+        obj = Objective("f", minimize=False)
+        p1 = Parameter("p1")
+
+        gen = AxSingleFidelityGenerator(
+            varying_parameters=[var1, var2],
+            objectives=[obj],
+            analyzed_parameters=[p1],
+            parameter_constraints=["x0 + x1 <= 10"],
+            outcome_constraints=["p1 <= 30"],
+            fit_out_of_design=fit_out_of_design,
+        )
+        ev = FunctionEvaluator(function=eval_func_sf)
+        exploration = Exploration(
+            generator=gen,
+            evaluator=ev,
+            max_evals=20,
+            sim_workers=2,
+            exploration_dir_path="./tests_output/test_ax_single_fidelity",
+            libe_comms="local_threading",
+            resume=True,
+        )
+
+        # Get reference to original AxClient.
+        ax_client = gen._ax_client
+
+        # Run exploration.
+        exploration.run(n_evals=1)
+
+        if not fit_out_of_design:
+            # Check that no old evaluations were added
+            assert len(exploration.history) == 11
+            assert all(exploration.history.trial_ignored.to_numpy()[:-1])
+            # Check that the sobol step has not been skipped.
+            df = ax_client.get_trials_data_frame()
+            assert len(df) == 1
+            assert df["generation_method"].to_numpy()[0] == "Sobol"
+
+        else:
+            # Check that the old evaluations were added
+            assert len(exploration.history) == 12
+            assert not all(exploration.history.trial_ignored.to_numpy())
+            # Check that the sobol step has been skipped.
+            df = ax_client.get_trials_data_frame()
+            assert len(df) == 12
+            assert df["generation_method"].to_numpy()[-1] == "GPEI"
+
+            check_run_ax_service(
+                ax_client, gen, exploration, n_failed_expected=2
+            )
+
 
 def test_ax_multi_fidelity():
     """Test that an exploration with a multifidelity generator runs"""
@@ -460,6 +544,9 @@ def test_ax_multi_fidelity():
 
     # Save history for later restart test
     np.save("./tests_output/ax_mf_history", exploration._libe_history.H)
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_multitask():
@@ -551,7 +638,7 @@ def test_ax_client():
     exploration = Exploration(
         generator=gen,
         evaluator=ev,
-        max_evals=6,
+        max_evals=15,
         sim_workers=2,
         run_async=False,
         exploration_dir_path="./tests_output/test_ax_client",
@@ -562,6 +649,9 @@ def test_ax_client():
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_single_fidelity_with_history():
@@ -602,6 +692,9 @@ def test_ax_single_fidelity_with_history():
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, n_failed_expected=3)
+
+    # Check that plotting functions don't crash.
+    make_plots(gen)
 
 
 def test_ax_multi_fidelity_with_history():
@@ -692,8 +785,8 @@ def test_ax_service_init():
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
 
-    n_init = 4
-    n_external = 6
+    n_init = 2
+    n_external = 4
 
     for i in range(n_external):
         gen = AxSingleFidelityGenerator(
@@ -704,7 +797,7 @@ def test_ax_service_init():
             generator=gen,
             evaluator=ev,
             max_evals=6,
-            sim_workers=2,
+            sim_workers=3,  # Test with sim_workers > n_init.
             exploration_dir_path=f"./tests_output/test_ax_service_init_{i}",
         )
 
@@ -753,7 +846,7 @@ def test_ax_service_init():
         generator=gen,
         evaluator=ev,
         max_evals=15,
-        sim_workers=2,
+        sim_workers=3,  # Test with sim_workers > n_init.
         exploration_dir_path="./tests_output/test_ax_service_init_enforce",
     )
 
@@ -782,6 +875,7 @@ def test_ax_service_init():
 
 if __name__ == "__main__":
     test_ax_single_fidelity()
+    test_ax_single_fidelity_resume()
     test_ax_single_fidelity_int()
     test_ax_single_fidelity_moo()
     test_ax_single_fidelity_fb()

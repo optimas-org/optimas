@@ -101,7 +101,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         if calc_in is not None:
             # Check how many simulations have returned
             n = len(calc_in["sim_id"])
-            # Update the GP with latest simulation results
+            # Feed the latest simulation results to the generator
             for i in range(n):
                 trial_index = int(calc_in["trial_index"][i])
                 trial_status = calc_in["trial_status"][i]
