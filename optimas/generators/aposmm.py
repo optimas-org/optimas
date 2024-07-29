@@ -134,7 +134,10 @@ class APOSMMWrapper(libEWrapper):
         """Pass objective values to generator, slotting/caching into APOSMM's expected results array."""
         trial = trials[0]
         if self.num_evals == 0:
-            self.new_array = np.zeros(self._array_size, dtype=self.libe_gen.gen_specs["out"] + [("f", float)])
+            self.new_array = np.zeros(
+                self._array_size,
+                dtype=self.libe_gen.gen_specs["out"] + [("f", float)],
+            )
         self._slot_in_data(trial)
         self.num_evals += 1
         if not self._told_initial_sample and self._enough_initial_sample:
