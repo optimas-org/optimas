@@ -5,7 +5,7 @@ import numpy as np
 from typing import List, Optional
 import inspect
 
-from libensemble.generators import LibEnsembleGenInterfacer
+from libensemble.generators import LibensembleGenThreadInterfacer
 
 from optimas.core import (
     Objective,
@@ -73,7 +73,7 @@ class libEWrapper(Generator):
                 )
             else:
                 if (
-                    isinstance(self.libe_gen, LibEnsembleGenInterfacer)
+                    isinstance(self.libe_gen, LibensembleGenThreadInterfacer)
                     and self.libe_gen.thread is None
                 ):  # no initialization needed except setup()
                     self.libe_gen.setup()  # start background thread

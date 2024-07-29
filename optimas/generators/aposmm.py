@@ -3,8 +3,6 @@
 import numpy as np
 from typing import List
 
-from libensemble.generators import LibEnsembleGenInterfacer
-
 from optimas.core import (
     Objective,
     Trial,
@@ -123,7 +121,7 @@ class APOSMMWrapper(libEWrapper):
     def _ask(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         n_trials = len(trials)
-        gen_out = self.libe_gen.ask(n_trials)
+        gen_out = self.libe_gen.ask_np(n_trials)
 
         for i, trial in enumerate(trials):
             trial.parameter_values = gen_out[i]["x"]
@@ -136,15 +134,13 @@ class APOSMMWrapper(libEWrapper):
         """Pass objective values to generator, slotting/caching into APOSMM's expected results array."""
         trial = trials[0]
         if self.num_evals == 0:
-            self.new_array = self.libe_gen.create_results_array(
-                self._array_size, empty=True
-            )
+            self.new_array = np.zeros(self._array_size, dtype=self.libe_gen.gen_specs["out"] + [("f", float)])
         self._slot_in_data(trial)
         self.num_evals += 1
         if not self._told_initial_sample and self._enough_initial_sample:
-            self.libe_gen.tell(self.new_array)
+            self.libe_gen.tell_np(self.new_array)
             self._told_initial_sample = True
             self.num_evals = 0
         elif self._told_initial_sample and self._enough_subsequent_points:
-            self.libe_gen.tell(self.new_array)
+            self.libe_gen.tell_np(self.new_array)
             self.num_evals = 0  # reset, create a new array next time around
