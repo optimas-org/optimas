@@ -39,8 +39,8 @@ beam.zinject_plane = 0.0
 # boundary
 boundary.field_hi = none damped
 boundary.field_lo = none damped
-boundary.particle_hi = absorbing absorbing
-boundary.particle_lo = absorbing absorbing
+boundary.particle_hi = none absorbing
+boundary.particle_lo = none absorbing
 
 # diag
 diag.diag_type = Full
