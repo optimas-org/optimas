@@ -9,9 +9,9 @@ from openpmd_viewer.addons import LpaDiagnostics
 def get_emittance(ts, t):
     """Calculate the beam emittance at the given time step."""
     w, x, ux = ts.get_particle(["w", "x", "ux"], t=t)
-    x2 = np.average( x**2, weights=w)
+    x2 = np.average(x**2, weights=w)
     xu = np.average(x * ux, weights=w)
-    return np.sqrt( x2 * np.average( (ux - xu/x2 * x)**2, weights=w) )
+    return np.sqrt(x2 * np.average((ux - xu / x2 * x) ** 2, weights=w))
 
 
 def analyze_simulation(simulation_directory, output_params):
