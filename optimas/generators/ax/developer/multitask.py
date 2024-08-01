@@ -47,6 +47,7 @@ NOT_STARTED = "not_started"
 LOFI_RETURNED = "lofi_returned"
 HIFI_RETURNED = "hifi_returned"
 
+
 # get_MTGP is not part of the Ax codebase, as of Ax 0.4.1, due to this PR:
 # https://github.com/facebook/Ax/pull/2508
 # Here we use `get_MTGP` from https://ax.dev/tutorials/multi_task.html#4b.-Multi-task-Bayesian-optimization
@@ -66,9 +67,7 @@ def get_MTGP(
     }
     transforms = MT_MTGP_trans
     transform_configs = {
-        "TrialAsTask": {
-            "trial_level_map": {"trial_type": trial_index_to_type}
-        },
+        "TrialAsTask": {"trial_level_map": {"trial_type": trial_index_to_type}},
         "ConvertMetricNames": tconfig_from_mt_experiment(experiment),
     }
 
@@ -369,7 +368,9 @@ class AxMultitaskGenerator(AxGenerator):
         )
 
         # Register metric in order to be able to save experiment to json file.
-        _, encoder_registry, decoder_registry = register_metrics({AxMetric, None})
+        _, encoder_registry, decoder_registry = register_metrics(
+            {AxMetric, None}
+        )
         self._encoder_registry = encoder_registry
         self._decoder_registry = decoder_registry
 
