@@ -141,9 +141,6 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
             else:
                 # Use a SAAS model with qNEI acquisition function.
                 MODEL_CLASS = Models.FULLYBAYESIAN
-            # Disable additional logs from fully Bayesian model.
-            bo_model_kwargs["disable_progbar"] = True
-            bo_model_kwargs["verbose"] = False
         else:
             if len(self.objectives) > 1:
                 # Use a model with qNEHVI acquisition function.
