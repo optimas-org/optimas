@@ -250,12 +250,19 @@ class Generator:
             incorporating the evaluated trials. By default ``True``.
 
         """
+        self._tell(trials)
         for trial in trials:
             if trial not in self._given_trials:
                 self._add_external_evaluated_trial(trial)
-        self._tell(trials)
-        for trial in trials:
-            if not trial.failed:
+
+            if trial.ignored:
+                # Check first if ignored, because it can be ignored
+                # and completed at the same time.
+                log_msg = (
+                    f"Trial {trial.index} ignored. "
+                    f"Reason: {trial.ignored_reason}"
+                )
+            elif trial.completed:
                 log_msg = "Completed trial {} with objective(s) {}".format(
                     trial.index, trial.objectives_as_dict()
                 )
@@ -263,7 +270,7 @@ class Generator:
                     log_msg += " and analyzed parameter(s) {}".format(
                         trial.analyzed_parameters_as_dict()
                     )
-            else:
+            elif trial.failed:
                 log_msg = f"Failed to evaluate trial {trial.index}."
             logger.info(log_msg)
         if allow_saving_model and self._save_model:
@@ -279,11 +286,16 @@ class Generator:
 
         """
         # Keep only evaluations where the simulation finished successfully.
-        history = history[history["sim_ended"]]
+        history_ended = history[history["sim_ended"]]
         trials = self._create_trials_from_external_data(
-            history, ignore_unrecognized_parameters=True
+            history_ended, ignore_unrecognized_parameters=True
         )
         self.tell(trials, allow_saving_model=False)
+        # Communicate to history array whether the trial has been ignored.
+        for trial in trials:
+            idxs = np.where(history["trial_index"] == trial.index)[0]
+            if len(idxs) > 0:
+                history["trial_ignored"][idxs[0]] = trial.ignored
 
     def attach_trials(
         self,
@@ -539,6 +551,7 @@ class Generator:
                 [(var.name, var.dtype) for var in self._varying_parameters]
                 + [("num_procs", int), ("num_gpus", int)]
                 + [("trial_index", int)]
+                + [("trial_ignored", bool)]
                 + [
                     (par.save_name, par.dtype)
                     for par in self._custom_trial_parameters

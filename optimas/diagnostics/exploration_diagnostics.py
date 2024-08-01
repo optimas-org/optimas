@@ -593,6 +593,7 @@ class ExplorationDiagnostics:
         select: Optional[Dict] = None,
         sort: Optional[Dict] = None,
         top: Optional[Dict] = None,
+        parnames_as_titles: Optional[bool] = True,
         show_top_evaluation_indices: Optional[bool] = False,
         show_legend: Optional[bool] = False,
         subplot_spec: Optional[SubplotSpec] = None,
@@ -617,6 +618,9 @@ class ExplorationDiagnostics:
             e.g. {'f': False} sort simulations according to f descendingly.
         top: int, optional
             Highlight the 'top' evaluations of every objective.
+        parnames_as_titles : bool, optional
+            Whether to show the parameter names as titles (instead of labels)
+            for a more compact layout.
         show_top_evaluation_indices : bool, optional
             Whether to show the indices of the top evaluations.
         show_legend : bool, optional
@@ -674,13 +678,25 @@ class ExplorationDiagnostics:
 
         # Make figure
         nplots = len(parnames)
+        if parnames_as_titles is True:
+            hspace = 0.40
+        else:
+            hspace = None
+
         if subplot_spec is None:
             fig = plt.figure(**figure_kw)
-            gs = GridSpec(nplots, 2, width_ratios=[0.8, 0.2], wspace=0.05)
+            gs = GridSpec(
+                nplots, 2, width_ratios=[0.8, 0.2], wspace=0.05, hspace=hspace
+            )
         else:
             fig = plt.gcf()
             gs = GridSpecFromSubplotSpec(
-                nplots, 2, subplot_spec, width_ratios=[0.8, 0.2], wspace=0.05
+                nplots,
+                2,
+                subplot_spec,
+                width_ratios=[0.8, 0.2],
+                wspace=0.05,
+                hspace=hspace,
             )
 
         # Actual plotting
@@ -792,7 +808,15 @@ class ExplorationDiagnostics:
             ax_histy.set_ylim(ax_scatter.get_ylim())
 
             # Tuning axes and labels
-            ax_scatter.set_ylabel(parnames[i])
+            if parnames_as_titles is True:
+                ax_scatter.set_title(
+                    parnames[i].replace("_", " "),
+                    fontdict={"fontsize": "x-small"},
+                    loc="right",
+                    pad=2,
+                )
+            else:
+                ax_scatter.set_ylabel(parnames[i])
 
             if i != nplots - 1:
                 ax_scatter.tick_params(labelbottom=False)
@@ -946,7 +970,10 @@ class ExplorationDiagnostics:
         print(best_evals[objective_names + varpar_names + anapar_names])
 
     def build_gp_model(
-        self, parameter: str, minimize: Optional[bool] = None
+        self,
+        parameter: str,
+        minimize: Optional[bool] = None,
+        fit_out_of_design: Optional[bool] = False,
     ) -> AxModelManager:
         """Build a GP model of the specified parameter.
 
@@ -960,6 +987,11 @@ class ExplorationDiagnostics:
             Use it to indicate whether lower or higher values of the parameter
             are better. This is relevant, e.g. to determine the best point of
             the model.
+        fit_out_of_design : bool, optional
+            Whether to fit the surrogate model taking into account evaluations
+            outside of the range of the varying parameters. This can be useful
+            if the range of parameter has been reduced during the optimization.
+            By default, False.
 
         Returns
         -------
@@ -993,4 +1025,5 @@ class ExplorationDiagnostics:
             source=self.history,
             varying_parameters=self.varying_parameters,
             objectives=[objective],
+            fit_out_of_design=fit_out_of_design,
         )

@@ -15,7 +15,8 @@ from ax.modelbridge.generation_strategy import (
     GenerationStep,
     GenerationStrategy,
 )
-from ax.exceptions.core import DataRequiredError
+from ax.modelbridge.transition_criterion import MaxTrials, MinTrials
+from ax import Arm
 
 from optimas.core import (
     Objective,
@@ -165,23 +166,50 @@ class AxServiceGenerator(AxGenerator):
                     trial.varying_parameters, trial.parameter_values
                 ):
                     params[var.name] = value
-                _, trial_id = self._ax_client.attach_trial(params)
+                try:
+                    _, trial_id = self._ax_client.attach_trial(params)
+                except ValueError as error:
+                    # Bypass checks from AxClient and manually add a trial
+                    # outside of the search space.
+                    # https://github.com/facebook/Ax/issues/768#issuecomment-1036515242
+                    if "not a valid value" in str(error):
+                        if self._fit_out_of_design:
+                            ax_trial = self._ax_client.experiment.new_trial()
+                            ax_trial.add_arm(Arm(parameters=params))
+                            ax_trial.mark_running(no_runner_required=True)
+                            trial_id = ax_trial.index
+                        else:
+                            ignore_reason = (
+                                f"The parameters {params} are outside of the "
+                                "range of the varying parameters. "
+                                "Set `fit_out_of_design=True` if you want "
+                                "the model to use these data."
+                            )
+                            trial.ignore(reason=ignore_reason)
+                            continue
+                    else:
+                        raise error
                 ax_trial = self._ax_client.get_trial(trial_id)
 
                 # Since data was given externally, reduce number of
                 # initialization trials, but only if they have not failed.
-                if (
-                    trial.status != TrialStatus.FAILED
-                    and not self._enforce_n_init
-                ):
+                if trial.completed and not self._enforce_n_init:
                     generation_strategy = self._ax_client.generation_strategy
                     current_step = generation_strategy.current_step
                     # Reduce only if there are still Sobol trials left.
                     if current_step.model == Models.SOBOL:
-                        current_step.transition_criteria[0].threshold -= 1
+                        for tc in current_step.transition_criteria:
+                            # Looping over all criterial makes sure we reduce
+                            # the transition thresholds due to `_n_init`
+                            # (i.e., max trials) and `min_trials_observed=1` (
+                            # i.e., min trials).
+                            if isinstance(tc, (MinTrials, MaxTrials)):
+                                tc.threshold -= 1
                         generation_strategy._maybe_move_to_next_step()
             finally:
-                if trial.completed:
+                if trial.ignored:
+                    continue
+                elif trial.completed:
                     outcome_evals = {}
                     # Add objective evaluations.
                     for ev in trial.objective_evaluations:

@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec, SubplotSpec
 from matplotlib.axes import Axes
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # Ax utilities for model building
 try:
@@ -24,6 +25,7 @@ try:
         convert_optimas_to_ax_parameters,
         convert_optimas_to_ax_objectives,
     )
+    from ax import Arm
 
     ax_installed = True
 except ImportError:
@@ -53,6 +55,11 @@ class AxModelManager:
         parameters that were varied to scan the value of the objectives.
         The names and data of these parameters must be contained in the
         source ``DataFrame``.
+    fit_out_of_design : bool, optional
+        Whether to fit the surrogate model taking into account evaluations
+        outside of the range of the varying parameters. This can be useful
+        if the range of parameter has been reduced during the optimization.
+        By default, False.
     """
 
     def __init__(
@@ -60,6 +67,7 @@ class AxModelManager:
         source: Union[AxClient, str, pd.DataFrame],
         varying_parameters: Optional[List[VaryingParameter]] = None,
         objectives: Optional[List[Objective]] = None,
+        fit_out_of_design: Optional[bool] = False,
     ) -> None:
         if not ax_installed:
             raise ImportError(
@@ -72,7 +80,7 @@ class AxModelManager:
             self.ax_client = AxClient.load_from_json_file(filepath=source)
         elif isinstance(source, pd.DataFrame):
             self.ax_client = self._build_ax_client_from_dataframe(
-                source, varying_parameters, objectives
+                source, varying_parameters, objectives, fit_out_of_design
             )
         else:
             raise ValueError(
@@ -93,6 +101,7 @@ class AxModelManager:
         df: pd.DataFrame,
         varying_parameters: List[VaryingParameter],
         objectives: List[Objective],
+        fit_out_of_design: Optional[bool] = False,
     ) -> AxClient:
         """Initialize the AxClient and the model using the given data.
 
@@ -105,6 +114,9 @@ class AxModelManager:
         varying_parameters : list of `VaryingParameter`.
             List of parameters that were varied to scan the value of the
             objectives.
+        fit_out_of_design : bool, optional
+            Whether to fit the surrogate model taking into account evaluations
+            outside of the range of the varying parameters.
         """
         # Define parameters for AxClient
         axparameters = convert_optimas_to_ax_parameters(varying_parameters)
@@ -128,7 +140,29 @@ class AxModelManager:
         # Add trials from DataFrame
         for _, row in df.iterrows():
             params = {vp.name: row[vp.name] for vp in varying_parameters}
-            _, trial_id = ax_client.attach_trial(params)
+            try:
+                _, trial_id = ax_client.attach_trial(params)
+            except ValueError as error:
+                # Bypass checks from AxClient and manually add a trial
+                # outside of the search space.
+                # https://github.com/facebook/Ax/issues/768#issuecomment-1036515242
+                if "not a valid value" in str(error):
+                    if fit_out_of_design:
+                        ax_trial = ax_client.experiment.new_trial()
+                        ax_trial.add_arm(Arm(parameters=params))
+                        ax_trial.mark_running(no_runner_required=True)
+                        trial_id = ax_trial.index
+                    else:
+                        ignore_reason = (
+                            f"The parameters {params} are outside of the "
+                            "range of the varying parameters. "
+                            "Set `fit_out_of_design=True` if you want "
+                            "the model to use these data."
+                        )
+                        print(ignore_reason)
+                        continue
+                else:
+                    raise error
             data = {obj.name: (row[obj.name], np.nan) for obj in objectives}
             ax_client.complete_trial(trial_id, raw_data=data)
         return ax_client
@@ -325,6 +359,7 @@ class AxModelManager:
         range_x: Optional[List[float]] = None,
         range_y: Optional[List[float]] = None,
         mode: Optional[Literal["mean", "sem", "both"]] = "mean",
+        cbar_location: Optional[Literal["top", "right"]] = "top",
         show_trials: Optional[bool] = True,
         show_contour: Optional[bool] = True,
         show_contour_labels: Optional[bool] = False,
@@ -360,6 +395,8 @@ class AxModelManager:
         mode : str, optional.
             Whether to plot the ``"mean"`` of the model, the standard error of
             the mean ``"sem"``, or ``"both"``. By default, ``"mean"``.
+        cbar_location : str, optional.
+            Set position of the colorbar. By default, ``"top"``.
         show_trials : bool
             Whether to show the trials used to build the model. By default,
             ``True``.
@@ -470,7 +507,9 @@ class AxModelManager:
             # colormesh
             pcolormesh_kw = dict(pcolormesh_kw or {})
             im = ax.pcolormesh(xaxis, yaxis, f, shading="auto", **pcolormesh_kw)
-            cbar = plt.colorbar(im, ax=ax, location="top")
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes(cbar_location, size="2.5%", pad=0.1)
+            cbar = plt.colorbar(im, cax=cax, location=cbar_location)
             cbar.set_label(labels[i])
             ax.set(xlabel=param_x, ylabel=param_y)
             # contour
@@ -485,9 +524,7 @@ class AxModelManager:
                     linestyles="solid",
                 )
                 if show_contour_labels:
-                    ax.clabel(
-                        cset, inline=True, fmt="%1.1f", fontsize="xx-small"
-                    )
+                    ax.clabel(cset, inline=True, fontsize="xx-small")
             if show_trials:
                 ax.scatter(
                     trials[param_x], trials[param_y], s=8, c="black", marker="o"
