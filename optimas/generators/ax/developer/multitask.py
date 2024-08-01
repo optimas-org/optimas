@@ -20,6 +20,7 @@ from ax.modelbridge.torch import TorchModelBridge
 from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 from ax.storage.json_store.save import save_experiment
+
 try:
     from ax.storage.metric_registry import register_metric as register_metrics
 except ImportError:
@@ -51,8 +52,11 @@ except ImportError:
     from ax.modelbridge.registry import Models, MT_MTGP_trans
     from ax.core.experiment import Experiment
     from ax.core.data import Data
-    from ax.modelbridge.transforms.convert_metric_names import tconfig_from_mt_experiment
+    from ax.modelbridge.transforms.convert_metric_names import (
+        tconfig_from_mt_experiment,
+    )
     from ax.utils.common.typeutils import checked_cast
+
     # This function is from https://ax.dev/tutorials/multi_task.html#4b.-Multi-task-Bayesian-optimization
     def get_MTGP(
         experiment: Experiment,
@@ -70,7 +74,9 @@ except ImportError:
         }
         transforms = MT_MTGP_trans
         transform_configs = {
-            "TrialAsTask": {"trial_level_map": {"trial_type": trial_index_to_type}},
+            "TrialAsTask": {
+                "trial_level_map": {"trial_type": trial_index_to_type}
+            },
             "ConvertMetricNames": tconfig_from_mt_experiment(experiment),
         }
 
@@ -80,7 +86,9 @@ except ImportError:
         if trial_index is None:
             trial_index = len(experiment.trials) - 1
         elif trial_index >= len(experiment.trials):
-            raise ValueError("trial_index is bigger than the number of experiment trials")
+            raise ValueError(
+                "trial_index is bigger than the number of experiment trials"
+            )
 
         status_quo = experiment.trials[trial_index].status_quo
         if status_quo is None:
