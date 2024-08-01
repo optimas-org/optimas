@@ -17,6 +17,7 @@ def get_emittance(ts, t):
         xu = np.average(x * ux, weights=w)
         return np.sqrt(x2 * u2 - xu**2)
 
+
 def analyze_simulation(simulation_directory, output_params):
     """Analyze the output of the WarpX simulation.
 
