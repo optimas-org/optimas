@@ -6,9 +6,7 @@ from typing import List, Dict, Tuple, Optional, Union
 
 import numpy as np
 import torch
-from packaging import version
 
-from ax.version import version as ax_version
 from ax.core.arm import Arm
 from ax.core.batch_trial import BatchTrial
 from ax.core.multi_type_experiment import MultiTypeExperiment
@@ -22,8 +20,11 @@ from ax.modelbridge.torch import TorchModelBridge
 from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 from ax.storage.json_store.save import save_experiment
-from ax.storage.metric_registry import register_metric
-from ax.modelbridge.factory import get_MTGP_LEGACY as get_MTGP
+try:
+    from ax.storage.metric_registry import register_metric as register_metrics
+except ImportError:
+    # For Ax >= 0.4.1
+    from ax.storage.metric_registry import register_metrics
 
 from optimas.generators.ax.base import AxGenerator
 from optimas.core import (
@@ -37,11 +38,72 @@ from optimas.core import (
 )
 from .ax_metric import AxMetric
 
-
 # Define generator states.
 NOT_STARTED = "not_started"
 LOFI_RETURNED = "lofi_returned"
 HIFI_RETURNED = "hifi_returned"
+
+try:
+    from ax.modelbridge.factory import get_MTGP_LEGACY as get_MTGP
+except ImportError:
+    # For Ax >= 0.4.1: get_MTGP_LEGACY is deprecated, due to this PR:
+    # https://github.com/facebook/Ax/pull/2508
+    from ax.modelbridge.registry import Models, MT_MTGP_trans
+    from ax.core.experiment import Experiment
+    from ax.core.data import Data
+    from ax.modelbridge.transforms.convert_metric_names import tconfig_from_mt_experiment
+    from ax.utils.common.typeutils import checked_cast
+    # This function is from https://ax.dev/tutorials/multi_task.html#4b.-Multi-task-Bayesian-optimization
+    def get_MTGP(
+        experiment: Experiment,
+        data: Data,
+        search_space: Optional[SearchSpace] = None,
+        trial_index: Optional[int] = None,
+        device: torch.device = torch.device("cpu"),
+        dtype: torch.dtype = torch.double,
+    ) -> TorchModelBridge:
+        """Instantiates a Multi-task Gaussian Process (MTGP) model that generates
+        points with EI.
+        """
+        trial_index_to_type = {
+            t.index: t.trial_type for t in experiment.trials.values()
+        }
+        transforms = MT_MTGP_trans
+        transform_configs = {
+            "TrialAsTask": {"trial_level_map": {"trial_type": trial_index_to_type}},
+            "ConvertMetricNames": tconfig_from_mt_experiment(experiment),
+        }
+
+        # Choose the status quo features for the experiment from the selected trial.
+        # If trial_index is None, we will look for a status quo from the last
+        # experiment trial to use as a status quo for the experiment.
+        if trial_index is None:
+            trial_index = len(experiment.trials) - 1
+        elif trial_index >= len(experiment.trials):
+            raise ValueError("trial_index is bigger than the number of experiment trials")
+
+        status_quo = experiment.trials[trial_index].status_quo
+        if status_quo is None:
+            status_quo_features = None
+        else:
+            status_quo_features = ObservationFeatures(
+                parameters=status_quo.parameters,
+                trial_index=trial_index,  # pyre-ignore[6]
+            )
+
+        return checked_cast(
+            TorchModelBridge,
+            Models.ST_MTGP(
+                experiment=experiment,
+                search_space=search_space or experiment.search_space,
+                data=data,
+                transforms=transforms,
+                transform_configs=transform_configs,
+                torch_dtype=dtype,
+                torch_device=device,
+                status_quo_features=status_quo_features,
+            ),
+        )
 
 
 class AxMultitaskGenerator(AxGenerator):
@@ -307,7 +369,7 @@ class AxMultitaskGenerator(AxGenerator):
         )
 
         # Register metric in order to be able to save experiment to json file.
-        _, encoder_registry, decoder_registry = register_metric(AxMetric)
+        _, encoder_registry, decoder_registry = register_metrics(AxMetric)
         self._encoder_registry = encoder_registry
         self._decoder_registry = decoder_registry
 
