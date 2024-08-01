@@ -4,3 +4,7 @@ __pycache__
 # IDE and development directories
 .venv
 .vscode
+
+# Installation folders
+build
+optimas.egg-info
