@@ -308,8 +308,9 @@ class Generator:
         self.tell_trials(trials, allow_saving_model=False)
         # Communicate to history array whether the trial has been ignored.
         for trial in trials:
-            i = np.where(history["trial_index"] == trial.index)[0][0]
-            history["trial_ignored"][i] = trial.ignored
+            idxs = np.where(history["trial_index"] == trial.index)[0]
+            if len(idxs) > 0:
+                history["trial_ignored"][idxs[0]] = trial.ignored
 
     def attach_trials(
         self,

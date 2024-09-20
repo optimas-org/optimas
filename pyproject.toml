@@ -34,11 +34,11 @@ test = [
     'flake8',
     'pytest',
     'pytest-mpi',
-    'ax-platform >= 0.4.0',
+    'ax-platform == 0.4.0',
     'matplotlib',
 ]
 all = [
-    'ax-platform >= 0.4.0',
+    'ax-platform == 0.4.0',
 ]
 
 [project.urls]
