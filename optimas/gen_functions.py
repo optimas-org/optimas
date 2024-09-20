@@ -68,7 +68,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
         H_o = np.zeros(number_of_gen_points, dtype=gen_specs["out"])
-        generated_trials = generator.ask(number_of_gen_points)
+        generated_trials = generator.ask_trials(number_of_gen_points)
         for i, trial in enumerate(generated_trials):
             for var, val in zip(
                 trial.varying_parameters, trial.parameter_values
