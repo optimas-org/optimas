@@ -70,7 +70,6 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         H_o = np.zeros(number_of_gen_points, dtype=gen_specs["out"])
         generated_trials = generator.ask(number_of_gen_points)
         for i, trial in enumerate(generated_trials):
-            trial = generated_trials[0]
             for var, val in zip(
                 trial.varying_parameters, trial.parameter_values
             ):
