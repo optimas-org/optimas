@@ -369,7 +369,7 @@ class AxMultitaskGenerator(AxGenerator):
 
         # Register metric in order to be able to save experiment to json file.
         _, encoder_registry, decoder_registry = register_metrics(
-            {AxMetric, None}
+            {AxMetric: None}
         )
         self._encoder_registry = encoder_registry
         self._decoder_registry = decoder_registry
