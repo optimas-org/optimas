@@ -120,19 +120,19 @@ class Trial:
         parameter_values = {trial_dict[var.name] for var in varying_parameters}
         # Prepare evaluations
         evaluations = [
-            Evaluation(
-                parameter=par,
-                value=trial_dict[par.name]
-            )
-            for par in objectives + analyzed_parameters if par.name in trial_dict
+            Evaluation(parameter=par, value=trial_dict[par.name])
+            for par in objectives + analyzed_parameters
+            if par.name in trial_dict
         ]
         # Create the trial object
-        trial = cls(varying_parameters=varying_parameters,
-                    objectives=objectives,
-                    analyzed_parameters=analyzed_parameters,
-                    parameter_values=parameter_values,
-                    evaluations=evaluations,
-                    custom_parameters=custom_parameters)
+        trial = cls(
+            varying_parameters=varying_parameters,
+            objectives=objectives,
+            analyzed_parameters=analyzed_parameters,
+            parameter_values=parameter_values,
+            evaluations=evaluations,
+            custom_parameters=custom_parameters,
+        )
         if "_id" in trial_dict:
             trial._index = trial_dict["_id"]
         if "_ignored" in trial_dict:
