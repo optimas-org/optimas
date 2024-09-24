@@ -94,6 +94,56 @@ class Trial:
         }
         return trial_dict
 
+    @classmethod
+    def from_dict(
+        cls,
+        trial_dict: Dict,
+        varying_parameters: List[VaryingParameter],
+        objectives: List[Objective],
+        analyzed_parameters: List[Parameter],
+        custom_parameters: Optional[List[TrialParameter]],
+    ) -> "Trial":
+        """Create a trial from a dictionary.
+
+        Parameters
+        ----------
+        trial_dict : dict
+            Dictionary containing the trial information.
+        varying_parameters : list of VaryingParameter
+            The varying parameters of the optimization.
+        objectives : list of Objective
+            The optimization objectives.
+        analyzed_parameters : list of Parameter, optional
+            Additional parameters to be analyzed during the optimization.
+        """
+        # Prepare values of the input parameters
+        parameter_values = {trial_dict[var.name] for var in varying_parameters}
+        # Prepare evaluations
+        evaluations = [
+            Evaluation(
+                parameter=par,
+                value=trial_dict[par.name]
+            )
+            for par in objectives + analyzed_parameters if par.name in trial_dict
+        ]
+        # Create the trial object
+        trial = cls(varying_parameters=varying_parameters,
+                    objectives=objectives,
+                    analyzed_parameters=analyzed_parameters,
+                    parameter_values=parameter_values,
+                    evaluations=evaluations,
+                    custom_parameters=custom_parameters)
+        if "_id" in trial_dict:
+            trial._index = trial_dict["_id"]
+        if "_ignored" in trial_dict:
+            trial._ignored = trial_dict["_ignored"]
+        if "_ignored_reason" in trial_dict:
+            trial._ignored_reason = trial_dict["_ignored_reason"]
+        if "_status" in trial_dict:
+            trial._status = trial_dict["_status"]
+        # TODO: Handle custom parameters
+        return trial
+
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
         """Get the list of varying parameters."""
