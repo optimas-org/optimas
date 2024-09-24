@@ -254,16 +254,7 @@ class Generator:
 
         """
         # Feed data to the generator, using the standardized API
-        results = []
-        for trial in trials:
-            # Convert to dictionaries
-            point = {
-                **trial.parameters_as_dict(),
-                **trial.analyzed_parameters_as_dict(),
-                **trial.objectives_as_dict(),
-            }
-            results.append(point)
-        self.tell(results)
+        self.tell( [ trial.to_dict() for trial in trials ] )
 
         # Perform additional checks that rely on the trial format
         for trial in trials:

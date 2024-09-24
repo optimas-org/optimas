@@ -81,6 +81,21 @@ class Trial:
             self._mapped_evaluations[ev.parameter.name] = ev
         self.mark_as(TrialStatus.CANDIDATE)
 
+
+    def to_dict(self) -> Dict:
+        """Convert the trial to a dictionary."""
+        trial_dict = {
+            **self.parameters_as_dict(),
+            **self.objectives_as_dict(),
+            **self.analyzed_parameters_as_dict(),
+            "_id": self._index,
+            "_ignored": self._ignored,
+            "_ignored_reason": self._ignored_reason,
+            "_status": self._status,
+        }
+        return trial_dict
+
+
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
         """Get the list of varying parameters."""
