@@ -150,7 +150,8 @@ class AxServiceGenerator(AxGenerator):
                 fixed_features=self._fixed_features
             )
             point = {
-                var.name: parameters.get(var.name) for var in self._varying_parameters
+                var.name: parameters.get(var.name)
+                for var in self._varying_parameters
             }
             point["_id"] = trial_id
             points.append(point)
