@@ -17,6 +17,7 @@ class TrialStatus(int, Enum):
     COMPLETED = 2
     FAILED = 3
 
+
 class Trial:
     """Defines a trial to be evaluated.
 
