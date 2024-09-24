@@ -254,7 +254,7 @@ class Generator:
 
         """
         # Feed data to the generator, using the standardized API
-        self.tell( [ trial.to_dict() for trial in trials ] )
+        self.tell([trial.to_dict() for trial in trials])
 
         # Perform additional checks that rely on the trial format
         for trial in trials:
