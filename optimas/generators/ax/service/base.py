@@ -142,17 +142,19 @@ class AxServiceGenerator(AxGenerator):
         """Get access to the underlying model using an `AxModelManager`."""
         return self._model
 
-    def ask(self, trials: List[Trial]) -> List[Trial]:
-        """Fill in the parameter values of the requested trials."""
-        for trial in trials:
+    def ask(self, num_points: Optional[int]) -> List[dict]:
+        """Request the next set of points to evaluate."""
+        points = []
+        for _ in range(num_points):
             parameters, trial_id = self._ax_client.get_next_trial(
                 fixed_features=self._fixed_features
             )
-            trial.parameter_values = [
-                parameters.get(var.name) for var in self._varying_parameters
-            ]
-            trial.ax_trial_id = trial_id
-        return trials
+            point = {
+                var.name: parameters.get(var.name) for var in self._varying_parameters
+            }
+            point["_id"] = trial_id
+            points.append(point)
+        return points
 
     def tell(self, trials: List[Trial]) -> None:
         """Incorporate evaluated trials into Ax client."""
