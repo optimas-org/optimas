@@ -87,6 +87,7 @@ class Trial:
             **self.parameters_as_dict(),
             **self.objectives_as_dict(),
             **self.analyzed_parameters_as_dict(),
+            **self.custom_parameters_as_dict(),
             "_id": self._index,
             "_ignored": self._ignored,
             "_ignored_reason": self._ignored_reason,
