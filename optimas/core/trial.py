@@ -288,7 +288,8 @@ class Trial:
         params = {}
         for obj in self._objectives:
             ev = self._mapped_evaluations[obj.name]
-            params[obj.name] = (ev.value, ev.sem)
+            if ev is not None:
+                params[obj.name] = (ev.value, ev.sem)
         return params
 
     def analyzed_parameters_as_dict(self) -> Dict:
