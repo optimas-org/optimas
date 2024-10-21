@@ -15,6 +15,7 @@ from libensemble.resources.resources import Resources
 from optimas.core import Evaluation
 from optimas.core.trial import TrialStatus
 
+
 def persistent_generator(H, persis_info, gen_specs, libE_info):
     """Generate and launch evaluations with the optimas generators.
 
