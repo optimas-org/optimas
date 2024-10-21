@@ -109,7 +109,9 @@ class AxServiceGenerator(AxGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
-        custom_trial_parameters = [ TrialParameter("trial_index", "ax_trial_index", dtype=int)]
+        custom_trial_parameters = [
+            TrialParameter("ax_trial_id", dtype=int),
+        ]
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
