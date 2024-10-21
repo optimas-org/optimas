@@ -116,6 +116,9 @@ class Trial:
             The optimization objectives.
         analyzed_parameters : list of Parameter, optional
             Additional parameters to be analyzed during the optimization.
+        custom_parameters : list of TrialParameter, optional
+            Additional parameters needed to identify or carry out the trial, and
+            which will be included in the optimization history.
         """
         # Prepare values of the input parameters
         parameter_values = {trial_dict[var.name] for var in varying_parameters}
@@ -303,4 +306,11 @@ class Trial:
         for par in self._analyzed_parameters:
             ev = self._mapped_evaluations[par.name]
             params[par.name] = (ev.value, ev.sem)
+        return params
+
+    def custom_parameters_as_dict(self) -> Dict:
+        """Get a mapping between names and values of the custom parameters."""
+        params = {}
+        for param in self._custom_parameters:
+            params[param.name] = getattr(self, param.name)
         return params
