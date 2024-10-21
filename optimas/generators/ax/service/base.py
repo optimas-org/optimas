@@ -172,7 +172,7 @@ class AxServiceGenerator(AxGenerator):
                 objectives=self._objectives,
                 analyzed_parameters=self._analyzed_parameters,
                 custom_parameters=self._custom_trial_parameters,
-                )
+            )
             try:
                 trial_id = trial.ax_trial_id
                 ax_trial = self._ax_client.get_trial(trial_id)
