@@ -121,7 +121,7 @@ class Trial:
             which will be included in the optimization history.
         """
         # Prepare values of the input parameters
-        parameter_values = {trial_dict[var.name] for var in varying_parameters}
+        parameter_values = [trial_dict[var.name] for var in varying_parameters]
         # Prepare evaluations
         evaluations = [
             Evaluation(parameter=par, value=trial_dict[par.name])
