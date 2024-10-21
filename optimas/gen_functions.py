@@ -15,7 +15,6 @@ from libensemble.resources.resources import Resources
 from optimas.core import Evaluation
 from optimas.core.trial import TrialStatus
 
-
 def persistent_generator(H, persis_info, gen_specs, libE_info):
     """Generate and launch evaluations with the optimas generators.
 
@@ -80,7 +79,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                 run_params = run_params[trial.trial_type]
             if trial.custom_parameters is not None:
                 for par in trial.custom_parameters:
-                    H_o[par.save_name][i] = getattr(trial, par.name)
+                    H_o[par.save_name][i] = getattr(trial, par.save_name)
             H_o["trial_index"][i] = trial.index
             H_o["num_procs"][i] = run_params["num_procs"]
             H_o["num_gpus"][i] = run_params["num_gpus"]
