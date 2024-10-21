@@ -23,7 +23,7 @@ from optimas.core import (
     Trial,
     VaryingParameter,
     Parameter,
-    TrialStatus,
+    TrialParameter,
 )
 from optimas.generators.ax.base import AxGenerator
 from optimas.utils.ax import AxModelManager
@@ -109,6 +109,7 @@ class AxServiceGenerator(AxGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
+        custom_trial_parameters = [ TrialParameter("trial_index", "ax_trial_index", dtype=int)]
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
@@ -119,6 +120,7 @@ class AxServiceGenerator(AxGenerator):
             save_model=save_model,
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,
+            custom_trial_parameters=custom_trial_parameters,
             allow_fixed_parameters=True,
             allow_updating_parameters=True,
         )
@@ -153,7 +155,7 @@ class AxServiceGenerator(AxGenerator):
                 var.name: parameters.get(var.name)
                 for var in self._varying_parameters
             }
-            point["_id"] = trial_id
+            point["ax_trial_id"] = trial_id
             points.append(point)
         return points
 
@@ -163,10 +165,11 @@ class AxServiceGenerator(AxGenerator):
         """
         for result in results:
             trial = Trial.from_dict(
-                result,
-                self._varying_parameters,
-                self._objectives,
-                self._analyzed_parameters
+                trial_dict=result,
+                varying_parameters=self._varying_parameters,
+                objectives=self._objectives,
+                analyzed_parameters=self._analyzed_parameters,
+                custom_parameters=self._custom_trial_parameters,
                 )
             try:
                 trial_id = trial.ax_trial_id

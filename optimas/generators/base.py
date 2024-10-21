@@ -209,11 +209,9 @@ class Generator:
             # Convert the points to the Trial format
             gen_trials = []
             for point in gen_points:
-                trial = Trial(
+                trial = Trial.from_dict(
+                    trial_dict=point,
                     varying_parameters=self._varying_parameters,
-                    parameter_values=[
-                        point[var.name] for var in self._varying_parameters
-                    ],
                     objectives=self._objectives,
                     analyzed_parameters=self._analyzed_parameters,
                     custom_parameters=self._custom_trial_parameters,
