@@ -102,7 +102,7 @@ class Trial:
         varying_parameters: List[VaryingParameter],
         objectives: List[Objective],
         analyzed_parameters: List[Parameter],
-        custom_parameters: Optional[List[TrialParameter]],
+        custom_parameters: Optional[List[TrialParameter]] = None,
     ) -> "Trial":
         """Create a trial from a dictionary.
 

@@ -157,9 +157,17 @@ class AxServiceGenerator(AxGenerator):
             points.append(point)
         return points
 
-    def tell(self, trials: List[Trial]) -> None:
-        """Incorporate evaluated trials into Ax client."""
-        for trial in trials:
+    def tell(self, results: List[dict]) -> None:
+        """
+        Send the results of evaluations to the generator.
+        """
+        for result in results:
+            trial = Trial.from_dict(
+                result,
+                self._varying_parameters,
+                self._objectives,
+                self._analyzed_parameters
+                )
             try:
                 trial_id = trial.ax_trial_id
                 ax_trial = self._ax_client.get_trial(trial_id)
