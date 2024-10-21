@@ -166,8 +166,8 @@ class AxServiceGenerator(AxGenerator):
                 result,
                 self._varying_parameters,
                 self._objectives,
-                self._analyzed_parameters
-                )
+                self._analyzed_parameters,
+            )
             try:
                 trial_id = trial.ax_trial_id
                 ax_trial = self._ax_client.get_trial(trial_id)
