@@ -145,7 +145,8 @@ class Trial:
             trial._ignored_reason = trial_dict["_ignored_reason"]
         if "_status" in trial_dict:
             trial._status = trial_dict["_status"]
-        # TODO: Handle custom parameters
+        for custom_param in custom_parameters:
+            setattr(trial, custom_param.name, trial_dict[custom_param.name])
         return trial
 
     @property
