@@ -211,7 +211,6 @@ class Generator:
                         varying_parameters=self._varying_parameters,
                         objectives=self._objectives,
                         analyzed_parameters=self._analyzed_parameters,
-                        custom_parameters=self._custom_trial_parameters,
                     )
                 )
             # Ask the generator to fill them.
@@ -489,7 +488,6 @@ class Generator:
                 ],
                 objectives=self._objectives,
                 analyzed_parameters=self._analyzed_parameters,
-                custom_parameters=self._custom_trial_parameters,
             )
             for par in self._custom_trial_parameters:
                 setattr(trial, par.name, trial_data[par.save_name][i])
