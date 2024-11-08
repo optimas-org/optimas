@@ -110,7 +110,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                         trial.complete_evaluation(ev)
                 trials.append(trial)
 
-            # Register trial with unknown SEM
+            # Register trials with unknown SEM
             generator.tell_trials(trials)
 
             # Set the number of points to generate to that number:
