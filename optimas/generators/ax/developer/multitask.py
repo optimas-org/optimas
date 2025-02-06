@@ -202,9 +202,7 @@ class AxMultitaskGenerator(AxGenerator):
             TrialParameter("trial_type", "ax_trial_type", dtype="U32"),
             TrialParameter("trial_index", "ax_trial_index", dtype=int),
         ]
-        self._check_inputs(
-            varying_parameters, objectives, lofi_task, hifi_task
-        )
+        self._check_inputs(varying_parameters, objectives, lofi_task, hifi_task)
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
@@ -349,9 +347,7 @@ class AxMultitaskGenerator(AxGenerator):
                 objective_eval = {}
                 oe = trial.objective_evaluations[0]
                 objective_eval["f"] = (oe.value, oe.sem)
-                self.current_trial.run_metadata[trial.arm_name] = (
-                    objective_eval
-                )
+                self.current_trial.run_metadata[trial.arm_name] = objective_eval
             else:
                 self.current_trial.mark_arm_abandoned(trial.arm_name)
             if trial.trial_type == self.lofi_task.name:
