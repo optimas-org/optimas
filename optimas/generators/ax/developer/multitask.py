@@ -3,6 +3,7 @@
 import os
 from copy import deepcopy
 from typing import List, Dict, Tuple, Optional, Union
+from pyre_extensions import assert_is_instance
 
 import numpy as np
 import torch
@@ -22,13 +23,38 @@ from ax.core.generator_run import GeneratorRun
 from ax.storage.json_store.save import save_experiment
 from ax.storage.metric_registry import register_metrics
 
-from ax.modelbridge.registry import Models, MT_MTGP_trans
+from ax.modelbridge.registry import Models, ST_MTGP_trans
+
+try:
+    # For Ax >= 0.5.0
+    from ax.modelbridge.transforms.derelativize import Derelativize
+    from ax.modelbridge.transforms.convert_metric_names import (
+        ConvertMetricNames,
+    )
+    from ax.modelbridge.transforms.trial_as_task import TrialAsTask
+    from ax.modelbridge.transforms.stratified_standardize_y import (
+        StratifiedStandardizeY,
+    )
+    from ax.modelbridge.transforms.task_encode import TaskChoiceToIntTaskChoice
+    from ax.modelbridge.registry import MBM_X_trans
+
+    MT_MTGP_trans = MBM_X_trans + [
+        Derelativize,
+        ConvertMetricNames,
+        TrialAsTask,
+        StratifiedStandardizeY,
+        TaskChoiceToIntTaskChoice,
+    ]
+
+except ImportError:
+    # For Ax < 0.5.0
+    from ax.modelbridge.registry import MT_MTGP_trans
+
 from ax.core.experiment import Experiment
 from ax.core.data import Data
 from ax.modelbridge.transforms.convert_metric_names import (
     tconfig_from_mt_experiment,
 )
-from ax.utils.common.typeutils import checked_cast
 
 from optimas.generators.ax.base import AxGenerator
 from optimas.core import (
@@ -50,7 +76,7 @@ HIFI_RETURNED = "hifi_returned"
 
 # get_MTGP is not part of the Ax codebase, as of Ax 0.4.1, due to this PR:
 # https://github.com/facebook/Ax/pull/2508
-# Here we use `get_MTGP` from https://ax.dev/tutorials/multi_task.html#4b.-Multi-task-Bayesian-optimization
+# Here we use `get_MTGP` https://ax.dev/docs/tutorials/multi_task/
 def get_MTGP(
     experiment: Experiment,
     data: Data,
@@ -61,19 +87,31 @@ def get_MTGP(
 ) -> TorchModelBridge:
     """Instantiates a Multi-task Gaussian Process (MTGP) model that generates
     points with EI.
-    """
-    trial_index_to_type = {
-        t.index: t.trial_type for t in experiment.trials.values()
-    }
-    transforms = MT_MTGP_trans
-    transform_configs = {
-        "TrialAsTask": {"trial_level_map": {"trial_type": trial_index_to_type}},
-        "ConvertMetricNames": tconfig_from_mt_experiment(experiment),
-    }
 
-    # Choose the status quo features for the experiment from the selected trial.
-    # If trial_index is None, we will look for a status quo from the last
-    # experiment trial to use as a status quo for the experiment.
+    If the input experiment is a MultiTypeExperiment then a
+    Multi-type Multi-task GP model will be instantiated.
+    Otherwise, the model will be a Single-type Multi-task GP.
+    """
+
+    if isinstance(experiment, MultiTypeExperiment):
+        trial_index_to_type = {
+            t.index: t.trial_type for t in experiment.trials.values()
+        }
+        transforms = MT_MTGP_trans
+        transform_configs = {
+            "TrialAsTask": {
+                "trial_level_map": {"trial_type": trial_index_to_type}
+            },
+            "ConvertMetricNames": tconfig_from_mt_experiment(experiment),
+        }
+    else:
+        # Set transforms for a Single-type MTGP model.
+        transforms = ST_MTGP_trans
+        transform_configs = None
+
+    # Choose the status quo features for the experiment from the selected
+    # trial. If trial_index is None, we will look for a status quo from the
+    # last experiment trial to use as a status quo for the experiment.
     if trial_index is None:
         trial_index = len(experiment.trials) - 1
     elif trial_index >= len(experiment.trials):
@@ -90,8 +128,7 @@ def get_MTGP(
             trial_index=trial_index,  # pyre-ignore[6]
         )
 
-    return checked_cast(
-        TorchModelBridge,
+    return assert_is_instance(
         Models.ST_MTGP(
             experiment=experiment,
             search_space=search_space or experiment.search_space,
@@ -102,6 +139,7 @@ def get_MTGP(
             torch_device=device,
             status_quo_features=status_quo_features,
         ),
+        TorchModelBridge,
     )
 
 
@@ -164,7 +202,9 @@ class AxMultitaskGenerator(AxGenerator):
             TrialParameter("trial_type", "ax_trial_type", dtype="U32"),
             TrialParameter("trial_index", "ax_trial_index", dtype=int),
         ]
-        self._check_inputs(varying_parameters, objectives, lofi_task, hifi_task)
+        self._check_inputs(
+            varying_parameters, objectives, lofi_task, hifi_task
+        )
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
@@ -309,7 +349,9 @@ class AxMultitaskGenerator(AxGenerator):
                 objective_eval = {}
                 oe = trial.objective_evaluations[0]
                 objective_eval["f"] = (oe.value, oe.sem)
-                self.current_trial.run_metadata[trial.arm_name] = objective_eval
+                self.current_trial.run_metadata[trial.arm_name] = (
+                    objective_eval
+                )
             else:
                 self.current_trial.mark_arm_abandoned(trial.arm_name)
             if trial.trial_type == self.lofi_task.name:
