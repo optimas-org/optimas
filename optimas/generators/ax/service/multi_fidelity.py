@@ -126,8 +126,10 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
                 num_trials=-1,
                 model_kwargs={
                     **bo_model_kwargs,
-                    "acquisition_options": {"X_pending": None,
-                                            "constraints": None}
+                    "acquisition_options": {
+                        "X_pending": None,
+                        "constraints": None,
+                    },
                 },
                 model_gen_kwargs={
                     "model_gen_options": {
