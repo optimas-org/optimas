@@ -134,20 +134,13 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
     ) -> List[GenerationStep]:
         """Create generation steps for single-fidelity optimization."""
         # Select BO model.
+        # Ax 0.5.0 detects if multi-objective.
         if self._fully_bayesian:
-            if len(self.objectives) > 1:
-                # Use a SAAS model with qNEHVI acquisition function.
-                MODEL_CLASS = Models.FULLYBAYESIANMOO
-            else:
-                # Use a SAAS model with qNEI acquisition function.
-                MODEL_CLASS = Models.FULLYBAYESIAN
+            # Use a SAAS model with qNEHVI/qNEI acquisition function
+            MODEL_CLASS = Models.SAASBO
         else:
-            if len(self.objectives) > 1:
-                # Use a model with qNEHVI acquisition function.
-                MODEL_CLASS = Models.MOO
-            else:
-                # Use a model with qNEI acquisition function.
-                MODEL_CLASS = Models.GPEI
+            # Use a model with qNEHVI/qNEI acquisition function
+            MODEL_CLASS = Models.BOTORCH_MODULAR
 
         # Make generation strategy.
         steps = []
