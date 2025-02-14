@@ -818,7 +818,7 @@ def test_ax_service_init():
         # are replaced by Manual trials.
         df = ax_client.get_trials_data_frame()
         for j in range(i):
-            assert df["generation_method"][j] == "Manual"
+            assert df["generation_method"][j] is None
         for k in range(i, n_init - 1):
             assert df["generation_method"][k] == "Sobol"
 
@@ -868,7 +868,7 @@ def test_ax_service_init():
     # `n_external` Manual trials.
     df = ax_client.get_trials_data_frame()
     for j in range(n_external):
-        assert df["generation_method"][j] == "Manual"
+        assert df["generation_method"][j] is None
     for k in range(n_external, n_external + n_init):
         assert df["generation_method"][k] == "Sobol"
     df["generation_method"][n_external + n_init] == "BoTorch"
