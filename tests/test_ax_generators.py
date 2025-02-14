@@ -590,7 +590,7 @@ def test_ax_client():
     trial_count = 0
     trials_to_fail = [2, 5]
 
-    # Create the AxClient from https://ax.dev/tutorials/gpei_hartmann_service.html.
+    # Create the AxClient from https://ax.dev/docs/tutorials/gpei_hartmann_service.
     ax_client = AxClient()
     ax_client.create_experiment(
         name="hartmann_test_experiment",
