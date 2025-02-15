@@ -30,7 +30,8 @@ jobs:
       run: |
         conda install numpy pandas pytorch cpuonly -c pytorch
         conda install -c conda-forge mpi4py mpich
-        pip install .[test]
+
+        pip install -e .[test]
     - shell: bash -l {0}
       name: Run unit tests with MPICH
       run: |
