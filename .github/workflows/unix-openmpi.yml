@@ -30,9 +30,10 @@ jobs:
       run: |
         conda install numpy pandas pytorch cpuonly -c pytorch
         conda install -c conda-forge mpi4py openmpi
+        mpirun -npernode
 
-    - name: Debug with tmate
-      uses: mxschmitt/action-tmate@v3
+    # - name: Debug with tmate
+    #   uses: mxschmitt/action-tmate@v3
 
     - shell: bash -l {0}
       name: Run unit tests with openMPI
