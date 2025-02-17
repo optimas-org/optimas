@@ -30,7 +30,7 @@ jobs:
       name: Install dependencies
       run: |
         conda install numpy pandas pytorch cpuonly -c pytorch
-        conda install -c conda-forge mpi4py openmpi>=5
+        conda install -c conda-forge mpi4py openmpi=5.*
 
     # - name: Debug with tmate
     #   uses: mxschmitt/action-tmate@v3
