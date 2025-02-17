@@ -12,7 +12,7 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        python-version: ['3.10']
+        python-version: ['3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
       name: Install dependencies
       run: |
         conda install numpy pandas pytorch cpuonly -c pytorch
-        conda install -c conda-forge mpi4py openmpi
+        conda install -c conda-forge mpi4py openmpi>=5
 
     # - name: Debug with tmate
     #   uses: mxschmitt/action-tmate@v3
