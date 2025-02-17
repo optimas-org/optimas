@@ -31,19 +31,21 @@ jobs:
         conda install numpy pandas pytorch cpuonly -c pytorch
         conda install -c conda-forge mpi4py openmpi
 
-    # - name: Debug with tmate
-    #   uses: mxschmitt/action-tmate@v3
+    - name: Debug with tmate
+      uses: mxschmitt/action-tmate@v3
+      continue-on-error: true
 
-    - shell: bash -l {0}
-      name: Run unit tests with openMPI
-      run: |
-        echo $CONDA_PREFIX
-        echo $PATH
-        echo -e "\nlooking for mpirun:"
-        which mpirun
-        echo -e "\n mpirun --version"
-        mpirun --version
-        echo -e "\n mpirun -npernode"
-        mpirun -npernode
-        # python -m pytest tests/
-        # mpirun -np 3 --oversubscribe python -m pytest --with-mpi tests/test_grid_sampling_mpi.py
+    # - shell: bash -l {0}
+    #   name: Run unit tests with openMPI
+    #   run: |
+    #     echo $CONDA_PREFIX
+    #     echo $PATH
+    #     echo -e "\nlooking for mpirun:"
+    #     #which mpirun
+    #     find $CONDA_PREFIX -name mpirun
+    #     echo -e "\n mpirun --version"
+    #     mpirun --version
+    #     echo -e "\n mpirun -npernode"
+    #     mpirun -npernode
+    #     # python -m pytest tests/
+    #     # mpirun -np 3 --oversubscribe python -m pytest --with-mpi tests/test_grid_sampling_mpi.py
