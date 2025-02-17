@@ -39,7 +39,11 @@ jobs:
       run: |
         echo $CONDA_PREFIX
         echo $PATH
+        echo -e "\nlooking for mpirun:"
         which mpirun
+        echo -e "\n mpirun --version"
+        mpirun --version
+        echo -e "\n mpirun -npernode"
         mpirun -npernode
         # python -m pytest tests/
         # mpirun -np 3 --oversubscribe python -m pytest --with-mpi tests/test_grid_sampling_mpi.py
