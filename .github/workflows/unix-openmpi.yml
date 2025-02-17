@@ -39,20 +39,5 @@ jobs:
     - shell: bash -l {0}
       name: Run unit tests with openMPI
       run: |
-        echo $CONDA_PREFIX
-        conda list openmpi
-        conda list|grep openmpi
-        echo $PATH
-        echo -e "\nlooking for mpirun:"
-        #which mpirun
-        find $CONDA_PREFIX -name mpirun
-        echo -e "\n conda env:"
-        ls $CONDA_PREFIX
-        echo -e "\n conda env libs - mpi:"
-        ls $CONDA_PREFIX/lib/libmpi*
-        # echo -e "\n mpirun --version"
-        mpirun --version
-        echo -e "\n mpirun -npernode"
-        mpirun -npernode
-        # python -m pytest tests/
-        # mpirun -np 3 --oversubscribe python -m pytest --with-mpi tests/test_grid_sampling_mpi.py
+        python -m pytest tests/
+        mpirun -np 3 --oversubscribe python -m pytest --with-mpi tests/test_grid_sampling_mpi.py
