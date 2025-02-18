@@ -130,7 +130,7 @@ class AxModelManager:
         # allow calling `model.predict`. Using MOO for multiobjective is
         # needed because otherwise calls to `get_pareto_optimal_parameters`
         # would fail.
-        model = Models.GPEI if len(objectives) == 1 else Models.MOO
+        model = Models.BOTORCH_MODULAR
         gs = GenerationStrategy([GenerationStep(model=model, num_trials=-1)])
         ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         ax_client.create_experiment(

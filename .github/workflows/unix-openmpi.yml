@@ -29,7 +29,7 @@ jobs:
       name: Install dependencies
       run: |
         conda install numpy pandas pytorch cpuonly -c pytorch
-        conda install -c conda-forge mpi4py openmpi
+        conda install -c conda-forge mpi4py openmpi=5.*
         pip install .[test]
     - shell: bash -l {0}
       name: Run unit tests with openMPI

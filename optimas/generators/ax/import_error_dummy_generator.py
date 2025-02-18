@@ -12,5 +12,5 @@ class AxImportErrorDummyGenerator(object):
         raise RuntimeError(
             "You need to install ax-platform, in order "
             "to use Ax-based generators in optimas.\n"
-            "e.g. with `pip install ax-platform >= 0.4.0`"
+            "e.g. with `pip install ax-platform > 0.5.0`"
         )
