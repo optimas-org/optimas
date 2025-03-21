@@ -23,7 +23,7 @@ from optimas.core import (
     Trial,
     VaryingParameter,
     Parameter,
-    TrialStatus,
+    TrialParameter,
 )
 from optimas.generators.ax.base import AxGenerator
 from optimas.utils.ax import AxModelManager
@@ -109,6 +109,9 @@ class AxServiceGenerator(AxGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
+        custom_trial_parameters = [
+            TrialParameter("ax_trial_id", dtype=int),
+        ]
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
@@ -119,6 +122,7 @@ class AxServiceGenerator(AxGenerator):
             save_model=save_model,
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,
+            custom_trial_parameters=custom_trial_parameters,
             allow_fixed_parameters=True,
             allow_updating_parameters=True,
         )
@@ -142,21 +146,33 @@ class AxServiceGenerator(AxGenerator):
         """Get access to the underlying model using an `AxModelManager`."""
         return self._model
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
-        """Fill in the parameter values of the requested trials."""
-        for trial in trials:
+    def ask(self, num_points: Optional[int]) -> List[dict]:
+        """Request the next set of points to evaluate."""
+        points = []
+        for _ in range(num_points):
             parameters, trial_id = self._ax_client.get_next_trial(
                 fixed_features=self._fixed_features
             )
-            trial.parameter_values = [
-                parameters.get(var.name) for var in self._varying_parameters
-            ]
-            trial.ax_trial_id = trial_id
-        return trials
+            point = {
+                var.name: parameters.get(var.name)
+                for var in self._varying_parameters
+            }
+            point["ax_trial_id"] = trial_id
+            points.append(point)
+        return points
 
-    def _tell(self, trials: List[Trial]) -> None:
-        """Incorporate evaluated trials into Ax client."""
-        for trial in trials:
+    def tell(self, results: List[dict]) -> None:
+        """
+        Send the results of evaluations to the generator.
+        """
+        for result in results:
+            trial = Trial.from_dict(
+                trial_dict=result,
+                varying_parameters=self._varying_parameters,
+                objectives=self._objectives,
+                analyzed_parameters=self._analyzed_parameters,
+                custom_parameters=self._custom_trial_parameters,
+            )
             try:
                 trial_id = trial.ax_trial_id
                 ax_trial = self._ax_client.get_trial(trial_id)
