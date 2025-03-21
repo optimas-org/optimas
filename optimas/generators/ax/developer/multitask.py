@@ -85,14 +85,13 @@ def get_MTGP(
     device: torch.device = torch.device("cpu"),
     dtype: torch.dtype = torch.double,
 ) -> TorchModelBridge:
-    """Instantiates a Multi-task Gaussian Process (MTGP) model that generates
-    points with EI.
+    """Instantiate a Multi-task Gaussian Process (MTGP) model.
 
+    Points are generated with EI (Expected Improvement).
     If the input experiment is a MultiTypeExperiment then a
     Multi-type Multi-task GP model will be instantiated.
     Otherwise, the model will be a Single-type Multi-task GP.
     """
-
     if isinstance(experiment, MultiTypeExperiment):
         trial_index_to_type = {
             t.index: t.trial_type for t in experiment.trials.values()
