@@ -14,9 +14,9 @@ Create a ``profile.optimas`` file in your home directory with the following cont
 
     source /etc/profile.d/modules.sh
     module purge
-    module load intel.2020
+    module load intel/2022
     module load maxwell cuda/11.8
-    module load mpi/mpich-3.2-x86_64
+    module load mpi/mpich-x86_64
     module load maxwell mamba
     . mamba-init
 
