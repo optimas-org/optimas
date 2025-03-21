@@ -221,7 +221,7 @@ class AxServiceGenerator(AxGenerator):
                             # i.e., min trials).
                             if isinstance(tc, (MinTrials, MaxTrials)):
                                 tc.threshold -= 1
-                        generation_strategy._maybe_move_to_next_step()
+                        generation_strategy._maybe_transition_to_next_node()
             finally:
                 if trial.ignored:
                     continue
