@@ -488,7 +488,7 @@ def test_ax_single_fidelity_resume():
             # Check that the sobol step has been skipped.
             df = ax_client.get_trials_data_frame()
             assert len(df) == 12
-            assert df["generation_method"].to_numpy()[-1] == "GPEI"
+            assert df["generation_method"].to_numpy()[-1] == "BoTorch"
 
             check_run_ax_service(
                 ax_client, gen, exploration, n_failed_expected=2
@@ -590,7 +590,7 @@ def test_ax_client():
     trial_count = 0
     trials_to_fail = [2, 5]
 
-    # Create the AxClient from https://ax.dev/tutorials/gpei_hartmann_service.html.
+    # Create the AxClient from https://ax.dev/docs/tutorials/gpei_hartmann_service.
     ax_client = AxClient()
     ax_client.create_experiment(
         name="hartmann_test_experiment",
@@ -818,10 +818,11 @@ def test_ax_service_init():
         # are replaced by Manual trials.
         df = ax_client.get_trials_data_frame()
         for j in range(i):
-            assert df["generation_method"][j] == "Manual"
+            assert df["generation_method"][j] is None
         for k in range(i, n_init - 1):
             assert df["generation_method"][k] == "Sobol"
-        df["generation_method"][min(i, n_init)] == "GPEI"
+
+        df["generation_method"][min(i, n_init)] == "BoTorch"
 
     # Try to load saved client from json. This used to fail when the SOBOL
     # step was skipped due to n_external > n_init. It is added here to prevent
@@ -867,24 +868,33 @@ def test_ax_service_init():
     # `n_external` Manual trials.
     df = ax_client.get_trials_data_frame()
     for j in range(n_external):
-        assert df["generation_method"][j] == "Manual"
+        assert df["generation_method"][j] is None
     for k in range(n_external, n_external + n_init):
         assert df["generation_method"][k] == "Sobol"
-    df["generation_method"][n_external + n_init] == "GPEI"
+    df["generation_method"][n_external + n_init] == "BoTorch"
 
 
 if __name__ == "__main__":
-    test_ax_single_fidelity()
-    test_ax_single_fidelity_resume()
-    test_ax_single_fidelity_int()
-    test_ax_single_fidelity_moo()
-    test_ax_single_fidelity_fb()
-    test_ax_single_fidelity_moo_fb()
-    test_ax_single_fidelity_updated_params()
-    test_ax_multi_fidelity()
-    test_ax_multitask()
-    test_ax_client()
-    test_ax_single_fidelity_with_history()
-    test_ax_multi_fidelity_with_history()
-    test_ax_multitask_with_history()
-    test_ax_service_init()
+    tests = [
+        test_ax_single_fidelity,
+        test_ax_single_fidelity_resume,
+        test_ax_single_fidelity_int,
+        test_ax_single_fidelity_moo,
+        test_ax_single_fidelity_fb,
+        test_ax_single_fidelity_moo_fb,
+        test_ax_single_fidelity_updated_params,
+        test_ax_multi_fidelity,
+        test_ax_multitask,
+        test_ax_client,
+        test_ax_single_fidelity_with_history,
+        test_ax_multi_fidelity_with_history,
+        test_ax_multitask_with_history,
+        test_ax_service_init,
+    ]
+
+    for test in tests:
+        print()
+        print("-" * len(test.__name__))
+        print(test.__name__)  # Print test name
+        print("-" * len(test.__name__))
+        test()  # Run the test

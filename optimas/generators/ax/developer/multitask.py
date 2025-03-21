@@ -3,12 +3,11 @@
 import os
 from copy import deepcopy
 from typing import List, Dict, Tuple, Optional, Union
+from pyre_extensions import assert_is_instance
 
 import numpy as np
 import torch
-from packaging import version
 
-from ax.version import version as ax_version
 from ax.core.arm import Arm
 from ax.core.batch_trial import BatchTrial
 from ax.core.multi_type_experiment import MultiTypeExperiment
@@ -22,8 +21,40 @@ from ax.modelbridge.torch import TorchModelBridge
 from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 from ax.storage.json_store.save import save_experiment
-from ax.storage.metric_registry import register_metric
-from ax.modelbridge.factory import get_MTGP_LEGACY as get_MTGP
+from ax.storage.metric_registry import register_metrics
+
+from ax.modelbridge.registry import Models, ST_MTGP_trans
+
+try:
+    # For Ax >= 0.5.0
+    from ax.modelbridge.transforms.derelativize import Derelativize
+    from ax.modelbridge.transforms.convert_metric_names import (
+        ConvertMetricNames,
+    )
+    from ax.modelbridge.transforms.trial_as_task import TrialAsTask
+    from ax.modelbridge.transforms.stratified_standardize_y import (
+        StratifiedStandardizeY,
+    )
+    from ax.modelbridge.transforms.task_encode import TaskChoiceToIntTaskChoice
+    from ax.modelbridge.registry import MBM_X_trans
+
+    MT_MTGP_trans = MBM_X_trans + [
+        Derelativize,
+        ConvertMetricNames,
+        TrialAsTask,
+        StratifiedStandardizeY,
+        TaskChoiceToIntTaskChoice,
+    ]
+
+except ImportError:
+    # For Ax < 0.5.0
+    from ax.modelbridge.registry import MT_MTGP_trans
+
+from ax.core.experiment import Experiment
+from ax.core.data import Data
+from ax.modelbridge.transforms.convert_metric_names import (
+    tconfig_from_mt_experiment,
+)
 
 from optimas.generators.ax.base import AxGenerator
 from optimas.core import (
@@ -37,11 +68,78 @@ from optimas.core import (
 )
 from .ax_metric import AxMetric
 
-
 # Define generator states.
 NOT_STARTED = "not_started"
 LOFI_RETURNED = "lofi_returned"
 HIFI_RETURNED = "hifi_returned"
+
+
+# get_MTGP is not part of the Ax codebase, as of Ax 0.4.1, due to this PR:
+# https://github.com/facebook/Ax/pull/2508
+# Here we use `get_MTGP` https://ax.dev/docs/tutorials/multi_task/
+def get_MTGP(
+    experiment: Experiment,
+    data: Data,
+    search_space: Optional[SearchSpace] = None,
+    trial_index: Optional[int] = None,
+    device: torch.device = torch.device("cpu"),
+    dtype: torch.dtype = torch.double,
+) -> TorchModelBridge:
+    """Instantiate a Multi-task Gaussian Process (MTGP) model.
+
+    Points are generated with EI (Expected Improvement).
+    If the input experiment is a MultiTypeExperiment then a
+    Multi-type Multi-task GP model will be instantiated.
+    Otherwise, the model will be a Single-type Multi-task GP.
+    """
+    if isinstance(experiment, MultiTypeExperiment):
+        trial_index_to_type = {
+            t.index: t.trial_type for t in experiment.trials.values()
+        }
+        transforms = MT_MTGP_trans
+        transform_configs = {
+            "TrialAsTask": {
+                "trial_level_map": {"trial_type": trial_index_to_type}
+            },
+            "ConvertMetricNames": tconfig_from_mt_experiment(experiment),
+        }
+    else:
+        # Set transforms for a Single-type MTGP model.
+        transforms = ST_MTGP_trans
+        transform_configs = None
+
+    # Choose the status quo features for the experiment from the selected
+    # trial. If trial_index is None, we will look for a status quo from the
+    # last experiment trial to use as a status quo for the experiment.
+    if trial_index is None:
+        trial_index = len(experiment.trials) - 1
+    elif trial_index >= len(experiment.trials):
+        raise ValueError(
+            "trial_index is bigger than the number of experiment trials"
+        )
+
+    status_quo = experiment.trials[trial_index].status_quo
+    if status_quo is None:
+        status_quo_features = None
+    else:
+        status_quo_features = ObservationFeatures(
+            parameters=status_quo.parameters,
+            trial_index=trial_index,  # pyre-ignore[6]
+        )
+
+    return assert_is_instance(
+        Models.ST_MTGP(
+            experiment=experiment,
+            search_space=search_space or experiment.search_space,
+            data=data,
+            transforms=transforms,
+            transform_configs=transform_configs,
+            torch_dtype=dtype,
+            torch_device=device,
+            status_quo_features=status_quo_features,
+        ),
+        TorchModelBridge,
+    )
 
 
 class AxMultitaskGenerator(AxGenerator):
@@ -307,7 +405,9 @@ class AxMultitaskGenerator(AxGenerator):
         )
 
         # Register metric in order to be able to save experiment to json file.
-        _, encoder_registry, decoder_registry = register_metric(AxMetric)
+        _, encoder_registry, decoder_registry = register_metrics(
+            {AxMetric: None}
+        )
         self._encoder_registry = encoder_registry
         self._decoder_registry = decoder_registry
 
