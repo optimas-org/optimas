@@ -7,7 +7,7 @@ import pandas as pd
 
 
 def convert_to_dataframe(
-    data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame]
+    data: Union[Dict, List[Dict], np.ndarray, pd.DataFrame],
 ) -> pd.DataFrame:
     """Convert input data to a pandas DataFrame.
 
