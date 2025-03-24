@@ -162,9 +162,7 @@ class AxServiceGenerator(AxGenerator):
         return points
 
     def tell(self, results: List[dict]) -> None:
-        """
-        Send the results of evaluations to the generator.
-        """
+        """Send the results of evaluations to the generator."""
         for result in results:
             trial = Trial.from_dict(
                 trial_dict=result,
