@@ -23,7 +23,7 @@ from optimas.core import (
     Trial,
     VaryingParameter,
     Parameter,
-    TrialParameter,
+    TrialStatus,
 )
 from optimas.generators.ax.base import AxGenerator
 from optimas.utils.ax import AxModelManager
@@ -109,9 +109,6 @@ class AxServiceGenerator(AxGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
-        custom_trial_parameters = [
-            TrialParameter("ax_trial_id", dtype=int),
-        ]
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
@@ -122,7 +119,6 @@ class AxServiceGenerator(AxGenerator):
             save_model=save_model,
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,
-            custom_trial_parameters=custom_trial_parameters,
             allow_fixed_parameters=True,
             allow_updating_parameters=True,
         )
