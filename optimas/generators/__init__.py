@@ -4,8 +4,8 @@ try:
     from .ax.service.multi_fidelity import AxMultiFidelityGenerator
     from .ax.service.ax_client import AxClientGenerator
     from .ax.developer.multitask import AxMultitaskGenerator
-except (ImportError, ModuleNotFoundError) as e:
-    if e.__str__().startswith("No module named 'ax"):
+except ImportError as e:
+    if e.__str__() == "No module named 'ax'":
         # Replace generators by dummy generators that will
         # raise an error only if the user tries to instantiate them
         # and tell them to install ax-platform
