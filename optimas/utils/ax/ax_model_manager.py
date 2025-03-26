@@ -30,6 +30,7 @@ try:
     ax_installed = True
 except ImportError:
     from .import_error_dummy_class import AxImportErrorDummyClass
+
     AxClient = AxImportErrorDummyClass
     TorchModelBridge = AxImportErrorDummyClass
     ax_installed = False
