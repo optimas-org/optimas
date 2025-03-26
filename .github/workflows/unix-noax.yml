@@ -35,5 +35,5 @@ jobs:
     - shell: bash -l {0}
       name: Run unit tests without Ax
       run: |
-        python -m pytest tests/ --ignore=tests/test_ax_generators.py --ignore=tests/test_ax_model_manager.py
+        python -m pytest tests/ --ignore=tests/test_ax_generators.py --ignore=tests/test_ax_model_manager.py  --ignore=tests/test_gpu_resources.py
         mpirun -np 3 python -m pytest --with-mpi tests/test_grid_sampling_mpi.py
