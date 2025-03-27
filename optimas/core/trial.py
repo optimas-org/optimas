@@ -36,10 +36,6 @@ class Trial:
         parameter).
     index : int, optional
         Index of the trial.
-    custom_parameters : list of TrialParameter, optional
-        Additional parameters needed to identify or carry out the trial, and
-        which will be included in the optimization history.
-
     """
 
     def __init__(
@@ -50,7 +46,6 @@ class Trial:
         parameter_values: Optional[List[float]] = None,
         evaluations: Optional[List[Evaluation]] = None,
         index: Optional[int] = None,
-        custom_parameters: Optional[List[TrialParameter]] = None,
     ) -> None:
         # Process inputs.
         self._varying_parameters = varying_parameters
@@ -63,15 +58,8 @@ class Trial:
         )
         evaluations = [] if evaluations is None else evaluations
         self._index = index
-        self._custom_parameters = (
-            [] if custom_parameters is None else custom_parameters
-        )
         self._ignored = False
         self._ignored_reason = None
-
-        # Add custom parameters as trial attributes.
-        for param in self._custom_parameters:
-            setattr(self, param.name, None)
 
         # Create map of evaluations to objectives and analyzed parameters.
         self._mapped_evaluations = {}
@@ -138,11 +126,6 @@ class Trial:
     def ignored_reason(self) -> str:
         """Get the reason why the trial is ignored by the generator."""
         return self._ignored_reason
-
-    @property
-    def custom_parameters(self) -> List[TrialParameter]:
-        """Get the list of custom trial parameters."""
-        return self._custom_parameters
 
     @property
     def status(self) -> TrialStatus:
