@@ -23,4 +23,3 @@ class ExternalGenerator(Generator):
     def ingest(self, trials):
         """Send the results of evaluations to the generator."""
         self.gen.ingest(trials)
-        
