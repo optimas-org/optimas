@@ -142,7 +142,7 @@ class AxServiceGenerator(AxGenerator):
         """Get access to the underlying model using an `AxModelManager`."""
         return self._model
 
-    def ask(self, num_points: Optional[int]) -> List[dict]:
+    def suggest(self, num_points: Optional[int]) -> List[dict]:
         """Request the next set of points to evaluate."""
         points = []
         for _ in range(num_points):
@@ -157,7 +157,7 @@ class AxServiceGenerator(AxGenerator):
             points.append(point)
         return points
 
-    def tell(self, results: List[dict]) -> None:
+    def ingest(self, results: List[dict]) -> None:
         """Send the results of evaluations to the generator."""
         for result in results:
             trial = Trial.from_dict(

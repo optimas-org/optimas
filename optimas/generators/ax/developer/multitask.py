@@ -260,7 +260,7 @@ class AxMultitaskGenerator(AxGenerator):
             "to the number of high-fidelity trials"
         )
 
-    def ask(self, trials: List[Trial]) -> List[Trial]:
+    def suggest(self, trials: List[Trial]) -> List[Trial]:
         """Fill in the parameter values of the requested trials."""
         for trial in trials:
             next_trial = self._get_next_trial_arm()
@@ -275,7 +275,7 @@ class AxMultitaskGenerator(AxGenerator):
                 trial.trial_index = trial_index
         return trials
 
-    def tell(self, trials: List[Trial]) -> None:
+    def ingest(self, trials: List[Trial]) -> None:
         """Incorporate evaluated trials into experiment."""
         if self.gen_state == NOT_STARTED:
             self._incorporate_external_data(trials)

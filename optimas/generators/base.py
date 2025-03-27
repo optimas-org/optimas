@@ -205,7 +205,7 @@ class Generator:
         if n_trials > self.n_queued_trials:
             n_gen = n_trials - self.n_queued_trials
             # Ask generator for n_gen points, using the standardized API
-            gen_points = self.ask(n_gen)
+            gen_points = self.suggest(n_gen)
             # Convert the points to the Trial format
             gen_trials = []
             for point in gen_points:
@@ -252,7 +252,7 @@ class Generator:
 
         """
         # Feed data to the generator, using the standardized API
-        self.tell([trial.to_dict() for trial in trials])
+        self.ingest([trial.to_dict() for trial in trials])
 
         # Perform additional checks that rely on the trial format
         for trial in trials:
@@ -583,7 +583,7 @@ class Generator:
         libE_specs = {}
         return libE_specs
 
-    def ask(self, num_points: Optional[int]) -> List[dict]:
+    def suggest(self, num_points: Optional[int]) -> List[dict]:
         """Request the next set of points to evaluate.
 
         Parameters
@@ -594,7 +594,7 @@ class Generator:
         """
         return []
 
-    def tell(self, results: List[dict]) -> None:
+    def ingest(self, results: List[dict]) -> None:
         """
         Send the results of evaluations to the generator.
 

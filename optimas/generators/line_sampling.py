@@ -103,7 +103,7 @@ class LineSamplingGenerator(Generator):
         # Store configurations.
         self._all_configs = all_configs
 
-    def ask(self, num_points: Optional[int]) -> List[dict]:
+    def suggest(self, num_points: Optional[int]) -> List[dict]:
         """Request the next set of points to evaluate."""
         points = []
         for _ in range(num_points):

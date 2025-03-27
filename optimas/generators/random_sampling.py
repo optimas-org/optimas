@@ -57,7 +57,7 @@ class RandomSamplingGenerator(Generator):
         self._rng = np.random.default_rng(seed)
         self._define_generator_parameters()
 
-    def ask(self, num_points: Optional[int]) -> List[dict]:
+    def suggest(self, num_points: Optional[int]) -> List[dict]:
         """Request the next set of points to evaluate."""
         configs = self._generate_sampling[self._distribution](num_points)
         points = []

@@ -16,10 +16,11 @@ class ExternalGenerator(Generator):
         )
         self.gen = ext_gen
 
-    def ask(self, n_trials):
+    def suggest(self, n_trials):
         """Request the next set of points to evaluate."""
-        return self.gen.ask(n_trials)
+        return self.gen.suggest(n_trials)
 
-    def tell(self, trials):
+    def ingest(self, trials):
         """Send the results of evaluations to the generator."""
-        self.gen.tell(trials)
+        self.gen.ingest(trials)
+        
