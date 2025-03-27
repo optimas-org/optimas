@@ -20,7 +20,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
     """Generate and launch evaluations with the optimas generators.
 
     This function gets the generator object and uses it to generate new
-    evaluations via the `ask` method. Once finished, the result of the
+    evaluations via the `ask_trials` method. Once finished, the result of the
     evaluations is communicated back to the generator via the `tell` method.
 
     This is a persistent generator function, i.e., it is called by a dedicated
@@ -68,7 +68,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
         H_o = np.zeros(number_of_gen_points, dtype=gen_specs["out"])
-        generated_trials = generator.ask(number_of_gen_points)
+        generated_trials = generator.ask_trials(number_of_gen_points)
         for i, trial in enumerate(generated_trials):
             for var, val in zip(
                 trial.varying_parameters, trial.parameter_values
@@ -96,6 +96,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             # Check how many simulations have returned
             n = len(calc_in["sim_id"])
             # Feed the latest simulation results to the generator
+            trials = []
             for i in range(n):
                 trial_index = int(calc_in["trial_index"][i])
                 trial_status = calc_in["trial_status"][i]
@@ -107,8 +108,11 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                         y = calc_in[par.name][i]
                         ev = Evaluation(parameter=par, value=y)
                         trial.complete_evaluation(ev)
-                # Register trial with unknown SEM
-                generator.tell([trial])
+                trials.append(trial)
+
+            # Register trials with unknown SEM
+            generator.tell_trials(trials)
+
             # Set the number of points to generate to that number:
             number_of_gen_points = min(n + n_failed_gens, max_evals - n_gens)
             n_failed_gens = 0
