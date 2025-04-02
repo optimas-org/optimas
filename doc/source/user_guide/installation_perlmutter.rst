@@ -43,7 +43,6 @@ Then, create a file ``submission_script`` with the following content:
     #SBATCH -q regular
     #SBATCH --exclusive
     #SBATCH --gpu-bind=none
-    #SBATCH --gpus-per-node=4
 
     module load cray-python/3.9.13.1
     source $HOME/sw/perlmutter/gpu/venvs/optimas/bin/activate
