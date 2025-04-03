@@ -103,15 +103,14 @@ class LineSamplingGenerator(Generator):
         # Store configurations.
         self._all_configs = all_configs
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
-        """Fill in the parameter values of the requested trials."""
-        for trial in trials:
+    def suggest(self, num_points: Optional[int]) -> List[dict]:
+        """Request the next set of points to evaluate."""
+        points = []
+        for _ in range(num_points):
             if self._all_configs:
                 config = self._all_configs.pop(0)
-                trial.parameter_values = [
-                    config[var.name] for var in trial.varying_parameters
-                ]
-        return trials
+                points.append(config)
+        return points
 
     def _mark_trial_as_failed(self, trial: Trial):
         """No need to do anything, since there is no surrogate model."""

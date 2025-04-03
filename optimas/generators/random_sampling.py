@@ -57,13 +57,16 @@ class RandomSamplingGenerator(Generator):
         self._rng = np.random.default_rng(seed)
         self._define_generator_parameters()
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
-        """Fill in the parameter values of the requested trials."""
-        n_trials = len(trials)
-        configs = self._generate_sampling[self._distribution](n_trials)
-        for trial, config in zip(trials, configs):
-            trial.parameter_values = config
-        return trials
+    def suggest(self, num_points: Optional[int]) -> List[dict]:
+        """Request the next set of points to evaluate."""
+        configs = self._generate_sampling[self._distribution](num_points)
+        points = []
+        for config in configs:
+            point = {}
+            for var, value in zip(self._varying_parameters, config):
+                point[var.name] = value
+            points.append(point)
+        return points
 
     def _check_inputs(
         self,

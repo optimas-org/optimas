@@ -43,7 +43,7 @@ where :math:`l_b=0` and :math:`u_b=15`, the grid of sample looks like:
 
    all_trials = []
    while True:
-       trial = gen.ask(1)
+       trial = gen.ask_trials(1)
        if trial:
            all_trials.append(trial[0])
        else:
