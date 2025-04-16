@@ -7,11 +7,13 @@ Optimas relies on the following packages:
 
 * `jinja2 <https://pypi.org/project/jinja2/>`_ - Needed to generate simulation scripts from templates.
 * `libEnsemble <https://pypi.org/project/libensemble/>`_ - The backbone of optimas, orchestrates the concurrent evaluation of simulations, the resource detection and allocation, and the communication between simulations and manager.
-* `mpi4py <https://pypi.org/project/mpi4py/>`_ - Python bindings for MPI. Required for launching parallel simulations.
 * `pandas <https://pypi.org/project/pandas/>`_ - Enable output as pandas DataFrames.
 * `pydantic <https://pypi.org/project/pydantic/>`_ - Input validation and object serialization.
 * (optional) `Ax <https://pypi.org/project/ax-platform/>`_ - Algorithms for Bayesian optimization.
 
+Optional dependencies:
+
+* `mpi4py <https://pypi.org/project/mpi4py/>`_ - Python bindings for MPI. Required for launching parallel simulations.
 
 The installed dependencies will determine which generators are available for use.
 See table below for a summary.
