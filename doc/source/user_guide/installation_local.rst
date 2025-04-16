@@ -3,6 +3,8 @@ Installation on a local computer
 
 The recommended approach is to install optimas in a ``conda`` environment.
 
+Optional: If you intend to run Optimus with an MPI Runner, ``mpi4py`` is required.
+
 Install ``mpi4py``
 ~~~~~~~~~~~~~~~~~~
 If your system has already an MPI implementation installed, install ``mpi4py``

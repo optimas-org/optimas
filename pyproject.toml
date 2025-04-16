@@ -24,7 +24,6 @@ dependencies = [
     'libensemble >= 1.3.0',
     'jinja2',
     'pandas',
-    'mpi4py',
     'pydantic >= 2.0',
 ]
 dynamic = ['version']
@@ -36,10 +35,12 @@ test = [
     'pytest-mpi',
     'ax-platform >=0.5.0',
     'matplotlib',
+    'mpi4py',
 ]
 all = [
     'ax-platform >=0.5.0',
-    'matplotlib'
+    'matplotlib',
+    'mpi4py',
 ]
 
 [project.urls]

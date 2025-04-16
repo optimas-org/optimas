@@ -52,7 +52,10 @@ or directly from GitHub:
 ```sh
 python -m pip install "optimas[all] @ git+https://github.com/optimas-org/optimas.git"
 ```
-Make sure `mpi4py` is available in your environment before installing optimas. For more details, check out the full [installation guide](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html). We have also prepared dedicated installation instructions for some HPC systems such as
+
+If you intend to run Optimus with an MPI Runner, make sure `mpi4py` is available in your environment before installing optimas.
+
+For more details, check out the full [installation guide](https://optimas.readthedocs.io/en/latest/user_guide/installation_local.html). We have also prepared dedicated installation instructions for some HPC systems such as
 [JUWELS (JSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_juwels.html),
 [Maxwell (DESY)](https://optimas.readthedocs.io/en/latest/user_guide/installation_maxwell.html) and
 [Perlmutter (NERSC)](https://optimas.readthedocs.io/en/latest/user_guide/installation_perlmutter.html).
