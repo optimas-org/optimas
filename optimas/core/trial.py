@@ -94,7 +94,7 @@ class Trial:
         }
 
         if hasattr(self, "_ax_trial_id"):
-            trial_dict["ax_trial_id"] = self._ax_trial_id
+            trial_dict["ax_trial_id"] = self.ax_trial_id
 
         return trial_dict
 
@@ -123,6 +123,7 @@ class Trial:
             Additional parameters needed to identify or carry out the trial, and
             which will be included in the optimization history.
         """
+
         # Prepare values of the input parameters
         parameter_values = [trial_dict[var.name] for var in varying_parameters]
         # Prepare evaluations
@@ -152,6 +153,7 @@ class Trial:
             trial._status = trial_dict["_status"]
         for custom_param in custom_parameters:
             setattr(trial, custom_param.name, trial_dict[custom_param.name])
+
         return trial
 
     @property
@@ -201,6 +203,15 @@ class Trial:
     @index.setter
     def index(self, value):
         self._index = value
+
+    @property
+    def ax_trial_id(self) -> int:
+        """Get the index of the trial."""
+        return self._ax_trial_id
+
+    @ax_trial_id.setter
+    def ax_trial_id(self, value):
+        self._ax_trial_id = value
 
     @property
     def ignored(self) -> bool:

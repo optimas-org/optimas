@@ -168,7 +168,7 @@ class AxServiceGenerator(AxGenerator):
                 custom_parameters=self._custom_trial_parameters,
             )
             try:
-                trial_id = trial.ax_trial_id
+                trial_id = trial._ax_trial_id
                 ax_trial = self._ax_client.get_trial(trial_id)
             except AttributeError:
                 params = {}
