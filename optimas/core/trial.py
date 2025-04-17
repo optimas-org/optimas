@@ -68,7 +68,6 @@ class Trial:
         )
         self._ignored = False
         self._ignored_reason = None
-
         # Add custom parameters as trial attributes.
         for param in self._custom_parameters:
             setattr(self, param.name, None)
@@ -93,6 +92,10 @@ class Trial:
             "_ignored_reason": self._ignored_reason,
             "_status": self._status,
         }
+
+        if hasattr(self, "_ax_trial_id"):
+            trial_dict["ax_trial_id"] = self._ax_trial_id
+
         return trial_dict
 
     @classmethod
@@ -139,6 +142,8 @@ class Trial:
         )
         if "_id" in trial_dict:
             trial._index = trial_dict["_id"]
+        if "ax_trial_id" in trial_dict:
+            trial._ax_trial_id = trial_dict["ax_trial_id"]
         if "_ignored" in trial_dict:
             trial._ignored = trial_dict["_ignored"]
         if "_ignored_reason" in trial_dict:

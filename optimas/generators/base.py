@@ -216,6 +216,8 @@ class Generator:
                     analyzed_parameters=self._analyzed_parameters,
                     custom_parameters=self._custom_trial_parameters,
                 )
+                if 'ax_trial_id' in point:
+                    trial.ax_trial_id = point['ax_trial_id']
                 gen_trials.append(trial)
             # Keep only trials that have been given data.
             for trial in gen_trials:
