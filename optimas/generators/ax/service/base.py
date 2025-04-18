@@ -159,9 +159,7 @@ class AxServiceGenerator(AxGenerator):
 
     def _ignore_out_of_bounds(self, trial: Trial) -> None:
         """Check if trial parameters are within their bounds."""
-        for var, value in zip(
-            trial.varying_parameters, trial.parameter_values
-        ):
+        for var, value in zip(trial.varying_parameters, trial.parameter_values):
             if value < var.lower_bound or value > var.upper_bound:
                 if not self._fit_out_of_design:
                     ignore_reason = (
