@@ -157,6 +157,28 @@ class AxServiceGenerator(AxGenerator):
             points.append(point)
         return points
 
+    def _ignore_out_of_bounds(self, trial: Trial) -> None:
+        """Check if trial parameters are within their bounds."""
+        for var, value in zip(
+            trial.varying_parameters, trial.parameter_values
+        ):
+            if value < var.lower_bound or value > var.upper_bound:
+                if not self._fit_out_of_design:
+                    ignore_reason = (
+                        f"Parameter {var.name} value {value} is outside "
+                        f"allowed range [{var.lower_bound}, {var.upper_bound}]. "
+                        "Set `fit_out_of_design=True` if you want "
+                        "the model to use these data."
+                    )
+                    trial.ignore(reason=ignore_reason)
+
+    def ignore_trials(self, trials: List[Trial]) -> None:
+        """Ignore trials as determined by the generator."""
+        for trial in trials:
+            if not hasattr(trial, "ax_trial_id"):
+                # Handle unknown trial
+                self._ignore_out_of_bounds(trial)
+
     def ingest(self, results: List[dict]) -> None:
         """Send the results of evaluations to the generator."""
         for result in results:
@@ -168,7 +190,7 @@ class AxServiceGenerator(AxGenerator):
                 custom_parameters=self._custom_trial_parameters,
             )
             try:
-                trial_id = trial._ax_trial_id
+                trial_id = trial.ax_trial_id
                 ax_trial = self._ax_client.get_trial(trial_id)
             except AttributeError:
                 params = {}
@@ -188,15 +210,6 @@ class AxServiceGenerator(AxGenerator):
                             ax_trial.add_arm(Arm(parameters=params))
                             ax_trial.mark_running(no_runner_required=True)
                             trial_id = ax_trial.index
-                        else:
-                            ignore_reason = (
-                                f"The parameters {params} are outside of the "
-                                "range of the varying parameters. "
-                                "Set `fit_out_of_design=True` if you want "
-                                "the model to use these data."
-                            )
-                            trial.ignore(reason=ignore_reason)
-                            continue
                     else:
                         raise error
                 ax_trial = self._ax_client.get_trial(trial_id)

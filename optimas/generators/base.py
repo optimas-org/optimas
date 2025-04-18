@@ -239,6 +239,10 @@ class Generator:
                 trials.append(trial)
         return trials
 
+    def ignore_trials(self, trials: List[Trial]) -> None:
+        """Ignore trials as determined by the generator."""
+        pass
+
     def tell_trials(
         self, trials: List[Trial], allow_saving_model: Optional[bool] = True
     ) -> None:
@@ -254,6 +258,7 @@ class Generator:
 
         """
         # Feed data to the generator, using the standardized API
+        self.ignore_trials(trials)
         self.ingest([trial.to_dict() for trial in trials])
 
         # Perform additional checks that rely on the trial format
