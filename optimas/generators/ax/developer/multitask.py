@@ -267,14 +267,14 @@ class AxMultitaskGenerator(AxGenerator):
             "The number of low-fidelity trials must be larger than or equal "
             "to the number of high-fidelity trials"
         )
-        
+
     def suggest(self, num_points: Optional[int]) -> List[dict]:
         """Request the next set of points to evaluate."""
         points = []
-        for _ in range(num_points):        
+        for _ in range(num_points):
             next_trial = self._get_next_trial_arm()
             if next_trial is not None:
-                arm, trial_type, trial_index = next_trial           
+                arm, trial_type, trial_index = next_trial
             point = {
                 var.name: arm.parameters.get(var.name)
                 for var in self._varying_parameters
