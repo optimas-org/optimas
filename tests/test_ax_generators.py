@@ -831,7 +831,7 @@ def test_ax_service_init():
         filepath=os.path.join(
             exploration.exploration_dir_path,
             "model_history",
-            "ax_client_at_eval_5.json",
+            "ax_client_at_eval_6.json",
         )
     )
 
