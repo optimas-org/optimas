@@ -308,10 +308,10 @@ class AxMultitaskGenerator(AxGenerator):
     def _incorporate_external_data(self, trials: List[Trial]) -> None:
         """Incorporate external data (e.g., from history) into experiment."""
         # Get trial indices.
-        # SH should have handling if trial_indexs are None...
+        # SH should have handling if ax_trial_ids are None...
         trial_indices = []
         for trial in trials:
-            trial_indices.append(trial.trial_index)
+            trial_indices.append(trial.ax_trial_id)
         trial_indices = np.unique(np.array(trial_indices))
 
         # Group trials by index.
@@ -319,7 +319,7 @@ class AxMultitaskGenerator(AxGenerator):
         for index in trial_indices:
             grouped_trials[index] = []
         for trial in trials:
-            grouped_trials[trial.trial_index].append(trial)
+            grouped_trials[trial.ax_trial_id].append(trial)
 
         # Add trials to experiment.
         for index in trial_indices:
