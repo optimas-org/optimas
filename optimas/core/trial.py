@@ -123,7 +123,6 @@ class Trial:
             Additional parameters needed to identify or carry out the trial, and
             which will be included in the optimization history.
         """
-
         # Prepare values of the input parameters
         parameter_values = [trial_dict[var.name] for var in varying_parameters]
         # Prepare evaluations
