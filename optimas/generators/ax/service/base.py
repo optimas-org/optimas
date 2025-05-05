@@ -253,10 +253,7 @@ class AxServiceGenerator(AxGenerator):
         # Add outcome constraints evaluations.
         ax_config = self._ax_client.experiment.optimization_config
         if ax_config.outcome_constraints:
-            ocs = [
-                oc.metric.name
-                for oc in ax_config.outcome_constraints
-            ]
+            ocs = [oc.metric.name for oc in ax_config.outcome_constraints]
             for ev in trial.parameter_evaluations:
                 par_name = ev.parameter.name
                 if par_name in ocs:
