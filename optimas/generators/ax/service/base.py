@@ -107,7 +107,7 @@ class AxServiceGenerator(AxGenerator):
         save_model: Optional[bool] = True,
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
-    ) -> None:
+    ) -> None:       
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
@@ -152,7 +152,7 @@ class AxServiceGenerator(AxGenerator):
                 var.name: parameters.get(var.name)
                 for var in self._varying_parameters
             }
-            point["ax_trial_id"] = trial_id
+            point["_id"] = trial_id
             points.append(point)
         return points
 
@@ -169,8 +169,10 @@ class AxServiceGenerator(AxGenerator):
             if trial.ignored:
                 continue
             try:
-                ax_trial = self._ax_client.get_trial(trial.ax_trial_id)
-            except AttributeError:
+                ax_trial = self._ax_client.get_trial(trial.gen_id)
+            except KeyError:
+                # This could indicate gen_id is not set or it is unrecognized
+                # Either way, Ax should generate a new trial / internal id.
                 ax_trial = self._insert_unknown_trial(trial)
             finally:
                 if trial.completed:
@@ -197,7 +199,7 @@ class AxServiceGenerator(AxGenerator):
     def ignore_trials(self, trials: List[Trial]) -> None:
         """Ignore trials as determined by the generator."""
         for trial in trials:
-            if not hasattr(trial, "ax_trial_id"):
+            if trial.gen_id is None:
                 # Handle unknown trial
                 self._ignore_out_of_bounds(trial)
 
@@ -345,7 +347,7 @@ class AxServiceGenerator(AxGenerator):
 
     def _mark_trial_as_failed(self, trial: Trial):
         """Mark a trial as failed so that is not used for fitting the model."""
-        ax_trial = self._ax_client.get_trial(trial.ax_trial_id)
+        ax_trial = self._ax_client.get_trial(trial.gen_id)
         if self._abandon_failed_trials:
             ax_trial.mark_abandoned(unsafe=True)
         else:

@@ -63,6 +63,7 @@ class Trial:
         )
         evaluations = [] if evaluations is None else evaluations
         self._index = index
+        self._gen_id = None
         self._custom_parameters = (
             [] if custom_parameters is None else custom_parameters
         )
@@ -87,14 +88,14 @@ class Trial:
             **self.objectives_as_dict(),
             **self.analyzed_parameters_as_dict(),
             **self.custom_parameters_as_dict(),
-            "_id": self._index,
+            "_id": self._gen_id,
             "_ignored": self._ignored,
             "_ignored_reason": self._ignored_reason,
             "_status": self._status,
         }
 
-        if hasattr(self, "_ax_trial_id"):
-            trial_dict["ax_trial_id"] = self.ax_trial_id
+        if hasattr(self, "_gen_id"):
+            trial_dict["gen_id"] = self.gen_id
 
         return trial_dict
 
@@ -141,9 +142,7 @@ class Trial:
             custom_parameters=custom_parameters,
         )
         if "_id" in trial_dict:
-            trial._index = trial_dict["_id"]
-        if "ax_trial_id" in trial_dict:
-            trial._ax_trial_id = trial_dict["ax_trial_id"]
+            trial._gen_id = trial_dict["_id"]
         if "_ignored" in trial_dict:
             trial._ignored = trial_dict["_ignored"]
         if "_ignored_reason" in trial_dict:
@@ -204,13 +203,13 @@ class Trial:
         self._index = value
 
     @property
-    def ax_trial_id(self) -> int:
+    def gen_id(self) -> int:
         """Get the index of the trial."""
-        return self._ax_trial_id
+        return self._gen_id
 
-    @ax_trial_id.setter
-    def ax_trial_id(self, value):
-        self._ax_trial_id = value
+    @gen_id.setter
+    def gen_id(self, value):
+        self._gen_id = value
 
     @property
     def ignored(self) -> bool:
