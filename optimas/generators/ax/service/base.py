@@ -107,7 +107,7 @@ class AxServiceGenerator(AxGenerator):
         save_model: Optional[bool] = True,
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
-    ) -> None:       
+    ) -> None:
         super().__init__(
             varying_parameters=varying_parameters,
             objectives=objectives,
