@@ -94,9 +94,6 @@ class Trial:
             "_status": self._status,
         }
 
-        if hasattr(self, "_gen_id"):
-            trial_dict["gen_id"] = self.gen_id
-
         return trial_dict
 
     @classmethod
