@@ -474,7 +474,9 @@ def test_ax_single_fidelity_resume():
 
         if not fit_out_of_design:
             # Check that no old evaluations were added
-            assert len(exploration.history) == 11
+            assert (
+                len(exploration.history) == 11
+            ), f"Got: {len(exploration.history)}"
             assert all(exploration.history.trial_ignored.to_numpy()[:-1])
             # Check that the sobol step has not been skipped.
             df = ax_client.get_trials_data_frame()
@@ -831,7 +833,7 @@ def test_ax_service_init():
         filepath=os.path.join(
             exploration.exploration_dir_path,
             "model_history",
-            "ax_client_at_eval_6.json",
+            "ax_client_at_eval_5.json",
         )
     )
 
