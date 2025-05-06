@@ -275,16 +275,16 @@ class AxMultitaskGenerator(AxGenerator):
             next_trial = self._get_next_trial_arm()
             if next_trial is not None:
                 arm, trial_type, trial_index = next_trial
-            point = {
-                var.name: arm.parameters.get(var.name)
-                for var in self._varying_parameters
-            }
-            # SH for VOCS standard these will need to be declared as variables
-            # For now much match the trial parameter names.
-            point["ax_trial_id"] = trial_index
-            point["arm_name"] = arm.name
-            point["trial_type"] = trial_type
-            points.append(point)
+                point = {
+                    var.name: arm.parameters.get(var.name)
+                    for var in self._varying_parameters
+                }
+                # SH for VOCS standard these will need to be 'variables'
+                # For now much match the trial parameter names.
+                point["ax_trial_id"] = trial_index
+                point["arm_name"] = arm.name
+                point["trial_type"] = trial_type
+                points.append(point)
         return points
 
     def ingest(self, results: List[dict]) -> None:
