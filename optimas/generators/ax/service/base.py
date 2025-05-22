@@ -23,7 +23,6 @@ from optimas.core import (
     Trial,
     VaryingParameter,
     Parameter,
-    TrialStatus,
 )
 from optimas.generators.ax.base import AxGenerator
 from optimas.utils.ax import AxModelManager
@@ -142,97 +141,128 @@ class AxServiceGenerator(AxGenerator):
         """Get access to the underlying model using an `AxModelManager`."""
         return self._model
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
-        """Fill in the parameter values of the requested trials."""
-        for trial in trials:
+    def suggest(self, num_points: Optional[int]) -> List[dict]:
+        """Request the next set of points to evaluate."""
+        points = []
+        for _ in range(num_points):
             parameters, trial_id = self._ax_client.get_next_trial(
                 fixed_features=self._fixed_features
             )
-            trial.parameter_values = [
-                parameters.get(var.name) for var in self._varying_parameters
-            ]
-            trial.ax_trial_id = trial_id
-        return trials
+            point = {
+                var.name: parameters.get(var.name)
+                for var in self._varying_parameters
+            }
+            point["_id"] = trial_id
+            points.append(point)
+        return points
 
-    def _tell(self, trials: List[Trial]) -> None:
-        """Incorporate evaluated trials into Ax client."""
-        for trial in trials:
+    def ingest(self, results: List[dict]) -> None:
+        """Send the results of evaluations to the generator."""
+        for result in results:
+            trial = Trial.from_dict(
+                trial_dict=result,
+                varying_parameters=self._varying_parameters,
+                objectives=self._objectives,
+                analyzed_parameters=self._analyzed_parameters,
+                custom_parameters=self._custom_trial_parameters,
+            )
+            if trial.ignored:
+                continue
             try:
-                trial_id = trial.ax_trial_id
-                ax_trial = self._ax_client.get_trial(trial_id)
-            except AttributeError:
-                params = {}
-                for var, value in zip(
-                    trial.varying_parameters, trial.parameter_values
-                ):
-                    params[var.name] = value
-                try:
-                    _, trial_id = self._ax_client.attach_trial(params)
-                except ValueError as error:
-                    # Bypass checks from AxClient and manually add a trial
-                    # outside of the search space.
-                    # https://github.com/facebook/Ax/issues/768#issuecomment-1036515242
-                    if "not a valid value" in str(error):
-                        if self._fit_out_of_design:
-                            ax_trial = self._ax_client.experiment.new_trial()
-                            ax_trial.add_arm(Arm(parameters=params))
-                            ax_trial.mark_running(no_runner_required=True)
-                            trial_id = ax_trial.index
-                        else:
-                            ignore_reason = (
-                                f"The parameters {params} are outside of the "
-                                "range of the varying parameters. "
-                                "Set `fit_out_of_design=True` if you want "
-                                "the model to use these data."
-                            )
-                            trial.ignore(reason=ignore_reason)
-                            continue
-                    else:
-                        raise error
-                ax_trial = self._ax_client.get_trial(trial_id)
-
-                # Since data was given externally, reduce number of
-                # initialization trials, but only if they have not failed.
-                if trial.completed and not self._enforce_n_init:
-                    generation_strategy = self._ax_client.generation_strategy
-                    current_step = generation_strategy.current_step
-                    # Reduce only if there are still Sobol trials left.
-                    if current_step.model == Models.SOBOL:
-                        for tc in current_step.transition_criteria:
-                            # Looping over all criterial makes sure we reduce
-                            # the transition thresholds due to `_n_init`
-                            # (i.e., max trials) and `min_trials_observed=1` (
-                            # i.e., min trials).
-                            if isinstance(tc, (MinTrials, MaxTrials)):
-                                tc.threshold -= 1
-                        generation_strategy._maybe_transition_to_next_node()
+                ax_trial = self._ax_client.get_trial(trial.gen_id)
+            except KeyError:
+                # This could indicate gen_id is not set or it is unrecognized
+                # Either way, Ax should generate a new trial / internal id.
+                ax_trial = self._insert_unknown_trial(trial)
             finally:
-                if trial.ignored:
-                    continue
-                elif trial.completed:
-                    outcome_evals = {}
-                    # Add objective evaluations.
-                    for ev in trial.objective_evaluations:
-                        outcome_evals[ev.parameter.name] = (ev.value, ev.sem)
-                    # Add outcome constraints evaluations.
-                    ax_config = self._ax_client.experiment.optimization_config
-                    if ax_config.outcome_constraints:
-                        ocs = [
-                            oc.metric.name
-                            for oc in ax_config.outcome_constraints
-                        ]
-                        for ev in trial.parameter_evaluations:
-                            par_name = ev.parameter.name
-                            if par_name in ocs:
-                                outcome_evals[par_name] = (ev.value, ev.sem)
-                    self._ax_client.complete_trial(
-                        trial_index=trial_id, raw_data=outcome_evals
-                    )
+                if trial.completed:
+                    self._complete_trial(ax_trial.index, trial)
                 elif trial.failed:
                     if self._abandon_failed_trials:
                         ax_trial.mark_abandoned()
                     else:
                         ax_trial.mark_failed()
+
+    def _ignore_out_of_bounds(self, trial: Trial) -> None:
+        """Check if trial parameters are within their bounds."""
+        for var, value in zip(trial.varying_parameters, trial.parameter_values):
+            if value < var.lower_bound or value > var.upper_bound:
+                if not self._fit_out_of_design:
+                    ignore_reason = (
+                        f"Parameter {var.name} value {value} is outside "
+                        f"allowed range [{var.lower_bound}, {var.upper_bound}]. "
+                        "Set `fit_out_of_design=True` if you want "
+                        "the model to use these data."
+                    )
+                    trial.ignore(reason=ignore_reason)
+
+    def ignore_trials(self, trials: List[Trial]) -> None:
+        """Ignore trials as determined by the generator."""
+        for trial in trials:
+            if trial.gen_id is None:
+                # Handle unknown trial
+                self._ignore_out_of_bounds(trial)
+
+    def _get_ingest_params(self, trial: Trial) -> Dict:
+        """Return a trials ingest parameters as a dictionary."""
+        params = {}
+        for var, value in zip(trial.varying_parameters, trial.parameter_values):
+            params[var.name] = value
+        return params
+
+    def _insert_unknown_trial(self, trial: Trial) -> None:
+        """Insert an unknown trial into the Ax client."""
+        params = self._get_ingest_params(trial)
+        try:
+            _, trial_id = self._ax_client.attach_trial(params)
+        except ValueError as error:
+            # Bypass checks from AxClient and manually add a trial
+            # outside of the search space.
+            # https://github.com/facebook/Ax/issues/768#issuecomment-1036515242
+            if "not a valid value" in str(error):
+                if self._fit_out_of_design:
+                    ax_trial = self._ax_client.experiment.new_trial()
+                    ax_trial.add_arm(Arm(parameters=params))
+                    ax_trial.mark_running(no_runner_required=True)
+                    trial_id = ax_trial.index
+            else:
+                raise error
+        ax_trial = self._ax_client.get_trial(trial_id)
+
+        # Since data was given externally, reduce number of
+        # initialization trials, but only if they have not failed.
+        if trial.completed and not self._enforce_n_init:
+            generation_strategy = self._ax_client.generation_strategy
+            current_step = generation_strategy.current_step
+            # Reduce only if there are still Sobol trials left.
+            if current_step.model == Models.SOBOL:
+                for tc in current_step.transition_criteria:
+                    # Looping over all criterial makes sure we reduce
+                    # the transition thresholds due to `_n_init`
+                    # (i.e., max trials) and `min_trials_observed=1` (
+                    # i.e., min trials).
+                    if isinstance(tc, (MinTrials, MaxTrials)):
+                        tc.threshold -= 1
+                generation_strategy._maybe_transition_to_next_node()
+        return ax_trial
+
+    def _complete_trial(self, ax_trial_index: int, trial: Trial) -> None:
+        """Complete a trial."""
+        outcome_evals = {}
+        # Add objective evaluations.
+        for ev in trial.objective_evaluations:
+            outcome_evals[ev.parameter.name] = (ev.value, ev.sem)
+        # Add outcome constraints evaluations.
+        ax_config = self._ax_client.experiment.optimization_config
+        if ax_config.outcome_constraints:
+            ocs = [oc.metric.name for oc in ax_config.outcome_constraints]
+            for ev in trial.parameter_evaluations:
+                par_name = ev.parameter.name
+                if par_name in ocs:
+                    outcome_evals[par_name] = (ev.value, ev.sem)
+        self._ax_client.complete_trial(
+            trial_index=ax_trial_index, raw_data=outcome_evals
+        )
 
     def _create_ax_client(self) -> AxClient:
         """Create Ax client."""
@@ -317,7 +347,7 @@ class AxServiceGenerator(AxGenerator):
 
     def _mark_trial_as_failed(self, trial: Trial):
         """Mark a trial as failed so that is not used for fitting the model."""
-        ax_trial = self._ax_client.get_trial(trial.ax_trial_id)
+        ax_trial = self._ax_client.get_trial(trial.gen_id)
         if self._abandon_failed_trials:
             ax_trial.mark_abandoned(unsafe=True)
         else:

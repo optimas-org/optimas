@@ -63,12 +63,12 @@ class Trial:
         )
         evaluations = [] if evaluations is None else evaluations
         self._index = index
+        self._gen_id = None
         self._custom_parameters = (
             [] if custom_parameters is None else custom_parameters
         )
         self._ignored = False
         self._ignored_reason = None
-
         # Add custom parameters as trial attributes.
         for param in self._custom_parameters:
             setattr(self, param.name, None)
@@ -80,6 +80,76 @@ class Trial:
         for ev in evaluations:
             self._mapped_evaluations[ev.parameter.name] = ev
         self.mark_as(TrialStatus.CANDIDATE)
+
+    def to_dict(self) -> Dict:
+        """Convert the trial to a dictionary."""
+        trial_dict = {
+            **self.parameters_as_dict(),
+            **self.objectives_as_dict(),
+            **self.analyzed_parameters_as_dict(),
+            **self.custom_parameters_as_dict(),
+            "_id": self._gen_id,
+            "_ignored": self._ignored,
+            "_ignored_reason": self._ignored_reason,
+            "_status": self._status,
+        }
+
+        return trial_dict
+
+    @classmethod
+    def from_dict(
+        cls,
+        trial_dict: Dict,
+        varying_parameters: List[VaryingParameter],
+        objectives: List[Objective],
+        analyzed_parameters: List[Parameter],
+        custom_parameters: Optional[List[TrialParameter]] = None,
+    ) -> "Trial":
+        """Create a trial from a dictionary.
+
+        Parameters
+        ----------
+        trial_dict : dict
+            Dictionary containing the trial information.
+        varying_parameters : list of VaryingParameter
+            The varying parameters of the optimization.
+        objectives : list of Objective
+            The optimization objectives.
+        analyzed_parameters : list of Parameter, optional
+            Additional parameters to be analyzed during the optimization.
+        custom_parameters : list of TrialParameter, optional
+            Additional parameters needed to identify or carry out the trial, and
+            which will be included in the optimization history.
+        """
+        # Prepare values of the input parameters
+        parameter_values = [trial_dict[var.name] for var in varying_parameters]
+        # Prepare evaluations
+        evaluations = [
+            Evaluation(parameter=par, value=trial_dict[par.name])
+            for par in objectives + analyzed_parameters
+            if par.name in trial_dict
+        ]
+        # Create the trial object
+        trial = cls(
+            varying_parameters=varying_parameters,
+            objectives=objectives,
+            analyzed_parameters=analyzed_parameters,
+            parameter_values=parameter_values,
+            evaluations=evaluations,
+            custom_parameters=custom_parameters,
+        )
+        if "_id" in trial_dict:
+            trial._gen_id = trial_dict["_id"]
+        if "_ignored" in trial_dict:
+            trial._ignored = trial_dict["_ignored"]
+        if "_ignored_reason" in trial_dict:
+            trial._ignored_reason = trial_dict["_ignored_reason"]
+        if "_status" in trial_dict:
+            trial._status = trial_dict["_status"]
+        for custom_param in custom_parameters:
+            setattr(trial, custom_param.name, trial_dict[custom_param.name])
+
+        return trial
 
     @property
     def varying_parameters(self) -> List[VaryingParameter]:
@@ -128,6 +198,15 @@ class Trial:
     @index.setter
     def index(self, value):
         self._index = value
+
+    @property
+    def gen_id(self) -> int:
+        """Get the index of the trial."""
+        return self._gen_id
+
+    @gen_id.setter
+    def gen_id(self, value):
+        self._gen_id = value
 
     @property
     def ignored(self) -> bool:
@@ -225,7 +304,8 @@ class Trial:
         params = {}
         for obj in self._objectives:
             ev = self._mapped_evaluations[obj.name]
-            params[obj.name] = (ev.value, ev.sem)
+            if ev is not None:
+                params[obj.name] = ev.value
         return params
 
     def analyzed_parameters_as_dict(self) -> Dict:
@@ -237,5 +317,13 @@ class Trial:
         params = {}
         for par in self._analyzed_parameters:
             ev = self._mapped_evaluations[par.name]
-            params[par.name] = (ev.value, ev.sem)
+            if ev is not None:
+                params[par.name] = ev.value
+        return params
+
+    def custom_parameters_as_dict(self) -> Dict:
+        """Get a mapping between names and values of the custom parameters."""
+        params = {}
+        for param in self._custom_parameters:
+            params[param.name] = getattr(self, param.name)
         return params
