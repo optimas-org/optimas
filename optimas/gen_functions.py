@@ -20,7 +20,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
     """Generate and launch evaluations with the optimas generators.
 
     This function gets the generator object and uses it to generate new
-    evaluations via the `ask` method. Once finished, the result of the
+    evaluations via the `ask_trials` method. Once finished, the result of the
     evaluations is communicated back to the generator via the `tell` method.
 
     This is a persistent generator function, i.e., it is called by a dedicated
@@ -68,7 +68,7 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
         # Ask the optimizer to generate `batch_size` new points
         # Store this information in the format expected by libE
         H_o = np.zeros(number_of_gen_points, dtype=gen_specs["out"])
-        generated_trials = generator.ask(number_of_gen_points)
+        generated_trials = generator.ask_trials(number_of_gen_points)
         for i, trial in enumerate(generated_trials):
             for var, val in zip(
                 trial.varying_parameters, trial.parameter_values
@@ -107,8 +107,8 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                         y = calc_in[par.name][i]
                         ev = Evaluation(parameter=par, value=y)
                         trial.complete_evaluation(ev)
-                # Register trial with unknown SEM
-                generator.tell([trial])
+                generator.tell_trials([trial])
+
             # Set the number of points to generate to that number:
             number_of_gen_points = min(n + n_failed_gens, max_evals - n_gens)
             n_failed_gens = 0

@@ -196,10 +196,13 @@ class AxMultitaskGenerator(AxGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
+        # As trial parameters these get written to history array
+        # Ax trial_index and arm toegther locate a point
+        # Multiple points (Optimas trials) can share the same Ax trial_index
         custom_trial_parameters = [
             TrialParameter("arm_name", "ax_arm_name", dtype="U32"),
             TrialParameter("trial_type", "ax_trial_type", dtype="U32"),
-            TrialParameter("trial_index", "ax_trial_index", dtype=int),
+            TrialParameter("ax_trial_id", "ax_trial_index", dtype=int),
         ]
         self._check_inputs(varying_parameters, objectives, lofi_task, hifi_task)
         super().__init__(
@@ -260,23 +263,38 @@ class AxMultitaskGenerator(AxGenerator):
             "to the number of high-fidelity trials"
         )
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
-        """Fill in the parameter values of the requested trials."""
-        for trial in trials:
+    def suggest(self, num_points: Optional[int]) -> List[dict]:
+        """Request the next set of points to evaluate."""
+        points = []
+        for _ in range(num_points):
             next_trial = self._get_next_trial_arm()
             if next_trial is not None:
                 arm, trial_type, trial_index = next_trial
-                trial.parameter_values = [
-                    arm.parameters.get(var.name)
+                point = {
+                    var.name: arm.parameters.get(var.name)
                     for var in self._varying_parameters
-                ]
-                trial.trial_type = trial_type
-                trial.arm_name = arm.name
-                trial.trial_index = trial_index
-        return trials
+                }
+                # SH for VOCS standard these will need to be 'variables'
+                # For now much match the trial parameter names.
+                point["ax_trial_id"] = trial_index
+                point["arm_name"] = arm.name
+                point["trial_type"] = trial_type
+                points.append(point)
+        return points
 
-    def _tell(self, trials: List[Trial]) -> None:
+    def ingest(self, results: List[dict]) -> None:
         """Incorporate evaluated trials into experiment."""
+        # reconstruct Optimas trials
+        trials = []
+        for result in results:
+            trial = Trial.from_dict(
+                trial_dict=result,
+                varying_parameters=self._varying_parameters,
+                objectives=self._objectives,
+                analyzed_parameters=self._analyzed_parameters,
+                custom_parameters=self._custom_trial_parameters,
+            )
+            trials.append(trial)
         if self.gen_state == NOT_STARTED:
             self._incorporate_external_data(trials)
         else:
@@ -285,9 +303,10 @@ class AxMultitaskGenerator(AxGenerator):
     def _incorporate_external_data(self, trials: List[Trial]) -> None:
         """Incorporate external data (e.g., from history) into experiment."""
         # Get trial indices.
+        # SH should have handling if ax_trial_ids are None...
         trial_indices = []
         for trial in trials:
-            trial_indices.append(trial.trial_index)
+            trial_indices.append(trial.ax_trial_id)
         trial_indices = np.unique(np.array(trial_indices))
 
         # Group trials by index.
@@ -295,7 +314,7 @@ class AxMultitaskGenerator(AxGenerator):
         for index in trial_indices:
             grouped_trials[index] = []
         for trial in trials:
-            grouped_trials[trial.trial_index].append(trial)
+            grouped_trials[trial.ax_trial_id].append(trial)
 
         # Add trials to experiment.
         for index in trial_indices:

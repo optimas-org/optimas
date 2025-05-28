@@ -187,7 +187,7 @@ class Generator:
                 n_evaluated += 1
         return n_evaluated
 
-    def ask(self, n_trials: int) -> List[Trial]:
+    def ask_trials(self, n_trials: int) -> List[Trial]:
         """Ask the generator to suggest the next ``n_trials`` to evaluate.
 
         Parameters
@@ -204,18 +204,19 @@ class Generator:
         # Generate as many trials as needed and add them to the queue.
         if n_trials > self.n_queued_trials:
             n_gen = n_trials - self.n_queued_trials
+            # Ask generator for n_gen points, using the standardized API
+            gen_points = self.suggest(n_gen)
+            # Convert the points to the Trial format
             gen_trials = []
-            for _ in range(n_gen):
-                gen_trials.append(
-                    Trial(
-                        varying_parameters=self._varying_parameters,
-                        objectives=self._objectives,
-                        analyzed_parameters=self._analyzed_parameters,
-                        custom_parameters=self._custom_trial_parameters,
-                    )
+            for point in gen_points:
+                trial = Trial.from_dict(
+                    trial_dict=point,
+                    varying_parameters=self._varying_parameters,
+                    objectives=self._objectives,
+                    analyzed_parameters=self._analyzed_parameters,
+                    custom_parameters=self._custom_trial_parameters,
                 )
-            # Ask the generator to fill them.
-            gen_trials = self._ask(gen_trials)
+                gen_trials.append(trial)
             # Keep only trials that have been given data.
             for trial in gen_trials:
                 if len(trial.parameter_values) > 0:
@@ -236,7 +237,11 @@ class Generator:
                 trials.append(trial)
         return trials
 
-    def tell(
+    def ignore_trials(self, trials: List[Trial]) -> None:
+        """Ignore trials as determined by the generator."""
+        pass
+
+    def tell_trials(
         self, trials: List[Trial], allow_saving_model: Optional[bool] = True
     ) -> None:
         """Give trials back to generator once they have been evaluated.
@@ -250,7 +255,11 @@ class Generator:
             incorporating the evaluated trials. By default ``True``.
 
         """
-        self._tell(trials)
+        # Feed data to the generator, using the standardized API
+        self.ignore_trials(trials)
+        self.ingest([trial.to_dict() for trial in trials])
+
+        # Perform additional checks that rely on the trial format
         for trial in trials:
             if trial not in self._given_trials:
                 self._add_external_evaluated_trial(trial)
@@ -290,7 +299,7 @@ class Generator:
         trials = self._create_trials_from_external_data(
             history_ended, ignore_unrecognized_parameters=True
         )
-        self.tell(trials, allow_saving_model=False)
+        self.tell_trials(trials, allow_saving_model=False)
         # Communicate to history array whether the trial has been ignored.
         for trial in trials:
             idxs = np.where(history["trial_index"] == trial.index)[0]
@@ -306,7 +315,7 @@ class Generator:
 
         The given trials are placed at the top of the queue of trials that
         will be proposed by the generator (that is, they will be the first
-        ones to be proposed the next time that `ask` is called).
+        ones to be proposed the next time that `ask_trials` is called).
 
         Parameters
         ----------
@@ -409,7 +418,7 @@ class Generator:
 
         By default, the trial will be appended to the end of the queue, unless
         a `queue_index` is given. Trials at the top of the queue will be the
-        first ones to be given for evaluation when `ask` is called.
+        first ones to be given for evaluation when `ask_trials` is called.
 
         Parameters
         ----------
@@ -579,28 +588,27 @@ class Generator:
         libE_specs = {}
         return libE_specs
 
-    def _ask(self, trials: List[Trial]) -> List[Trial]:
-        """Ask method to be implemented by the Generator subclasses.
+    def suggest(self, num_points: Optional[int]) -> List[dict]:
+        """Request the next set of points to evaluate.
 
         Parameters
         ----------
-        trials : list of Trial
-            A list with as many trials as requested to the generator. The
-            trials do not yet contain the values of the varying parameters.
-            These values should instead be supplied in this method.
+        num_points : int
+            Number of points to generate.
 
         """
-        return trials
+        return []
 
-    def _tell(self, trials: List[Trial]) -> None:
-        """Tell method to be implemented by the Generator subclasses.
+    def ingest(self, results: List[dict]) -> None:
+        """
+        Send the results of evaluations to the generator.
 
         Parameters
         ----------
-        trials : list of Trial
-            A list with all evaluated trials. All evaluations included in the
-            trials should be incorporated to the generator model in this
-            method.
+        results : list of dict
+            List with the results of the evaluations.
+            All evaluations included in the results should be incorporated
+            to the generator model in this method.
 
         """
         pass
