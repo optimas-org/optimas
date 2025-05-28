@@ -196,17 +196,12 @@ class AxMultitaskGenerator(AxGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
-        # SH note for standardization
         # As trial parameters these get written to history array
         # Ax trial_index and arm toegther locate a point
         # Multiple points (Optimas trials) can share the same Ax trial_index
-        # Standard (VOCS) does not have equiv. of trial parameters -> would be variables.
-        # If want to use _id can have a mapping inside the generator, but those
-        # points that are part of same ax trial_index will not be seen in history.
         custom_trial_parameters = [
             TrialParameter("arm_name", "ax_arm_name", dtype="U32"),
             TrialParameter("trial_type", "ax_trial_type", dtype="U32"),
-            # SH changed from trial_index to ax_trial_id - trial_index is usually Optimas index?
             TrialParameter("ax_trial_id", "ax_trial_index", dtype=int),
         ]
         self._check_inputs(varying_parameters, objectives, lofi_task, hifi_task)
@@ -289,7 +284,7 @@ class AxMultitaskGenerator(AxGenerator):
 
     def ingest(self, results: List[dict]) -> None:
         """Incorporate evaluated trials into experiment."""
-        # reconstruct Optimastrials
+        # reconstruct Optimas trials
         trials = []
         for result in results:
             trial = Trial.from_dict(

@@ -96,7 +96,6 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
             # Check how many simulations have returned
             n = len(calc_in["sim_id"])
             # Feed the latest simulation results to the generator
-            trials = []
             for i in range(n):
                 trial_index = int(calc_in["trial_index"][i])
                 trial_status = calc_in["trial_status"][i]
@@ -109,10 +108,6 @@ def persistent_generator(H, persis_info, gen_specs, libE_info):
                         ev = Evaluation(parameter=par, value=y)
                         trial.complete_evaluation(ev)
                 generator.tell_trials([trial])
-                trials.append(trial)
-
-            # Register trials with unknown SEM
-            # generator.tell_trials(trials)  # Give as batch
 
             # Set the number of points to generate to that number:
             number_of_gen_points = min(n + n_failed_gens, max_evals - n_gens)
