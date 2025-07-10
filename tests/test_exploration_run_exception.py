@@ -12,7 +12,7 @@ def eval_func(input_params, output_params):
 
 def test_exception_during_exploration_run():
     """Test that the Exploration handles exceptions during the run correctly.
-    
+
     When using `create_evaluation_dirs=True`, the current working directory
     will change during exploration and should be restored when `.run` finishes,
     even if an exception occurs.
@@ -29,9 +29,7 @@ def test_exception_during_exploration_run():
     )
 
     # Create function evaluator.
-    ev = FunctionEvaluator(
-        function=eval_func, create_evaluation_dirs=True
-    )
+    ev = FunctionEvaluator(function=eval_func, create_evaluation_dirs=True)
 
     # Create exploration.
     exploration = Exploration(
