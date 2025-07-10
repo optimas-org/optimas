@@ -112,7 +112,7 @@ def test_function_evaluator_with_logs():
     var1 = VaryingParameter("x0", -50.0, 5.0)
     var2 = VaryingParameter("x1", -5.0, 15.0)
     obj = Objective("f", minimize=False)
-    
+
     # Create generator.
     gen = RandomSamplingGenerator(
         varying_parameters=[var1, var2],

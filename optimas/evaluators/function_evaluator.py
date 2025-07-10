@@ -29,7 +29,10 @@ class FunctionEvaluator(Evaluator):
     """
 
     def __init__(
-        self, function: Callable, create_evaluation_dirs: bool = False, redirect_logs_to_file: bool = False
+        self,
+        function: Callable,
+        create_evaluation_dirs: bool = False,
+        redirect_logs_to_file: bool = False,
     ) -> None:
         super().__init__(sim_function=run_function)
         self.function = function

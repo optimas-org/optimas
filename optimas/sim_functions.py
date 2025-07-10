@@ -1,4 +1,5 @@
 """Contains the definition of the simulation functions given to libEnsemble."""
+
 from contextlib import redirect_stderr, redirect_stdout
 
 import jinja2
