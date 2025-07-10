@@ -37,7 +37,7 @@ def test_exception_during_exploration_run():
         evaluator=ev,
         max_evals=10,
         sim_workers=2,
-        exploration_dir_path="./tests_output/test_function_evaluator",
+        exploration_dir_path="./tests_output/test_exception_during_run",
     )
 
     cwd = os.getcwd()
