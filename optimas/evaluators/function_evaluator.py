@@ -20,15 +20,26 @@ class FunctionEvaluator(Evaluator):
         using this option, the current working directory inside the ``function``
         will be changed to the corresponding evaluation directory.
         By default, ``False``.
+    redirect_logs_to_file : bool
+        Whether to redirect the logs (stdout and stderr) of the evaluation
+        function to a file (log.out and log.err). This can be useful to keep the
+        logs of the exploration clean, preventing many processes from writing to the
+        terminal at once. If enabled, `create_evaluation_dirs` will be set to `True`.
 
     """
 
     def __init__(
-        self, function: Callable, create_evaluation_dirs: bool = False
+        self,
+        function: Callable,
+        create_evaluation_dirs: bool = False,
+        redirect_logs_to_file: bool = False,
     ) -> None:
         super().__init__(sim_function=run_function)
         self.function = function
         self._create_evaluation_dirs = create_evaluation_dirs
+        self._redirect_logs_to_file = redirect_logs_to_file
+        if self._redirect_logs_to_file:
+            self._create_evaluation_dirs = True
 
     def get_sim_specs(
         self,
@@ -43,6 +54,7 @@ class FunctionEvaluator(Evaluator):
         )
         # Add evaluation function to sim_specs.
         sim_specs["user"]["evaluation_func"] = self.function
+        sim_specs["user"]["redirect_logs_to_file"] = self._redirect_logs_to_file
         return sim_specs
 
     def get_libe_specs(self) -> Dict:

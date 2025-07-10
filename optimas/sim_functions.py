@@ -1,5 +1,7 @@
 """Contains the definition of the simulation functions given to libEnsemble."""
 
+from contextlib import redirect_stderr, redirect_stdout
+
 import jinja2
 import numpy as np
 
@@ -122,6 +124,7 @@ def run_function(H, persis_info, sim_specs, libE_info):
     else:
         user_specs = sim_specs["user"]
     evaluation_func = user_specs["evaluation_func"]
+    redirect_logs_to_file = user_specs["redirect_logs_to_file"]
 
     # Prepare the array that is returned to libE
     libE_output = np.zeros(1, dtype=sim_specs["out"])
@@ -130,7 +133,16 @@ def run_function(H, persis_info, sim_specs, libE_info):
             libE_output[name].fill(np.nan)
 
     # Run evaluation.
-    evaluation_func(input_values, libE_output[0])
+    if redirect_logs_to_file:
+        with (
+            open("log.out", "w") as stdout_file,
+            open("log.err", "w") as stderr_file,
+            redirect_stdout(stdout_file),
+            redirect_stderr(stderr_file),
+        ):
+            evaluation_func(input_values, libE_output[0])
+    else:
+        evaluation_func(input_values, libE_output[0])
     calc_status = WORKER_DONE
 
     # If required, fail when the objectives are NaN.
