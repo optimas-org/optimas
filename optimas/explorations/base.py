@@ -208,26 +208,32 @@ class Exploration:
         # Save exploration parameters to json file.
         self._save_exploration_parameters()
 
-        # Launch exploration with libEnsemble.
-        history, persis_info, flag = libE(
-            sim_specs,
-            gen_specs,
-            exit_criteria,
-            persis_info,
-            self.alloc_specs,
-            self.libE_specs,
-            H0=self._libe_history.H,
-        )
+        try:
+            # Launch exploration with libEnsemble.
+            history, persis_info, flag = libE(
+                sim_specs,
+                gen_specs,
+                exit_criteria,
+                persis_info,
+                self.alloc_specs,
+                self.libE_specs,
+                H0=self._libe_history.H,
+            )
 
-        # Update history.
-        self._libe_history.H = history
+            # Update history.
+            self._libe_history.H = history
 
-        # Update number of evaluation in this exploration.
-        n_evals_final = self.generator.n_evaluated_trials
-        self._n_evals += n_evals_final - n_evals_initial
+            # Update number of evaluation in this exploration.
+            n_evals_final = self.generator.n_evaluated_trials
+            self._n_evals += n_evals_final - n_evals_initial
 
-        # Reset `cwd` to initial value before `libE` was called.
-        os.chdir(cwd)
+        except Exception as e:
+            logger.error(
+                "Exploration stopped due to an exception: {}".format(e)
+            )
+        finally:
+            # Reset `cwd` to initial value before `libE` was called.
+            os.chdir(cwd)
 
     def attach_trials(
         self,
