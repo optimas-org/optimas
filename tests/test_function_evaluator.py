@@ -1,4 +1,5 @@
 import os
+import sys
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,6 +24,17 @@ def eval_func(input_params, output_params):
     plt.plot(output_params["p1"][0], output_params["p1"][1])
     output_params["fig"] = plt.gcf()
     plt.savefig("fig.png")
+
+
+def eval_func_logs(input_params, output_params):
+    """Evaluation function used for testing"""
+    x0 = input_params["x0"]
+    x1 = input_params["x1"]
+    result = -(x0 + 10 * np.cos(x0)) * (x1 + 5 * np.cos(x1))
+    output_params["f"] = result
+    # write something to stdout and stderr
+    print("This is a message to stdout.")
+    print("This is a message to stderr.", file=sys.stderr)
 
 
 def test_function_evaluator():
@@ -93,5 +105,55 @@ def test_function_evaluator():
                     diags.get_evaluation_dir_path(trial_index)
 
 
+def test_function_evaluator_with_logs():
+    """Test a function evaluator with redirected stdout and stderr."""
+
+    # Define variables and objectives.
+    var1 = VaryingParameter("x0", -50.0, 5.0)
+    var2 = VaryingParameter("x1", -5.0, 15.0)
+    obj = Objective("f", minimize=False)
+    
+    # Create generator.
+    gen = RandomSamplingGenerator(
+        varying_parameters=[var1, var2],
+        objectives=[obj],
+    )
+
+    # Create function evaluator.
+    ev = FunctionEvaluator(
+        function=eval_func_logs,
+        redirect_logs_to_file=True,
+    )
+
+    # Create exploration.
+    exploration = Exploration(
+        generator=gen,
+        evaluator=ev,
+        max_evals=10,
+        sim_workers=2,
+        exploration_dir_path="./tests_output/test_function_evaluator_logs",
+    )
+
+    # Run exploration.
+    exploration.run()
+
+    # Get diagnostics.
+    diags = ExplorationDiagnostics(exploration)
+
+    # Check that the logs were redirected if specified.
+    for trial_index in diags.history.trial_index:
+        trial_dir = diags.get_evaluation_dir_path(trial_index)
+        assert os.path.exists(os.path.join(trial_dir, "log.out"))
+        assert os.path.exists(os.path.join(trial_dir, "log.err"))
+        # Check contents of log files are as expected
+        with open(os.path.join(trial_dir, "log.out"), "r") as f:
+            log_out_content = f.read()
+            assert "This is a message to stdout." in log_out_content
+        with open(os.path.join(trial_dir, "log.err"), "r") as f:
+            log_err_content = f.read()
+            assert "This is a message to stderr." in log_err_content
+
+
 if __name__ == "__main__":
     test_function_evaluator()
+    test_function_evaluator_with_logs()
