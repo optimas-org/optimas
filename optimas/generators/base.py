@@ -79,13 +79,17 @@ class Generator:
     ) -> None:
         # Store VOCS object
         self._vocs = deepcopy(vocs)
-        
+
         # Convert VOCS to optimas internal format for backward compatibility
-        self._varying_parameters = self._convert_vocs_variables_to_varying_parameters()
+        self._varying_parameters = (
+            self._convert_vocs_variables_to_varying_parameters()
+        )
         self._objectives = self._convert_vocs_objectives_to_objectives()
         self._constraints = self._convert_vocs_constraints_to_constraints()
-        self._analyzed_parameters = self._convert_vocs_observables_to_parameters()
-        
+        self._analyzed_parameters = (
+            self._convert_vocs_observables_to_parameters()
+        )
+
         self._save_model = save_model
         self._model_save_period = model_save_period
         self._model_history_dir = model_history_dir
@@ -104,7 +108,9 @@ class Generator:
         self._trial_count = 0
         self._check_parameters(self._varying_parameters)
 
-    def _convert_vocs_variables_to_varying_parameters(self) -> List[VaryingParameter]:
+    def _convert_vocs_variables_to_varying_parameters(
+        self,
+    ) -> List[VaryingParameter]:
         """Convert VOCS variables to optimas VaryingParameter objects."""
         varying_parameters = []
         for var_name, var_spec in self._vocs.variables.items():
@@ -113,7 +119,7 @@ class Generator:
                 name=var_name,
                 lower_bound=var_spec.domain[0],
                 upper_bound=var_spec.domain[1],
-                default_value=var_spec.default_value
+                default_value=var_spec.default_value,
             )
             varying_parameters.append(vp)
         return varying_parameters
@@ -127,7 +133,9 @@ class Generator:
             objectives.append(obj)
         return objectives
 
-    def _convert_vocs_constraints_to_constraints(self) -> Optional[List[Parameter]]:
+    def _convert_vocs_constraints_to_constraints(
+        self,
+    ) -> Optional[List[Parameter]]:
         """Convert VOCS constraints to optimas Parameter objects."""
         if not self._vocs.constraints:
             return None

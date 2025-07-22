@@ -32,9 +32,9 @@ def test_uniform_sampling():
     vocs = VOCS(
         variables={
             "x0": [lower_bounds[0], upper_bounds[0]],
-            "x1": [lower_bounds[1], upper_bounds[1]]
+            "x1": [lower_bounds[1], upper_bounds[1]],
         },
-        objectives={"f": "MAXIMIZE"}
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Create generator and run exploration.
@@ -61,7 +61,9 @@ def test_uniform_sampling():
 
     # Generate expected points.
     rng = np.random.default_rng(seed=seed)
-    configs = rng.uniform(lower_bounds, upper_bounds, (n_evals, len(lower_bounds)))
+    configs = rng.uniform(
+        lower_bounds, upper_bounds, (n_evals, len(lower_bounds))
+    )
     x0_test = configs[:, 0]
     x1_test = configs[:, 1]
 
@@ -87,15 +89,13 @@ def test_normal_sampling():
     vocs = VOCS(
         variables={
             "x0": [center[0] - sigma[0], center[0] + sigma[0]],
-            "x1": [center[1] - sigma[1], center[1] + sigma[1]]
+            "x1": [center[1] - sigma[1], center[1] + sigma[1]],
         },
-        objectives={"f": "MAXIMIZE"}
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Create generator and run exploration.
-    gen = RandomSamplingGenerator(
-        vocs=vocs, distribution="normal", seed=1
-    )
+    gen = RandomSamplingGenerator(vocs=vocs, distribution="normal", seed=1)
     ev = FunctionEvaluator(function=eval_func)
     exploration = Exploration(
         generator=gen,

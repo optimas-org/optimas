@@ -33,17 +33,15 @@ def test_line_sampling():
     vocs = VOCS(
         variables={
             "x0": [lower_bounds[0], upper_bounds[0]],
-            "x1": [lower_bounds[1], upper_bounds[1]]
+            "x1": [lower_bounds[1], upper_bounds[1]],
         },
-        objectives={"f": "MAXIMIZE"}
+        objectives={"f": "MAXIMIZE"},
     )
     vocs.variables["x0"].default_value = defaults[0]
     vocs.variables["x1"].default_value = defaults[1]
 
     # Create generator and run exploration.
-    gen = LineSamplingGenerator(
-        vocs=vocs, n_steps=n_steps
-    )
+    gen = LineSamplingGenerator(vocs=vocs, n_steps=n_steps)
     ev = FunctionEvaluator(function=eval_func)
     exploration = Exploration(
         generator=gen,
@@ -79,27 +77,17 @@ def test_line_sampling_errors():
     """Test that the line sampling raises the correct exceptions."""
 
     vocs = VOCS(
-        variables={
-            "x0": [-3, 1],
-            "x1": [-3, 1]
-        },
-        objectives={"f": "MAXIMIZE"}
+        variables={"x0": [-3, 1], "x1": [-3, 1]}, objectives={"f": "MAXIMIZE"}
     )
 
     # Check that an exception is raised when default values are missing.
     with pytest.raises(
         AssertionError, match="Parameter x0 does not have a default value."
     ):
-        gen = LineSamplingGenerator(
-            vocs=vocs, n_steps=[3, 5]
-        )
+        gen = LineSamplingGenerator(vocs=vocs, n_steps=[3, 5])
 
     vocs = VOCS(
-        variables={
-            "x0": [-3, 1],
-            "x1": [-3, 1]
-        },
-        objectives={"f": "MAXIMIZE"}
+        variables={"x0": [-3, 1], "x1": [-3, 1]}, objectives={"f": "MAXIMIZE"}
     )
     # Set default values
     vocs.variables["x0"].default_value = 0.0
