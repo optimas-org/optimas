@@ -1,4 +1,5 @@
 import numpy as np
+from generator_standard.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import GridSamplingGenerator
@@ -18,24 +19,23 @@ def test_grid_sampling():
     """Test that grid sampling generates the expected configurations."""
 
     # Create varying parameters.
-    names = ["x0", "x1"]
     lower_bounds = [-3.0, 2.0]
     upper_bounds = [1.0, 5.0]
-    vars = []
     n_steps = [7, 15]
-    for name, lb, ub in zip(names, lower_bounds, upper_bounds):
-        vars.append(VaryingParameter(name, lb, ub))
 
     # Set number of evaluations.
     n_evals = np.prod(n_steps)
 
-    # Define objective.
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [lower_bounds[0], upper_bounds[0]],
+            "x1": [lower_bounds[1], upper_bounds[1]]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Create generator and run exploration.
-    gen = GridSamplingGenerator(
-        varying_parameters=vars, objectives=[obj], n_steps=n_steps
-    )
+    gen = GridSamplingGenerator(vocs=vocs, n_steps=n_steps)
     ev = FunctionEvaluator(function=eval_func)
     exploration = Exploration(
         generator=gen,

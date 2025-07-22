@@ -2,6 +2,7 @@ import re
 
 import numpy as np
 import pytest
+from generator_standard.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import LineSamplingGenerator
@@ -20,25 +21,28 @@ def eval_func(input_params, output_params):
 def test_line_sampling():
     """Test that line sampling generates the expected configurations."""
 
-    # Create varying parameters.
-    names = ["x0", "x1"]
+    # Define test parameters
     lower_bounds = [-3.0, 2.0]
     upper_bounds = [1.0, 5.0]
     defaults = [0, 0]
     n_steps = [7, 15]
-    vars = []
-    for name, lb, ub, dv in zip(names, lower_bounds, upper_bounds, defaults):
-        vars.append(VaryingParameter(name, lb, ub, default_value=dv))
 
     # Set number of evaluations.
     n_evals = np.sum(n_steps)
 
-    # Define objective.
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [lower_bounds[0], upper_bounds[0]],
+            "x1": [lower_bounds[1], upper_bounds[1]]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
+    vocs.variables["x0"].default_value = defaults[0]
+    vocs.variables["x1"].default_value = defaults[1]
 
     # Create generator and run exploration.
     gen = LineSamplingGenerator(
-        varying_parameters=vars, objectives=[obj], n_steps=n_steps
+        vocs=vocs, n_steps=n_steps
     )
     ev = FunctionEvaluator(function=eval_func)
     exploration = Exploration(
@@ -74,27 +78,32 @@ def test_line_sampling():
 def test_line_sampling_errors():
     """Test that the line sampling raises the correct exceptions."""
 
-    # Create varying parameters with missing default value.
-    var1 = VaryingParameter("x0", -3, 1)
-    var2 = VaryingParameter("x0", -3, 1)
-
-    # Define objective.
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-3, 1],
+            "x1": [-3, 1]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Check that an exception is raised when default values are missing.
     with pytest.raises(
         AssertionError, match="Parameter x0 does not have a default value."
     ):
         gen = LineSamplingGenerator(
-            varying_parameters=[var1, var2], objectives=[obj], n_steps=[3, 5]
+            vocs=vocs, n_steps=[3, 5]
         )
 
-    # Create varying parameters.
-    var1 = VaryingParameter("x0", -3, 1, default_value=0.0)
-    var2 = VaryingParameter("x0", -3, 1, default_value=0.0)
-
-    # Define objective.
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-3, 1],
+            "x1": [-3, 1]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
+    # Set default values
+    vocs.variables["x0"].default_value = 0.0
+    vocs.variables["x1"].default_value = 0.0
 
     # Check that an exception is raised when n_steps is not correct.
     with pytest.raises(
@@ -104,9 +113,7 @@ def test_line_sampling_errors():
             " `varying_parameters` (2) do not match."
         ),
     ):
-        gen = LineSamplingGenerator(
-            varying_parameters=[var1, var2], objectives=[obj], n_steps=[3]
-        )
+        LineSamplingGenerator(vocs=vocs, n_steps=[3])
 
 
 if __name__ == "__main__":

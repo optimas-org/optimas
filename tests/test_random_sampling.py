@@ -1,4 +1,5 @@
 import numpy as np
+from generator_standard.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
@@ -22,23 +23,23 @@ def test_uniform_sampling():
     seed = 1
 
     # Create varying parameters.
-    names = ["x0", "x1"]
     lower_bounds = [-3.0, 2.0]
     upper_bounds = [1.0, 5.0]
-    vars = []
-    for name, lb, ub in zip(names, lower_bounds, upper_bounds):
-        vars.append(VaryingParameter(name, lb, ub))
 
     # Set number of evaluations.
     n_evals = 10
 
-    # Define objective.
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [lower_bounds[0], upper_bounds[0]],
+            "x1": [lower_bounds[1], upper_bounds[1]]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Create generator and run exploration.
     gen = RandomSamplingGenerator(
-        varying_parameters=vars,
-        objectives=[obj],
+        vocs=vocs,
         distribution="uniform",
         seed=1,
     )
@@ -60,7 +61,7 @@ def test_uniform_sampling():
 
     # Generate expected points.
     rng = np.random.default_rng(seed=seed)
-    configs = rng.uniform(lower_bounds, upper_bounds, (n_evals, len(vars)))
+    configs = rng.uniform(lower_bounds, upper_bounds, (n_evals, len(lower_bounds)))
     x0_test = configs[:, 0]
     x1_test = configs[:, 1]
 
@@ -77,22 +78,23 @@ def test_normal_sampling():
     seed = 1
 
     # Create varying parameters.
-    names = ["x0", "x1"]
     center = [0.0, 0.0]
     sigma = [1.0, 5.0]
-    vars = []
-    for name, c, s in zip(names, center, sigma):
-        vars.append(VaryingParameter(name, c - s, c + s))
 
     # Set number of evaluations.
     n_evals = 10
 
-    # Define objective.
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [center[0] - sigma[0], center[0] + sigma[0]],
+            "x1": [center[1] - sigma[1], center[1] + sigma[1]]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Create generator and run exploration.
     gen = RandomSamplingGenerator(
-        varying_parameters=vars, objectives=[obj], distribution="normal", seed=1
+        vocs=vocs, distribution="normal", seed=1
     )
     ev = FunctionEvaluator(function=eval_func)
     exploration = Exploration(
@@ -112,7 +114,7 @@ def test_normal_sampling():
 
     # Generate expected points.
     rng = np.random.default_rng(seed=seed)
-    configs = rng.normal(center, sigma, (n_evals, len(vars)))
+    configs = rng.normal(center, sigma, (n_evals, len(center)))
     x0_test = configs[:, 0]
     x1_test = configs[:, 1]
 
