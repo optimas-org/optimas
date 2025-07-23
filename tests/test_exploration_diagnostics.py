@@ -31,14 +31,8 @@ def test_exploration_diagnostics():
 
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
-        objectives={
-            "f1": "MAXIMIZE",
-            "f2": "MINIMIZE"
-        }
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f1": "MAXIMIZE", "f2": "MINIMIZE"},
     )
 
     # Create generator.

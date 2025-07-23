@@ -107,19 +107,21 @@ class ExplorationDiagnostics:
         variables = {}
         for vp in varying_parameters:
             variables[vp.name] = [vp.lower_bound, vp.upper_bound]
-        
+
         vocs_objectives = {}
         for obj in objectives:
-            vocs_objectives[obj.name] = "MINIMIZE" if obj.minimize else "MAXIMIZE"
-        
+            vocs_objectives[obj.name] = (
+                "MINIMIZE" if obj.minimize else "MAXIMIZE"
+            )
+
         observables = [param.name for param in analyzed_parameters]
-        
+
         vocs = VOCS(
             variables=variables,
             objectives=vocs_objectives,
-            observables=observables
+            observables=observables,
         )
-        
+
         return Exploration(
             generator=Generator(vocs=vocs),
             evaluator=Evaluator(sim_function=None),
