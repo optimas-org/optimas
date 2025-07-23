@@ -80,7 +80,7 @@ class Generator(StandardGenerator):
     ) -> None:
         # Initialize the standard generator which called validate_vocs
         super().__init__(vocs)
-        
+
         # Store copies to prevent unexpected behavior if parameters are changed
         # externally.
         self._vocs = deepcopy(vocs)
