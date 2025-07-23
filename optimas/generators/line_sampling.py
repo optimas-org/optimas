@@ -42,6 +42,14 @@ class LineSamplingGenerator(Generator):
         self._n_steps = n_steps if n_steps is np.ndarray else np.array(n_steps)
         self._create_configurations()
 
+    def _validate_vocs(self, vocs: VOCS) -> None:
+        super()._validate_vocs(vocs)
+        for var_name, var_spec in vocs.variables.items():
+            if var_spec.default_value is None:
+                raise ValueError(
+                    f"Variable '{var_name}' does not have a default value. "
+                )
+
     def _check_inputs(
         self,
         vocs: VOCS,
@@ -56,11 +64,6 @@ class LineSamplingGenerator(Generator):
         ) + "`varying_parameters` ({}) do not match.".format(
             len(self.varying_parameters)
         )
-        # Check that all varying parameters have a default value.
-        for var in self.varying_parameters:
-            assert (
-                var.default_value is not None
-            ), "Parameter {} does not have a default value.".format(var.name)
 
     def _create_configurations(self) -> None:
         """Create a list will all configurations to be evaluated."""
