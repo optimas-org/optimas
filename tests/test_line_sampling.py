@@ -32,8 +32,14 @@ def test_line_sampling():
 
     vocs = VOCS(
         variables={
-            "x0": ContinuousVariable(domain=[lower_bounds[0], upper_bounds[0]], default_value=defaults[0]),
-            "x1": ContinuousVariable(domain=[lower_bounds[1], upper_bounds[1]], default_value=defaults[1]),
+            "x0": ContinuousVariable(
+                domain=[lower_bounds[0], upper_bounds[0]],
+                default_value=defaults[0],
+            ),
+            "x1": ContinuousVariable(
+                domain=[lower_bounds[1], upper_bounds[1]],
+                default_value=defaults[1],
+            ),
         },
         objectives={"f": "MAXIMIZE"},
     )
@@ -89,7 +95,7 @@ def test_line_sampling_errors():
             "x0": ContinuousVariable(domain=[-3, 1], default_value=0.0),
             "x1": ContinuousVariable(domain=[-3, 1], default_value=0.0),
         },
-        objectives={"f": "MAXIMIZE"}
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Check that an exception is raised when n_steps is not correct.
