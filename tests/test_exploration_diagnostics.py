@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 import pytest
+from generator_standard.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
@@ -29,15 +30,19 @@ def test_exploration_diagnostics():
     exploration_dir_path = "./tests_output/test_exploration_diagnostics"
 
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f1", minimize=False)
-    obj2 = Objective("f2", minimize=True)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0]
+        },
+        objectives={
+            "f1": "MAXIMIZE",
+            "f2": "MINIMIZE"
+        }
+    )
 
     # Create generator.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2], objectives=[obj, obj2], seed=0
-    )
+    gen = RandomSamplingGenerator(vocs=vocs, seed=0)
 
     # Create template evaluator.
     ev = TemplateEvaluator(
@@ -137,12 +142,12 @@ def test_exploration_diagnostics():
         diags.print_best_evaluations(top=3, objective="f1")
         diags.print_evaluation(best_ev_f1["trial_index"].item())
 
-        # Check that all 3 possible objective inputs give the same result.
+        # Check that all possible objective inputs give the same result.
         _, trace1 = diags.get_objective_trace()
         _, trace2 = diags.get_objective_trace("f1")
-        _, trace3 = diags.get_objective_trace(obj)
+        # _, trace3 = diags.get_objective_trace(obj)  # Can be removed
         np.testing.assert_array_equal(trace1, trace2)
-        np.testing.assert_array_equal(trace1, trace3)
+        # np.testing.assert_array_equal(trace1, trace3)
 
         # Test making plot using the diagnostics API.
         fig, ax = plt.subplots()
