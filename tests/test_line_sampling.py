@@ -2,7 +2,7 @@ import re
 
 import numpy as np
 import pytest
-from generator_standard.vocs import VOCS
+from generator_standard.vocs import VOCS, ContinuousVariable
 
 from optimas.explorations import Exploration
 from optimas.generators import LineSamplingGenerator
@@ -32,13 +32,11 @@ def test_line_sampling():
 
     vocs = VOCS(
         variables={
-            "x0": [lower_bounds[0], upper_bounds[0]],
-            "x1": [lower_bounds[1], upper_bounds[1]],
+            "x0": ContinuousVariable(domain=[lower_bounds[0], upper_bounds[0]], default_value=defaults[0]),
+            "x1": ContinuousVariable(domain=[lower_bounds[1], upper_bounds[1]], default_value=defaults[1]),
         },
         objectives={"f": "MAXIMIZE"},
     )
-    vocs.variables["x0"].default_value = defaults[0]
-    vocs.variables["x1"].default_value = defaults[1]
 
     # Create generator and run exploration.
     gen = LineSamplingGenerator(vocs=vocs, n_steps=n_steps)
@@ -87,11 +85,12 @@ def test_line_sampling_errors():
         gen = LineSamplingGenerator(vocs=vocs, n_steps=[3, 5])
 
     vocs = VOCS(
-        variables={"x0": [-3, 1], "x1": [-3, 1]}, objectives={"f": "MAXIMIZE"}
+        variables={
+            "x0": ContinuousVariable(domain=[-3, 1], default_value=0.0),
+            "x1": ContinuousVariable(domain=[-3, 1], default_value=0.0),
+        },
+        objectives={"f": "MAXIMIZE"}
     )
-    # Set default values
-    vocs.variables["x0"].default_value = 0.0
-    vocs.variables["x1"].default_value = 0.0
 
     # Check that an exception is raised when n_steps is not correct.
     with pytest.raises(
