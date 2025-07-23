@@ -86,7 +86,7 @@ def test_line_sampling_errors():
 
     # Check that an exception is raised when default values are missing.
     with pytest.raises(
-        AssertionError, match="Parameter x0 does not have a default value."
+        ValueError, match="Variable 'x0' does not have a default value."
     ):
         gen = LineSamplingGenerator(vocs=vocs, n_steps=[3, 5])
 
