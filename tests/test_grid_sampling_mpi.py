@@ -31,9 +31,9 @@ def test_grid_sampling():
     vocs = VOCS(
         variables={
             "x0": [lower_bounds[0], upper_bounds[0]],
-            "x1": [lower_bounds[1], upper_bounds[1]]
+            "x1": [lower_bounds[1], upper_bounds[1]],
         },
-        objectives={"f": "MAXIMIZE"}
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Create generator and run exploration.

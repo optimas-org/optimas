@@ -31,10 +31,10 @@ def test_manual_exploration():
     vocs = VOCS(
         variables={
             "x0": [lower_bounds[0], upper_bounds[0]],
-            "x1": [lower_bounds[1], upper_bounds[1]]
+            "x1": [lower_bounds[1], upper_bounds[1]],
         },
         objectives={"f": "MAXIMIZE"},
-        observables=["par1"]
+        observables=["par1"],
     )
 
     # Trials to attach and evaluate manually.

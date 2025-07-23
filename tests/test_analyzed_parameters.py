@@ -23,12 +23,9 @@ def test_analyzed_parameters():
     objective, but also a set of additional analyzed parameters.
     """
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
         objectives={"f": "MAXIMIZE"},
-        observables=["analyzed_parameter_1", "analyzed_parameter_2"]
+        observables=["analyzed_parameter_1", "analyzed_parameter_2"],
     )
 
     # Create generator.
@@ -75,12 +72,9 @@ def test_analyzed_parameters_from_history():
     loaded back into the exploration.
     """
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
         objectives={"f": "MAXIMIZE"},
-        observables=["analyzed_parameter_1", "analyzed_parameter_2"]
+        observables=["analyzed_parameter_1", "analyzed_parameter_2"],
     )
 
     # Create generator.

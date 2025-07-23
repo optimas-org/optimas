@@ -19,11 +19,8 @@ def test_exploration_in_steps():
     """Test that an exploration runs correctly when doing so in several steps."""
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
-        objectives={"f": "MAXIMIZE"}
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Define variables and objectives.
@@ -70,11 +67,8 @@ def test_exploration_in_steps_without_limit():
     """
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
-        objectives={"f": "MAXIMIZE"}
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Define evaluator.
@@ -114,11 +108,8 @@ def test_exploration_resume():
     """Test that an exploration correctly resumes from a previous run."""
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
-        objectives={"f": "MAXIMIZE"}
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Define variables and objectives.

@@ -28,12 +28,9 @@ def analysis_func_2(sim_dir, output_params):
 def test_chain_evaluator():
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
         objectives={"f": "MAXIMIZE"},
-        observables=["result_1"]
+        observables=["result_1"],
     )
 
     # Define variables and objectives.
@@ -80,11 +77,8 @@ def test_chain_evaluator_only_final_analysis():
     analysis function."""
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
-        objectives={"f": "MAXIMIZE"}
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Define variables and objectives.

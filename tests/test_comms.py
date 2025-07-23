@@ -19,11 +19,8 @@ def test_libe_comms():
     """Test local and local_threading communications."""
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
-        objectives={"f": "MAXIMIZE"}
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
     )
 
     max_evals = 10
