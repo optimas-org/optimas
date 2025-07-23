@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from generator_standard.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
@@ -20,20 +21,21 @@ def test_manual_exploration():
     """Tests methods for manually attaching trials and evaluations."""
 
     # Create varying parameters.
-    names = ["x0", "x1"]
     lower_bounds = [-3.0, 2.0]
     upper_bounds = [1.0, 5.0]
-    vars = []
-    for name, lb, ub in zip(names, lower_bounds, upper_bounds):
-        vars.append(VaryingParameter(name, lb, ub))
-    par1 = Parameter("par1")
 
     # Set number of evaluations.
     n_evals = 10
     n_evals_substep = 3
 
-    # Define objective.
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [lower_bounds[0], upper_bounds[0]],
+            "x1": [lower_bounds[1], upper_bounds[1]]
+        },
+        objectives={"f": "MAXIMIZE"},
+        observables=["par1"]
+    )
 
     # Trials to attach and evaluate manually.
     trials_to_attach = {"x0": [-2.3, 1.0, 0.5], "x1": [2.4, 1.0, 3.0]}
@@ -55,9 +57,7 @@ def test_manual_exploration():
     for i, (trials, evals) in enumerate(zip(test_trials, test_evals)):
         # Create generator and run exploration.
         gen = RandomSamplingGenerator(
-            varying_parameters=vars,
-            objectives=[obj],
-            analyzed_parameters=[par1],
+            vocs=vocs,
             distribution="uniform",
             seed=1,
         )

@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+from generator_standard.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
@@ -26,17 +27,17 @@ def analysis_func_2(sim_dir, output_params):
 
 def test_chain_evaluator():
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    par1 = Parameter("result_1")
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0]
+        },
+        objectives={"f": "MAXIMIZE"},
+        observables=["result_1"]
+    )
 
     # Define variables and objectives.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
-        analyzed_parameters=[par1],
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create template evaluator.
     ev1 = TemplateEvaluator(
@@ -78,14 +79,16 @@ def test_chain_evaluator_only_final_analysis():
     """Test a ChainEvaluator where only the final TemplateEvaluator has an
     analysis function."""
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Define variables and objectives.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create template evaluator.
     ev1 = TemplateEvaluator(

@@ -1,4 +1,5 @@
 import os
+from generator_standard.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
@@ -17,14 +18,16 @@ def analysis_func(sim_dir, output_params):
 def test_exploration_in_steps():
     """Test that an exploration runs correctly when doing so in several steps."""
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Define variables and objectives.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create template evaluator.
     ev = TemplateEvaluator(
@@ -66,14 +69,16 @@ def test_exploration_in_steps_without_limit():
     without a limit on the maximum number of evaluations.
     """
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Define evaluator.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create template evaluator.
     ev = TemplateEvaluator(
@@ -108,14 +113,16 @@ def test_exploration_in_steps_without_limit():
 def test_exploration_resume():
     """Test that an exploration correctly resumes from a previous run."""
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Define variables and objectives.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create template evaluator.
     ev = TemplateEvaluator(
