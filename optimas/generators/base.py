@@ -21,11 +21,12 @@ from optimas.core import (
     TrialStatus,
 )
 from generator_standard.vocs import VOCS
+from generator_standard.generator import Generator as StandardGenerator
 
 logger = get_logger(__name__)
 
 
-class Generator:
+class Generator(StandardGenerator):
     """Base class for all generators.
 
     Parameters
@@ -77,7 +78,11 @@ class Generator:
         allow_fixed_parameters: Optional[bool] = False,
         allow_updating_parameters: Optional[bool] = False,
     ) -> None:
-        # Store VOCS object
+        # Initialize the standard generator which called validate_vocs
+        super().__init__(vocs)
+        
+        # Store copies to prevent unexpected behavior if parameters are changed
+        # externally.
         self._vocs = deepcopy(vocs)
 
         # Convert VOCS to optimas internal format for backward compatibility
@@ -107,6 +112,13 @@ class Generator:
         self._queued_trials = []  # Trials queued to be given for evaluation.
         self._trial_count = 0
         self._check_parameters(self._varying_parameters)
+
+    def _validate_vocs(self, vocs: VOCS) -> None:
+        """This generator should have atleast one variable and one objective"""
+        if not vocs.variables:
+            raise ValueError("VOCS must define at least one variable.")
+        if not vocs.objectives:
+            raise ValueError("VOCS must define at least one objective.")
 
     def _convert_vocs_variables_to_varying_parameters(
         self,
