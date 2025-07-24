@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import pytest
+from generator_standard.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
@@ -44,20 +45,22 @@ def test_function_evaluator():
 
     for create_dirs in create_dirs_options:
         # Define variables and objectives.
-        var1 = VaryingParameter("x0", -50.0, 5.0)
-        var2 = VaryingParameter("x1", -5.0, 15.0)
-        obj = Objective("f", minimize=False)
-        # Test also more complex analyzed parameters.
-        p0 = Parameter("p0", dtype=(float, (2, 4)))
-        p1 = Parameter("p1", dtype="O")
-        p2 = Parameter("fig", dtype="O")
+        vocs = VOCS(
+            variables={
+                "x0": [-50.0, 5.0],
+                "x1": [-5.0, 15.0]
+            },
+            objectives={"f": "MAXIMIZE"},
+            observables={
+                "p0": (float, (2, 4)),
+                "p1": "O",
+                "fig": "O",
+            },
+
+        )
 
         # Create generator.
-        gen = RandomSamplingGenerator(
-            varying_parameters=[var1, var2],
-            objectives=[obj],
-            analyzed_parameters=[p0, p1, p2],
-        )
+        gen = RandomSamplingGenerator(vocs=vocs)
 
         # Create function evaluator.
         ev = FunctionEvaluator(
@@ -109,15 +112,16 @@ def test_function_evaluator_with_logs():
     """Test a function evaluator with redirected stdout and stderr."""
 
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Create generator.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create function evaluator.
     ev = FunctionEvaluator(

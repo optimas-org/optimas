@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import matplotlib.pyplot as plt
+from generator_standard.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
@@ -24,20 +25,21 @@ def analysis_func(sim_dir, output_params):
 
 def test_template_evaluator():
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
-    # Test also more complex analyzed parameters.
-    p0 = Parameter("p0", dtype=(float, (2, 4)))
-    p1 = Parameter("p1", dtype="O")
-    p2 = Parameter("fig", dtype="O")
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0]
+        },
+        objectives={"f": "MAXIMIZE"},
+        observables={
+            "p0": (float, (2, 4)),
+            "p1": "O",
+            "fig": "O",
+        }
+    )
 
     # Define variables and objectives.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
-        analyzed_parameters=[p0, p1, p2],
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create template evaluator.
     ev = TemplateEvaluator(
@@ -87,15 +89,16 @@ def test_template_evaluator_timeout():
     os.environ["OPTIMAS_TEST_SLEEP"] = "20"
 
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0]
+        },
+        objectives={"f": "MAXIMIZE"}
+    )
 
     # Define variables and objectives.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create template evaluator with 1s timeout.
     ev = TemplateEvaluator(
