@@ -46,17 +46,13 @@ def test_function_evaluator():
     for create_dirs in create_dirs_options:
         # Define variables and objectives.
         vocs = VOCS(
-            variables={
-                "x0": [-50.0, 5.0],
-                "x1": [-5.0, 15.0]
-            },
+            variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
             objectives={"f": "MAXIMIZE"},
             observables={
                 "p0": (float, (2, 4)),
                 "p1": "O",
                 "fig": "O",
             },
-
         )
 
         # Create generator.
@@ -113,11 +109,8 @@ def test_function_evaluator_with_logs():
 
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
-        objectives={"f": "MAXIMIZE"}
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Create generator.

@@ -26,16 +26,13 @@ def analysis_func(sim_dir, output_params):
 def test_template_evaluator():
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
         objectives={"f": "MAXIMIZE"},
         observables={
             "p0": (float, (2, 4)),
             "p1": "O",
             "fig": "O",
-        }
+        },
     )
 
     # Define variables and objectives.
@@ -90,11 +87,8 @@ def test_template_evaluator_timeout():
 
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
-        objectives={"f": "MAXIMIZE"}
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
     )
 
     # Define variables and objectives.
