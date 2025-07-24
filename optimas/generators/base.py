@@ -164,7 +164,7 @@ class Generator(StandardGenerator):
         # Handle both old format (set of strings) and new format (dict with ObservableType)
         if isinstance(self._vocs.observables, dict):
             for obs_name, obs_spec in self._vocs.observables.items():
-                if hasattr(obs_spec, 'dtype'):
+                if hasattr(obs_spec, "dtype"):
                     # New format with ObservableType
                     param = Parameter(name=obs_name, dtype=obs_spec.dtype)
                 else:

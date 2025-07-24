@@ -23,12 +23,9 @@ def analysis_func(sim_dir, output_params):
 def test_env_script():
     # Define variables and objectives.
     vocs = VOCS(
-        variables={
-            "x0": [-50.0, 5.0],
-            "x1": [-5.0, 15.0]
-        },
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
         objectives={"f": "MAXIMIZE"},
-        observables={"test_var": "U10"}
+        observables={"test_var": "U10"},
     )
 
     # Define variables and objectives.
