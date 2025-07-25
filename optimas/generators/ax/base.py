@@ -1,6 +1,6 @@
 """Contains the definition of the base Ax generator."""
 
-from typing import List, Optional
+from typing import Optional
 import logging
 
 import torch
