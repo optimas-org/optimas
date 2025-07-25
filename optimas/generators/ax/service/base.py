@@ -30,7 +30,12 @@ from optimas.utils.ax.other import (
     convert_optimas_to_ax_parameters,
     convert_optimas_to_ax_objectives,
 )
-from generator_standard.vocs import VOCS, LessThanConstraint, GreaterThanConstraint, BoundsConstraint
+from generator_standard.vocs import (
+    VOCS,
+    LessThanConstraint,
+    GreaterThanConstraint,
+    BoundsConstraint,
+)
 
 
 class AxServiceGenerator(AxGenerator):
@@ -115,7 +120,9 @@ class AxServiceGenerator(AxGenerator):
         self._fit_out_of_design = fit_out_of_design
         self._fixed_features = None
         self._parameter_constraints = parameter_constraints
-        self._outcome_constraints, constraint_parameters = self._convert_vocs_constraints_to_outcome_constraints()
+        self._outcome_constraints, constraint_parameters = (
+            self._convert_vocs_constraints_to_outcome_constraints()
+        )
         # Add constraint parameters to analyzed parameters
         if constraint_parameters:
             if self._analyzed_parameters is None:
@@ -124,20 +131,29 @@ class AxServiceGenerator(AxGenerator):
         self._ax_client = self._create_ax_client()
         self._model = AxModelManager(self._ax_client)
 
-    def _convert_vocs_constraints_to_outcome_constraints(self) -> tuple[List[str], List[Parameter]]:
+    def _convert_vocs_constraints_to_outcome_constraints(
+        self,
+    ) -> tuple[List[str], List[Parameter]]:
         """Convert VOCS constraints to AX outcome constraints format and create analyzed parameters."""
         outcome_constraints = []
         constraint_parameters = []
-        if hasattr(self._vocs, 'constraints') and self._vocs.constraints:
-            for constraint_name, constraint_spec in self._vocs.constraints.items():
+        if hasattr(self._vocs, "constraints") and self._vocs.constraints:
+            for (
+                constraint_name,
+                constraint_spec,
+            ) in self._vocs.constraints.items():
                 # Create analyzed parameter for this constraint
                 constraint_parameters.append(Parameter(constraint_name))
-                
+
                 # Handle different constraint types
                 if isinstance(constraint_spec, LessThanConstraint):
-                    outcome_constraints.append(f"{constraint_name} <= {constraint_spec.value}")
+                    outcome_constraints.append(
+                        f"{constraint_name} <= {constraint_spec.value}"
+                    )
                 elif isinstance(constraint_spec, GreaterThanConstraint):
-                    outcome_constraints.append(f"{constraint_name} >= {constraint_spec.value}")
+                    outcome_constraints.append(
+                        f"{constraint_name} >= {constraint_spec.value}"
+                    )
                 elif isinstance(constraint_spec, BoundsConstraint):
                     lo, hi = constraint_spec.range
                     outcome_constraints.append(f"{constraint_name} >= {lo}")
