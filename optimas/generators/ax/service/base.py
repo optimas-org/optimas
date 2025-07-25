@@ -30,6 +30,7 @@ from optimas.utils.ax.other import (
     convert_optimas_to_ax_parameters,
     convert_optimas_to_ax_objectives,
 )
+from generator_standard.vocs import VOCS
 
 
 class AxServiceGenerator(AxGenerator):
@@ -37,13 +38,8 @@ class AxServiceGenerator(AxGenerator):
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary.
-    objectives : list of Objective
-        List of optimization objectives.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
+    vocs : VOCS
+        VOCS object defining variables, objectives, constraints, and observables.
     parameter_constraints : list of str, optional
         List of string representation of parameter
         constraints, such as ``"x3 >= x4"`` or ``"-x3 + 2*x4 - 3.5*x5 >= 2"``.
@@ -92,9 +88,7 @@ class AxServiceGenerator(AxGenerator):
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
-        analyzed_parameters: Optional[List[Parameter]] = None,
+        vocs: VOCS,
         parameter_constraints: Optional[List[str]] = None,
         outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
@@ -109,9 +103,7 @@ class AxServiceGenerator(AxGenerator):
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
         super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
+            vocs=vocs,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,

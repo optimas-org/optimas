@@ -11,6 +11,7 @@ from ax.modelbridge.registry import Models
 
 from optimas.core import Objective, VaryingParameter, Parameter
 from .base import AxServiceGenerator
+from generator_standard.vocs import VOCS
 
 
 class AxMultiFidelityGenerator(AxServiceGenerator):
@@ -18,13 +19,9 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary. One them should be a fidelity.
-    objectives : list of Objective
-        List of optimization objectives.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
+    vocs : VOCS
+        VOCS object defining variables, objectives, constraints, and observables.
+        One of the variables should be a fidelity parameter.
     outcome_constraints : list of str, optional
         List of string representation of outcome constraints (i.e., constraints
         on any of the ``analyzed_parameters``) of form
@@ -72,9 +69,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
-        analyzed_parameters: Optional[List[Parameter]] = None,
+        vocs: VOCS,
         outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
@@ -90,9 +85,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     ) -> None:
         self.fidel_cost_intercept = fidel_cost_intercept
         super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
+            vocs=vocs,
             outcome_constraints=outcome_constraints,
             n_init=n_init,
             enforce_n_init=enforce_n_init,

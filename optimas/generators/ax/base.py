@@ -7,6 +7,7 @@ import torch
 
 from optimas.core import Objective, TrialParameter, VaryingParameter, Parameter
 from optimas.generators.base import Generator
+from generator_standard.vocs import VOCS
 
 
 # Disable Ax loggers to get cleaner output. In principle, setting
@@ -22,13 +23,8 @@ class AxGenerator(Generator):
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary.
-    objectives : list of Objective
-        List of optimization objectives.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
+    vocs : VOCS
+        VOCS object defining variables, objectives, constraints, and observables.
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
@@ -63,9 +59,7 @@ class AxGenerator(Generator):
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
-        analyzed_parameters: Optional[List[Parameter]] = None,
+        vocs: VOCS,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -77,9 +71,7 @@ class AxGenerator(Generator):
         allow_updating_parameters: Optional[bool] = False,
     ) -> None:
         super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
+            vocs=vocs,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,

@@ -7,6 +7,7 @@ from ax.modelbridge.registry import Models
 
 from optimas.core import Objective, VaryingParameter, Parameter
 from .base import AxServiceGenerator
+from generator_standard.vocs import VOCS
 
 
 class AxSingleFidelityGenerator(AxServiceGenerator):
@@ -23,13 +24,8 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary.
-    objectives : list of Objective
-        List of optimization objectives.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
+    vocs : VOCS
+        VOCS object defining variables, objectives, constraints, and observables.
     parameter_constraints : list of str, optional
         List of string representation of parameter
         constraints, such as ``"x3 >= x4"`` or ``"-x3 + 2*x4 - 3.5*x5 >= 2"``.
@@ -93,9 +89,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
-        analyzed_parameters: Optional[List[Parameter]] = None,
+        vocs: VOCS,
         parameter_constraints: Optional[List[str]] = None,
         outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
@@ -112,9 +106,7 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
     ) -> None:
         self._fully_bayesian = fully_bayesian
         super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
+            vocs=vocs,
             parameter_constraints=parameter_constraints,
             outcome_constraints=outcome_constraints,
             n_init=n_init,
