@@ -91,7 +91,6 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         self,
         vocs: VOCS,
         parameter_constraints: Optional[List[str]] = None,
-        outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
         abandon_failed_trials: Optional[bool] = True,
@@ -108,7 +107,6 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         super().__init__(
             vocs=vocs,
             parameter_constraints=parameter_constraints,
-            outcome_constraints=outcome_constraints,
             n_init=n_init,
             enforce_n_init=enforce_n_init,
             abandon_failed_trials=abandon_failed_trials,

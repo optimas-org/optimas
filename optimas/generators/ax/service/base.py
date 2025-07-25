@@ -30,7 +30,7 @@ from optimas.utils.ax.other import (
     convert_optimas_to_ax_parameters,
     convert_optimas_to_ax_objectives,
 )
-from generator_standard.vocs import VOCS
+from generator_standard.vocs import VOCS, LessThanConstraint, GreaterThanConstraint, BoundsConstraint
 
 
 class AxServiceGenerator(AxGenerator):
@@ -45,10 +45,7 @@ class AxServiceGenerator(AxGenerator):
         constraints, such as ``"x3 >= x4"`` or ``"-x3 + 2*x4 - 3.5*x5 >= 2"``.
         For the latter constraints, any number of arguments is accepted, and
         acceptable operators are ``<=`` and ``>=``.
-    outcome_constraints : list of str, optional
-        List of string representation of outcome constraints (i.e., constraints
-        on any of the ``analyzed_parameters``) of form
-        ``"metric_name >= bound"``, like ``"m1 <= 3."``.
+
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. If external data is attached to the exploration, the
@@ -90,7 +87,6 @@ class AxServiceGenerator(AxGenerator):
         self,
         vocs: VOCS,
         parameter_constraints: Optional[List[str]] = None,
-        outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
         abandon_failed_trials: Optional[bool] = True,
@@ -119,9 +115,34 @@ class AxServiceGenerator(AxGenerator):
         self._fit_out_of_design = fit_out_of_design
         self._fixed_features = None
         self._parameter_constraints = parameter_constraints
-        self._outcome_constraints = outcome_constraints
+        self._outcome_constraints, constraint_parameters = self._convert_vocs_constraints_to_outcome_constraints()
+        # Add constraint parameters to analyzed parameters
+        if constraint_parameters:
+            if self._analyzed_parameters is None:
+                self._analyzed_parameters = []
+            self._analyzed_parameters.extend(constraint_parameters)
         self._ax_client = self._create_ax_client()
         self._model = AxModelManager(self._ax_client)
+
+    def _convert_vocs_constraints_to_outcome_constraints(self) -> tuple[List[str], List[Parameter]]:
+        """Convert VOCS constraints to AX outcome constraints format and create analyzed parameters."""
+        outcome_constraints = []
+        constraint_parameters = []
+        if hasattr(self._vocs, 'constraints') and self._vocs.constraints:
+            for constraint_name, constraint_spec in self._vocs.constraints.items():
+                # Create analyzed parameter for this constraint
+                constraint_parameters.append(Parameter(constraint_name))
+                
+                # Handle different constraint types
+                if isinstance(constraint_spec, LessThanConstraint):
+                    outcome_constraints.append(f"{constraint_name} <= {constraint_spec.value}")
+                elif isinstance(constraint_spec, GreaterThanConstraint):
+                    outcome_constraints.append(f"{constraint_name} >= {constraint_spec.value}")
+                elif isinstance(constraint_spec, BoundsConstraint):
+                    lo, hi = constraint_spec.range
+                    outcome_constraints.append(f"{constraint_name} >= {lo}")
+                    outcome_constraints.append(f"{constraint_name} <= {hi}")
+        return outcome_constraints, constraint_parameters
 
     @property
     def ax_client(self) -> AxClient:

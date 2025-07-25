@@ -22,10 +22,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     vocs : VOCS
         VOCS object defining variables, objectives, constraints, and observables.
         One of the variables should be a fidelity parameter.
-    outcome_constraints : list of str, optional
-        List of string representation of outcome constraints (i.e., constraints
-        on any of the ``analyzed_parameters``) of form
-        ``"metric_name >= bound"``, like ``"m1 <= 3."``.
+
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. If external data is attached to the exploration, the
@@ -70,7 +67,6 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     def __init__(
         self,
         vocs: VOCS,
-        outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
         abandon_failed_trials: Optional[bool] = True,
@@ -86,7 +82,6 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         self.fidel_cost_intercept = fidel_cost_intercept
         super().__init__(
             vocs=vocs,
-            outcome_constraints=outcome_constraints,
             n_init=n_init,
             enforce_n_init=enforce_n_init,
             abandon_failed_trials=abandon_failed_trials,
