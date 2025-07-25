@@ -437,7 +437,7 @@ def test_ax_single_fidelity_updated_params():
         vocs=vocs,
         fit_out_of_design=True,
     )
-    
+
     # Start with a fixed value of x0.
     var1.fix_value(-10.0)
     ev = FunctionEvaluator(function=eval_func_sf)
