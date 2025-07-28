@@ -132,10 +132,13 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         return steps
 
     def set_fidelity_param(
-        self, var_name: str, is_fidelity: bool = True, fidelity_target_value: float = None
+        self,
+        var_name: str,
+        is_fidelity: bool = True,
+        fidelity_target_value: float = None,
     ) -> None:
         """Set a parameter as the fidelity parameter for multi-fidelity optimization.
-        
+
         Parameters
         ----------
         var_name : str
@@ -150,13 +153,15 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
             if vp.name == var_name:
                 var = vp
                 break
-        
+
         if var is None:
-            raise ValueError(f"Variable '{var_name}' not found in varying parameters")
-        
+            raise ValueError(
+                f"Variable '{var_name}' not found in varying parameters"
+            )
+
         var.is_fidelity = is_fidelity
         if fidelity_target_value is not None:
             var.fidelity_target_value = fidelity_target_value
-        
+
         # Update the Ax client
         self._update_parameter(var)
