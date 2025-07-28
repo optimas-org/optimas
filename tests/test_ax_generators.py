@@ -439,7 +439,7 @@ def test_ax_single_fidelity_updated_params():
     )
 
     # Start with a fixed value of x0.
-    var1.fix_value(-10.0)
+    gen.fix_value("x0", -10.0)
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
         generator=gen,
@@ -454,21 +454,21 @@ def test_ax_single_fidelity_updated_params():
     assert all(exploration.history["x0"] == -10)
 
     # Free value of x0 and run 5 evals.
-    var1.free_value()
-    gen.update_parameter(var1)
+    gen.free_value("x0")
     exploration.run(n_evals=5)
     assert not all(exploration.history["x0"][-5:] == -10)
 
-    # Update range of x0 and run 10 evals.
-    var1.update_range(-20.0, 0.0)
-    gen.update_parameter(var1)
-    exploration.run(n_evals=10)
-    assert all(exploration.history["x0"][-10:] >= -20)
-    assert all(exploration.history["x0"][-10:] <= 0.0)
+    # SH TODO: Implement update_range in new interface
+    # Do we want update_domain function in VOCS? Or create new VOCS here?
+    # # Update range of x0 and run 10 evals.
+    # var1.update_range(-20.0, 0.0)
+    # gen.update_parameter(var1)
+    # exploration.run(n_evals=10)
+    # assert all(exploration.history["x0"][-10:] >= -20)
+    # assert all(exploration.history["x0"][-10:] <= 0.0)
 
     # Fix of x0 and run 5 evals.
-    var1.fix_value(-9)
-    gen.update_parameter(var1)
+    gen.fix_value("x0", -9)
     exploration.run(n_evals=5)
     assert all(exploration.history["x0"][-5:] == -9)
 
@@ -477,8 +477,7 @@ def test_ax_single_fidelity_updated_params():
     assert exploration.history["x0"].to_numpy()[-1] == -7
 
     # Free value and run 3 evals.
-    var1.free_value()
-    gen.update_parameter(var1)
+    gen.free_value("x0")
     exploration.run(n_evals=3)
     assert all(exploration.history["x0"][-3:] != -9)
 

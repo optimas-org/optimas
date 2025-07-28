@@ -50,12 +50,12 @@ class AxServiceGenerator(AxGenerator):
         constraints, such as ``"x3 >= x4"`` or ``"-x3 + 2*x4 - 3.5*x5 >= 2"``.
         For the latter constraints, any number of arguments is accepted, and
         acceptable operators are ``<=`` and ``>=``.
-
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. If external data is attached to the exploration, the
         number of initialization evaluations will be reduced by the same
         amount, unless `enforce_n_init=True`. By default, ``4``.
+
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
@@ -381,3 +381,36 @@ class AxServiceGenerator(AxGenerator):
             ax_trial.mark_abandoned(unsafe=True)
         else:
             ax_trial.mark_failed(unsafe=True)
+
+    def fix_value(self, var_name: str, value: float) -> None:
+        """Fix a parameter to a specific value."""
+        var = None
+        for vp in self._varying_parameters:
+            if vp.name == var_name:
+                var = vp
+                break
+        
+        if var is None:
+            raise ValueError(f"Variable '{var_name}' not found in varying parameters")
+        
+        var.fix_value(value)
+        self._update_parameter(var)
+
+    def free_value(self, var_name: str) -> None:
+        """Free a previously fixed parameter."""
+        var = None
+        for vp in self._varying_parameters:
+            if vp.name == var_name:
+                var = vp
+                break
+        
+        if var is None:
+            raise ValueError(f"Variable '{var_name}' not found in varying parameters")
+        
+        if not var.is_fixed:
+            raise ValueError(f"Variable '{var_name}' was not previously fixed")
+        
+        var.free_value()
+        self._update_parameter(var)
+
+
