@@ -413,4 +413,35 @@ class AxServiceGenerator(AxGenerator):
         var.free_value()
         self._update_parameter(var)
 
+    def update_range(self, var_name: str, lower_bound: float, upper_bound: float) -> None:
+        """Update the range of a parameter.
+        
+        Parameters
+        ----------
+        var_name : str
+            Name of the variable to update.
+        lower_bound : float
+            New lower bound for the parameter.
+        upper_bound : float
+            New upper bound for the parameter.
+        """
+        var = None
+        for vp in self._varying_parameters:
+            if vp.name == var_name:
+                var = vp
+                break
+        
+        if var is None:
+            raise ValueError(f"Variable '{var_name}' not found in varying parameters")
+        
+        # Update the VOCS variable domain
+        if var_name in self._vocs.variables:
+            self._vocs.variables[var_name].domain = [lower_bound, upper_bound]
+        
+        # Update the varying parameter
+        var.update_range(lower_bound, upper_bound)
+        
+        # Update the Ax client
+        self._update_parameter(var)
+
 

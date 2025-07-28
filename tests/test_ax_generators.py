@@ -458,14 +458,11 @@ def test_ax_single_fidelity_updated_params():
     exploration.run(n_evals=5)
     assert not all(exploration.history["x0"][-5:] == -10)
 
-    # SH TODO: Implement update_range in new interface
-    # Do we want update_domain function in VOCS? Or create new VOCS here?
-    # # Update range of x0 and run 10 evals.
-    # var1.update_range(-20.0, 0.0)
-    # gen.update_parameter(var1)
-    # exploration.run(n_evals=10)
-    # assert all(exploration.history["x0"][-10:] >= -20)
-    # assert all(exploration.history["x0"][-10:] <= 0.0)
+    # Update range of x0 and run 10 evals.
+    gen.update_range("x0", -20.0, 0.0)
+    exploration.run(n_evals=10)
+    assert all(exploration.history["x0"][-10:] >= -20)
+    assert all(exploration.history["x0"][-10:] <= 0.0)
 
     # Fix of x0 and run 5 evals.
     gen.fix_value("x0", -9)
