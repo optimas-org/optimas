@@ -490,11 +490,6 @@ def test_ax_multi_fidelity():
     trial_count = 0
     trials_to_fail = [2, 5]
 
-    # TODO: res needs is_fidelity=True, fidelity_target_value=8.0
-    # var3 = VaryingParameter(
-    #     "res", 1.0, 8.0, is_fidelity=True, fidelity_target_value=8.0
-    # )
-
     vocs = VOCS(
         variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0], "res": [1.0, 8.0]},
         objectives={"f": "MAXIMIZE"},
@@ -502,6 +497,7 @@ def test_ax_multi_fidelity():
     )
 
     gen = AxMultiFidelityGenerator(vocs=vocs)
+    gen.set_fidelity_param("res", is_fidelity=True, fidelity_target_value=8.0)
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
         generator=gen,
@@ -522,7 +518,7 @@ def test_ax_multi_fidelity():
     # Check constraints.
     ocs = gen._ax_client.experiment.optimization_config.outcome_constraints
     assert len(ocs) == 1
-    assert ocs[0].metric.name == p1.name
+    assert ocs[0].metric.name == "p1"
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
@@ -689,7 +685,6 @@ def test_ax_multi_fidelity_with_history():
     trial_count = 0
     trials_to_fail = []
 
-    # TODO: res needs is_fidelity=True, fidelity_target_value=8.0
     vocs = VOCS(
         variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0], "res": [1.0, 8.0]},
         objectives={"f": "MAXIMIZE"},
@@ -697,6 +692,7 @@ def test_ax_multi_fidelity_with_history():
     )
 
     gen = AxMultiFidelityGenerator(vocs=vocs)
+    gen.set_fidelity_param("res", is_fidelity=True, fidelity_target_value=8.0)
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
         generator=gen,
