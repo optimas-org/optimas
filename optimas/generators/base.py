@@ -20,7 +20,7 @@ from optimas.core import (
     TrialParameter,
     TrialStatus,
 )
-from generator_standard.vocs import VOCS
+from generator_standard.vocs import VOCS, ContinuousVariable
 from generator_standard.generator import Generator as StandardGenerator
 
 logger = get_logger(__name__)
@@ -127,13 +127,14 @@ class Generator(StandardGenerator):
         varying_parameters = []
         for var_name, var_spec in self._vocs.variables.items():
             # Only handle ContinuousVariable for now
-            vp = VaryingParameter(
-                name=var_name,
-                lower_bound=var_spec.domain[0],
-                upper_bound=var_spec.domain[1],
-                default_value=var_spec.default_value,
-            )
-            varying_parameters.append(vp)
+            if isinstance(var_spec, ContinuousVariable):
+                vp = VaryingParameter(
+                    name=var_name,
+                    lower_bound=var_spec.domain[0],
+                    upper_bound=var_spec.domain[1],
+                    default_value=var_spec.default_value,
+                )
+                varying_parameters.append(vp)
         return varying_parameters
 
     def _convert_vocs_objectives_to_objectives(self) -> List[Objective]:
