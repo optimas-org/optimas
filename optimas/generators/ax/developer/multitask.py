@@ -223,7 +223,7 @@ class AxMultitaskGenerator(AxGenerator):
         self.current_trial = None
         self.gr_lofi = None
         self._experiment = self._create_experiment()
-        
+
         # Internal mapping: _id -> (arm_name, ax_trial_id, trial_type)
         self._id_mapping = {}
         self._next_id = 0
@@ -275,7 +275,7 @@ class AxMultitaskGenerator(AxGenerator):
                 self._id_mapping[current_id] = {
                     "arm_name": arm.name,
                     "ax_trial_id": trial_index,
-                    "trial_type": trial_type
+                    "trial_type": trial_type,
                 }
                 point["_id"] = current_id
                 point["trial_type"] = trial_type  # Keep trial_type for now
@@ -296,7 +296,7 @@ class AxMultitaskGenerator(AxGenerator):
                 custom_parameters=self._custom_trial_parameters,
             )
             trials.append(trial)
-        
+
         # Apply _id mapping to all trials before processing
         for trial in trials:
             if trial.gen_id is not None and trial.gen_id in self._id_mapping:
@@ -304,7 +304,7 @@ class AxMultitaskGenerator(AxGenerator):
                 trial.arm_name = mapping["arm_name"]
                 trial.ax_trial_id = mapping["ax_trial_id"]
                 # trial_type should already be in trial from custom_parameters
-        
+
         if self.gen_state == NOT_STARTED:
             self._incorporate_external_data(trials)
         else:
