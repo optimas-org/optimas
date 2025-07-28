@@ -534,7 +534,11 @@ def test_ax_multitask():
     """Test that an exploration with a multitask generator runs"""
 
     vocs = VOCS(
-        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0], "trial_type": {"task_1", "task_2"}},
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0],
+            "trial_type": {"task_1", "task_2"},
+        },
         objectives={"f": "MAXIMIZE"},
     )
 
@@ -721,7 +725,11 @@ def test_ax_multitask_with_history():
     """
 
     vocs = VOCS(
-        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0], "trial_type": {"task_1", "task_2"}},
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0],
+            "trial_type": {"task_1", "task_2"},
+        },
         objectives={"f": "MAXIMIZE"},
     )
 

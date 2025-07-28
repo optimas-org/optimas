@@ -194,10 +194,12 @@ class AxMultitaskGenerator(AxGenerator):
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
         self._check_inputs(vocs, lofi_task, hifi_task)
-        
+
         # Convert discrete variables to trial parameters before calling super().__init__
-        custom_trial_parameters = self._convert_discrete_variables_to_trial_parameters(vocs)
-        
+        custom_trial_parameters = (
+            self._convert_discrete_variables_to_trial_parameters(vocs)
+        )
+
         super().__init__(
             vocs=vocs,
             use_cuda=use_cuda,
@@ -221,19 +223,23 @@ class AxMultitaskGenerator(AxGenerator):
         self.current_trial = None
         self.gr_lofi = None
         self._experiment = self._create_experiment()
-        
+
         # Internal mapping: _id -> (arm_name, ax_trial_id, trial_type)
         self._id_mapping = {}
         self._next_id = 0
 
-    def _convert_discrete_variables_to_trial_parameters(self, vocs: VOCS) -> List[TrialParameter]:
+    def _convert_discrete_variables_to_trial_parameters(
+        self, vocs: VOCS
+    ) -> List[TrialParameter]:
         """Convert discrete variables from VOCS to TrialParameter objects."""
         trial_parameters = []
         for var_name, var_spec in vocs.variables.items():
             if isinstance(var_spec, DiscreteVariable):
                 # Convert discrete variable to trial parameter
                 max_len = max(len(str(val)) for val in var_spec.values)
-                trial_param = TrialParameter(var_name, var_name, dtype=f"U{max_len}")
+                trial_param = TrialParameter(
+                    var_name, var_name, dtype=f"U{max_len}"
+                )
                 trial_parameters.append(trial_param)
         return trial_parameters
 
@@ -258,12 +264,12 @@ class AxMultitaskGenerator(AxGenerator):
             "Objectives given: {}.".format(n_objectives)
         )
         # Check that there is a discrete variable called 'trial_type'
-        assert "trial_type" in vocs.variables, (
-            "Multitask generator requires a discrete variable named 'trial_type'"
-        )
-        assert isinstance(vocs.variables["trial_type"], DiscreteVariable), (
-            "Variable 'trial_type' must be a discrete variable"
-        )
+        assert (
+            "trial_type" in vocs.variables
+        ), "Multitask generator requires a discrete variable named 'trial_type'"
+        assert isinstance(
+            vocs.variables["trial_type"], DiscreteVariable
+        ), "Variable 'trial_type' must be a discrete variable"
 
     def _check_inputs(
         self,
@@ -295,7 +301,7 @@ class AxMultitaskGenerator(AxGenerator):
                 for trial_param in self._custom_trial_parameters:
                     if trial_param.name == "trial_type":
                         point[trial_param.name] = trial_type
-                
+
                 # Generate unique _id and store mapping
                 current_id = self._next_id
                 self._id_mapping[current_id] = {
