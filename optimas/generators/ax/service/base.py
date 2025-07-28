@@ -389,10 +389,12 @@ class AxServiceGenerator(AxGenerator):
             if vp.name == var_name:
                 var = vp
                 break
-        
+
         if var is None:
-            raise ValueError(f"Variable '{var_name}' not found in varying parameters")
-        
+            raise ValueError(
+                f"Variable '{var_name}' not found in varying parameters"
+            )
+
         var.fix_value(value)
         self._update_parameter(var)
 
@@ -403,14 +405,14 @@ class AxServiceGenerator(AxGenerator):
             if vp.name == var_name:
                 var = vp
                 break
-        
+
         if var is None:
-            raise ValueError(f"Variable '{var_name}' not found in varying parameters")
-        
+            raise ValueError(
+                f"Variable '{var_name}' not found in varying parameters"
+            )
+
         if not var.is_fixed:
             raise ValueError(f"Variable '{var_name}' was not previously fixed")
-        
+
         var.free_value()
         self._update_parameter(var)
-
-
