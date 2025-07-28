@@ -67,6 +67,7 @@ from optimas.core import (
     TrialStatus,
 )
 from .ax_metric import AxMetric
+from generator_standard.vocs import VOCS
 
 # Define generator states.
 NOT_STARTED = "not_started"
@@ -152,10 +153,8 @@ class AxMultitaskGenerator(AxGenerator):
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary. One them should be a fidelity.
-    objectives : list of Objective
-        List of optimization objectives. Only one objective is supported.
+    vocs : VOCS
+        VOCS object defining variables, objectives, constraints, and observables.
     lofi_task, hifi_task : Task
         The low- and high-fidelity tasks.
     analyzed_parameters : list of Parameter, optional
@@ -184,11 +183,9 @@ class AxMultitaskGenerator(AxGenerator):
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
+        vocs: VOCS,
         lofi_task: Task,
         hifi_task: Task,
-        analyzed_parameters: Optional[List[Parameter]] = None,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -200,15 +197,11 @@ class AxMultitaskGenerator(AxGenerator):
         # Ax trial_index and arm toegther locate a point
         # Multiple points (Optimas trials) can share the same Ax trial_index
         custom_trial_parameters = [
-            TrialParameter("arm_name", "ax_arm_name", dtype="U32"),
             TrialParameter("trial_type", "ax_trial_type", dtype="U32"),
-            TrialParameter("ax_trial_id", "ax_trial_index", dtype=int),
         ]
-        self._check_inputs(varying_parameters, objectives, lofi_task, hifi_task)
+        self._check_inputs(vocs, lofi_task, hifi_task)
         super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
+            vocs=vocs,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,
@@ -230,6 +223,10 @@ class AxMultitaskGenerator(AxGenerator):
         self.current_trial = None
         self.gr_lofi = None
         self._experiment = self._create_experiment()
+        
+        # Internal mapping: _id -> (arm_name, ax_trial_id, trial_type)
+        self._id_mapping = {}
+        self._next_id = 0
 
     def get_gen_specs(
         self, sim_workers: int, run_params: Dict, sim_max: int
@@ -244,14 +241,13 @@ class AxMultitaskGenerator(AxGenerator):
 
     def _check_inputs(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
+        vocs: VOCS,
         lofi_task: Task,
         hifi_task: Task,
     ) -> None:
         """Check that the generator inputs are valid."""
         # Check that only one objective has been given.
-        n_objectives = len(objectives)
+        n_objectives = len(vocs.objectives)
         assert n_objectives == 1, (
             "Multitask generator supports only a single objective. "
             "Objectives given: {}.".format(n_objectives)
@@ -274,11 +270,16 @@ class AxMultitaskGenerator(AxGenerator):
                     var.name: arm.parameters.get(var.name)
                     for var in self._varying_parameters
                 }
-                # SH for VOCS standard these will need to be 'variables'
-                # For now much match the trial parameter names.
-                point["ax_trial_id"] = trial_index
-                point["arm_name"] = arm.name
-                point["trial_type"] = trial_type
+                # Generate unique _id and store mapping
+                current_id = self._next_id
+                self._id_mapping[current_id] = {
+                    "arm_name": arm.name,
+                    "ax_trial_id": trial_index,
+                    "trial_type": trial_type
+                }
+                point["_id"] = current_id
+                point["trial_type"] = trial_type  # Keep trial_type for now
+                self._next_id += 1
                 points.append(point)
         return points
 
@@ -295,6 +296,15 @@ class AxMultitaskGenerator(AxGenerator):
                 custom_parameters=self._custom_trial_parameters,
             )
             trials.append(trial)
+        
+        # Apply _id mapping to all trials before processing
+        for trial in trials:
+            if trial.gen_id is not None and trial.gen_id in self._id_mapping:
+                mapping = self._id_mapping[trial.gen_id]
+                trial.arm_name = mapping["arm_name"]
+                trial.ax_trial_id = mapping["ax_trial_id"]
+                # trial_type should already be in trial from custom_parameters
+        
         if self.gen_state == NOT_STARTED:
             self._incorporate_external_data(trials)
         else:
