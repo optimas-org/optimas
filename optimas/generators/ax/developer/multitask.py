@@ -193,10 +193,20 @@ class AxMultitaskGenerator(AxGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
+
+        # As trial parameters these get written to history array
+        # Ax trial_index and arm toegther locate a point
+        # Multiple points (Optimas trials) can share the same Ax trial_index
+        # vocs interface note: These are not part of vocs. They are only stored
+        # to allow keeping track of them from previous runs.
+        custom_trial_parameters = [
+            TrialParameter("arm_name", "ax_arm_name", dtype="U32"),
+            TrialParameter("ax_trial_id", "ax_trial_index", dtype=int),
+        ]
         self._check_inputs(vocs, lofi_task, hifi_task)
 
         # Convert discrete variables to trial parameters before calling super().__init__
-        custom_trial_parameters = (
+        custom_trial_parameters.extend(
             self._convert_discrete_variables_to_trial_parameters(vocs)
         )
 
@@ -223,10 +233,6 @@ class AxMultitaskGenerator(AxGenerator):
         self.current_trial = None
         self.gr_lofi = None
         self._experiment = self._create_experiment()
-
-        # Internal mapping: _id -> (arm_name, ax_trial_id, trial_type)
-        self._id_mapping = {}
-        self._next_id = 0
 
     def _convert_discrete_variables_to_trial_parameters(
         self, vocs: VOCS
@@ -302,15 +308,8 @@ class AxMultitaskGenerator(AxGenerator):
                     if trial_param.name == "trial_type":
                         point[trial_param.name] = trial_type
 
-                # Generate unique _id and store mapping
-                current_id = self._next_id
-                self._id_mapping[current_id] = {
-                    "arm_name": arm.name,
-                    "ax_trial_id": trial_index,
-                    "trial_type": trial_type,
-                }
-                point["_id"] = current_id
-                self._next_id += 1
+                point["ax_trial_id"] = trial_index
+                point["arm_name"] = arm.name
                 points.append(point)
         return points
 
@@ -327,14 +326,6 @@ class AxMultitaskGenerator(AxGenerator):
                 custom_parameters=self._custom_trial_parameters,
             )
             trials.append(trial)
-
-        # Apply _id mapping to all trials before processing
-        for trial in trials:
-            if trial.gen_id is not None and trial.gen_id in self._id_mapping:
-                mapping = self._id_mapping[trial.gen_id]
-                trial.arm_name = mapping["arm_name"]
-                trial.ax_trial_id = mapping["ax_trial_id"]
-                # trial_type should already be in trial from custom_parameters
 
         if self.gen_state == NOT_STARTED:
             self._incorporate_external_data(trials)
