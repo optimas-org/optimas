@@ -275,6 +275,7 @@ def test_ax_single_fidelity_int():
     trial_count = 0
     trials_to_fail = [2, 6]
 
+    # TODO: Suggest supporting IntegerVariables in vocs
     vocs = VOCS(
         variables={"x0": set(range(-50, 6)), "x1": [-5.0, 15.0]},
         objectives={"f": "MAXIMIZE"},

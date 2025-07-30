@@ -20,7 +20,7 @@ from optimas.core import (
     TrialParameter,
     TrialStatus,
 )
-from generator_standard.vocs import VOCS, ContinuousVariable
+from generator_standard.vocs import VOCS, ContinuousVariable, DiscreteVariable
 from generator_standard.generator import Generator as StandardGenerator
 
 logger = get_logger(__name__)
@@ -114,7 +114,7 @@ class Generator(StandardGenerator):
         self._check_parameters(self._varying_parameters)
 
     def _validate_vocs(self, vocs: VOCS) -> None:
-        """This generator should have atleast one variable and one objective"""
+        """Ensure the generator has at least one variable and one objective."""
         if not vocs.variables:
             raise ValueError("VOCS must define at least one variable.")
         if not vocs.objectives:
@@ -126,7 +126,7 @@ class Generator(StandardGenerator):
         """Convert VOCS variables to optimas VaryingParameter objects."""
         varying_parameters = []
         for var_name, var_spec in self._vocs.variables.items():
-            # Only handle ContinuousVariable for now
+            # Handle ContinuousVariable
             if isinstance(var_spec, ContinuousVariable):
                 vp = VaryingParameter(
                     name=var_name,
@@ -135,6 +135,25 @@ class Generator(StandardGenerator):
                     default_value=var_spec.default_value,
                 )
                 varying_parameters.append(vp)
+            # Handle DiscreteVariable that is a range of integers
+            # TODO: Suggest supporting IntegerVariables in vocs
+            elif isinstance(var_spec, DiscreteVariable):
+                values = list(var_spec.values)
+                if len(values) > 1:
+                    # Check if values form a continuous integer range
+                    sorted_values = sorted(values)
+                    if all(
+                        isinstance(v, int) for v in values
+                    ) and sorted_values == list(
+                        range(sorted_values[0], sorted_values[-1] + 1)
+                    ):
+                        vp = VaryingParameter(
+                            name=var_name,
+                            lower_bound=sorted_values[0],
+                            upper_bound=sorted_values[-1],
+                            dtype=int,
+                        )
+                        varying_parameters.append(vp)
         return varying_parameters
 
     def _convert_vocs_objectives_to_objectives(self) -> List[Objective]:
