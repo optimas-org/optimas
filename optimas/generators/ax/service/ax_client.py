@@ -6,6 +6,7 @@ from ax.service.ax_client import AxClient
 from ax.core.objective import MultiObjective
 
 from optimas.core import Objective, VaryingParameter, Parameter
+from generator_standard.vocs import VOCS
 from .base import AxServiceGenerator
 
 
@@ -71,18 +72,19 @@ class AxClientGenerator(AxServiceGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ):
-        varying_parameters = self._get_varying_parameters(ax_client)
-        objectives = self._get_objectives(ax_client)
+        # Create VOCS object from AxClient data
+        vocs = self._create_vocs_from_ax_client(ax_client)
+
+        # Add constraints to analyzed parameters
         analyzed_parameters = self._add_constraints_to_analyzed_parameters(
             analyzed_parameters, ax_client
         )
+
         use_cuda = self._use_cuda(ax_client)
         self._ax_client = ax_client
+
         super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
-            enforce_n_init=True,
+            vocs=vocs,
             abandon_failed_trials=abandon_failed_trials,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
@@ -90,6 +92,38 @@ class AxClientGenerator(AxServiceGenerator):
             save_model=save_model,
             model_save_period=model_save_period,
             model_history_dir=model_history_dir,
+        )
+
+    def _create_vocs_from_ax_client(self, ax_client: AxClient) -> VOCS:
+        """Create a VOCS object from the AxClient data."""
+        # Extract variables from search space
+        variables = {}
+        for _, p in ax_client.experiment.search_space.parameters.items():
+            variables[p.name] = [p.lower, p.upper]
+
+        # Extract objectives from optimization config
+        objectives = {}
+        ax_objective = ax_client.experiment.optimization_config.objective
+        if isinstance(ax_objective, MultiObjective):
+            ax_objectives = ax_objective.objectives
+        else:
+            ax_objectives = [ax_objective]
+
+        for ax_obj in ax_objectives:
+            obj_type = "MINIMIZE" if ax_obj.minimize else "MAXIMIZE"
+            objectives[ax_obj.metric_names[0]] = obj_type
+
+        # Extract observables from outcome constraints (if any)
+        observables = set()
+        ax_config = ax_client.experiment.optimization_config
+        if ax_config.outcome_constraints:
+            for constraint in ax_config.outcome_constraints:
+                observables.add(constraint.metric.name)
+
+        return VOCS(
+            variables=variables,
+            objectives=objectives,
+            observables=observables,
         )
 
     def _get_varying_parameters(self, ax_client: AxClient):

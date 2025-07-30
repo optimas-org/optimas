@@ -20,25 +20,19 @@ from optimas.core import (
     TrialParameter,
     TrialStatus,
 )
+from generator_standard.vocs import VOCS, ContinuousVariable, DiscreteVariable
+from generator_standard.generator import Generator as StandardGenerator
 
 logger = get_logger(__name__)
 
 
-class Generator:
+class Generator(StandardGenerator):
     """Base class for all generators.
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary.
-    objectives : list of Objective
-        List of optimization objectives.
-    constraints : list of Parameter, optional
-        [Not yet implemented] List of optimization constraints. By default
-        ``None``.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
+    vocs : VOCS
+        VOCS object specifying variables, objectives, constraints, and observables.
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
@@ -73,10 +67,7 @@ class Generator:
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
-        constraints: Optional[List[Parameter]] = None,
-        analyzed_parameters: Optional[List[Parameter]] = None,
+        vocs: VOCS,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -87,16 +78,23 @@ class Generator:
         allow_fixed_parameters: Optional[bool] = False,
         allow_updating_parameters: Optional[bool] = False,
     ) -> None:
-        if objectives is None:
-            objectives = [Objective()]
+        # Initialize the standard generator which called validate_vocs
+        super().__init__(vocs)
+
         # Store copies to prevent unexpected behavior if parameters are changed
         # externally.
-        self._varying_parameters = deepcopy(varying_parameters)
-        self._objectives = deepcopy(objectives)
-        self._constraints = constraints
-        self._analyzed_parameters = (
-            [] if analyzed_parameters is None else analyzed_parameters
+        self._vocs = deepcopy(vocs)
+
+        # Convert VOCS to optimas internal format for backward compatibility
+        self._varying_parameters = (
+            self._convert_vocs_variables_to_varying_parameters()
         )
+        self._objectives = self._convert_vocs_objectives_to_objectives()
+        self._constraints = self._convert_vocs_constraints_to_constraints()
+        self._analyzed_parameters = (
+            self._convert_vocs_observables_to_parameters()
+        )
+
         self._save_model = save_model
         self._model_save_period = model_save_period
         self._model_history_dir = model_history_dir
@@ -114,6 +112,89 @@ class Generator:
         self._queued_trials = []  # Trials queued to be given for evaluation.
         self._trial_count = 0
         self._check_parameters(self._varying_parameters)
+
+    def _validate_vocs(self, vocs: VOCS) -> None:
+        """Ensure the generator has at least one variable and one objective."""
+        if not vocs.variables:
+            raise ValueError("VOCS must define at least one variable.")
+        if not vocs.objectives:
+            raise ValueError("VOCS must define at least one objective.")
+
+    def _convert_vocs_variables_to_varying_parameters(
+        self,
+    ) -> List[VaryingParameter]:
+        """Convert VOCS variables to optimas VaryingParameter objects."""
+        varying_parameters = []
+        for var_name, var_spec in self._vocs.variables.items():
+            # Handle ContinuousVariable
+            if isinstance(var_spec, ContinuousVariable):
+                vp = VaryingParameter(
+                    name=var_name,
+                    lower_bound=var_spec.domain[0],
+                    upper_bound=var_spec.domain[1],
+                    default_value=var_spec.default_value,
+                )
+                varying_parameters.append(vp)
+            # Handle DiscreteVariable that is a range of integers
+            # TODO: Suggest supporting IntegerVariables in vocs
+            elif isinstance(var_spec, DiscreteVariable):
+                values = list(var_spec.values)
+                if len(values) > 1:
+                    # Check if values form a continuous integer range
+                    sorted_values = sorted(values)
+                    if all(
+                        isinstance(v, int) for v in values
+                    ) and sorted_values == list(
+                        range(sorted_values[0], sorted_values[-1] + 1)
+                    ):
+                        vp = VaryingParameter(
+                            name=var_name,
+                            lower_bound=sorted_values[0],
+                            upper_bound=sorted_values[-1],
+                            dtype=int,
+                        )
+                        varying_parameters.append(vp)
+        return varying_parameters
+
+    def _convert_vocs_objectives_to_objectives(self) -> List[Objective]:
+        """Convert VOCS objectives to optimas Objective objects."""
+        objectives = []
+        for obj_name, obj_type in self._vocs.objectives.items():
+            minimize = obj_type == "MINIMIZE"
+            obj = Objective(name=obj_name, minimize=minimize)
+            objectives.append(obj)
+        return objectives
+
+    def _convert_vocs_constraints_to_constraints(
+        self,
+    ) -> Optional[List[Parameter]]:
+        """Convert VOCS constraints to optimas Parameter objects."""
+        if not self._vocs.constraints:
+            return None
+        constraints = []
+        for const_name, const_spec in self._vocs.constraints.items():
+            # For now, create a basic Parameter - constraint handling needs more work
+            param = Parameter(name=const_name)
+            constraints.append(param)
+        return constraints
+
+    def _convert_vocs_observables_to_parameters(self) -> List[Parameter]:
+        """Convert VOCS observables to optimas Parameter objects."""
+        parameters = []
+        # Handle both set of strings and dict
+        for obs_name in self._vocs.observables:
+            if isinstance(self._vocs.observables, dict):
+                obs_spec = self._vocs.observables[obs_name]
+            else:
+                obs_spec = None
+            param = Parameter(name=obs_name, dtype=obs_spec)
+            parameters.append(param)
+        return parameters
+
+    @property
+    def vocs(self) -> VOCS:
+        """Get the VOCS object."""
+        return self._vocs
 
     @property
     def varying_parameters(self) -> List[VaryingParameter]:

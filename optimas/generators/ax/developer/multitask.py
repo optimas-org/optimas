@@ -67,6 +67,7 @@ from optimas.core import (
     TrialStatus,
 )
 from .ax_metric import AxMetric
+from generator_standard.vocs import VOCS, DiscreteVariable
 
 # Define generator states.
 NOT_STARTED = "not_started"
@@ -152,10 +153,8 @@ class AxMultitaskGenerator(AxGenerator):
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary. One them should be a fidelity.
-    objectives : list of Objective
-        List of optimization objectives. Only one objective is supported.
+    vocs : VOCS
+        VOCS object defining variables, objectives, constraints, and observables.
     lofi_task, hifi_task : Task
         The low- and high-fidelity tasks.
     analyzed_parameters : list of Parameter, optional
@@ -184,11 +183,9 @@ class AxMultitaskGenerator(AxGenerator):
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
+        vocs: VOCS,
         lofi_task: Task,
         hifi_task: Task,
-        analyzed_parameters: Optional[List[Parameter]] = None,
         use_cuda: Optional[bool] = False,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -196,19 +193,25 @@ class AxMultitaskGenerator(AxGenerator):
         model_save_period: Optional[int] = 5,
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
+
         # As trial parameters these get written to history array
         # Ax trial_index and arm toegther locate a point
         # Multiple points (Optimas trials) can share the same Ax trial_index
+        # vocs interface note: These are not part of vocs. They are only stored
+        # to allow keeping track of them from previous runs.
         custom_trial_parameters = [
             TrialParameter("arm_name", "ax_arm_name", dtype="U32"),
-            TrialParameter("trial_type", "ax_trial_type", dtype="U32"),
             TrialParameter("ax_trial_id", "ax_trial_index", dtype=int),
         ]
-        self._check_inputs(varying_parameters, objectives, lofi_task, hifi_task)
+        self._check_inputs(vocs, lofi_task, hifi_task)
+
+        # Convert discrete variables to trial parameters before calling super().__init__
+        custom_trial_parameters.extend(
+            self._convert_discrete_variables_to_trial_parameters(vocs)
+        )
+
         super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
+            vocs=vocs,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,
@@ -231,6 +234,21 @@ class AxMultitaskGenerator(AxGenerator):
         self.gr_lofi = None
         self._experiment = self._create_experiment()
 
+    def _convert_discrete_variables_to_trial_parameters(
+        self, vocs: VOCS
+    ) -> List[TrialParameter]:
+        """Convert discrete variables from VOCS to TrialParameter objects."""
+        trial_parameters = []
+        for var_name, var_spec in vocs.variables.items():
+            if isinstance(var_spec, DiscreteVariable):
+                # Convert discrete variable to trial parameter
+                max_len = max(len(str(val)) for val in var_spec.values)
+                trial_param = TrialParameter(
+                    var_name, var_name, dtype=f"U{max_len}"
+                )
+                trial_parameters.append(trial_param)
+        return trial_parameters
+
     def get_gen_specs(
         self, sim_workers: int, run_params: Dict, sim_max: int
     ) -> Dict:
@@ -242,20 +260,30 @@ class AxMultitaskGenerator(AxGenerator):
         gen_specs["out"].append(("task", str, max_length))
         return gen_specs
 
-    def _check_inputs(
-        self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
-        lofi_task: Task,
-        hifi_task: Task,
-    ) -> None:
-        """Check that the generator inputs are valid."""
+    def _validate_vocs(self, vocs: VOCS) -> None:
+        """Validate VOCS for multitask generator."""
+        super()._validate_vocs(vocs)
         # Check that only one objective has been given.
-        n_objectives = len(objectives)
+        n_objectives = len(vocs.objectives)
         assert n_objectives == 1, (
             "Multitask generator supports only a single objective. "
             "Objectives given: {}.".format(n_objectives)
         )
+        # Check that there is a discrete variable called 'trial_type'
+        assert (
+            "trial_type" in vocs.variables
+        ), "Multitask generator requires a discrete variable named 'trial_type'"
+        assert isinstance(
+            vocs.variables["trial_type"], DiscreteVariable
+        ), "Variable 'trial_type' must be a discrete variable"
+
+    def _check_inputs(
+        self,
+        vocs: VOCS,
+        lofi_task: Task,
+        hifi_task: Task,
+    ) -> None:
+        """Check that the generator inputs are valid."""
         # Check that the number of low-fidelity trials per iteration is larger
         # than that of high-fidelity trials.
         assert lofi_task.n_opt >= hifi_task.n_opt, (
@@ -274,11 +302,14 @@ class AxMultitaskGenerator(AxGenerator):
                     var.name: arm.parameters.get(var.name)
                     for var in self._varying_parameters
                 }
-                # SH for VOCS standard these will need to be 'variables'
-                # For now much match the trial parameter names.
+                # SH We can use a discrete var here in vocs (converted for now to trial parameters)
+                # But unlike varying parameters the name refers to a fixed generator concept.
+                for trial_param in self._custom_trial_parameters:
+                    if trial_param.name == "trial_type":
+                        point[trial_param.name] = trial_type
+
                 point["ax_trial_id"] = trial_index
                 point["arm_name"] = arm.name
-                point["trial_type"] = trial_type
                 points.append(point)
         return points
 
@@ -295,6 +326,7 @@ class AxMultitaskGenerator(AxGenerator):
                 custom_parameters=self._custom_trial_parameters,
             )
             trials.append(trial)
+
         if self.gen_state == NOT_STARTED:
             self._incorporate_external_data(trials)
         else:
