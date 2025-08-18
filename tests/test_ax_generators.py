@@ -498,7 +498,7 @@ def test_ax_multi_fidelity():
     )
 
     gen = AxMultiFidelityGenerator(vocs=vocs)
-    gen.set_fidelity_param("res", is_fidelity=True, fidelity_target_value=8.0)
+    gen.set_fidelity_param("res", fidelity_target_value=8.0)
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
         generator=gen,
@@ -697,7 +697,7 @@ def test_ax_multi_fidelity_with_history():
     )
 
     gen = AxMultiFidelityGenerator(vocs=vocs)
-    gen.set_fidelity_param("res", is_fidelity=True, fidelity_target_value=8.0)
+    gen.set_fidelity_param("res", fidelity_target_value=8.0)
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
         generator=gen,
