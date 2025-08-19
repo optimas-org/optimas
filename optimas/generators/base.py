@@ -78,7 +78,7 @@ class Generator(StandardGenerator):
         allow_fixed_parameters: Optional[bool] = False,
         allow_updating_parameters: Optional[bool] = False,
     ) -> None:
-        # Initialize the standard generator which called validate_vocs
+        # Initialize the standard generator which calls `_validate_vocs`
         super().__init__(vocs)
 
         # Store copies to prevent unexpected behavior if parameters are changed
