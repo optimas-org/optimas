@@ -103,7 +103,6 @@ class ExplorationDiagnostics:
                 analyzed_parameters.append(p)
 
         # Create exploration using dummy generator and evaluator.
-        # Create exploration using dummy generator and evaluator.
         variables = {}
         for vp in varying_parameters:
             variables[vp.name] = [vp.lower_bound, vp.upper_bound]
