@@ -13,33 +13,30 @@ in the `analyze_simulation` function, which for convenience is here defined in
 the `analysis_script.py` file.
 """
 
-from optimas.core import Parameter, VaryingParameter, Objective
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration
+from generator_standard.vocs import VOCS
 
 from analysis_script import analyze_simulation
 
 
-# Create varying parameters and objectives.
-var_1 = VaryingParameter("laser_scale", 0.7, 1.05)
-var_2 = VaryingParameter("z_foc", 3.0, 7.5)
-var_3 = VaryingParameter("mult", 0.1, 1.5)
-var_4 = VaryingParameter("plasma_scale", 0.6, 0.8)
-obj = Objective("f", minimize=False)
-
-
-# Define additional parameters to analyze.
-energy_med = Parameter("energy_med")
-energy_mad = Parameter("energy_mad")
-charge = Parameter("charge")
+# Create VOCS object.
+vocs = VOCS(
+    variables={
+        "laser_scale": [0.7, 1.05],
+        "z_foc": [3.0, 7.5],
+        "mult": [0.1, 1.5],
+        "plasma_scale": [0.6, 0.8],
+    },
+    objectives={"f": "MAXIMIZE"},
+    observables=["energy_med", "energy_mad", "charge"],
+)
 
 
 # Create generator.
 gen = AxSingleFidelityGenerator(
-    varying_parameters=[var_1, var_2, var_3, var_4],
-    objectives=[obj],
-    analyzed_parameters=[energy_med, energy_mad, charge],
+    vocs=vocs,
     n_init=4,
 )
 
