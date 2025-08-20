@@ -9,34 +9,32 @@ Further optimas documentation and examples:
 https://optimas.readthedocs.io/en/latest/index.html
 """
 
-from optimas.core import VaryingParameter, Objective, Parameter
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration
+from generator_standard.vocs import VOCS
 from analysis_script import analyze_simulation
 
-# Create varying parameters and objectives.
+# Create VOCS object.
 # name of parameter, lower bound of values to be explored,
 # upper bound of values to be explored
-var_1 = VaryingParameter("RF_phase", -2.5, 2.5)
-var_2 = VaryingParameter("B_sol", 0.12, 0.38)
-# Objectives that will be minimized:
-obj_1 = Objective("bunch_length", minimize=True)
-obj_2 = Objective("emittance", minimize=True)
-# Additional example parameters that will be analyzed but are not used for the
-# optimization:
-em_x = Parameter("emittance_x")
-em_y = Parameter("emittance_y")
+vocs = VOCS(
+    variables={
+        "RF_phase": [-2.5, 2.5],
+        "B_sol": [0.12, 0.38],
+    },
+    objectives={
+        "bunch_length": "MINIMIZE",
+        "emittance": "MINIMIZE",
+    },
+    observables=["emittance_x", "emittance_y"],
+)
 
 # Create generator.
 # Pick the generator to be used, here Single-fidelity Bayesian optimization.
-# The analyzed_parameters are parameters that are calculated for each
-# simulation but not used for the optimization.
 gen = AxSingleFidelityGenerator(
-    varying_parameters=[var_1, var_2],
-    objectives=[obj_1, obj_2],
+    vocs=vocs,
     n_init=8,
-    analyzed_parameters=[em_x, em_y],
 )
 
 

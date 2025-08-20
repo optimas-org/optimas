@@ -11,23 +11,25 @@ function, which for convenience is here defined in the `analysis_script.py`
 file.
 """
 
-from optimas.core import VaryingParameter, Objective
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration
+from generator_standard.vocs import VOCS
 
 from analysis_script import analyze_simulation
 
 
-# Create varying parameters and objectives.
-var_1 = VaryingParameter("g_lens", 100.0, 1000.0)
-obj = Objective("f", minimize=True)
+# Create VOCS object.
+vocs = VOCS(
+    variables={
+        "g_lens": [100.0, 1000.0],
+    },
+    objectives={"f": "MINIMIZE"},
+)
 
 
 # Create generator.
-gen = AxSingleFidelityGenerator(
-    varying_parameters=[var_1], objectives=[obj], n_init=12
-)
+gen = AxSingleFidelityGenerator(vocs=vocs, n_init=12)
 
 
 # Create evaluator.

@@ -12,17 +12,23 @@ function, which for convenience is here defined in the `analysis_script.py`
 file.
 """
 
-from optimas.core import VaryingParameter, Objective, Task
+from optimas.core import Task
 from optimas.generators import AxMultitaskGenerator
 from optimas.evaluators import TemplateEvaluator, MultitaskEvaluator
 from optimas.explorations import Exploration
+from generator_standard.vocs import VOCS
 
 from analysis_script import analyze_simulation
 
 
-# Create varying parameters and objectives.
-var_1 = VaryingParameter("g_lens", 100.0, 1000.0)
-obj = Objective("f", minimize=True)
+# Create VOCS object.
+vocs = VOCS(
+    variables={
+        "g_lens": [100.0, 1000.0],
+        "trial_type": {"wake-t", "fbpic"},
+    },
+    objectives={"f": "MINIMIZE"},
+)
 
 # Create tasks.
 lofi_task = Task("wake-t", n_init=12, n_opt=12)
@@ -31,8 +37,7 @@ hifi_task = Task("fbpic", n_init=2, n_opt=2)
 
 # Create generator.
 gen = AxMultitaskGenerator(
-    varying_parameters=[var_1],
-    objectives=[obj],
+    vocs=vocs,
     lofi_task=lofi_task,
     hifi_task=hifi_task,
 )
