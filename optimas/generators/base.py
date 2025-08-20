@@ -105,6 +105,12 @@ class Generator(StandardGenerator):
         self._custom_trial_parameters = (
             [] if custom_trial_parameters is None else custom_trial_parameters
         )
+
+        # Automatically add discrete variables as trial parameters
+        discrete_trial_params = (
+            self._convert_vocs_discrete_variables_to_trial_parameters()
+        )
+        self._custom_trial_parameters.extend(discrete_trial_params)
         self._allow_fixed_parameters = allow_fixed_parameters
         self._allow_updating_parameters = allow_updating_parameters
         self._gen_function = persistent_generator
@@ -190,6 +196,31 @@ class Generator(StandardGenerator):
             param = Parameter(name=obs_name, dtype=obs_spec)
             parameters.append(param)
         return parameters
+
+    def _convert_vocs_discrete_variables_to_trial_parameters(
+        self,
+    ) -> List[TrialParameter]:
+        """Convert discrete variables from VOCS to TrialParameter objects.
+
+        Only converts discrete variables that were NOT already converted to
+        VaryingParameters.
+        """
+        trial_parameters = []
+        # Get the names of variables that were already converted to
+        # VaryingParameters
+        varying_param_names = {vp.name for vp in self._varying_parameters}
+
+        for var_name, var_spec in self._vocs.variables.items():
+            if isinstance(var_spec, DiscreteVariable):
+                # Only convert if it wasn't already converted to a
+                # VaryingParameter
+                if var_name not in varying_param_names:
+                    max_len = max(len(str(val)) for val in var_spec.values)
+                    trial_param = TrialParameter(
+                        var_name, var_name, dtype=f"U{max_len}"
+                    )
+                    trial_parameters.append(trial_param)
+        return trial_parameters
 
     @property
     def vocs(self) -> VOCS:

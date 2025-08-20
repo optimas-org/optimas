@@ -205,11 +205,6 @@ class AxMultitaskGenerator(AxGenerator):
         ]
         self._check_inputs(vocs, lofi_task, hifi_task)
 
-        # Convert discrete variables to trial parameters before calling super().__init__
-        custom_trial_parameters.extend(
-            self._convert_discrete_variables_to_trial_parameters(vocs)
-        )
-
         super().__init__(
             vocs=vocs,
             use_cuda=use_cuda,
@@ -233,21 +228,6 @@ class AxMultitaskGenerator(AxGenerator):
         self.current_trial = None
         self.gr_lofi = None
         self._experiment = self._create_experiment()
-
-    def _convert_discrete_variables_to_trial_parameters(
-        self, vocs: VOCS
-    ) -> List[TrialParameter]:
-        """Convert discrete variables from VOCS to TrialParameter objects."""
-        trial_parameters = []
-        for var_name, var_spec in vocs.variables.items():
-            if isinstance(var_spec, DiscreteVariable):
-                # Convert discrete variable to trial parameter
-                max_len = max(len(str(val)) for val in var_spec.values)
-                trial_param = TrialParameter(
-                    var_name, var_name, dtype=f"U{max_len}"
-                )
-                trial_parameters.append(trial_param)
-        return trial_parameters
 
     def get_gen_specs(
         self, sim_workers: int, run_params: Dict, sim_max: int
