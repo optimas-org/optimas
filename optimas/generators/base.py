@@ -187,13 +187,9 @@ class Generator(StandardGenerator):
     def _convert_vocs_observables_to_parameters(self) -> List[Parameter]:
         """Convert VOCS observables to optimas Parameter objects."""
         parameters = []
-        # Handle both set of strings and dict
-        for obs_name in self._vocs.observables:
-            if isinstance(self._vocs.observables, dict):
-                obs_spec = self._vocs.observables[obs_name]
-            else:
-                obs_spec = None
-            param = Parameter(name=obs_name, dtype=obs_spec)
+        for obs_name, obs_spec in self._vocs.observables.items():
+            dtype = obs_spec.dtype
+            param = Parameter(name=obs_name, dtype=dtype)
             parameters.append(param)
         return parameters
 
