@@ -166,7 +166,7 @@ class Generator(StandardGenerator):
         """Convert VOCS objectives to optimas Objective objects."""
         objectives = []
         for obj_name, obj_type in self._vocs.objectives.items():
-            minimize = obj_type == "MINIMIZE"
+            minimize = isinstance(obj_type, MinimizeObjective)
             obj = Objective(name=obj_name, minimize=minimize)
             objectives.append(obj)
         return objectives
