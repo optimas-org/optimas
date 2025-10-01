@@ -25,6 +25,7 @@ from gest_api.vocs import (
     ContinuousVariable,
     DiscreteVariable,
     MinimizeObjective,
+    ExploreObjective,
 )
 from gest_api.generator import Generator as StandardGenerator
 
@@ -171,6 +172,8 @@ class Generator(StandardGenerator):
         """Convert VOCS objectives to optimas Objective objects."""
         objectives = []
         for obj_name, obj_type in self._vocs.objectives.items():
+            if isinstance(obj_type, ExploreObjective):
+                raise ValueError("EXPLORE is not supported in Optimas")
             minimize = isinstance(obj_type, MinimizeObjective)
             obj = Objective(name=obj_name, minimize=minimize)
             objectives.append(obj)
