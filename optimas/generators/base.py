@@ -20,7 +20,12 @@ from optimas.core import (
     TrialParameter,
     TrialStatus,
 )
-from gest_api.vocs import VOCS, ContinuousVariable, DiscreteVariable
+from gest_api.vocs import (
+    VOCS,
+    ContinuousVariable,
+    DiscreteVariable,
+    MinimizeObjective,
+)
 from gest_api.generator import Generator as StandardGenerator
 
 logger = get_logger(__name__)
