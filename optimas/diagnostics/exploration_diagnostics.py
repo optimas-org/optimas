@@ -19,7 +19,7 @@ from optimas.evaluators.base import Evaluator
 from optimas.explorations import Exploration
 from optimas.utils.other import get_df_with_selection
 from optimas.utils.ax import AxModelManager
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 
 
 class ExplorationDiagnostics:

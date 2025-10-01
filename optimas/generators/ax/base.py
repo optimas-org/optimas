@@ -5,9 +5,9 @@ import logging
 
 import torch
 
-from optimas.core import Objective, TrialParameter, VaryingParameter, Parameter
+from optimas.core import TrialParameter
 from optimas.generators.base import Generator
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 
 
 # Disable Ax loggers to get cleaner output. In principle, setting

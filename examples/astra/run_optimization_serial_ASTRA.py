@@ -12,7 +12,7 @@ https://optimas.readthedocs.io/en/latest/index.html
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 from analysis_script import analyze_simulation
 
 # Create VOCS object.

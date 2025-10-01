@@ -20,8 +20,8 @@ from optimas.core import (
     TrialParameter,
     TrialStatus,
 )
-from generator_standard.vocs import VOCS, ContinuousVariable, DiscreteVariable
-from generator_standard.generator import Generator as StandardGenerator
+from gest_api.vocs import VOCS, ContinuousVariable, DiscreteVariable
+from gest_api.generator import Generator as StandardGenerator
 
 logger = get_logger(__name__)
 

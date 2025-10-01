@@ -59,15 +59,12 @@ from ax.modelbridge.transforms.convert_metric_names import (
 from optimas.generators.ax.base import AxGenerator
 from optimas.core import (
     TrialParameter,
-    VaryingParameter,
-    Objective,
-    Parameter,
     Task,
     Trial,
     TrialStatus,
 )
 from .ax_metric import AxMetric
-from generator_standard.vocs import VOCS, DiscreteVariable
+from gest_api.vocs import VOCS, DiscreteVariable
 
 # Define generator states.
 NOT_STARTED = "not_started"

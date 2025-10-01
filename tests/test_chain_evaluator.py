@@ -1,12 +1,11 @@
 import os
 
 import numpy as np
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
 from optimas.evaluators import TemplateEvaluator, ChainEvaluator
-from optimas.core import VaryingParameter, Objective, Parameter
 
 
 def analysis_func_1(sim_dir, output_params):

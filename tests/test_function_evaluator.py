@@ -4,12 +4,11 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import pytest
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
 from optimas.evaluators import FunctionEvaluator
-from optimas.core import VaryingParameter, Objective, Parameter
 from optimas.diagnostics import ExplorationDiagnostics
 
 

@@ -6,7 +6,7 @@ from optimas.core import Task
 from optimas.generators import AxMultitaskGenerator
 from optimas.evaluators import TemplateEvaluator, MultitaskEvaluator
 from optimas.explorations import Exploration
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 
 from analysis_script import analyze_simulation
 

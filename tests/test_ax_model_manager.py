@@ -8,7 +8,7 @@ from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import FunctionEvaluator
 from optimas.diagnostics import ExplorationDiagnostics
 from optimas.utils.ax import AxModelManager
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 
 
 def eval_func_sf_moo(input_params, output_params):

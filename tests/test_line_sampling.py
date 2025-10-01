@@ -2,12 +2,11 @@ import re
 
 import numpy as np
 import pytest
-from generator_standard.vocs import VOCS, ContinuousVariable
+from gest_api.vocs import VOCS, ContinuousVariable
 
 from optimas.explorations import Exploration
 from optimas.generators import LineSamplingGenerator
 from optimas.evaluators import FunctionEvaluator
-from optimas.core import VaryingParameter, Objective
 
 
 def eval_func(input_params, output_params):

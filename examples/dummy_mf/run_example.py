@@ -1,6 +1,6 @@
 """Basic example of parallel multi-fidelity Bayesian optimization with Ax."""
 
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 from optimas.generators import AxMultiFidelityGenerator
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration

@@ -1,11 +1,10 @@
 import numpy as np
 import pytest
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import GridSamplingGenerator
 from optimas.evaluators import FunctionEvaluator
-from optimas.core import VaryingParameter, Objective
 
 
 def eval_func(input_params, output_params):

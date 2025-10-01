@@ -1,6 +1,6 @@
 """Basic example of parallel grid sampling with simulations."""
 
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 from optimas.generators import GridSamplingGenerator
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration

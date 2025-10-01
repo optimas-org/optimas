@@ -15,7 +15,7 @@ from optimas.generators import (
 )
 from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
 from optimas.core import Task
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 
 
 # Some tests will use threading (instead of multiprocessing) to be able to

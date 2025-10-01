@@ -19,9 +19,7 @@ from ax.modelbridge.transition_criterion import MaxTrials, MinTrials
 from ax import Arm
 
 from optimas.core import (
-    Objective,
     Trial,
-    VaryingParameter,
     Parameter,
 )
 from optimas.generators.ax.base import AxGenerator
@@ -30,7 +28,7 @@ from optimas.utils.ax.other import (
     convert_optimas_to_ax_parameters,
     convert_optimas_to_ax_objectives,
 )
-from generator_standard.vocs import (
+from gest_api.vocs import (
     VOCS,
     LessThanConstraint,
     GreaterThanConstraint,

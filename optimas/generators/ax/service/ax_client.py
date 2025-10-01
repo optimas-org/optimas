@@ -6,7 +6,7 @@ from ax.service.ax_client import AxClient
 from ax.core.objective import MultiObjective
 
 from optimas.core import Objective, VaryingParameter, Parameter
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 from .base import AxServiceGenerator
 
 

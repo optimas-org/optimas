@@ -1,6 +1,6 @@
 """Basic example of parallel line sampling with simulations."""
 
-from generator_standard.vocs import VOCS, ContinuousVariable
+from gest_api.vocs import VOCS, ContinuousVariable
 from optimas.generators import LineSamplingGenerator
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration

@@ -4,8 +4,8 @@ from typing import List, Optional, Union
 
 import numpy as np
 
-from optimas.core import Objective, Trial, VaryingParameter, Parameter
-from generator_standard.vocs import VOCS
+from optimas.core import Trial
+from gest_api.vocs import VOCS
 from .base import Generator
 
 

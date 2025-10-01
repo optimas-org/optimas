@@ -5,9 +5,8 @@ from typing import List, Optional, Dict
 from ax.modelbridge.generation_strategy import GenerationStep
 from ax.modelbridge.registry import Models
 
-from optimas.core import Objective, VaryingParameter, Parameter
 from .base import AxServiceGenerator
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 
 
 class AxSingleFidelityGenerator(AxServiceGenerator):

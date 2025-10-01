@@ -1,6 +1,6 @@
 """Basic example of parallel multitask Bayesian optimization with Ax."""
 
-from generator_standard.vocs import VOCS
+from gest_api.vocs import VOCS
 from optimas.core import Task
 from optimas.generators import AxMultitaskGenerator
 from optimas.evaluators import TemplateEvaluator, MultitaskEvaluator
