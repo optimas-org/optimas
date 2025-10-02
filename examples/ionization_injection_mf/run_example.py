@@ -32,8 +32,6 @@ vocs = VOCS(
     },
     objectives={"f": "MINIMIZE"},
     observables=["energy_med", "energy_mad", "charge"],
-    fidelity_parameter="resolution",
-    fidelity_target_value=4.0,
 )
 
 
@@ -42,6 +40,7 @@ gen = AxMultiFidelityGenerator(
     vocs=vocs,
     n_init=4,
 )
+gen.set_fidelity_param("resolution", fidelity_target_value=4.0)
 
 
 # Create evaluator.
