@@ -28,7 +28,8 @@ jobs:
     - shell: bash -l {0}
       name: Install dependencies
       run: |
-        conda install mkl=2024.0.* numpy pandas pytorch cpuonly -c pytorch
+        conda install numpy pandas pytorch cpuonly -c pytorch
+        conda install -c defaults mkl=2024.0.*
         conda install -c conda-forge mpi4py openmpi=5.*
         pip install .[test]
     - shell: bash -l {0}
