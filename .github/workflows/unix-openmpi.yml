@@ -28,7 +28,7 @@ jobs:
     - shell: bash -l {0}
       name: Install dependencies
       run: |
-        conda install numpy pandas pytorch cpuonly -c pytorch
+        conda install numpy pandas pytorch cpuonly -c conda-forge
         conda install -c conda-forge mpi4py openmpi=5.*
         pip install .[test]
     - shell: bash -l {0}
