@@ -26,14 +26,18 @@ parameters named ``x0`` and ``x1`` that can vary in the ranges [0, 15] and
 
 .. code-block:: python
 
-    from optimas.core import VaryingParameter
+    from gest_api.vocs import VOCS
 
-    var_1 = VaryingParameter("x0", 0.0, 15.0)
-    var_2 = VaryingParameter("x1", -5.0, 5.0)
+    vocs = VOCS(
+        variables={
+            "x0": [0.0, 15.0],
+            "x1": [-5.0, 5.0],
+        },
+    )
 
 
-Objectives and other analyzed parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Objectives and other observables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The objectives (:class:`~optimas.core.Objective`) define the outcomes of an
 evaluation that optimas should optimize (maximize or minimize) or scan.
 
@@ -43,16 +47,19 @@ play a role in the optimization but that should be analyzed at each evaluation
 can also be given.
 
 The following code shows how to define one objective ``'f'`` that
-should be minimized and two diagnostics ``'diag_1'`` and ``'diag_2'`` that will
+should be minimized and two observables ``'diag_1'`` and ``'diag_2'`` that will
 also be calculated for each evaluation.
 
 .. code-block:: python
 
-    from optimas.core import Objective, Parameter
-
-    obj = Objective("f", minimize=True)
-    diag_1 = Parameter("diag_1")
-    diag_2 = Parameter("diag_2")
+    vocs = VOCS(
+        variables={
+            "x0": [0.0, 15.0],
+            "x1": [-5.0, 5.0],
+        },
+        objectives={"f": "MINIMIZE"},
+        observables=["diag_1", "diag_2"],
+    )
 
 
 Generator
@@ -73,19 +80,13 @@ Bayesian optimization loop is started (see
 
     from optimas.generators import AxSingleFidelityGenerator
 
-    gen = AxSingleFidelityGenerator(
-        varying_parameters=[var_1, var_2],
-        objectives=[obj],
-        analyzed_parameters=[diag_1, diag_2],
-        n_init=4,
-    )
+    gen = AxSingleFidelityGenerator(vocs=vocs, n_init=4)
 
 
 Evaluator
 ~~~~~~~~~
 The evaluator is in charge of getting the trials suggested by the generator and
-evaluating them, returning the value of the objectives and other analyzed
-parameters.
+evaluating them, returning the value of the objectives and other observables.
 
 There are two types of evaluators:
 
@@ -101,7 +102,7 @@ There are two types of evaluators:
   Each evaluation is executed using MPI with the amount or resources (number of
   processes and GPUs) specified by the user. After executing the script, the
   output of the evaluation is analyzed with a user-defined function that
-  calculates the value of the objectives and other analyzed parameters.
+  calculates the value of the objectives and other observables.
   See :ref:`optimas-with-simulations` for more details about how to use a
   :class:`~optimas.evaluators.TemplateEvaluator`.
 
