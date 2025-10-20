@@ -87,7 +87,7 @@ would look like:
        simulation_directory : str
           Path to the simulation folder where the output was generated.
        output_params : dict
-          Dictionary where the value of the objectives and analyzed parameters
+          Dictionary where the value of the objectives and observables
           will be stored. There is one entry per parameter, where the key
           is the name of the parameter given by the user.
 
