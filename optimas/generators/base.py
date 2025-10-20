@@ -148,7 +148,6 @@ class Generator(StandardGenerator):
                 )
                 varying_parameters.append(vp)
             # Handle DiscreteVariable that is a range of integers
-            # TODO: Suggest supporting IntegerVariables in vocs
             elif isinstance(var_spec, DiscreteVariable):
                 values = list(var_spec.values)
                 if len(values) > 1:

@@ -138,9 +138,7 @@ def test_exploration_diagnostics():
         # Check that all possible objective inputs give the same result.
         _, trace1 = diags.get_objective_trace()
         _, trace2 = diags.get_objective_trace("f1")
-        # _, trace3 = diags.get_objective_trace(obj)  # Can be removed
         np.testing.assert_array_equal(trace1, trace2)
-        # np.testing.assert_array_equal(trace1, trace3)
 
         # Test making plot using the diagnostics API.
         fig, ax = plt.subplots()
