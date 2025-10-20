@@ -279,8 +279,8 @@ class AxMultitaskGenerator(AxGenerator):
                     var.name: arm.parameters.get(var.name)
                     for var in self._varying_parameters
                 }
-                # SH We can use a discrete var here in vocs (converted for now to trial parameters)
-                # But unlike varying parameters the name refers to a fixed generator concept.
+                # trial_type is declared as a discrete variable in vocs
+                # and converted internally to a trial parameter.
                 for trial_param in self._custom_trial_parameters:
                     if trial_param.name == "trial_type":
                         point[trial_param.name] = trial_type
@@ -312,7 +312,6 @@ class AxMultitaskGenerator(AxGenerator):
     def _incorporate_external_data(self, trials: List[Trial]) -> None:
         """Incorporate external data (e.g., from history) into experiment."""
         # Get trial indices.
-        # SH should have handling if ax_trial_ids are None...
         trial_indices = []
         for trial in trials:
             trial_indices.append(trial.ax_trial_id)
