@@ -131,7 +131,7 @@ def simulate_plasma_stage(
 
     # Plasma density profile
     # ----------------------
-    l_plateau = 28.0e-5  # 28.0e-2 # (m)  # SH change for short test
+    l_plateau = 28.0e-2 # (m)  # SH change for short test
     l_plasma = l_plateau
 
     # Determine guiding channel.
