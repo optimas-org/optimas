@@ -1,11 +1,12 @@
-""" Optimization of an LPA with APOSMM/nlopt and Wake-T."""
+"""Optimization of an LPA with APOSMM/nlopt and Wake-T."""
 
 import numpy as np
 import pickle
-from math import gamma, pi, sqrt
+
 # from multiprocessing import set_start_method
 
 import libensemble.gen_funcs
+
 libensemble.gen_funcs.rc.aposmm_optimizers = "nlopt"
 
 from libensemble.gen_classes import APOSMM
@@ -20,7 +21,7 @@ from analysis_script import analyze_simulation
 
 
 # Number of simulation batches, their size, and the maximum number of simulations
-n_batches = 2 #10 # 8
+n_batches = 2  # 10 # 8
 batch_size = 4  # 24
 
 initial_sample = batch_size  # *4
@@ -34,7 +35,7 @@ mcr = 1e-2  # minimal current ratio
 
 # Single source of truth for variable definitions
 vars_std = {
-    "beam_i_r2": [mcr, 1.0-mcr],
+    "beam_i_r2": [mcr, 1.0 - mcr],
     "beam_z_i_2": [-20.0, 20.0],  # µm
     "beam_length": [1.0, 20.0],  # µm
     "beam_i_r2_on_cube": [0, 1.0],
@@ -67,27 +68,35 @@ for i in range(10):
 vocs = VOCS(
     variables=vars_std,
     objectives={"f": "MINIMIZE"},
-    observables=observables_set
+    observables=observables_set,
 )
 
 bounds = np.array(vocs.bounds)
 LB = bounds[:n, 0]  # Lower bounds
 UB = bounds[:n, 1]  # Upper bounds
 
-pts_in_unit_cube = 0.5*np.ones((1,3))
-pts_in_original_domain = pts_in_unit_cube*(UB - LB) + LB
+pts_in_unit_cube = 0.5 * np.ones((1, 3))
+pts_in_original_domain = pts_in_unit_cube * (UB - LB) + LB
 
 for obs in vocs.observables:
     print(obs)
 
 
 # Set up APOSMM generator
-persis_info = add_unique_random_streams({}, 5)[1]  # SH Dont need the 5.Better to have APOSMM defaults.
-persis_info["nworkers"] = nworkers  # SH - not taking account of gen_on_manager in APOSMM
+persis_info = add_unique_random_streams({}, 5)[
+    1
+]  # SH Dont need the 5.Better to have APOSMM defaults.
+persis_info["nworkers"] = (
+    nworkers  # SH - not taking account of gen_on_manager in APOSMM
+)
 
 variables_mapping = {
     "x": ["beam_i_r2", "beam_z_i_2", "beam_length"],
-    "x_on_cube": ["beam_i_r2_on_cube", "beam_z_i_2_on_cube", "beam_length_on_cube"],
+    "x_on_cube": [
+        "beam_i_r2_on_cube",
+        "beam_z_i_2_on_cube",
+        "beam_length_on_cube",
+    ],
 }
 
 aposmm = APOSMM(
@@ -96,9 +105,9 @@ aposmm = APOSMM(
     persis_info=persis_info,
     initial_sample_size=initial_sample,
     # sample_points=np.atleast_2d(0.1 * (np.arange(n) + 1)),  # Outside of bounds on beam_length
-    sample_points = pts_in_original_domain,
+    sample_points=pts_in_original_domain,
     localopt_method="LN_BOBYQA",
-    rk_const=1e-4, #  0.5 * ((gamma(1 + (n / 2)) * 5) ** (1 / n)) / sqrt(pi),
+    rk_const=1e-4,  #  0.5 * ((gamma(1 + (n / 2)) * 5) ** (1 / n)) / sqrt(pi),
     run_max_eval=100 * (n + 1),
     max_active_runs=batch_size,
     dist_to_bound_multiple=0.5,
@@ -126,11 +135,11 @@ exp = Exploration(
     max_evals=max_evals,
     sim_workers=nworkers,
     run_async=False,  # SH - also try with True
-    exploration_dir_path='./exploration_0',
+    exploration_dir_path="./exploration_0",
 )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # set_start_method("spawn")
     # Run exploration.
     exp.run()
@@ -144,5 +153,5 @@ if __name__ == '__main__':
         pickle.dump(persis_info, open("persis_info.pickle", "wb"))
 
         # Check sampling followed by optimization runs
-        assert not np.any(H['local_pt'][:initial_sample])
-        assert np.all(H['local_pt'][initial_sample:])
+        assert not np.any(H["local_pt"][:initial_sample])
+        assert np.all(H["local_pt"][initial_sample:])
