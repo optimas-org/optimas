@@ -8,6 +8,7 @@ import os
 from math import gamma, pi, sqrt
 import numpy as np
 import libensemble.gen_funcs
+
 libensemble.gen_funcs.rc.aposmm_optimizers = "nlopt"
 
 from libensemble.gen_classes import APOSMM
@@ -59,15 +60,13 @@ def test_aposmm_nlopt():
 
     # Create varying parameters and objectives.
     vocs = VOCS(
-        variables= {
+        variables={
             "x0": [-3.0, 3.0],
             "x1": [-2.0, 2.0],
             "x0_on_cube": [0, 1.0],
             "x1_on_cube": [0, 1.0],
         },
-        objectives={
-            "f": "MINIMIZE"
-        },
+        objectives={"f": "MINIMIZE"},
     )
 
     # How APOSMM will convert the variables to internal arrays.
