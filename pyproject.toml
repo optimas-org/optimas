@@ -37,10 +37,12 @@ test = [
     'pytest-mpi',
     'ax-platform >=0.5.0, <1.0.0',
     'matplotlib',
+    'nlopt',
 ]
 all = [
     'ax-platform >=0.5.0, <1.0.0',
-    'matplotlib'
+    'matplotlib',
+    'nlopt',
 ]
 
 [project.urls]
