@@ -1,0 +1,1 @@
+From run_aposmm_nlopt_with_export_checks.py - in addition to the ensemble run this tests different export options. More in fitting with test than example.
