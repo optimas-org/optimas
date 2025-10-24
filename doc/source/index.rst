@@ -66,45 +66,54 @@ built on top of
             To the reference guide
 
 
-Contributing institutions
-~~~~~~~~~~~~~~~~~~~~~~~~~
+.. only:: html
 
-.. rst-class:: text-center
+   Contributing institutions
+   ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   .. rst-class:: text-center
+
+   .. |nbsp| unicode:: U+00A0 .. NO-BREAK SPACE
+
+   .. |pic1| image:: _static/Desy_logo_3c_web.svg
+      :height: 40px
+      :target: https://www.desy.de/
+      :class: only-light
+
+   .. |pic1b| image:: _static/DESY_logo_white_web.png
+      :height: 40px
+      :target: https://www.desy.de/
+      :class: only-dark
+
+   .. |pic2| image:: https://github.com/optimas-org/optimas/assets/20479420/203e3eb8-1bd2-49a3-a22f-139409919558
+      :height: 50px
+      :target: https://www.lbl.gov/
+      :class: only-light
+
+   .. |pic2b| image:: https://github.com/optimas-org/optimas/assets/20479420/e4a3b2d2-5178-48ca-9d71-0f13f90e763c
+      :height: 50px
+      :target: https://www.lbl.gov/
+      :class: only-dark
+
+   .. |pic3| image:: https://www.alcf.anl.gov/sites/default/files/styles/large/public/2020-01/Argonne_cmyk_black.png?itok=-df89dHw
+      :height: 30px
+      :target: https://www.anl.gov/
+      :class: only-light
+
+   .. |pic3b| image:: https://www.alcf.anl.gov/sites/default/files/styles/large/public/2020-01/Argonne_wireframe_white_vector.png?itok=mXUvxazY
+      :height: 30px
+      :target: https://www.anl.gov/
+      :class: only-dark
 
    |pic1| |pic1b|  |nbsp| |nbsp| |nbsp|  |pic2| |pic2b| |nbsp| |nbsp| |nbsp| |pic3| |pic3b|
 
+.. only:: latex
 
-.. |nbsp| unicode:: U+00A0 .. NO-BREAK SPACE
+   Contributing institutions
+   ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. |pic1| image:: https://upload.wikimedia.org/wikipedia/commons/5/55/Desy_logo_3c_web.svg
-    :height: 40px
-    :target: https://www.desy.de/
-    :class: only-light
+   DESY · Lawrence Berkeley National Laboratory · Argonne National Laboratory
 
-.. |pic1b| image:: https://images.squarespace-cdn.com/content/v1/56ebbc46746fb9377676109c/071bcfa5-f535-4d69-a1ca-a8212c85ac91/DESY_logo_white_web.png
-    :height: 40px
-    :target: https://www.desy.de/
-    :class: only-dark
-
-.. |pic2| image:: https://github.com/optimas-org/optimas/assets/20479420/203e3eb8-1bd2-49a3-a22f-139409919558
-    :height: 50px
-    :target: https://www.lbl.gov/
-    :class: only-light
-
-.. |pic2b| image:: https://github.com/optimas-org/optimas/assets/20479420/e4a3b2d2-5178-48ca-9d71-0f13f90e763c
-    :height: 50px
-    :target: https://www.lbl.gov/
-    :class: only-dark
-
-.. |pic3| image:: https://www.alcf.anl.gov/sites/default/files/styles/large/public/2020-01/Argonne_cmyk_black.png?itok=-df89dHw
-    :height: 30px
-    :target: https://www.anl.gov/
-    :class: only-light
-
-.. |pic3b| image:: https://www.alcf.anl.gov/sites/default/files/styles/large/public/2020-01/Argonne_wireframe_white_vector.png?itok=mXUvxazY
-    :height: 30px
-    :target: https://www.anl.gov/
-    :class: only-dark
 
 
 .. toctree::
