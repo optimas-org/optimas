@@ -66,53 +66,45 @@ built on top of
             To the reference guide
 
 
-.. only:: html
+Contributing institutions
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   Contributing institutions
-   ~~~~~~~~~~~~~~~~~~~~~~~~~
+.. rst-class:: text-center
 
-   .. rst-class:: text-center
+   |pic1| |pic1b|  |nbsp| |nbsp| |nbsp|  |pic2| |pic2b| |nbsp| |nbsp| |nbsp| |pic3| |pic3b|
 
-      |pic1| |pic1b|  |nbsp| |nbsp| |nbsp|  |pic2| |pic2b| |nbsp| |nbsp| |nbsp| |pic3| |pic3b|
 
-   .. |nbsp| unicode:: U+00A0 .. NO-BREAK SPACE
+.. |nbsp| unicode:: U+00A0 .. NO-BREAK SPACE
 
-   .. |pic1| image:: https://upload.wikimedia.org/wikipedia/commons/5/55/Desy_logo_3c_web.svg
-      :height: 40px
-      :target: https://www.desy.de/
-      :class: only-light
+.. |pic1| image:: https://github.com/user-attachments/assets/13ff9afa-abcf-4602-bb59-5de5841bcb0e
+    :height: 40px
+    :target: https://www.desy.de/
+    :class: only-light
 
-   .. |pic1b| image:: https://images.squarespace-cdn.com/content/v1/56ebbc46746fb9377676109c/071bcfa5-f535-4d69-a1ca-a8212c85ac91/DESY_logo_white_web.png
-      :height: 40px
-      :target: https://www.desy.de/
-      :class: only-dark
+.. |pic1b| image:: https://images.squarespace-cdn.com/content/v1/56ebbc46746fb9377676109c/071bcfa5-f535-4d69-a1ca-a8212c85ac91/DESY_logo_white_web.png
+    :height: 40px
+    :target: https://www.desy.de/
+    :class: only-dark
 
-   .. |pic2| image:: https://github.com/optimas-org/optimas/assets/20479420/203e3eb8-1bd2-49a3-a22f-139409919558
-      :height: 50px
-      :target: https://www.lbl.gov/
-      :class: only-light
+.. |pic2| image:: https://github.com/optimas-org/optimas/assets/20479420/203e3eb8-1bd2-49a3-a22f-139409919558
+    :height: 50px
+    :target: https://www.lbl.gov/
+    :class: only-light
 
-   .. |pic2b| image:: https://github.com/optimas-org/optimas/assets/20479420/e4a3b2d2-5178-48ca-9d71-0f13f90e763c
-      :height: 50px
-      :target: https://www.lbl.gov/
-      :class: only-dark
+.. |pic2b| image:: https://github.com/optimas-org/optimas/assets/20479420/e4a3b2d2-5178-48ca-9d71-0f13f90e763c
+    :height: 50px
+    :target: https://www.lbl.gov/
+    :class: only-dark
 
-   .. |pic3| image:: https://www.alcf.anl.gov/sites/default/files/styles/large/public/2020-01/Argonne_cmyk_black.png?itok=-df89dHw
-      :height: 30px
-      :target: https://www.anl.gov/
-      :class: only-light
+.. |pic3| image:: https://www.alcf.anl.gov/sites/default/files/styles/large/public/2020-01/Argonne_cmyk_black.png?itok=-df89dHw
+    :height: 30px
+    :target: https://www.anl.gov/
+    :class: only-light
 
-   .. |pic3b| image:: https://www.alcf.anl.gov/sites/default/files/styles/large/public/2020-01/Argonne_wireframe_white_vector.png?itok=mXUvxazY
-      :height: 30px
-      :target: https://www.anl.gov/
-      :class: only-dark
-
-.. only:: latex
-
-   Contributing institutions
-   ~~~~~~~~~~~~~~~~~~~~~~~~~
-
-   DESY · Lawrence Berkeley National Laboratory · Argonne National Laboratory
+.. |pic3b| image:: https://www.alcf.anl.gov/sites/default/files/styles/large/public/2020-01/Argonne_wireframe_white_vector.png?itok=mXUvxazY
+    :height: 30px
+    :target: https://www.anl.gov/
+    :class: only-dark
 
 
 .. toctree::
