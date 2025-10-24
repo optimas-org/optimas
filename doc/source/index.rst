@@ -76,7 +76,7 @@ Contributing institutions
 
 .. |nbsp| unicode:: U+00A0 .. NO-BREAK SPACE
 
-.. |pic1| image:: https://upload.wikimedia.org/wikipedia/commons/5/55/Desy_logo_3c_web.svg
+.. |pic1| image:: https://github.com/user-attachments/assets/13ff9afa-abcf-4602-bb59-5de5841bcb0e
     :height: 40px
     :target: https://www.desy.de/
     :class: only-light
