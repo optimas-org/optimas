@@ -19,6 +19,7 @@ from optimas.evaluators.base import Evaluator
 from optimas.explorations import Exploration
 from optimas.utils.other import get_df_with_selection
 from optimas.utils.ax import AxModelManager
+from gest_api.vocs import VOCS
 
 
 class ExplorationDiagnostics:
@@ -102,12 +103,26 @@ class ExplorationDiagnostics:
                 analyzed_parameters.append(p)
 
         # Create exploration using dummy generator and evaluator.
+        variables = {}
+        for vp in varying_parameters:
+            variables[vp.name] = [vp.lower_bound, vp.upper_bound]
+
+        vocs_objectives = {}
+        for obj in objectives:
+            vocs_objectives[obj.name] = (
+                "MINIMIZE" if obj.minimize else "MAXIMIZE"
+            )
+
+        observables = [param.name for param in analyzed_parameters]
+
+        vocs = VOCS(
+            variables=variables,
+            objectives=vocs_objectives,
+            observables=observables,
+        )
+
         return Exploration(
-            generator=Generator(
-                varying_parameters=varying_parameters,
-                objectives=objectives,
-                analyzed_parameters=analyzed_parameters,
-            ),
+            generator=Generator(vocs=vocs),
             evaluator=Evaluator(sim_function=None),
             history=history_path,
             exploration_dir_path=exploration_dir_path,

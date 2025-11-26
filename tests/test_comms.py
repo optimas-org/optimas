@@ -1,9 +1,9 @@
 import numpy as np
+from gest_api.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
 from optimas.evaluators import FunctionEvaluator
-from optimas.core import VaryingParameter, Objective
 
 
 def eval_func(input_params, output_params):
@@ -17,17 +17,16 @@ def eval_func(input_params, output_params):
 def test_libe_comms():
     """Test local and local_threading communications."""
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
+    )
 
     max_evals = 10
 
     for comm in ["local", "local_threading"]:
         # Create generator.
-        gen = RandomSamplingGenerator(
-            varying_parameters=[var1, var2], objectives=[obj]
-        )
+        gen = RandomSamplingGenerator(vocs=vocs)
 
         # Create function evaluator.
         ev = FunctionEvaluator(function=eval_func)

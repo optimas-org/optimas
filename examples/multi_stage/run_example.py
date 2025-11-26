@@ -10,32 +10,28 @@ in the `analyze_simulation` function, which for convenience is here defined in
 the `analysis_script.py` file.
 """
 
-from optimas.core import Parameter, VaryingParameter, Objective
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration
+from gest_api.vocs import VOCS
 
 from analysis_script import analyze_simulation
 
 
-# Create varying parameters and objectives.
-var_1 = VaryingParameter("adjust_factor", 0.7, 1.05)
-var_2 = VaryingParameter("lens_start", 0.32, 0.347)
-obj = Objective("f", minimize=True)
-
-
-# Define additional parameters to analyze.
-energy_std = Parameter("energy_std")
-energy_avg = Parameter("energy_avg")
-charge = Parameter("charge")
-emittance = Parameter("emittance")
+# Create VOCS object.
+vocs = VOCS(
+    variables={
+        "adjust_factor": [0.7, 1.05],
+        "lens_start": [0.32, 0.347],
+    },
+    objectives={"f": "MINIMIZE"},
+    observables=["energy_std", "energy_avg", "charge", "emittance"],
+)
 
 
 # Create generator.
 gen = AxSingleFidelityGenerator(
-    varying_parameters=[var_1, var_2],
-    objectives=[obj],
-    analyzed_parameters=[energy_std, energy_avg, charge, emittance],
+    vocs=vocs,
     n_init=4,
 )
 

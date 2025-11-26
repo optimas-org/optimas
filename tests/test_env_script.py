@@ -1,11 +1,11 @@
 import os
 
 import numpy as np
+from gest_api.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
 from optimas.evaluators import TemplateEvaluator
-from optimas.core import VaryingParameter, Objective, Parameter
 
 
 def analysis_func(sim_dir, output_params):
@@ -21,17 +21,14 @@ def analysis_func(sim_dir, output_params):
 
 def test_env_script():
     # Define variables and objectives.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
-    test_var = Parameter("test_var", dtype="U10")
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
+        observables={"test_var": "U10"},
+    )
 
     # Define variables and objectives.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
-        analyzed_parameters=[test_var],
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create template evaluator.
     ev = TemplateEvaluator(

@@ -1,9 +1,9 @@
 import numpy as np
+from gest_api.vocs import VOCS
 
 from optimas.explorations import Exploration
 from optimas.generators import RandomSamplingGenerator
 from optimas.evaluators import FunctionEvaluator
-from optimas.core import VaryingParameter, Objective, Parameter
 
 
 def eval_func(input_params, output_params):
@@ -21,21 +21,14 @@ def test_analyzed_parameters():
     Test that an exploration runs successfully when including not only an
     objective, but also a set of additional analyzed parameters.
     """
-    # Define varying parameters.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-
-    # Define objective and other parameters to analyze.
-    obj = Objective("f", minimize=False)
-    par1 = Parameter("analyzed_parameter_1")
-    par2 = Parameter("analyzed_parameter_2")
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
+        observables=["analyzed_parameter_1", "analyzed_parameter_2"],
+    )
 
     # Create generator.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
-        analyzed_parameters=[par1, par2],
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create function evaluator.
     ev = FunctionEvaluator(function=eval_func)
@@ -77,21 +70,14 @@ def test_analyzed_parameters_from_history():
     values of the analyzed parameters in the history file are correctly
     loaded back into the exploration.
     """
-    # Define varying parameters.
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-
-    # Define objective and other parameters to analyze.
-    obj = Objective("f", minimize=False)
-    par1 = Parameter("analyzed_parameter_1")
-    par2 = Parameter("analyzed_parameter_2")
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
+        observables=["analyzed_parameter_1", "analyzed_parameter_2"],
+    )
 
     # Create generator.
-    gen = RandomSamplingGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
-        analyzed_parameters=[par1, par2],
-    )
+    gen = RandomSamplingGenerator(vocs=vocs)
 
     # Create function evaluator.
     ev = FunctionEvaluator(function=eval_func)

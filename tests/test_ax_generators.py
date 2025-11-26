@@ -14,7 +14,8 @@ from optimas.generators import (
     AxClientGenerator,
 )
 from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
-from optimas.core import VaryingParameter, Objective, Task, Parameter
+from optimas.core import Task
+from gest_api.vocs import VOCS
 
 
 # Some tests will use threading (instead of multiprocessing) to be able to
@@ -151,17 +152,15 @@ def test_ax_single_fidelity():
     trial_count = 0
     trials_to_fail = [2, 6]
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
-    p1 = Parameter("p1")
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
+        constraints={"p1": ["LESS_THAN", 30.0]},
+    )
 
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
-        analyzed_parameters=[p1],
+        vocs=vocs,
         parameter_constraints=["x0 + x1 <= 10"],
-        outcome_constraints=["p1 <= 30"],
     )
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
@@ -190,7 +189,7 @@ def test_ax_single_fidelity():
     assert all(history["x0"] + history["x1"] <= 10.0 + 1e-3)
     ocs = gen._ax_client.experiment.optimization_config.outcome_constraints
     assert len(ocs) == 1
-    assert ocs[0].metric.name == p1.name
+    assert ocs[0].metric.name == "p1"
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
@@ -213,17 +212,15 @@ def test_ax_single_fidelity_resume():
     fit_out_of_design_vals = [False, True]
 
     for fit_out_of_design in fit_out_of_design_vals:
-        var1 = VaryingParameter("x0", 5.1, 6.0)
-        var2 = VaryingParameter("x1", -5.0, 15.0)
-        obj = Objective("f", minimize=False)
-        p1 = Parameter("p1")
+        vocs = VOCS(
+            variables={"x0": [5.1, 6.0], "x1": [-5.0, 15.0]},
+            objectives={"f": "MAXIMIZE"},
+            constraints={"p1": ["LESS_THAN", 30.0]},
+        )
 
         gen = AxSingleFidelityGenerator(
-            varying_parameters=[var1, var2],
-            objectives=[obj],
-            analyzed_parameters=[p1],
+            vocs=vocs,
             parameter_constraints=["x0 + x1 <= 10"],
-            outcome_constraints=["p1 <= 30"],
             fit_out_of_design=fit_out_of_design,
         )
         ev = FunctionEvaluator(function=eval_func_sf)
@@ -278,13 +275,13 @@ def test_ax_single_fidelity_int():
     trial_count = 0
     trials_to_fail = [2, 6]
 
-    var1 = VaryingParameter("x0", -50.0, 5.0, dtype=int)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
-
-    gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj]
+    # Integer variables are not supported in vocs (use discrete variable)
+    vocs = VOCS(
+        variables={"x0": set(range(-50, 6)), "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
     )
+
+    gen = AxSingleFidelityGenerator(vocs=vocs)
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
         generator=gen,
@@ -319,14 +316,12 @@ def test_ax_single_fidelity_moo():
     trial_count = 0
     trials_to_fail = [2, 6]
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
-    obj2 = Objective("f2", minimize=False)
-
-    gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj, obj2]
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE", "f2": "MAXIMIZE"},
     )
+
+    gen = AxSingleFidelityGenerator(vocs=vocs)
     ev = FunctionEvaluator(function=eval_func_sf_moo)
     exploration = Exploration(
         generator=gen,
@@ -360,13 +355,12 @@ def test_ax_single_fidelity_fb():
     trial_count = 0
     trials_to_fail = [2, 6]
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
-
-    gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2], objectives=[obj], fully_bayesian=True
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
     )
+
+    gen = AxSingleFidelityGenerator(vocs=vocs, fully_bayesian=True)
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
         generator=gen,
@@ -398,16 +392,12 @@ def test_ax_single_fidelity_moo_fb():
     trial_count = 0
     trials_to_fail = [2, 6]
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
-    obj2 = Objective("f2", minimize=False)
-
-    gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj, obj2],
-        fully_bayesian=True,
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE", "f2": "MAXIMIZE"},
     )
+
+    gen = AxSingleFidelityGenerator(vocs=vocs, fully_bayesian=True)
     ev = FunctionEvaluator(function=eval_func_sf_moo)
     exploration = Exploration(
         generator=gen,
@@ -439,18 +429,18 @@ def test_ax_single_fidelity_updated_params():
     trial_count = 0
     trials_to_fail = []
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
-
-    # Start with a fixed value of x0.
-    var1.fix_value(-10.0)
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
+    )
 
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
+        vocs=vocs,
         fit_out_of_design=True,
     )
+
+    # Start with a fixed value of x0.
+    gen.fix_value("x0", -10.0)
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
         generator=gen,
@@ -465,21 +455,18 @@ def test_ax_single_fidelity_updated_params():
     assert all(exploration.history["x0"] == -10)
 
     # Free value of x0 and run 5 evals.
-    var1.free_value()
-    gen.update_parameter(var1)
+    gen.free_value("x0")
     exploration.run(n_evals=5)
     assert not all(exploration.history["x0"][-5:] == -10)
 
     # Update range of x0 and run 10 evals.
-    var1.update_range(-20.0, 0.0)
-    gen.update_parameter(var1)
+    gen.update_range("x0", -20.0, 0.0)
     exploration.run(n_evals=10)
     assert all(exploration.history["x0"][-10:] >= -20)
     assert all(exploration.history["x0"][-10:] <= 0.0)
 
     # Fix of x0 and run 5 evals.
-    var1.fix_value(-9)
-    gen.update_parameter(var1)
+    gen.fix_value("x0", -9)
     exploration.run(n_evals=5)
     assert all(exploration.history["x0"][-5:] == -9)
 
@@ -488,8 +475,7 @@ def test_ax_single_fidelity_updated_params():
     assert exploration.history["x0"].to_numpy()[-1] == -7
 
     # Free value and run 3 evals.
-    var1.free_value()
-    gen.update_parameter(var1)
+    gen.free_value("x0")
     exploration.run(n_evals=3)
     assert all(exploration.history["x0"][-3:] != -9)
 
@@ -505,20 +491,14 @@ def test_ax_multi_fidelity():
     trial_count = 0
     trials_to_fail = [2, 5]
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    var3 = VaryingParameter(
-        "res", 1.0, 8.0, is_fidelity=True, fidelity_target_value=8.0
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0], "res": [1.0, 8.0]},
+        objectives={"f": "MAXIMIZE"},
+        constraints={"p1": ["LESS_THAN", 30.0]},
     )
-    obj = Objective("f", minimize=False)
-    p1 = Parameter("p1")
 
-    gen = AxMultiFidelityGenerator(
-        varying_parameters=[var1, var2, var3],
-        objectives=[obj],
-        analyzed_parameters=[p1],
-        outcome_constraints=["p1 <= 30"],
-    )
+    gen = AxMultiFidelityGenerator(vocs=vocs)
+    gen.set_fidelity_param("res", fidelity_target_value=8.0)
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
         generator=gen,
@@ -539,7 +519,7 @@ def test_ax_multi_fidelity():
     # Check constraints.
     ocs = gen._ax_client.experiment.optimization_config.outcome_constraints
     assert len(ocs) == 1
-    assert ocs[0].metric.name == p1.name
+    assert ocs[0].metric.name == "p1"
 
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
@@ -554,16 +534,20 @@ def test_ax_multi_fidelity():
 def test_ax_multitask():
     """Test that an exploration with a multitask generator runs"""
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0],
+            "trial_type": {"task_1", "task_2"},
+        },
+        objectives={"f": "MAXIMIZE"},
+    )
 
     task1 = Task("task_1", n_init=2, n_opt=1)
     task2 = Task("task_2", n_init=5, n_opt=3)
 
     gen = AxMultitaskGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
+        vocs=vocs,
         hifi_task=task1,
         lofi_task=task2,
     )
@@ -666,16 +650,13 @@ def test_ax_single_fidelity_with_history():
     trial_count = 0
     trials_to_fail = []
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
-    p1 = Parameter("p1")
-
-    gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
-        analyzed_parameters=[p1],
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
+        constraints={"p1": ["LESS_THAN", 30.0]},
     )
+
+    gen = AxSingleFidelityGenerator(vocs=vocs)
     ev = FunctionEvaluator(function=eval_func_sf)
     exploration = Exploration(
         generator=gen,
@@ -709,19 +690,14 @@ def test_ax_multi_fidelity_with_history():
     trial_count = 0
     trials_to_fail = []
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    var3 = VaryingParameter(
-        "res", 1.0, 8.0, is_fidelity=True, fidelity_target_value=8.0
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0], "res": [1.0, 8.0]},
+        objectives={"f": "MAXIMIZE"},
+        constraints={"p1": ["LESS_THAN", 30.0]},
     )
-    obj = Objective("f", minimize=False)
-    p1 = Parameter("p1")
 
-    gen = AxMultiFidelityGenerator(
-        varying_parameters=[var1, var2, var3],
-        objectives=[obj],
-        analyzed_parameters=[p1],
-    )
+    gen = AxMultiFidelityGenerator(vocs=vocs)
+    gen.set_fidelity_param("res", fidelity_target_value=8.0)
     ev = FunctionEvaluator(function=eval_func_mf)
     exploration = Exploration(
         generator=gen,
@@ -749,16 +725,20 @@ def test_ax_multitask_with_history():
     restarted from a history file
     """
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={
+            "x0": [-50.0, 5.0],
+            "x1": [-5.0, 15.0],
+            "trial_type": {"task_1", "task_2"},
+        },
+        objectives={"f": "MAXIMIZE"},
+    )
 
     task1 = Task("task_1", n_init=2, n_opt=1)
     task2 = Task("task_2", n_init=5, n_opt=3)
 
     gen = AxMultitaskGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
+        vocs=vocs,
         hifi_task=task1,
         lofi_task=task2,
     )
@@ -783,17 +763,16 @@ def test_ax_service_init():
     or evaluations are given.
     """
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    obj = Objective("f", minimize=False)
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0]},
+        objectives={"f": "MAXIMIZE"},
+    )
 
     n_init = 2
     n_external = 4
 
     for i in range(n_external):
-        gen = AxSingleFidelityGenerator(
-            varying_parameters=[var1, var2], objectives=[obj], n_init=n_init
-        )
+        gen = AxSingleFidelityGenerator(vocs=vocs, n_init=n_init)
         ev = FunctionEvaluator(function=eval_func_sf)
         exploration = Exploration(
             generator=gen,
@@ -839,8 +818,7 @@ def test_ax_service_init():
 
     # Test single case with `enforce_n_init=True`
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2],
-        objectives=[obj],
+        vocs=vocs,
         n_init=n_init,
         enforce_n_init=True,
     )

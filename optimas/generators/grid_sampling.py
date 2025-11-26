@@ -4,7 +4,8 @@ from typing import List, Optional
 
 import numpy as np
 
-from optimas.core import Objective, Trial, VaryingParameter, Parameter
+from optimas.core import Trial
+from gest_api.vocs import VOCS
 from .base import Generator
 
 
@@ -19,30 +20,19 @@ class GridSamplingGenerator(Generator):
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary.
-    objectives : list of Objective
-        List of optimization objectives.
+    vocs : VOCS
+        VOCS object specifying variables, objectives, constraints, and observables.
     n_steps : list of int
         Number of grid steps along each direction.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
 
     """
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
+        vocs: VOCS,
         n_steps: List[int],
-        analyzed_parameters: Optional[List[Parameter]] = None,
     ) -> None:
-        super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
-        )
+        super().__init__(vocs=vocs)
         self._n_steps = n_steps if n_steps is np.ndarray else np.array(n_steps)
         self._create_configurations()
 
