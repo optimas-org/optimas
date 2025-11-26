@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 from optimas.explorations import Exploration
-from optimas.core import VaryingParameter, Objective
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import FunctionEvaluator
 from optimas.diagnostics import ExplorationDiagnostics
 from optimas.utils.ax import AxModelManager
+from gest_api.vocs import VOCS
 
 
 def eval_func_sf_moo(input_params, output_params):
@@ -26,15 +26,13 @@ def test_ax_model_manager():
     runs and that the generator and Ax client are updated after running.
     """
 
-    var1 = VaryingParameter("x0", -50.0, 5.0)
-    var2 = VaryingParameter("x1", -5.0, 15.0)
-    var3 = VaryingParameter("x2", -5.0, 15.0)
-    obj = Objective("f", minimize=True)
-    obj2 = Objective("f2", minimize=False)
-
-    gen = AxSingleFidelityGenerator(
-        varying_parameters=[var1, var2, var3], objectives=[obj, obj2]
+    # Create VOCS object
+    vocs = VOCS(
+        variables={"x0": [-50.0, 5.0], "x1": [-5.0, 15.0], "x2": [-5.0, 15.0]},
+        objectives={"f": "MINIMIZE", "f2": "MAXIMIZE"},
     )
+
+    gen = AxSingleFidelityGenerator(vocs=vocs)
     ev = FunctionEvaluator(function=eval_func_sf_moo)
     exploration = Exploration(
         generator=gen,
@@ -88,8 +86,12 @@ def test_ax_model_manager():
     gs = GridSpec(2, 2, wspace=0.2, hspace=0.3)
 
     # center coordinates
-    x1_c = 0.5 * (var2.lower_bound + var2.upper_bound)
-    x2_c = 0.5 * (var3.lower_bound + var3.upper_bound)
+    x1_c = 0.5 * (
+        vocs.variables["x1"].domain[0] + vocs.variables["x1"].domain[1]
+    )
+    x2_c = 0.5 * (
+        vocs.variables["x2"].domain[0] + vocs.variables["x2"].domain[1]
+    )
 
     # plot model for `f` with custom slice value
     fig, ax1 = mm_axcl.plot_contour(

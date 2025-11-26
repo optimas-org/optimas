@@ -32,6 +32,7 @@ jobs:
         conda install -c pytorch numpy pandas
         conda install -c conda-forge mpi4py openmpi=5.*
         pip install .[test]
+        pip install git+https://github.com/campa-consortium/gest-api.git
     - shell: bash -l {0}
       name: Run unit tests with openMPI
       run: |

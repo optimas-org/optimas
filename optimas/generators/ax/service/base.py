@@ -19,9 +19,7 @@ from ax.modelbridge.transition_criterion import MaxTrials, MinTrials
 from ax import Arm
 
 from optimas.core import (
-    Objective,
     Trial,
-    VaryingParameter,
     Parameter,
 )
 from optimas.generators.ax.base import AxGenerator
@@ -30,6 +28,12 @@ from optimas.utils.ax.other import (
     convert_optimas_to_ax_parameters,
     convert_optimas_to_ax_objectives,
 )
+from gest_api.vocs import (
+    VOCS,
+    LessThanConstraint,
+    GreaterThanConstraint,
+    BoundsConstraint,
+)
 
 
 class AxServiceGenerator(AxGenerator):
@@ -37,27 +41,19 @@ class AxServiceGenerator(AxGenerator):
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary.
-    objectives : list of Objective
-        List of optimization objectives.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
+    vocs : VOCS
+        VOCS object defining variables, objectives, constraints, and observables.
     parameter_constraints : list of str, optional
         List of string representation of parameter
         constraints, such as ``"x3 >= x4"`` or ``"-x3 + 2*x4 - 3.5*x5 >= 2"``.
         For the latter constraints, any number of arguments is accepted, and
         acceptable operators are ``<=`` and ``>=``.
-    outcome_constraints : list of str, optional
-        List of string representation of outcome constraints (i.e., constraints
-        on any of the ``analyzed_parameters``) of form
-        ``"metric_name >= bound"``, like ``"m1 <= 3."``.
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. If external data is attached to the exploration, the
         number of initialization evaluations will be reduced by the same
         amount, unless `enforce_n_init=True`. By default, ``4``.
+
     enforce_n_init : bool, optional
         Whether to enforce the generation of `n_init` Sobol trials, even if
         external data is supplied. By default, ``False``.
@@ -92,11 +88,8 @@ class AxServiceGenerator(AxGenerator):
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
-        analyzed_parameters: Optional[List[Parameter]] = None,
+        vocs: VOCS,
         parameter_constraints: Optional[List[str]] = None,
-        outcome_constraints: Optional[List[str]] = None,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
         abandon_failed_trials: Optional[bool] = True,
@@ -109,9 +102,7 @@ class AxServiceGenerator(AxGenerator):
         model_history_dir: Optional[str] = "model_history",
     ) -> None:
         super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
+            vocs=vocs,
             use_cuda=use_cuda,
             gpu_id=gpu_id,
             dedicated_resources=dedicated_resources,
@@ -127,9 +118,45 @@ class AxServiceGenerator(AxGenerator):
         self._fit_out_of_design = fit_out_of_design
         self._fixed_features = None
         self._parameter_constraints = parameter_constraints
-        self._outcome_constraints = outcome_constraints
+        self._outcome_constraints, constraint_parameters = (
+            self._convert_vocs_constraints_to_outcome_constraints()
+        )
+        # Add constraint parameters to analyzed parameters
+        if constraint_parameters:
+            if self._analyzed_parameters is None:
+                self._analyzed_parameters = []
+            self._analyzed_parameters.extend(constraint_parameters)
         self._ax_client = self._create_ax_client()
         self._model = AxModelManager(self._ax_client)
+
+    def _convert_vocs_constraints_to_outcome_constraints(
+        self,
+    ) -> tuple[List[str], List[Parameter]]:
+        """Convert VOCS constraints to AX outcome constraints format and create analyzed parameters."""
+        outcome_constraints = []
+        constraint_parameters = []
+        if hasattr(self._vocs, "constraints") and self._vocs.constraints:
+            for (
+                constraint_name,
+                constraint_spec,
+            ) in self._vocs.constraints.items():
+                # Create analyzed parameter for this constraint
+                constraint_parameters.append(Parameter(constraint_name))
+
+                # Handle different constraint types
+                if isinstance(constraint_spec, LessThanConstraint):
+                    outcome_constraints.append(
+                        f"{constraint_name} <= {constraint_spec.value}"
+                    )
+                elif isinstance(constraint_spec, GreaterThanConstraint):
+                    outcome_constraints.append(
+                        f"{constraint_name} >= {constraint_spec.value}"
+                    )
+                elif isinstance(constraint_spec, BoundsConstraint):
+                    lo, hi = constraint_spec.range
+                    outcome_constraints.append(f"{constraint_name} >= {lo}")
+                    outcome_constraints.append(f"{constraint_name} <= {hi}")
+        return outcome_constraints, constraint_parameters
 
     @property
     def ax_client(self) -> AxClient:
@@ -352,3 +379,73 @@ class AxServiceGenerator(AxGenerator):
             ax_trial.mark_abandoned(unsafe=True)
         else:
             ax_trial.mark_failed(unsafe=True)
+
+    def fix_value(self, var_name: str, value: float) -> None:
+        """Fix a parameter to a specific value."""
+        var = None
+        for vp in self._varying_parameters:
+            if vp.name == var_name:
+                var = vp
+                break
+
+        if var is None:
+            raise ValueError(
+                f"Variable '{var_name}' not found in varying parameters"
+            )
+
+        var.fix_value(value)
+        self._update_parameter(var)
+
+    def free_value(self, var_name: str) -> None:
+        """Free a previously fixed parameter."""
+        var = None
+        for vp in self._varying_parameters:
+            if vp.name == var_name:
+                var = vp
+                break
+
+        if var is None:
+            raise ValueError(
+                f"Variable '{var_name}' not found in varying parameters"
+            )
+
+        if not var.is_fixed:
+            raise ValueError(f"Variable '{var_name}' was not previously fixed")
+
+        var.free_value()
+        self._update_parameter(var)
+
+    def update_range(
+        self, var_name: str, lower_bound: float, upper_bound: float
+    ) -> None:
+        """Update the range of a parameter.
+
+        Parameters
+        ----------
+        var_name : str
+            Name of the variable to update.
+        lower_bound : float
+            New lower bound for the parameter.
+        upper_bound : float
+            New upper bound for the parameter.
+        """
+        var = None
+        for vp in self._varying_parameters:
+            if vp.name == var_name:
+                var = vp
+                break
+
+        if var is None:
+            raise ValueError(
+                f"Variable '{var_name}' not found in varying parameters"
+            )
+
+        # Update the VOCS variable domain
+        if var_name in self._vocs.variables:
+            self._vocs.variables[var_name].domain = [lower_bound, upper_bound]
+
+        # Update the varying parameter
+        var.update_range(lower_bound, upper_bound)
+
+        # Update the Ax client
+        self._update_parameter(var)

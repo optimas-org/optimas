@@ -4,7 +4,7 @@ from multiprocessing import set_start_method
 set_start_method("spawn", force=True)
 
 import numpy as np
-from optimas.core import VaryingParameter, Objective, Parameter
+from gest_api.vocs import VOCS
 from optimas.generators import AxSingleFidelityGenerator
 from optimas.evaluators import TemplateEvaluator
 from optimas.explorations import Exploration
@@ -31,17 +31,16 @@ def create_exploration(
     gpu_id=0,
     exploration_dir_path="./exploration",
 ):
-    # Create varying parameters and objectives.
-    var_1 = VaryingParameter("x0", 0.0, 15.0)
-    var_2 = VaryingParameter("x1", 0.0, 15.0)
-    obj = Objective("f", minimize=True)
-    p0 = Parameter("cuda_visible_devices", dtype="U10")
+    # Create VOCS object
+    vocs = VOCS(
+        variables={"x0": [0.0, 15.0], "x1": [0.0, 15.0]},
+        objectives={"f": "MINIMIZE"},
+        observables={"cuda_visible_devices": "U10"},
+    )
 
     # Create generator.
     gen = AxSingleFidelityGenerator(
-        varying_parameters=[var_1, var_2],
-        objectives=[obj],
-        analyzed_parameters=[p0],
+        vocs=vocs,
         n_init=4,
         dedicated_resources=dedicated_resources,
         use_cuda=use_cuda,

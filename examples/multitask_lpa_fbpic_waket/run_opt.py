@@ -2,26 +2,27 @@
 
 from multiprocessing import set_start_method
 
-from optimas.core import VaryingParameter, Objective, Parameter, Task
+from optimas.core import Task
 from optimas.generators import AxMultitaskGenerator
 from optimas.evaluators import TemplateEvaluator, MultitaskEvaluator
 from optimas.explorations import Exploration
+from gest_api.vocs import VOCS
 
 from analysis_script import analyze_simulation
 
 
-# Create varying parameters and objectives.
-var_1 = VaryingParameter("beam_i_1", 1.0, 10.0)  # kA
-var_2 = VaryingParameter("beam_i_2", 1.0, 10.0)  # kA
-var_3 = VaryingParameter("beam_z_i_2", -10.0, 10.0)  # µm
-var_4 = VaryingParameter("beam_length", 1.0, 20.0)  # µm
-obj = Objective("f", minimize=True)
-
-
-# Define other quantities to analyze (which are not the optimization objective)
-par_1 = Parameter("energy_med")
-par_2 = Parameter("energy_mad")
-par_3 = Parameter("charge")
+# Create VOCS object.
+vocs = VOCS(
+    variables={
+        "beam_i_1": [1.0, 10.0],  # kA
+        "beam_i_2": [1.0, 10.0],  # kA
+        "beam_z_i_2": [-10.0, 10.0],  # µm
+        "beam_length": [1.0, 20.0],  # µm
+        "trial_type": {"wake-t", "fbpic"},
+    },
+    objectives={"f": "MINIMIZE"},
+    observables=["energy_med", "energy_mad", "charge"],
+)
 
 
 # Create tasks.
@@ -31,9 +32,7 @@ hifi_task = Task("fbpic", n_init=3, n_opt=3)
 
 # Create generator.
 gen = AxMultitaskGenerator(
-    varying_parameters=[var_1, var_2, var_3, var_4],
-    objectives=[obj],
-    analyzed_parameters=[par_1, par_2, par_3],
+    vocs=vocs,
     use_cuda=True,
     dedicated_resources=True,
     hifi_task=hifi_task,
