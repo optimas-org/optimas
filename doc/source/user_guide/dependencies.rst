@@ -24,23 +24,23 @@ See table below for a summary.
      - ``pip install optimas``
      - ``pip install 'optimas[all]'``
    * - :class:`~optimas.generators.LineSamplingGenerator`
-     - ✅
-     - ✅
+     - :math:`\checkmark`
+     - :math:`\checkmark`
    * - :class:`~optimas.generators.GridSamplingGenerator`
-     - ✅
-     - ✅
+     - :math:`\checkmark`
+     - :math:`\checkmark`
    * - :class:`~optimas.generators.RandomSamplingGenerator`
-     - ✅
-     - ✅
+     - :math:`\checkmark`
+     - :math:`\checkmark`
    * - :class:`~optimas.generators.AxSingleFidelityGenerator`
-     - ❌
-     - ✅
+     - :math:`\times`
+     - :math:`\checkmark`
    * - :class:`~optimas.generators.AxMultiFidelityGenerator`
-     - ❌
-     - ✅
+     - :math:`\times`
+     - :math:`\checkmark`
    * - :class:`~optimas.generators.AxMultitaskGenerator`
-     - ❌
-     - ✅
+     - :math:`\times`
+     - :math:`\checkmark`
    * - :class:`~optimas.generators.AxClientGenerator`
-     - ❌
-     - ✅
+     - :math:`\times`
+     - :math:`\checkmark`
