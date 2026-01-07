@@ -153,9 +153,6 @@ class AxMultitaskGenerator(AxGenerator):
         VOCS object defining variables, objectives, constraints, and observables.
     lofi_task, hifi_task : Task
         The low- and high-fidelity tasks.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
     use_cuda : bool, optional
         Whether to allow the generator to run on a CUDA GPU. By default
         ``False``.
