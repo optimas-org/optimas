@@ -33,7 +33,7 @@ jobs:
         conda install -c conda-forge mpi4py openmpi=5.*
         pip install .[test]
         pip install git+https://github.com/campa-consortium/gest-api.git
-        pip install --upgrade-strategy=only-if-needed git+https://github.com/xopt-org/xopt.git
+        pip install --upgrade-strategy=only-if-needed git+https://github.com/xopt-org/xopt.git@generator_standard
     - shell: bash -l {0}
       name: Run unit tests with openMPI
       run: |
