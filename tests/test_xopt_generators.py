@@ -3,7 +3,9 @@
 import numpy as np
 
 from optimas.generators import ExternalGenerator
-from xopt.generators.bayesian.expected_improvement import ExpectedImprovementGenerator
+from xopt.generators.bayesian.expected_improvement import (
+    ExpectedImprovementGenerator,
+)
 
 from gest_api.vocs import VOCS
 from optimas.evaluators import FunctionEvaluator
@@ -21,7 +23,7 @@ def xtest_callable(input_params, output_params):
 def test_xopt_EI():
     """Test xopt_EI with a 2D function."""
     initial_sample_size = 8
- 
+
     # Create vocs
     vocs = VOCS(
         variables={"x1": [0, 1.0], "x2": [0, 10.0]},
