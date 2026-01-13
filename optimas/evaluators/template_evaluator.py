@@ -152,6 +152,14 @@ class TemplateEvaluator(Evaluator):
         # Determine executable path.
         if self.sim_template.endswith(".py"):
             executable_path = os.path.basename(self.sim_template)
+        elif self.precedent is not None:
+            # Could be a container call in precedent. In that case,
+            # the executable is not available on the host system and
+            # we just forward what the user provided.
+            assert (
+                self.executable is not None
+            ), "An executable must be provided for non-Python simulations"
+            executable_path = self.executable
         else:
             # By default, if the template is not a `.py` file, we run
             # it with an executable.
