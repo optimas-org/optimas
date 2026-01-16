@@ -30,7 +30,7 @@ def rosenbrock(input_params, output_params):
 
 
 def test_xopt_EI():
-    """Test xopt_EI with a 2D function."""
+    """Test xopt ExpectedImprovementGenerator with a 2D function."""
     initial_sample_size = 8
 
     # Create vocs
@@ -80,7 +80,7 @@ def test_xopt_EI():
 
 
 def test_xopt_neldermead():
-    """Test xopt_EI with a 2D function."""
+    """Test xopt NelderMeadGenerator with a 2D function."""
     initial_sample_size = 8
 
     # Create vocs
