@@ -8,8 +8,6 @@ from gest_api.vocs import VOCS
 
 jax.config.update("jax_enable_x64", True)
 
-# from multiprocessing import set_start_method
-
 import libensemble.gen_funcs
 
 libensemble.gen_funcs.rc.aposmm_optimizers = "ibcdfo_pounders"
@@ -213,7 +211,7 @@ exp = Exploration(
     evaluator=ev,
     max_evals=max_evals,
     sim_workers=nworkers,
-    run_async=False,  # SH - also try with True
+    run_async=True,
     exploration_dir_path="./exploration_0",
 )
 
