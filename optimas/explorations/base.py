@@ -22,7 +22,6 @@ from optimas.evaluators.function_evaluator import FunctionEvaluator
 from optimas.utils.logger import get_logger
 from optimas.utils.other import convert_to_dataframe
 
-
 logger = get_logger(__name__)
 
 
