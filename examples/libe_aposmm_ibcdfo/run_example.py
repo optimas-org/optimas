@@ -21,7 +21,7 @@ from optimas.explorations import Exploration
 from analysis_script import analyze_simulation
 
 try:
-    from ibcdfo.pounders import pounders  # noqa: F401
+    from ibcdfo import run_pounders  # noqa: F401
 except ModuleNotFoundError:
     sys.exit("Please 'pip install ibcdfo'")
 try:
