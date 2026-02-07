@@ -9,8 +9,8 @@ from ax.utils.common.constants import Keys
 from ax.modelbridge.generation_strategy import GenerationStep
 from ax.modelbridge.registry import Models
 
-from optimas.core import Objective, VaryingParameter, Parameter
 from .base import AxServiceGenerator
+from gest_api.vocs import VOCS
 
 
 class AxMultiFidelityGenerator(AxServiceGenerator):
@@ -18,17 +18,10 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
 
     Parameters
     ----------
-    varying_parameters : list of VaryingParameter
-        List of input parameters to vary. One them should be a fidelity.
-    objectives : list of Objective
-        List of optimization objectives.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
-    outcome_constraints : list of str, optional
-        List of string representation of outcome constraints (i.e., constraints
-        on any of the ``analyzed_parameters``) of form
-        ``"metric_name >= bound"``, like ``"m1 <= 3."``.
+    vocs : VOCS
+        VOCS object defining variables, objectives, constraints, and observables.
+        One of the variables should be a fidelity parameter.
+
     n_init : int, optional
         Number of evaluations to perform during the initialization phase using
         Sobol sampling. If external data is attached to the exploration, the
@@ -72,10 +65,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
 
     def __init__(
         self,
-        varying_parameters: List[VaryingParameter],
-        objectives: List[Objective],
-        analyzed_parameters: Optional[List[Parameter]] = None,
-        outcome_constraints: Optional[List[str]] = None,
+        vocs: VOCS,
         n_init: Optional[int] = 4,
         enforce_n_init: Optional[bool] = False,
         abandon_failed_trials: Optional[bool] = True,
@@ -90,10 +80,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     ) -> None:
         self.fidel_cost_intercept = fidel_cost_intercept
         super().__init__(
-            varying_parameters=varying_parameters,
-            objectives=objectives,
-            analyzed_parameters=analyzed_parameters,
-            outcome_constraints=outcome_constraints,
+            vocs=vocs,
             n_init=n_init,
             enforce_n_init=enforce_n_init,
             abandon_failed_trials=abandon_failed_trials,
@@ -142,3 +129,35 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         )
 
         return steps
+
+    def set_fidelity_param(
+        self,
+        var_name: str,
+        fidelity_target_value: float = None,
+    ) -> None:
+        """Set a parameter as the fidelity parameter for multi-fidelity optimization.
+
+        Parameters
+        ----------
+        var_name : str
+            Name of the variable to set as fidelity parameter.
+        fidelity_target_value : float, optional
+            The target fidelity value for optimization.
+        """
+        var = None
+        for vp in self._varying_parameters:
+            if vp.name == var_name:
+                var = vp
+                break
+
+        if var is None:
+            raise ValueError(
+                f"Variable '{var_name}' not found in varying parameters"
+            )
+
+        var.is_fidelity = True
+        if fidelity_target_value is not None:
+            var.fidelity_target_value = fidelity_target_value
+
+        # Update the Ax client
+        self._update_parameter(var)
