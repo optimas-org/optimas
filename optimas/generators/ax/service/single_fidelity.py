@@ -86,6 +86,8 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
 
     """
 
+    returns_id: bool = True
+
     def __init__(
         self,
         vocs: VOCS,

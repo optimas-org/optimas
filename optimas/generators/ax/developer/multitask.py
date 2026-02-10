@@ -174,6 +174,8 @@ class AxMultitaskGenerator(AxGenerator):
 
     """
 
+    returns_id = True
+
     def __init__(
         self,
         vocs: VOCS,
