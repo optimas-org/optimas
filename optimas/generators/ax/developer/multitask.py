@@ -354,7 +354,7 @@ class AxMultitaskGenerator(AxGenerator):
                 arms.append(
                     Arm(parameters=params, name=param_to_name[arm.signature])
                 )
-                self._next_id += 1
+                # self._next_id += 1
 
             # Create new batch trial.
             gr = GeneratorRun(arms=arms, weights=[1.0] * len(arms))
