@@ -633,15 +633,6 @@ def test_ax_client():
 
     exploration.run()
 
-    # Debug prints for CI.
-    print(f"numpy version: {np.__version__}")
-    print(f"gen.n_evaluated_trials: {gen.n_evaluated_trials}")
-    print(f"gen.n_failed_trials: {gen.n_failed_trials}")
-    print(f"history shape: {exploration.history.shape}")
-    print(f"history columns: {exploration.history.columns.tolist()}")
-    print(f"history:\n{exploration.history}")
-    print(f"ax_client trials:\n{ax_client.get_trials_data_frame()}")
-
     # Perform checks.
     check_run_ax_service(ax_client, gen, exploration, len(trials_to_fail))
 
@@ -865,19 +856,19 @@ def test_ax_service_init():
 
 if __name__ == "__main__":
     tests = [
-        # test_ax_single_fidelity,
-        # test_ax_single_fidelity_resume,
-        # test_ax_single_fidelity_int,
-        # test_ax_single_fidelity_moo,
-        # test_ax_single_fidelity_fb,
-        # test_ax_single_fidelity_moo_fb,
-        # test_ax_single_fidelity_updated_params,
-        # test_ax_multi_fidelity,
-        # test_ax_multitask,
+        test_ax_single_fidelity,
+        test_ax_single_fidelity_resume,
+        test_ax_single_fidelity_int,
+        test_ax_single_fidelity_moo,
+        test_ax_single_fidelity_fb,
+        test_ax_single_fidelity_moo_fb,
+        test_ax_single_fidelity_updated_params,
+        test_ax_multi_fidelity,
+        test_ax_multitask,
         test_ax_client,
-        # test_ax_single_fidelity_with_history,
-        # test_ax_multi_fidelity_with_history,
-        # test_ax_multitask_with_history,
+        test_ax_single_fidelity_with_history,
+        test_ax_multi_fidelity_with_history,
+        test_ax_multitask_with_history,
         test_ax_service_init,
     ]
 
