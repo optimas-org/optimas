@@ -4,8 +4,9 @@ from typing import List, Optional
 
 from ax.service.ax_client import AxClient
 from ax.core.objective import MultiObjective
+from ax.core.types import ComparisonOp
 
-from optimas.core import Objective, VaryingParameter, Parameter
+from optimas.core import Parameter
 from gest_api.vocs import VOCS
 from .base import AxServiceGenerator
 
@@ -16,17 +17,14 @@ class AxClientGenerator(AxServiceGenerator):
     This generator allows the user to provide a custom ``AxClient``,
     allowing for maximum control of the optimization.
 
-    For this generator there is no need to provide the list of
-    ``varying_parameters`` or ``objectives``. The generator will obtain
-    these parameters directly from the ``AxClient``.
+    For this generator there is no need to provide the ``vocs``. The
+    generator builds a VOCS (variables, objectives, constraints, and
+    observables) directly from the ``AxClient``.
 
     Parameters
     ----------
     ax_client : AxClient
         The Ax client from which the trials will be generated.
-    analyzed_parameters : list of Parameter, optional
-        List of parameters to analyze at each trial, but which are not
-        optimization objectives. By default ``None``.
     abandon_failed_trials : bool, optional
         Whether failed trials should be abandoned (i.e., not suggested again).
         By default, ``True``.
@@ -52,19 +50,15 @@ class AxClientGenerator(AxServiceGenerator):
 
     Notes
     -----
-    If the ``AxClient`` contains ``outcome_constraints``, these will appear in
-    the ``optimas`` log as optimization objectives. They are still being
-    correctly used as constraints by the ``AxClient``, and the optimization
-    will work as expected. This is only an issue on ``optimas``, which fails to
-    properly recognize them because optimization constraints have not yet been
-    implemented.
+    Outcome constraints are passed into VOCS as constraints and are correctly
+    used by the ``AxClient``. The ``optimas`` log/display does not yet show
+    constraints separately; constraint metrics may appear as extra columns.
 
     """
 
     def __init__(
         self,
         ax_client: AxClient,
-        analyzed_parameters: Optional[List[Parameter]] = None,
         abandon_failed_trials: Optional[bool] = True,
         gpu_id: Optional[int] = 0,
         dedicated_resources: Optional[bool] = False,
@@ -74,12 +68,6 @@ class AxClientGenerator(AxServiceGenerator):
     ):
         # Create VOCS object from AxClient data
         vocs = self._create_vocs_from_ax_client(ax_client)
-
-        # Add constraints to analyzed parameters
-        analyzed_parameters = self._add_constraints_to_analyzed_parameters(
-            analyzed_parameters, ax_client
-        )
-
         use_cuda = self._use_cuda(ax_client)
         self._ax_client = ax_client
 
@@ -113,65 +101,32 @@ class AxClientGenerator(AxServiceGenerator):
             obj_type = "MINIMIZE" if ax_obj.minimize else "MAXIMIZE"
             objectives[ax_obj.metric_names[0]] = obj_type
 
-        # Extract observables from outcome constraints (if any)
-        observables = set()
+        # Extract constraints from outcome constraints (if any)
+        constraints = {}
         ax_config = ax_client.experiment.optimization_config
         if ax_config.outcome_constraints:
             for constraint in ax_config.outcome_constraints:
-                observables.add(constraint.metric.name)
+                name = constraint.metric.name
+                if constraint.op == ComparisonOp.LEQ:
+                    constraints[name] = ["LESS_THAN", constraint.bound]
+                elif constraint.op == ComparisonOp.GEQ:
+                    constraints[name] = ["GREATER_THAN", constraint.bound]
 
         return VOCS(
             variables=variables,
             objectives=objectives,
-            observables=observables,
+            constraints=constraints,
         )
 
-    def _get_varying_parameters(self, ax_client: AxClient):
-        """Obtain the list of varying parameters from the AxClient."""
-        varying_parameters = []
-        for _, p in ax_client.experiment.search_space.parameters.items():
-            vp = VaryingParameter(
-                name=p.name,
-                lower_bound=p.lower,
-                upper_bound=p.upper,
-                is_fidelity=p.is_fidelity,
-                fidelity_target_value=p.target_value,
-                dtype=p.python_type,
-            )
-            varying_parameters.append(vp)
-        return varying_parameters
-
-    def _get_objectives(self, ax_client: AxClient):
-        """Obtain the list of objectives from the AxClient."""
-        objectives = []
-        ax_objective = ax_client.experiment.optimization_config.objective
-        if isinstance(ax_objective, MultiObjective):
-            ax_objectives = ax_objective.objectives
-        else:
-            ax_objectives = [ax_objective]
-        for ax_obj in ax_objectives:
-            obj = Objective(
-                name=ax_obj.metric_names[0], minimize=ax_obj.minimize
-            )
-            objectives.append(obj)
-        return objectives
-
-    def _add_constraints_to_analyzed_parameters(
-        self, analyzed_parameters: List[Parameter], ax_client: AxClient
-    ):
-        """Add outcome constraints to the list of analyzed parameters.
-
-        This is currently needed because optimas does not yet have a
-        proper definition of constraints. The constraints will be correctly
-        handled and given to the AxClient, but will appear as analyzed
-        parameters in the optimization log.
-        """
-        ax_config = ax_client.experiment.optimization_config
-        if ax_config.outcome_constraints and analyzed_parameters is None:
-            analyzed_parameters = []
-        for constraint in ax_config.outcome_constraints:
-            analyzed_parameters.append(Parameter(name=constraint.metric.name))
-        return analyzed_parameters
+    def _convert_vocs_constraints_to_outcome_constraints(
+        self,
+    ) -> tuple[List[str], List[Parameter]]:
+        """Override to skip conversion since AxClient already has constraints."""
+        constraint_parameters = []
+        if hasattr(self._vocs, "constraints") and self._vocs.constraints:
+            for constraint_name in self._vocs.constraints.keys():
+                constraint_parameters.append(Parameter(constraint_name))
+        return [], constraint_parameters
 
     def _create_ax_client(self) -> AxClient:
         """Override the base function to simply return the given."""
