@@ -224,7 +224,7 @@ if __name__ == "__main__":
         aposmm.finalize()
 
         # Obtain APOSMM history which includes local minima information
-        aposmm_hist, persis_info, _ = aposmm.export(user_fields=True)
+        aposmm_hist, persis_info, _ = aposmm.export(vocs_field_names=True)
         np.save("aposmm_hist.npy", aposmm_hist)
         pickle.dump(persis_info, open("aposmm_persis_info.pickle", "wb"))
 
