@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10', 3.11, 3.12]
+        python-version: [3.11, 3.12]
 
     steps:
     - uses: actions/checkout@v4
@@ -32,8 +32,8 @@ jobs:
         conda install -c pytorch numpy pandas
         conda install -c conda-forge mpi4py mpich
         pip install .[test]
-        pip install git+https://github.com/campa-consortium/gest-api.git
-        pip install git+https://github.com/xopt-org/xopt.git
+        pip install gest-api
+        pip install xopt
         pip uninstall --yes ax-platform # Run without Ax
     - shell: bash -l {0}
       name: Run unit tests without Ax
