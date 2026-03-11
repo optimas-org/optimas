@@ -11,7 +11,7 @@ dependencies:
     - matplotlib
     - nbsphinx
     - numpydoc
-    - git+https://github.com/campa-consortium/gest-api.git
+    - gest-api
     - pydata-sphinx-theme
     - sphinx-copybutton
     - sphinx-design

@@ -32,8 +32,8 @@ jobs:
         conda install -c pytorch numpy pandas
         conda install -c conda-forge mpi4py mpich
         pip install .[test]
-        pip install git+https://github.com/campa-consortium/gest-api.git
-        pip install git+https://github.com/xopt-org/xopt.git
+        pip install gest-api
+        pip install xopt
         pip uninstall --yes ax-platform # Run without Ax
     - shell: bash -l {0}
       name: Run unit tests without Ax
