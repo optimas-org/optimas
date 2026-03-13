@@ -22,7 +22,7 @@ classifiers = [
     'Programming Language :: Python :: 3.12',
 ]
 dependencies = [
-    'libensemble >= 1.3.0',
+    'libensemble >= 1.6.0',
     'numpy',
     'jinja2',
     'pandas',
