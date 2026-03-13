@@ -249,7 +249,7 @@ def test_ax_single_fidelity_resume():
             # Check that the sobol step has not been skipped.
             df = ax_client.get_trials_data_frame()
             assert len(df) == 1
-            assert df["generation_method"].to_numpy()[0] == "Sobol"
+            assert "Sobol" in df["generation_node"].to_numpy()[0]
 
         else:
             # Check that the old evaluations were added
@@ -258,7 +258,7 @@ def test_ax_single_fidelity_resume():
             # Check that the sobol step has been skipped.
             df = ax_client.get_trials_data_frame()
             assert len(df) == 12
-            assert df["generation_method"].to_numpy()[-1] == "BoTorch"
+            assert "BoTorch" in df["generation_node"].to_numpy()[-1]
 
             check_run_ax_service(
                 ax_client, gen, exploration, n_failed_expected=2
@@ -799,11 +799,9 @@ def test_ax_service_init():
         # are replaced by Manual trials.
         df = ax_client.get_trials_data_frame()
         for j in range(i):
-            assert df["generation_method"][j] is None
+            assert df["generation_node"][j] is None
         for k in range(i, n_init - 1):
-            assert df["generation_method"][k] == "Sobol"
-
-        df["generation_method"][min(i, n_init)] == "BoTorch"
+            assert df["generation_node"][k] is not None and "Sobol" in df["generation_node"][k]
 
     # Try to load saved client from json. This used to fail when the SOBOL
     # step was skipped due to n_external > n_init. It is added here to prevent
@@ -848,10 +846,9 @@ def test_ax_service_init():
     # `n_external` Manual trials.
     df = ax_client.get_trials_data_frame()
     for j in range(n_external):
-        assert df["generation_method"][j] is None
+        assert df["generation_node"][j] is None
     for k in range(n_external, n_external + n_init):
-        assert df["generation_method"][k] == "Sobol"
-    df["generation_method"][n_external + n_init] == "BoTorch"
+        assert df["generation_node"][k] is not None and "Sobol" in df["generation_node"][k]
 
 
 if __name__ == "__main__":

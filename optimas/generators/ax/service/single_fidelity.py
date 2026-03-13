@@ -2,8 +2,8 @@
 
 from typing import List, Optional, Dict
 
-from ax.modelbridge.generation_strategy import GenerationStep
-from ax.modelbridge.registry import Models
+from ax.generation_strategy.generation_node import GenerationStep
+from ax.adapter.registry import Generators
 
 from .base import AxServiceGenerator
 from gest_api.vocs import VOCS
@@ -126,10 +126,10 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         # Ax 0.5.0 detects if multi-objective.
         if self._fully_bayesian:
             # Use a SAAS model with qNEHVI/qNEI acquisition function
-            MODEL_CLASS = Models.SAASBO
+            GENERATOR_CLASS = Generators.SAASBO
         else:
             # Use a model with qNEHVI/qNEI acquisition function
-            MODEL_CLASS = Models.BOTORCH_MODULAR
+            GENERATOR_CLASS = Generators.BOTORCH_MODULAR
 
         # Make generation strategy.
         steps = []
@@ -140,9 +140,9 @@ class AxSingleFidelityGenerator(AxServiceGenerator):
         # Continue indefinitely with BO.
         steps.append(
             GenerationStep(
-                model=MODEL_CLASS,
+                generator=GENERATOR_CLASS,
                 num_trials=-1,
-                model_kwargs=bo_model_kwargs,
+                generator_kwargs=bo_model_kwargs,
             )
         )
 

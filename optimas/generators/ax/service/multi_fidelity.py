@@ -5,12 +5,32 @@ from typing import List, Optional, Dict
 from botorch.acquisition.knowledge_gradient import (
     qMultiFidelityKnowledgeGradient,
 )
-from ax.utils.common.constants import Keys
-from ax.modelbridge.generation_strategy import GenerationStep
-from ax.modelbridge.registry import Models
+from botorch.acquisition.input_constructors import (
+    ACQF_INPUT_CONSTRUCTOR_REGISTRY,
+)
+from ax.generation_strategy.generation_node import GenerationStep
+from ax.adapter.registry import Generators
 
 from .base import AxServiceGenerator
 from gest_api.vocs import VOCS
+
+# Workaround for BoTorch bug: X_pending is not in the allowed variable
+# kwargs for construct_inputs_qMFKG, but Ax always passes it. KG-based
+# acquisition functions handle pending points via fantasization, so
+# X_pending can be safely ignored.
+_original_constructor = ACQF_INPUT_CONSTRUCTOR_REGISTRY[
+    qMultiFidelityKnowledgeGradient
+]
+
+
+def _patched_constructor(*args, **kwargs):
+    kwargs.pop("X_pending", None)
+    return _original_constructor(*args, **kwargs)
+
+
+ACQF_INPUT_CONSTRUCTOR_REGISTRY[qMultiFidelityKnowledgeGradient] = (
+    _patched_constructor
+)
 
 
 class AxMultiFidelityGenerator(AxServiceGenerator):
@@ -97,8 +117,10 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         self, bo_model_kwargs: Dict
     ) -> List[GenerationStep]:
         """Create generation steps for multifidelity optimization."""
-        # Add acquisition function to model kwargs.
-        bo_model_kwargs["botorch_acqf_class"] = qMultiFidelityKnowledgeGradient
+        # Add acquisition function to generator kwargs.
+        bo_model_kwargs[
+            "botorch_acqf_class"
+        ] = qMultiFidelityKnowledgeGradient
 
         # Make generation strategy.
         steps = []
@@ -109,22 +131,9 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         # Continue indefinitely with GPKG.
         steps.append(
             GenerationStep(
-                model=Models.BOTORCH_MODULAR,
+                generator=Generators.BOTORCH_MODULAR,
                 num_trials=-1,
-                model_kwargs={
-                    **bo_model_kwargs,
-                    "acquisition_options": {
-                        "X_pending": None,
-                        "constraints": None,
-                    },
-                },
-                model_gen_kwargs={
-                    "model_gen_options": {
-                        Keys.ACQF_KWARGS: {
-                            Keys.COST_INTERCEPT: self.fidel_cost_intercept
-                        }
-                    }
-                },
+                generator_kwargs=bo_model_kwargs,
             ),
         )
 
