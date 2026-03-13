@@ -118,9 +118,7 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
     ) -> List[GenerationStep]:
         """Create generation steps for multifidelity optimization."""
         # Add acquisition function to generator kwargs.
-        bo_model_kwargs[
-            "botorch_acqf_class"
-        ] = qMultiFidelityKnowledgeGradient
+        bo_model_kwargs["botorch_acqf_class"] = qMultiFidelityKnowledgeGradient
 
         # Make generation strategy.
         steps = []

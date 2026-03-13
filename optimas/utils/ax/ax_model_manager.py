@@ -107,7 +107,9 @@ class AxModelManager:
         """Get the model from the AxClient instance."""
         # Make sure model is fitted.
         self.ax_client.fit_model()
-        return self.ax_client.generation_strategy._curr.generator_spec.fitted_adapter
+        return (
+            self.ax_client.generation_strategy._curr.generator_spec.fitted_adapter
+        )
 
     def _build_ax_client_from_dataframe(
         self,
@@ -144,7 +146,9 @@ class AxModelManager:
         # needed because otherwise calls to `get_pareto_optimal_parameters`
         # would fail.
         generator = Generators.BOTORCH_MODULAR
-        gs = GenerationStrategy(nodes=[GenerationStep(generator=generator, num_trials=-1)])
+        gs = GenerationStrategy(
+            nodes=[GenerationStep(generator=generator, num_trials=-1)]
+        )
         ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         ax_client.create_experiment(
             parameters=axparameters, objectives=axobjectives

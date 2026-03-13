@@ -801,7 +801,10 @@ def test_ax_service_init():
         for j in range(i):
             assert df["generation_node"][j] is None
         for k in range(i, n_init - 1):
-            assert df["generation_node"][k] is not None and "Sobol" in df["generation_node"][k]
+            assert (
+                df["generation_node"][k] is not None
+                and "Sobol" in df["generation_node"][k]
+            )
 
     # Try to load saved client from json. This used to fail when the SOBOL
     # step was skipped due to n_external > n_init. It is added here to prevent
@@ -848,7 +851,10 @@ def test_ax_service_init():
     for j in range(n_external):
         assert df["generation_node"][j] is None
     for k in range(n_external, n_external + n_init):
-        assert df["generation_node"][k] is not None and "Sobol" in df["generation_node"][k]
+        assert (
+            df["generation_node"][k] is not None
+            and "Sobol" in df["generation_node"][k]
+        )
 
 
 if __name__ == "__main__":
