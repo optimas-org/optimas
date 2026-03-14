@@ -134,8 +134,9 @@ class AxClientGenerator(AxServiceGenerator):
 
     def _use_cuda(self, ax_client: AxClient):
         """Determine whether the AxClient uses CUDA."""
-        for step in ax_client.generation_strategy._steps:
-            if "torch_device" in step.model_kwargs:
-                if step.model_kwargs["torch_device"] == "cuda":
-                    return True
+        for node in ax_client.generation_strategy._nodes:
+            for gs in node.generator_specs:
+                if "torch_device" in gs.generator_kwargs:
+                    if gs.generator_kwargs["torch_device"] == "cuda":
+                        return True
         return False
