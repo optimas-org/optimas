@@ -2,6 +2,7 @@ import os
 import threading
 
 import numpy as np
+import pandas as pd
 
 from ax.service.ax_client import AxClient, ObjectiveProperties
 from ax.utils.measurement.synthetic_functions import hartmann6
@@ -799,7 +800,7 @@ def test_ax_service_init():
         # are replaced by Manual trials.
         df = ax_client.get_trials_data_frame()
         for j in range(i):
-            assert df["generation_node"][j] is None
+            assert np.isnan(df["generation_node"][j])
         for k in range(i, n_init - 1):
             assert (
                 df["generation_node"][k] is not None
@@ -849,7 +850,7 @@ def test_ax_service_init():
     # `n_external` Manual trials.
     df = ax_client.get_trials_data_frame()
     for j in range(n_external):
-        assert df["generation_node"][j] is None
+        assert np.isnan(df["generation_node"][j])
     for k in range(n_external, n_external + n_init):
         assert (
             df["generation_node"][k] is not None
