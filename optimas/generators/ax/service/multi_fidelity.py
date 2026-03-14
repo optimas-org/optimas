@@ -127,6 +127,9 @@ class AxMultiFidelityGenerator(AxServiceGenerator):
         steps.append(self._create_sobol_step())
 
         # Continue indefinitely with GPKG.
+        bo_model_kwargs["botorch_acqf_options"] = {
+            "cost_intercept": self.fidel_cost_intercept,
+        }
         steps.append(
             GenerationStep(
                 generator=Generators.BOTORCH_MODULAR,
