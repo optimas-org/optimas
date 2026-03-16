@@ -17,7 +17,6 @@ from gest_api.vocs import VOCS
 
 from analysis_script import analyze_simulation
 
-
 # Create VOCS object.
 vocs = VOCS(
     variables={

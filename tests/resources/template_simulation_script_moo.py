@@ -6,7 +6,6 @@ and stores the result in `f1.txt` and `f2.txt`.
 
 import numpy as np
 
-
 # 2D function with multiple minima
 f1 = -({{x0}} + 10 * np.cos({{x0}})) * ({{x1}} + 5 * np.cos({{x1}}))
 f2 = -({{x0}} + 10 * np.cos({{x0}} + 10)) * ({{x1}} + 5 * np.cos({{x1}} - 5))

@@ -10,6 +10,7 @@ Major features:
 - The class implements memory buffering of the slices, so as
   not to write to disk at every timestep
 """
+
 import os
 import math
 import numpy as np
