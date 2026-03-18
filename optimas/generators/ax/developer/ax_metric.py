@@ -1,7 +1,7 @@
 """Contains the definition of the Ax metric used for multitask optimization."""
 
 import pandas as pd
-from ax import Metric
+from ax.core.metric import Metric
 from ax.core.batch_trial import BatchTrial
 from ax.core.data import Data
 from ax.utils.common.result import Ok

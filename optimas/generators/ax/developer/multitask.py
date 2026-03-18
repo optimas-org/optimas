@@ -16,45 +16,33 @@ from ax.core.search_space import SearchSpace
 from ax.core.optimization_config import OptimizationConfig
 from ax.core.objective import Objective as AxObjective
 from ax.runners import SyntheticRunner
-from ax.modelbridge.factory import get_sobol
-from ax.modelbridge.torch import TorchModelBridge
+from ax.adapter.factory import get_sobol
+from ax.adapter.torch import TorchAdapter
 from ax.core.observation import ObservationFeatures
 from ax.core.generator_run import GeneratorRun
 from ax.storage.json_store.save import save_experiment
 from ax.storage.metric_registry import register_metrics
 
-from ax.modelbridge.registry import Models, ST_MTGP_trans
+from ax.adapter.registry import Generators, MBM_X_trans
+from ax.adapter.transforms.derelativize import Derelativize
+from ax.adapter.transforms.metrics_as_task import MetricsAsTask
+from ax.adapter.transforms.trial_as_task import TrialAsTask
+from ax.adapter.transforms.stratified_standardize_y import (
+    StratifiedStandardizeY,
+)
+from ax.adapter.transforms.task_encode import TaskChoiceToIntTaskChoice
+from ax.adapter.registry import ST_MTGP_trans
 
-try:
-    # For Ax >= 0.5.0
-    from ax.modelbridge.transforms.derelativize import Derelativize
-    from ax.modelbridge.transforms.convert_metric_names import (
-        ConvertMetricNames,
-    )
-    from ax.modelbridge.transforms.trial_as_task import TrialAsTask
-    from ax.modelbridge.transforms.stratified_standardize_y import (
-        StratifiedStandardizeY,
-    )
-    from ax.modelbridge.transforms.task_encode import TaskChoiceToIntTaskChoice
-    from ax.modelbridge.registry import MBM_X_trans
-
-    MT_MTGP_trans = MBM_X_trans + [
-        Derelativize,
-        ConvertMetricNames,
-        TrialAsTask,
-        StratifiedStandardizeY,
-        TaskChoiceToIntTaskChoice,
-    ]
-
-except ImportError:
-    # For Ax < 0.5.0
-    from ax.modelbridge.registry import MT_MTGP_trans
+MT_MTGP_trans = MBM_X_trans + [
+    Derelativize,
+    MetricsAsTask,
+    TrialAsTask,
+    StratifiedStandardizeY,
+    TaskChoiceToIntTaskChoice,
+]
 
 from ax.core.experiment import Experiment
 from ax.core.data import Data
-from ax.modelbridge.transforms.convert_metric_names import (
-    tconfig_from_mt_experiment,
-)
 
 from optimas.generators.ax.base import AxGenerator
 from optimas.core import (
@@ -81,7 +69,7 @@ def get_MTGP(
     trial_index: Optional[int] = None,
     device: torch.device = torch.device("cpu"),
     dtype: torch.dtype = torch.double,
-) -> TorchModelBridge:
+) -> TorchAdapter:
     """Instantiate a Multi-task Gaussian Process (MTGP) model.
 
     Points are generated with EI (Expected Improvement).
@@ -94,11 +82,21 @@ def get_MTGP(
             t.index: t.trial_type for t in experiment.trials.values()
         }
         transforms = MT_MTGP_trans
+
+        # Build MetricsAsTask config manually (replaces tconfig_from_mt_experiment)
+        canonical = experiment._metric_to_canonical_name
+        metric_task_map = {}
+        for metric_name, canonical_name in canonical.items():
+            if metric_name != canonical_name:
+                if canonical_name not in metric_task_map:
+                    metric_task_map[canonical_name] = []
+                metric_task_map[canonical_name].append(metric_name)
+
         transform_configs = {
             "TrialAsTask": {
                 "trial_level_map": {"trial_type": trial_index_to_type}
             },
-            "ConvertMetricNames": tconfig_from_mt_experiment(experiment),
+            "MetricsAsTask": {"metric_task_map": metric_task_map},
         }
     else:
         # Set transforms for a Single-type MTGP model.
@@ -125,7 +123,7 @@ def get_MTGP(
         )
 
     return assert_is_instance(
-        Models.ST_MTGP(
+        Generators.ST_MTGP(
             experiment=experiment,
             search_space=search_space or experiment.search_space,
             data=data,
@@ -135,7 +133,7 @@ def get_MTGP(
             torch_device=device,
             status_quo_features=status_quo_features,
         ),
-        TorchModelBridge,
+        TorchAdapter,
     )
 
 
@@ -354,7 +352,6 @@ class AxMultitaskGenerator(AxGenerator):
                 arms.append(
                     Arm(parameters=params, name=param_to_name[arm.signature])
                 )
-                # self._next_id += 1
 
             # Create new batch trial.
             gr = GeneratorRun(arms=arms, weights=[1.0] * len(arms))
@@ -597,7 +594,7 @@ class AxMultitaskGenerator(AxGenerator):
 
 
 def max_utility_from_GP(
-    n: int, m: TorchModelBridge, gr: GeneratorRun, hifi_task: str
+    n: int, m: TorchAdapter, gr: GeneratorRun, hifi_task: str
 ) -> GeneratorRun:
     """Select the max utility points according to the MTGP predictions.
 

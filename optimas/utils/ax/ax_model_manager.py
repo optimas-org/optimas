@@ -25,18 +25,16 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 # Ax utilities for model building
 try:
     from ax.service.ax_client import AxClient
-    from ax.modelbridge.generation_strategy import (
-        GenerationStep,
-        GenerationStrategy,
-    )
-    from ax.modelbridge.registry import Models
-    from ax.modelbridge.torch import TorchModelBridge
+    from ax.generation_strategy.generation_node import GenerationStep
+    from ax.generation_strategy.generation_strategy import GenerationStrategy
+    from ax.adapter.registry import Generators
+    from ax.adapter.torch import TorchAdapter
     from ax.core.observation import ObservationFeatures
     from .other import (
         convert_optimas_to_ax_parameters,
         convert_optimas_to_ax_objectives,
     )
-    from ax import Arm
+    from ax.core.arm import Arm
 
     ax_installed = True
 except ImportError:
@@ -47,7 +45,7 @@ from optimas.utils.other import convert_to_dataframe
 
 if TYPE_CHECKING:
     from ax.service.ax_client import AxClient
-    from ax.modelbridge.torch import TorchModelBridge
+    from ax.adapter.torch import TorchAdapter
 
 
 class AxModelManager:
@@ -105,11 +103,13 @@ class AxModelManager:
             )
 
     @property
-    def _model(self) -> TorchModelBridge:
+    def _model(self) -> TorchAdapter:
         """Get the model from the AxClient instance."""
         # Make sure model is fitted.
         self.ax_client.fit_model()
-        return self.ax_client.generation_strategy.model
+        return (
+            self.ax_client.generation_strategy._curr.generator_spec.fitted_adapter
+        )
 
     def _build_ax_client_from_dataframe(
         self,
@@ -145,8 +145,10 @@ class AxModelManager:
         # allow calling `model.predict`. Using MOO for multiobjective is
         # needed because otherwise calls to `get_pareto_optimal_parameters`
         # would fail.
-        model = Models.BOTORCH_MODULAR
-        gs = GenerationStrategy([GenerationStep(model=model, num_trials=-1)])
+        generator = Generators.BOTORCH_MODULAR
+        gs = GenerationStrategy(
+            nodes=[GenerationStep(generator=generator, num_trials=-1)]
+        )
         ax_client = AxClient(generation_strategy=gs, verbose_logging=False)
         ax_client.create_experiment(
             parameters=axparameters, objectives=axobjectives
