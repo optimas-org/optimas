@@ -10,13 +10,11 @@ from ax.service.utils.instantiation import (
     ObjectiveProperties,
     FixedFeatures,
 )
-from ax.modelbridge.registry import Models
-from ax.modelbridge.generation_strategy import (
-    GenerationStep,
-    GenerationStrategy,
-)
-from ax.modelbridge.transition_criterion import MaxTrials, MinTrials
-from ax import Arm
+from ax.adapter.registry import Generators
+from ax.generation_strategy.generation_node import GenerationStep
+from ax.generation_strategy.generation_strategy import GenerationStrategy
+from ax.generation_strategy.transition_criterion import MinTrials
+from ax.core.arm import Arm
 
 from optimas.core import (
     Trial,
@@ -262,15 +260,19 @@ class AxServiceGenerator(AxGenerator):
         # initialization trials, but only if they have not failed.
         if trial.completed and not self._enforce_n_init:
             generation_strategy = self._ax_client.generation_strategy
-            current_step = generation_strategy.current_step
+            current_node = generation_strategy.current_node
             # Reduce only if there are still Sobol trials left.
-            if current_step.model == Models.SOBOL:
-                for tc in current_step.transition_criteria:
-                    # Looping over all criterial makes sure we reduce
+            is_sobol = any(
+                gs.generator_enum == Generators.SOBOL
+                for gs in current_node.generator_specs
+            )
+            if is_sobol:
+                for tc in current_node.transition_criteria:
+                    # Looping over all criteria makes sure we reduce
                     # the transition thresholds due to `_n_init`
                     # (i.e., max trials) and `min_trials_observed=1` (
                     # i.e., min trials).
-                    if isinstance(tc, (MinTrials, MaxTrials)):
+                    if isinstance(tc, MinTrials):
                         tc.threshold -= 1
                 generation_strategy._maybe_transition_to_next_node()
         return ax_trial
@@ -296,13 +298,11 @@ class AxServiceGenerator(AxGenerator):
     def _create_ax_client(self) -> AxClient:
         """Create Ax client."""
         bo_model_kwargs = {
-            "torch_dtype": torch.double,
             "torch_device": torch.device(self.torch_device),
-            "fit_out_of_design": self._fit_out_of_design,
         }
         ax_client = AxClient(
             generation_strategy=GenerationStrategy(
-                self._create_generation_steps(bo_model_kwargs)
+                nodes=self._create_generation_steps(bo_model_kwargs)
             ),
             verbose_logging=False,
         )
@@ -339,7 +339,7 @@ class AxServiceGenerator(AxGenerator):
         # This also allows the generator to work well when
         # `sim_workers` > `n_init`.
         return GenerationStep(
-            model=Models.SOBOL,
+            generator=Generators.SOBOL,
             num_trials=self._n_init,
             min_trials_observed=1,
             enforce_num_trials=False,
@@ -366,8 +366,8 @@ class AxServiceGenerator(AxGenerator):
         # Delete the fitted model from the generation strategy, otherwise
         # the parameter won't be updated.
         generation_strategy = self._ax_client.generation_strategy
-        if generation_strategy._model is not None:
-            del generation_strategy._curr.model_spec._fitted_model
+        if generation_strategy._curr.generator_spec._fitted_adapter is not None:
+            generation_strategy._curr.generator_spec._fitted_adapter = None
         parameters = self._create_ax_parameters()
         new_search_space = InstantiationBase.make_search_space(parameters, None)
         self._ax_client.experiment.search_space.update_parameter(
