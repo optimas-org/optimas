@@ -137,9 +137,7 @@ def analyze_simulation(
     output_params["charge"] = q_tot
     output_params["mean_gamma"] = mean_gamma
     output_params["std_gamma"] = std_gamma
-    output_params["charge"] = (
-        q_tot  # Ensure q_tot is defined and correct  #SH duplicate line....
-    )
+
     # Add other parameters as needed
     for i in range(num_bins):
         output_params[f"bin_gammas_{i+1}"] = bin_averages[i]
