@@ -40,14 +40,9 @@ test = [
     'nlopt',
 ]
 all = [
-<<<<<<< HEAD
-    'ax-platform >=0.5.0, <1.0.0',
+    'ax-platform >=1.0.0',
     'matplotlib',
     'nlopt',
-=======
-    'ax-platform >=1.0.0',
-    'matplotlib'
->>>>>>> main
 ]
 
 [project.urls]
