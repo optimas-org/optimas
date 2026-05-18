@@ -11,6 +11,7 @@ Major features:
   not to write to disk at every timestep
 - Parallel output is not implemented for the moment
 """
+
 import os
 import numpy as np
 from scipy.constants import c
