@@ -25,9 +25,10 @@ analysis function. See see :ref:`optimas-with-simulations` for more details.
 
 The :class:`~optimas.generators.GridSamplingGenerator` generates a uniform
 multidimensional grid of samples to evaluate. The grid extends from the lower
-to the upper bound of each :class:`~optimas.core.VaryingParameter` and is
-divided in ``n_steps`` steps. In this case,
-where :math:`l_b=0` and :math:`u_b=15`, the grid of sample looks like:
+to the upper bound of each variable (as defined in the
+:class:`~gest_api.vocs.VOCS` object) and is divided in ``n_steps`` steps.
+In this case, where :math:`l_b=0` and :math:`u_b=15`, the grid of samples
+looks like:
 
 
 .. plot::
