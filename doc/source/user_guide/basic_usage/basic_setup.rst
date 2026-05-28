@@ -85,7 +85,7 @@ Using an external generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If you have a generator from a third-party library that follows the
 `gest-api <https://github.com/campa-consortium/gest-api>`_ generator standard,
-you can integrate it with optimas using
+you can integrate it with Optimas using
 :class:`~optimas.generators.ExternalGenerator`. The external generator must be
 instantiated and configured first, then passed to ``ExternalGenerator`` as a
 wrapper. The external library itself must be installed separately (see
