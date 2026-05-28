@@ -15,3 +15,4 @@ Generators
     AxMultiFidelityGenerator
     AxMultitaskGenerator
     AxClientGenerator
+    ExternalGenerator
