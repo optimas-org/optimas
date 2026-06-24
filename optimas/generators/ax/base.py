@@ -9,7 +9,6 @@ from optimas.core import TrialParameter
 from optimas.generators.base import Generator
 from gest_api.vocs import VOCS
 
-
 # Disable Ax loggers to get cleaner output. In principle, setting
 # `verbose_logging=False` in the `AxClient` should already avoid most of the
 # logs, but this does not work when using 'spawn' multiprocessing.
