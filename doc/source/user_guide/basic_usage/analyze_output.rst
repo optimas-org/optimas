@@ -20,16 +20,12 @@ In every run, the following log files are generated:
   numpy file that contains the
   `history array <https://libensemble.readthedocs.io/en/main/function_guides/history_array.html>`_
   of the run. This is a structured array that stores the data of each
-  evaluation, including the values of the
-  :class:`~optimas.core.VaryingParameter`\s,
-  :class:`~optimas.core.Objective`\s, analyzed
-  :class:`~optimas.core.Parameter`\s and other useful diagnostics.
+  evaluation, including the values of the variables, objectives, observables,
+  and other useful diagnostics.
   The periodicity with which this file is updated can be set with the
   ``history_save_period`` argument of the :class:`~optimas.explorations.Exploration`.
 - ``exploration_parameters.json``: JSON file containing a serialized
-  version of the :class:`~optimas.core.VaryingParameter`\s,
-  :class:`~optimas.core.Objective`\s and other
-  :class:`~optimas.core.Parameter`\s of the exploration.
+  version of the variables, objectives, and observables of the exploration.
 
 In addition, if the run is aborted for any reason, two additional files
 will be created:

@@ -5,9 +5,8 @@ This section covers the basic workflow of setting up an optimas
 :class:`~optimas.explorations.Exploration`, which is typically used to launch
 an optimization or parameter scan. This involves:
 
-- Specifying the parameters that should be varied during the exploration.
-- Specifying the optimization objectives and other parameters that should
-  analyzed for each evaluation.
+- Specifying the variables, objectives, and observables via a
+  :class:`~gest_api.vocs.VOCS` object.
 - Choosing a generator. This determines the strategy with which new evaluations
   are generated.
 - Choosing an evaluator. This determines how the evaluations are performed and
@@ -16,43 +15,36 @@ an optimization or parameter scan. This involves:
   criteria for ending the exploration.
 
 
-Parameters to vary
-~~~~~~~~~~~~~~~~~~
-The parameters to vary (:class:`~optimas.core.VaryingParameter`) are the
-parameters that should be tuned or scanned during the exploration.
-For example, if we want to see how the outcome of an evaluation depends on two
-parameters named ``x0`` and ``x1`` that can vary in the ranges [0, 15] and
-[-5, 5], we would define them as
+VOCS
+~~~~
+The variables, objectives, constraints, and observables of an exploration are
+all specified through a single :class:`~gest_api.vocs.VOCS` object.
+
+- **Variables** are the parameters that should be tuned or scanned during the
+  exploration, together with their allowed range.
+- **Objectives** define the outcomes of an evaluation that optimas should
+  optimize (maximize or minimize).
+- **Observables** are optional quantities that do not play a role in the
+  optimization but that should be recorded at each evaluation (for example,
+  because they provide useful diagnostic information).
+
+For example, if we want to optimize an objective ``'f'`` (to be minimized)
+over two parameters ``x0`` and ``x1`` in the ranges [0, 15] and [-5, 5],
+while also recording two diagnostics ``'diag_1'`` and ``'diag_2'``, we would
+define the VOCS as:
 
 .. code-block:: python
 
-    from optimas.core import VaryingParameter
+    from gest_api.vocs import VOCS
 
-    var_1 = VaryingParameter("x0", 0.0, 15.0)
-    var_2 = VaryingParameter("x1", -5.0, 5.0)
-
-
-Objectives and other analyzed parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The objectives (:class:`~optimas.core.Objective`) define the outcomes of an
-evaluation that optimas should optimize (maximize or minimize) or scan.
-
-Optionally, a list of parameters (:class:`~optimas.core.Parameter`) that do not
-play a role in the optimization but that should be analyzed at each evaluation
-(for example, because they provide useful information about the evaluations)
-can also be given.
-
-The following code shows how to define one objective ``'f'`` that
-should be minimized and two diagnostics ``'diag_1'`` and ``'diag_2'`` that will
-also be calculated for each evaluation.
-
-.. code-block:: python
-
-    from optimas.core import Objective, Parameter
-
-    obj = Objective("f", minimize=True)
-    diag_1 = Parameter("diag_1")
-    diag_2 = Parameter("diag_2")
+    vocs = VOCS(
+        variables={
+            "x0": [0.0, 15.0],
+            "x1": [-5.0, 5.0],
+        },
+        objectives={"f": "MINIMIZE"},
+        observables=["diag_1", "diag_2"],
+    )
 
 
 Generator
@@ -62,9 +54,8 @@ during the exploration. There are multiple generators implemented in optimas
 (see :ref:`generators`) that allow for various optimization strategies or
 parameter scans.
 
-In the example below, the varying parameters, objectives and diagnostics
-defined in the previous sections are used to set up a single-fidelity Bayesian
-optimizer based on `Ax <https://ax.dev/>`_.
+In the example below, the VOCS defined above is used to set up a
+single-fidelity Bayesian optimizer based on `Ax <https://ax.dev/>`_.
 ``n_init=4`` indicates that 4 random samples will be generated before the
 Bayesian optimization loop is started (see
 :class:`~optimas.generators.AxSingleFidelityGenerator` for more details).
@@ -73,19 +64,13 @@ Bayesian optimization loop is started (see
 
     from optimas.generators import AxSingleFidelityGenerator
 
-    gen = AxSingleFidelityGenerator(
-        varying_parameters=[var_1, var_2],
-        objectives=[obj],
-        analyzed_parameters=[diag_1, diag_2],
-        n_init=4,
-    )
+    gen = AxSingleFidelityGenerator(vocs=vocs, n_init=4)
 
 
 Evaluator
 ~~~~~~~~~
 The evaluator is in charge of getting the trials suggested by the generator and
-evaluating them, returning the value of the objectives and other analyzed
-parameters.
+evaluating them, returning the value of the objectives and other observables.
 
 There are two types of evaluators:
 
@@ -101,7 +86,7 @@ There are two types of evaluators:
   Each evaluation is executed using MPI with the amount or resources (number of
   processes and GPUs) specified by the user. After executing the script, the
   output of the evaluation is analyzed with a user-defined function that
-  calculates the value of the objectives and other analyzed parameters.
+  calculates the value of the objectives and other observables.
   See :ref:`optimas-with-simulations` for more details about how to use a
   :class:`~optimas.evaluators.TemplateEvaluator`.
 

@@ -25,13 +25,13 @@ analysis function. See see :ref:`optimas-with-simulations` for more details.
 
 The :class:`~optimas.generators.LineSamplingGenerator` generates a
 multidimensional distribution of samples where, as opposed to the
-:class:`~optimas.generators.GridSamplingGenerator`, only one
-:class:`~optimas.core.VaryingParameter` is varied at a time while the other
-remain with their default values. Each parameter varies between its lower
-and upper bound in ``n_steps`` equally-spaced steps. In this case,
-where :math:`x_0` and :math:`x_1` have a default values of :math:`5` and
-:math:`6`, respectively, and lower and upper bounds :math:`l_b=0` and
-:math:`u_b=15`, the grid of samples look like:
+:class:`~optimas.generators.GridSamplingGenerator`, only one variable
+is varied at a time while the others remain at their default values.
+Each variable varies between its lower and upper bound in ``n_steps``
+equally-spaced steps. In this case, where :math:`x_0` and :math:`x_1`
+have default values of :math:`5` and :math:`6`, respectively, and lower
+and upper bounds :math:`l_b=0` and :math:`u_b=15`, the grid of samples
+looks like:
 
 
 .. plot::
