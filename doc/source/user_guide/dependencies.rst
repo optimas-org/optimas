@@ -44,3 +44,12 @@ See table below for a summary.
    * - :class:`~optimas.generators.AxClientGenerator`
      - :math:`\times`
      - :math:`\checkmark`
+   * - :class:`~optimas.generators.ExternalGenerator` [#external]_
+     - :math:`\checkmark`
+     - :math:`\checkmark`
+
+.. [#external] :class:`~optimas.generators.ExternalGenerator` itself has no
+   additional Optimas dependency beyond ``gest-api`` (already a core
+   requirement). However, the external generator library being wrapped
+   (e.g., `Xopt generators <https://github.com/xopt-org/Xopt>`_, or libEnsemble's
+   `APOSMM <https://libensemble.readthedocs.io/en/main/examples/gest_api/aposmm.html>`_.
