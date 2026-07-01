@@ -3,7 +3,6 @@
 from typing import List, Optional
 
 from ax.service.ax_client import AxClient
-from ax.core.objective import MultiObjective
 from ax.core.types import ComparisonOp
 
 from optimas.core import Parameter
@@ -89,24 +88,25 @@ class AxClientGenerator(AxServiceGenerator):
         for _, p in ax_client.experiment.search_space.parameters.items():
             variables[p.name] = [p.lower, p.upper]
 
-        # Extract objectives from optimization config
+        # Extract objectives from optimization config. As of Ax 1.3,
+        # objectives are expression-based: a (possibly multi-) objective
+        # exposes `metric_names` together with `metric_weights`, where a
+        # negative weight indicates minimization.
         objectives = {}
         ax_objective = ax_client.experiment.optimization_config.objective
-        if isinstance(ax_objective, MultiObjective):
-            ax_objectives = ax_objective.objectives
-        else:
-            ax_objectives = [ax_objective]
-
-        for ax_obj in ax_objectives:
-            obj_type = "MINIMIZE" if ax_obj.minimize else "MAXIMIZE"
-            objectives[ax_obj.metric_names[0]] = obj_type
+        obj_weights = dict(ax_objective.metric_weights)
+        for name, signature in zip(
+            ax_objective.metric_names, ax_objective.metric_signatures
+        ):
+            minimize = obj_weights[signature] < 0
+            objectives[name] = "MINIMIZE" if minimize else "MAXIMIZE"
 
         # Extract constraints from outcome constraints (if any)
         constraints = {}
         ax_config = ax_client.experiment.optimization_config
         if ax_config.outcome_constraints:
             for constraint in ax_config.outcome_constraints:
-                name = constraint.metric.name
+                name = constraint.metric_names[0]
                 if constraint.op == ComparisonOp.LEQ:
                     constraints[name] = ["LESS_THAN", constraint.bound]
                 elif constraint.op == ComparisonOp.GEQ:

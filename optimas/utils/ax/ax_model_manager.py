@@ -335,10 +335,17 @@ class AxModelManager:
 
         # get optimum
         if len(self.ax_client.objective_names) > 1:
+            # As of Ax 1.3, a multi-objective is expression-based and exposes
+            # `metric_names`/`metric_signatures` together with `metric_weights`
+            # (a negative weight indicates minimization).
             minimize = None
-            for obj in self.ax_client.objective.objectives:
-                if metric_name == obj.metric_names[0]:
-                    minimize = obj.minimize
+            objective = self.ax_client.objective
+            obj_weights = dict(objective.metric_weights)
+            for name, signature in zip(
+                objective.metric_names, objective.metric_signatures
+            ):
+                if metric_name == name:
+                    minimize = obj_weights[signature] < 0
                     break
             pp = self.ax_client.get_pareto_optimal_parameters(
                 use_model_predictions=use_model_predictions
