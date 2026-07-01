@@ -9,7 +9,7 @@ from .base import Generator
 
 
 class ExternalGenerator(Generator):
-    """Wrap a third-party generator that follows the ``gest-api`` standard:
+    """Wrap a third-party generator that follows the ``gest-api`` standard.
 
     https://github.com/campa-consortium/gest-api
 
