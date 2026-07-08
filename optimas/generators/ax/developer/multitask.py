@@ -425,9 +425,11 @@ class AxMultitaskGenerator(AxGenerator):
         hifi_objective = AxMetric(name="hifi_metric", lower_is_better=minimize)
         lofi_objective = AxMetric(name="lofi_metric", lower_is_better=minimize)
 
-        # Create optimization config.
+        # Create optimization config. As of Ax 1.3, the first positional
+        # argument to `Objective` is an expression string, so the metric must
+        # be passed explicitly via the `metric` keyword.
         opt_config = OptimizationConfig(
-            objective=AxObjective(hifi_objective, minimize=minimize)
+            objective=AxObjective(metric=hifi_objective, minimize=minimize)
         )
 
         # Create experiment.

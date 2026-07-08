@@ -23,7 +23,7 @@ Two beam parameters are minimized:
 - the bunch_length,
 - and the transverse emittances ``'emittance'`` in :math:`\mathrm{µm}`, which are combined into one single parameter: :math:`\log \epsilon_{n,x}  \epsilon_{n,y}` and where the logarithm is used for better optimization as the emittance can span over several orders of magnitude.
 
-In addition, the transverse normalized emittances in :math:`x` and :math:`y` are stored as additional analyzed parameters ``'emittance_x'`` and ``'emittance_y'``.
+In addition, the transverse normalized emittances in :math:`x` and :math:`y` are stored as observables ``'emittance_x'`` and ``'emittance_y'``.
 
 The optimization is carried out using an
 :class:`~optimas.generators.AxSingleFidelityGenerator` and a
