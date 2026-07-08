@@ -67,6 +67,59 @@ Bayesian optimization loop is started (see
     gen = AxSingleFidelityGenerator(vocs=vocs, n_init=4)
 
 
+Using an external generator
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you have a generator from a third-party library that follows the
+`gest-api <https://github.com/campa-consortium/gest-api>`_ generator standard,
+you can integrate it with Optimas using
+:class:`~optimas.generators.ExternalGenerator`. The external generator must be
+instantiated and configured first, then passed to ``ExternalGenerator`` as a
+wrapper. The external library itself must be installed separately (see
+:ref:`dependencies`).
+
+Known libraries containing generators compatible with this interface include
+`Xopt <https://github.com/xopt-org/Xopt>`_ and `libEnsemble
+<https://github.com/Libensemble/libensemble>`_.
+
+Using a generic ``gest-api``-compatible generator:
+
+.. code-block:: python
+
+    from optimas.generators import ExternalGenerator
+    from gest_api.vocs import VOCS
+    from some_library import SomeGenerator
+
+    vocs = VOCS(
+        variables={"x0": [0.0, 15.0], "x1": [-5.0, 5.0]},
+        objectives={"f": "MINIMIZE"},
+    )
+
+    ext_gen = SomeGenerator(vocs=vocs)
+    gen = ExternalGenerator(ext_gen=ext_gen, vocs=vocs)
+
+Using an `Xopt <https://github.com/xopt-org/Xopt>`_ generator specifically:
+
+.. code-block:: python
+
+    from optimas.generators import ExternalGenerator
+    from gest_api.vocs import VOCS
+    from xopt.generators.bayesian.expected_improvement import (
+        ExpectedImprovementGenerator,
+    )
+
+    vocs = VOCS(
+        variables={"x0": [0.0, 15.0], "x1": [-5.0, 5.0]},
+        objectives={"f": "MINIMIZE"},
+    )
+
+    # Create and (optionally) pre-seed the external generator.
+    ext_gen = ExpectedImprovementGenerator(vocs=vocs)
+    ext_gen.ingest([{"x0": 1.0, "x1": 0.5, "f": 3.2}])
+
+    # Wrap it for use with optimas.
+    gen = ExternalGenerator(ext_gen=ext_gen, vocs=vocs)
+
+
 Evaluator
 ~~~~~~~~~
 The evaluator is in charge of getting the trials suggested by the generator and
