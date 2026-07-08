@@ -189,7 +189,7 @@ def test_ax_single_fidelity():
     assert all(history["x0"] + history["x1"] <= 10.0 + 1e-3)
     ocs = gen._ax_client.experiment.optimization_config.outcome_constraints
     assert len(ocs) == 1
-    assert ocs[0].metric.name == "p1"
+    assert ocs[0].metric_names[0] == "p1"
 
     # Save history for later restart test
     np.save("./tests_output/ax_sf_history", exploration._libe_history.H)
