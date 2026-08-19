@@ -17,6 +17,7 @@ from libensemble.executors.mpi_executor import MPIExecutor
 
 from optimas.core.trial import TrialStatus
 from optimas.generators.base import Generator
+from optimas.generators.external import adapt_generator
 from optimas.evaluators.base import Evaluator
 from optimas.evaluators.function_evaluator import FunctionEvaluator
 from optimas.utils.logger import get_logger
@@ -104,7 +105,7 @@ class Exploration:
                 "'threads' mode is only supported when using a "
                 "`FunctionEvaluator`. Use 'local' mode instead."
             )
-        self.generator = generator
+        self.generator = adapt_generator(generator)
         self.evaluator = evaluator
         self.max_evals = max_evals
         self.sim_workers = sim_workers

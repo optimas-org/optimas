@@ -2,7 +2,6 @@
 
 import numpy as np
 
-from optimas.generators import ExternalGenerator
 from xopt.generators.bayesian.expected_improvement import (
     ExpectedImprovementGenerator,
 )
@@ -39,6 +38,7 @@ def test_xopt_EI():
         objectives={"y1": "MINIMIZE"},
     )
 
+    # Create generator. gest-api generators are compatible.
     gen = ExpectedImprovementGenerator(vocs=vocs)
 
     # Create 4 initial points and ingest them
@@ -49,13 +49,6 @@ def test_xopt_EI():
         {"x1": 0.9, "x2": 9.0, "y1": 9.0},
     ]
     gen.ingest(initial_points)
-
-    # Create generator.
-    gen = ExternalGenerator(
-        ext_gen=gen,
-        vocs=vocs,
-        save_model=True,
-    )
 
     # Create evaluator.
     ev = FunctionEvaluator(function=xtest)
@@ -89,6 +82,7 @@ def test_xopt_neldermead():
         objectives={"y1": "MINIMIZE"},
     )
 
+    # Create generator. gest-api generators are compatible.
     gen = NelderMeadGenerator(vocs=vocs)
 
     # Create 4 initial points and ingest them
@@ -98,13 +92,6 @@ def test_xopt_neldermead():
         {"x1": -0.8, "x2": 0.8, "y1": 5.8},
     ]
     gen.ingest(initial_points)
-
-    # Create generator.
-    gen = ExternalGenerator(
-        ext_gen=gen,
-        vocs=vocs,
-        save_model=True,
-    )
 
     # Create evaluator.
     ev = FunctionEvaluator(function=rosenbrock)

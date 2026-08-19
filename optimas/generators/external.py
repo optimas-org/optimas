@@ -5,100 +5,75 @@ implementing the ``gest-api`` generator standard
 (https://github.com/campa-consortium/gest-api) into Optimas.
 """
 
+import warnings
+
+from gest_api.generator import Generator as StandardGenerator
+
 from .base import Generator
 
 
-class ExternalGenerator(Generator):
-    """Wrap a third-party generator that follows the ``gest-api`` standard.
+class _ExternalGeneratorAdapter(Generator):
+    """Adapt a ``gest-api`` generator to the Optimas generator protocol.
 
-    https://github.com/campa-consortium/gest-api
-
-    Any external generator that implements this interface can be used inside
-    optimas by wrapping it in ``ExternalGenerator``.
-
-    Known libraries containing generators compatible with this interface include
-    `Xopt <https://github.com/xopt-org/Xopt>`_ and `libEnsemble
-    <https://github.com/Libensemble/libensemble>`_.
-
-    Parameters
-    ----------
-    ext_gen : object
-        An object implementing/sub-classing the ``gest-api`` generator interface. The
-        external generator should be fully configured (including any initial
-        data ingested) before being passed here. The external library itself
-        must be installed separately.
-    **kwargs
-        Additional keyword arguments forwarded to the base
-        :class:`~optimas.generators.Generator` (e.g., ``vocs``,
-        ``save_model``).
-
-    Examples
-    --------
-    Using a generic ``gest-api``-compatible generator:
-
-    .. code-block:: python
-
-        from optimas.generators import ExternalGenerator
-        from gest_api.vocs import VOCS
-        from some_library import SomeGenerator
-
-        vocs = VOCS(
-            variables={"x1": [0.0, 1.0], "x2": [0.0, 10.0]},
-            objectives={"y1": "MINIMIZE"},
-        )
-
-        ext_gen = SomeGenerator(vocs=vocs)
-        gen = ExternalGenerator(ext_gen=ext_gen, vocs=vocs)
-
-    Using an `Xopt <https://github.com/xopt-org/Xopt>`_ generator:
-
-    .. code-block:: python
-
-        from optimas.generators import ExternalGenerator
-        from optimas.evaluators import FunctionEvaluator
-        from optimas.explorations import Exploration
-        from gest_api.vocs import VOCS
-        from xopt.generators.bayesian.expected_improvement import (
-            ExpectedImprovementGenerator,
-        )
-
-        vocs = VOCS(
-            variables={"x1": [0.0, 1.0], "x2": [0.0, 10.0]},
-            objectives={"y1": "MINIMIZE"},
-        )
-
-        # Create and (optionally) pre-seed the external generator.
-        ext_gen = ExpectedImprovementGenerator(vocs=vocs)
-        ext_gen.ingest([{"x1": 0.5, "x2": 5.0, "y1": 5.0}])
-
-        # Wrap it for use with optimas.
-        gen = ExternalGenerator(ext_gen=ext_gen, vocs=vocs)
-
-        ev = FunctionEvaluator(function=my_function)
-        exp = Exploration(generator=gen, evaluator=ev, max_evals=20, sim_workers=4)
-        exp.run()
+    The adapter supplies Optimas trial bookkeeping while delegating the
+    standardized ``suggest`` and ``ingest`` operations to the wrapped object.
     """
 
     def __init__(
         self,
         ext_gen,
+        vocs=None,
         **kwargs,
     ):
-        super().__init__(
-            **kwargs,
-        )
+        if not isinstance(ext_gen, StandardGenerator):
+            raise TypeError(
+                "ext_gen must implement the gest-api Generator interface."
+            )
+        if vocs is None:
+            try:
+                vocs = ext_gen.vocs
+            except AttributeError as exc:
+                raise ValueError(
+                    "The external generator must expose a `vocs` attribute, "
+                    "or `vocs` must be provided explicitly."
+                ) from exc
+        super().__init__(vocs=vocs, **kwargs)
         self.gen = ext_gen
 
     def suggest(self, n_trials):
-        """Request the next set of points to evaluate.
-
-        Delegates to the wrapped generator's ``suggest`` method.
-        """
+        """Request the next set of points to evaluate."""
         return self.gen.suggest(n_trials)
 
     def ingest(self, trials):
-        """Send the results of evaluations to the generator.
-
-        Delegates to the wrapped generator's ``ingest`` method.
-        """
+        """Send the results of evaluations to the generator."""
         self.gen.ingest(trials)
+
+
+def adapt_generator(generator, **kwargs):
+    """Adapt a gest-api generator to the Optimas generator protocol."""
+    if isinstance(generator, Generator):
+        return generator
+    if isinstance(generator, StandardGenerator):
+        return _ExternalGeneratorAdapter(generator, **kwargs)
+    raise TypeError(
+        "generator must be an Optimas Generator or implement the gest-api "
+        "Generator interface."
+    )
+
+
+class ExternalGenerator(_ExternalGeneratorAdapter):
+    """Deprecated compatibility wrapper for a gest-api generator.
+
+    Pass a gest-api generator directly to :class:`~optimas.explorations.Exploration`
+    instead. This class remains available for compatibility and supports the
+    Optimas-specific generator options accepted by the previous wrapper.
+    """
+
+    def __init__(self, ext_gen, **kwargs):
+        warnings.warn(
+            "ExternalGenerator is deprecated. Pass the gest-api generator "
+            "directly to Exploration instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(ext_gen=ext_gen, **kwargs)
