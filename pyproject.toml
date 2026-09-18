@@ -21,6 +21,7 @@ classifiers = [
     'Programming Language :: Python :: 3.12',
 ]
 dependencies = [
+    'gest-api >= 0.2',
     'libensemble >= 1.6.0',
     'numpy',
     'jinja2',
