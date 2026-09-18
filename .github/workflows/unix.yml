@@ -31,7 +31,6 @@ jobs:
         conda install -c conda-forge mpi4py mpich
         pip install torch --index-url https://download.pytorch.org/whl/cpu
         pip install .[test]
-        pip install gest-api
         pip install xopt
     - shell: bash -l {0}
       name: Run unit tests with MPICH
