@@ -11,7 +11,6 @@ import pandas as pd
 
 from libensemble.libE import libE
 from libensemble.history import History
-from libensemble.tools import add_unique_random_streams
 from libensemble.alloc_funcs.start_only_persistent import only_persistent_gens
 from libensemble.executors.mpi_executor import MPIExecutor
 
@@ -182,8 +181,14 @@ class Exploration:
         # Get initial number of generator trials.
         n_evals_initial = self.generator.n_evaluated_trials
 
-        # Create persis_info.
-        persis_info = add_unique_random_streams({}, self.sim_workers + 1)
+        # Create persis_info. One random stream per worker plus the manager, seeded
+        # by index so a run is reproducible. libEnsemble provided this as
+        # add_unique_random_streams until it was removed in favour of get_rng, whose
+        # signature serves a generator rather than a whole persis_info.
+        persis_info = {
+            i: {"rand_stream": np.random.default_rng(i), "worker_num": i}
+            for i in range(self.sim_workers + 1)
+        }
 
         # If specified, allocate dedicated resources for the generator.
         if self.generator.dedicated_resources and self.generator.use_cuda:
@@ -550,8 +555,6 @@ class Exploration:
     def _set_default_libe_specs(self) -> None:
         """Set default exploration libe_specs."""
         libE_specs = {}
-        # Run generator on manager to avoid copying gen to another process.
-        libE_specs["gen_on_manager"] = True
         # Save H to file every N simulation evaluations
         # default value, if not defined
         libE_specs["save_every_k_sims"] = self.history_save_period
@@ -603,9 +606,11 @@ class Exploration:
 
     def _create_alloc_specs(self) -> None:
         """Create exploration alloc_specs."""
+        # No "out": libEnsemble's AllocSpecs forbids unknown fields, and the
+        # given_back column it used to add is not read by the allocation function or
+        # by anything else.
         self.alloc_specs = {
             "alloc_f": only_persistent_gens,
-            "out": [("given_back", bool)],
             "user": {"async_return": self.run_async},
         }
 
