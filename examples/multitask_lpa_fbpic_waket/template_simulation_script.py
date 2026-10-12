@@ -11,7 +11,6 @@ from wake_t import GaussianPulse, PlasmaStage, ParticleBunch
 import aptools.plasma_accel.general_equations as ge
 from bunch_utils import trapezoidal_bunch
 
-
 # Parammeters exposed to optimizer.
 task = {{task}}
 beam_i_1 = {{beam_i_1}}
