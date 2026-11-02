@@ -12,10 +12,8 @@
 #
 from datetime import date
 
-
 # -- Import version ----------------------------------------------------------
 from optimas import __version__  # noqa: E402
-
 
 # -- Project information -----------------------------------------------------
 project = "optimas"

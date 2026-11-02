@@ -17,7 +17,6 @@ from optimas.evaluators import FunctionEvaluator, MultitaskEvaluator
 from optimas.core import Task
 from gest_api.vocs import VOCS
 
-
 # Some tests will use threading (instead of multiprocessing) to be able to
 # trigger failed trials based on a global counter.
 threadLock = threading.Lock()
